@@ -1,0 +1,70 @@
+"use client";
+
+import { AudioControls } from "@/components/child/audio-controls";
+import { splitHighlight } from "@/lib/learning/blending";
+import type { IntroContent } from "@/lib/content/question-schemas";
+import type { RendererProps } from "../types";
+
+// Explanation / demonstration: the pattern, each of its sounds, and example words.
+export function IntroRenderer({
+  step,
+  speak,
+}: RendererProps<{ type: "INTRO"; content: IntroContent; answer: null }>) {
+  const { content } = step.question;
+  return (
+    <div className="flex flex-col items-center gap-6 text-center">
+      <p className="text-primary text-8xl font-extrabold tracking-wide sm:text-9xl" lang="en">
+        {content.display ?? content.heading}
+      </p>
+      {content.body ? <p className="max-w-2xl text-2xl font-semibold">{content.body}</p> : null}
+      <AudioControls text={content.speech || content.body || content.heading} speak={speak} />
+
+      {step.pattern && step.pattern.sounds.length > 0 ? (
+        <ul className="flex flex-wrap justify-center gap-3" aria-label="Sounds">
+          {step.pattern.sounds.map((sound) => (
+            <li key={sound.code}>
+              <button
+                type="button"
+                onClick={() => void speak(sound.sayAs, "slow")}
+                className="bg-accent-soft text-accent flex min-h-14 items-center gap-2 rounded-2xl px-4 text-xl font-bold"
+              >
+                <span aria-hidden>🔊</span> {sound.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {content.examples.length > 0 ? (
+        <ul className="grid w-full grid-cols-2 gap-3 sm:grid-cols-3">
+          {content.examples.map((example) => {
+            const parts = splitHighlight(example.text, example.highlight);
+            return (
+              <li key={example.text}>
+                <button
+                  type="button"
+                  onClick={() => void speak(example.text)}
+                  className="bg-surface flex w-full flex-col items-center gap-2 rounded-3xl p-4 shadow-sm"
+                  aria-label={`${example.text}. Tap to hear.`}
+                >
+                  {example.emoji ? (
+                    <span className="text-6xl" aria-hidden>
+                      {example.emoji}
+                    </span>
+                  ) : null}
+                  <span className="text-3xl font-bold" aria-hidden>
+                    {parts.before}
+                    {parts.match ? (
+                      <mark className="bg-sun/40 rounded px-0.5 text-inherit">{parts.match}</mark>
+                    ) : null}
+                    {parts.after}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
+    </div>
+  );
+}
