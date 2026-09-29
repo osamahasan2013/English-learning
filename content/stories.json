@@ -1,0 +1,60 @@
+{
+  "stories": [
+    {
+      "code": "the-big-cat",
+      "title": "The Big Cat",
+      "level": "KG2",
+      "difficulty": 1,
+      "summary": "A big cat looks for a place to nap.",
+      "coverEmoji": "🐱",
+      "pages": [
+        { "text": "I see a cat.", "emoji": "🐱" },
+        { "text": "The cat is big.", "emoji": "🐈" },
+        { "text": "The cat can sit on a mat.", "emoji": "🧶" },
+        { "text": "The cat naps in the sun.", "emoji": "☀️" }
+      ]
+    },
+    {
+      "code": "sam-and-the-shell",
+      "title": "Sam and the Shell",
+      "level": "KG3",
+      "difficulty": 3,
+      "summary": "Sam finds a shell on the beach and hears the sea.",
+      "coverEmoji": "🐚",
+      "pages": [
+        { "text": "Sam went to the beach with his mother.", "emoji": "🏖️" },
+        { "text": "He saw a ship on the sea. Then he saw a shell in the sand.", "emoji": "🚢" },
+        { "text": "Sam held the shell to his ear. Shhh! It was like the sea.", "emoji": "🐚" },
+        { "text": "Sam put the shell in his bag. It was the best thing he found that day.", "emoji": "👜" }
+      ]
+    },
+    {
+      "code": "the-snail-and-the-rain",
+      "title": "The Snail and the Rain",
+      "level": "GRADE1",
+      "difficulty": 5,
+      "summary": "A slow snail enjoys a rainy day while everyone else hides.",
+      "coverEmoji": "🐌",
+      "pages": [
+        { "text": "It was a gray day. Dark clouds filled the sky, and then the rain began.", "emoji": "🌧️" },
+        { "text": "The goat ran into the barn. The sheep hid under a tree. The birds sat in their nest.", "emoji": "🐐" },
+        { "text": "But the snail did not hide. The snail likes the rain. Wet leaves are the best place to go for a slow walk.", "emoji": "🐌" },
+        { "text": "When the sun came out, the snail was far from home. It did not mind. It had seen the whole garden.", "emoji": "🌞" }
+      ]
+    },
+    {
+      "code": "the-storm-at-the-farm",
+      "title": "The Storm at the Farm",
+      "level": "GRADE2",
+      "difficulty": 7,
+      "summary": "A girl helps her grandfather get the animals safe before a storm.",
+      "coverEmoji": "⛈️",
+      "pages": [
+        { "text": "Mara was visiting her grandfather's farm when the sky turned dark and the wind started to howl.", "emoji": "🚜" },
+        { "text": "\"A storm is coming,\" Grandpa said. \"We need to get the horses into the barn before the thunder starts.\"", "emoji": "🐴" },
+        { "text": "Mara was scared of thunder, but she knew the horses were scared too. She talked to them in a calm, quiet voice as she led them inside.", "emoji": "⛈️" },
+        { "text": "When the last horse was safe, the rain poured down. Grandpa smiled. \"You were very helpful,\" he said. Mara felt proud, and not scared at all.", "emoji": "🌈" }
+      ]
+    }
+  ]
+}

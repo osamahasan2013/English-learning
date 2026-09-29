@@ -1,0 +1,25 @@
+{
+  "sentences": [
+    { "text": "I am happy.", "level": "KG2", "difficulty": 1, "grammarComplexity": 1, "emoji": "😊" },
+    { "text": "I like apples.", "level": "KG2", "difficulty": 1, "grammarComplexity": 1, "emoji": "🍎" },
+    { "text": "The cat is big.", "level": "KG2", "difficulty": 1, "grammarComplexity": 1, "emoji": "🐱" },
+    { "text": "I see a cat.", "level": "KG2", "difficulty": 1, "grammarComplexity": 1, "emoji": "🐱" },
+    { "text": "The hen is red.", "level": "KG2", "difficulty": 2, "grammarComplexity": 1, "emoji": "🐔" },
+    { "text": "I can run.", "level": "KG2", "difficulty": 1, "grammarComplexity": 1, "emoji": "🏃" },
+    { "text": "The bug is on the log.", "level": "KG2", "difficulty": 2, "grammarComplexity": 2, "emoji": "🐛" },
+    { "text": "I see a ship.", "level": "KG3", "difficulty": 2, "grammarComplexity": 1, "emoji": "🚢", "patterns": ["SH"] },
+    { "text": "The fish is in the dish.", "level": "KG3", "difficulty": 3, "grammarComplexity": 2, "emoji": "🐟", "patterns": ["SH"] },
+    { "text": "The chick is on the chair.", "level": "KG3", "difficulty": 3, "grammarComplexity": 2, "emoji": "🐥", "patterns": ["CH"] },
+    { "text": "I have three teeth.", "level": "KG3", "difficulty": 3, "grammarComplexity": 2, "emoji": "🦷", "patterns": ["TH"] },
+    { "text": "This is my mother.", "level": "KG3", "difficulty": 3, "grammarComplexity": 2, "emoji": "👩", "patterns": ["TH"] },
+    { "text": "The whale is in the sea.", "level": "KG3", "difficulty": 3, "grammarComplexity": 2, "emoji": "🐳", "patterns": ["WH"] },
+    { "text": "The sheep eat green grass.", "level": "GRADE1", "difficulty": 4, "grammarComplexity": 2, "emoji": "🐑", "patterns": ["EE"] },
+    { "text": "A leaf fell into the sea.", "level": "GRADE1", "difficulty": 4, "grammarComplexity": 2, "emoji": "🍃", "patterns": ["EA"] },
+    { "text": "The snail is in the rain.", "level": "GRADE1", "difficulty": 4, "grammarComplexity": 2, "emoji": "🐌", "patterns": ["AI"] },
+    { "text": "The goat is on the boat.", "level": "GRADE1", "difficulty": 4, "grammarComplexity": 2, "emoji": "⛵", "patterns": ["OA"] },
+    { "text": "The cow saw snow for the first time.", "level": "GRADE1", "difficulty": 5, "grammarComplexity": 3, "emoji": "🐄", "patterns": ["OW"] },
+    { "text": "The bird sat on the girl's arm.", "level": "GRADE2", "difficulty": 6, "grammarComplexity": 3, "emoji": "🐦", "patterns": ["IR", "AR"] },
+    { "text": "The horse ran across the farm before the storm.", "level": "GRADE2", "difficulty": 7, "grammarComplexity": 4, "emoji": "🐴", "patterns": ["OR", "AR"] },
+    { "text": "We played in the park and jumped over puddles.", "level": "GRADE2", "difficulty": 7, "grammarComplexity": 4, "emoji": "🌧️", "patterns": ["ED"] }
+  ]
+}

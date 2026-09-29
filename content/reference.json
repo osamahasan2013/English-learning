@@ -1,0 +1,127 @@
+{
+  "levels": [
+    {
+      "code": "KG1", "name": "Kindergarten 1", "shortName": "KG1", "sortOrder": 1, "minAge": 3, "maxAge": 4, "difficulty": 1,
+      "description": "Letters and their sounds, listening, and first words with pictures.",
+      "vocabularyTarget": 100, "sightWordTarget": 0, "maxSentenceWords": 3,
+      "phonicsScope": "Single letters: name, shape and main sound",
+      "readingComplexity": "Letters, simple picture words, very short phrases",
+      "writingComplexity": "Shapes and letter tracing",
+      "assessmentDifficulty": 1, "themeEmoji": "🌱"
+    },
+    {
+      "code": "KG2", "name": "Kindergarten 2", "shortName": "KG2", "sortOrder": 2, "minAge": 4, "maxAge": 5, "difficulty": 2,
+      "description": "Blending sounds into CVC words, first sight words and short sentences.",
+      "vocabularyTarget": 250, "sightWordTarget": 20, "maxSentenceWords": 5,
+      "phonicsScope": "All single letters; short vowels in CVC words",
+      "readingComplexity": "CVC words, short sentences, basic sight words",
+      "writingComplexity": "Letter formation and simple words",
+      "assessmentDifficulty": 2, "themeEmoji": "🌿"
+    },
+    {
+      "code": "KG3", "name": "Kindergarten 3", "shortName": "KG3", "sortOrder": 3, "minAge": 5, "maxAge": 6, "difficulty": 3,
+      "description": "Consonant digraphs, more sight words, simple paragraphs and short stories.",
+      "vocabularyTarget": 450, "sightWordTarget": 50, "maxSentenceWords": 7,
+      "phonicsScope": "Consonant digraphs (sh, ch, th, wh, ck, ng)",
+      "readingComplexity": "Simple paragraphs and short stories",
+      "writingComplexity": "CVC words and sight words",
+      "assessmentDifficulty": 3, "themeEmoji": "🌳"
+    },
+    {
+      "code": "GRADE1", "name": "Grade 1", "shortName": "G1", "sortOrder": 4, "minAge": 6, "maxAge": 7, "difficulty": 5,
+      "description": "Vowel teams, longer stories, reading fluency and basic comprehension.",
+      "vocabularyTarget": 800, "sightWordTarget": 100, "maxSentenceWords": 10,
+      "phonicsScope": "Vowel teams (ee, ea, ai, ay, oa, ow, oo, ou, oi, oy)",
+      "readingComplexity": "Longer stories, fluency, basic comprehension",
+      "writingComplexity": "Simple sentences",
+      "assessmentDifficulty": 5, "themeEmoji": "📘"
+    },
+    {
+      "code": "GRADE2", "name": "Grade 2", "shortName": "G2", "sortOrder": 5, "minAge": 7, "maxAge": 8, "difficulty": 7,
+      "description": "R-controlled vowels, word endings, multisyllabic words, comprehension and inference.",
+      "vocabularyTarget": 1400, "sightWordTarget": 200, "maxSentenceWords": 15,
+      "phonicsScope": "R-controlled vowels; endings -ing, -ed, -s, -es, -tion, -ment, -ness, -ful, -less",
+      "readingComplexity": "Longer paragraphs, multisyllabic words, age-appropriate inference",
+      "writingComplexity": "Short paragraphs",
+      "assessmentDifficulty": 7, "themeEmoji": "🚀"
+    }
+  ],
+  "subjects": [
+    { "code": "LETTERS", "name": "Letters & Sounds", "emoji": "🔤", "sortOrder": 1, "description": "Letter names, shapes and sounds." },
+    { "code": "PHONICS", "name": "Phonics", "emoji": "🧩", "sortOrder": 2, "description": "Spelling patterns and the sounds they make." },
+    { "code": "BLENDING", "name": "Blending", "emoji": "🔗", "sortOrder": 3, "description": "Joining sounds to read words." },
+    { "code": "SIGHT_WORDS", "name": "Sight Words", "emoji": "👀", "sortOrder": 4, "description": "Common words to know at a glance." },
+    { "code": "VOCABULARY", "name": "Vocabulary", "emoji": "📚", "sortOrder": 5, "description": "Word meanings." },
+    { "code": "SPELLING", "name": "Spelling", "emoji": "✏️", "sortOrder": 6, "description": "Writing words correctly." },
+    { "code": "SENTENCES", "name": "Sentences", "emoji": "💬", "sortOrder": 7, "description": "Building sentences." },
+    { "code": "READING", "name": "Reading", "emoji": "📖", "sortOrder": 8, "description": "Reading words, sentences and stories." },
+    { "code": "LISTENING", "name": "Listening", "emoji": "👂", "sortOrder": 9, "description": "Understanding spoken English." },
+    { "code": "WRITING", "name": "Writing", "emoji": "🖍️", "sortOrder": 10, "description": "Tracing and writing." }
+  ],
+  "skillDimensions": [
+    { "code": "LETTER_RECOGNITION", "name": "Letter recognition", "sortOrder": 1 },
+    { "code": "LETTER_SOUNDS", "name": "Letter sounds", "sortOrder": 2 },
+    { "code": "PHONICS", "name": "Phonics", "sortOrder": 3 },
+    { "code": "BLENDING", "name": "Blending", "sortOrder": 4 },
+    { "code": "WORD_READING", "name": "Word reading", "sortOrder": 5 },
+    { "code": "SIGHT_WORDS", "name": "Sight words", "sortOrder": 6 },
+    { "code": "VOCABULARY", "name": "Vocabulary", "sortOrder": 7 },
+    { "code": "LISTENING", "name": "Listening", "sortOrder": 8 },
+    { "code": "SPELLING", "name": "Spelling", "sortOrder": 9 },
+    { "code": "SENTENCE_FORMATION", "name": "Sentence formation", "sortOrder": 10 },
+    { "code": "READING_COMPREHENSION", "name": "Reading comprehension", "sortOrder": 11 },
+    { "code": "WRITING", "name": "Writing", "sortOrder": 12 }
+  ],
+  "activityTypes": [
+    { "code": "INTRO", "name": "Introduction", "description": "Explanation and demonstration with audio.", "isScored": false },
+    { "code": "MULTIPLE_CHOICE", "name": "Multiple choice", "isScored": true },
+    { "code": "LISTEN_AND_CHOOSE", "name": "Listen and choose", "isScored": true },
+    { "code": "PICTURE_MATCH", "name": "Picture match", "isScored": true },
+    { "code": "MISSING_LETTER", "name": "Missing letter", "isScored": true },
+    { "code": "WORD_BUILDER", "name": "Word builder", "description": "Blend sound tiles into a word.", "isScored": true },
+    { "code": "SENTENCE_BUILDER", "name": "Sentence builder", "isScored": true },
+    { "code": "SPELLING", "name": "Spelling", "description": "Type the word you hear.", "isScored": true },
+    { "code": "DRAG_DROP", "name": "Drag and drop", "isScored": true },
+    { "code": "MATCH", "name": "Match", "isScored": true },
+    { "code": "MEMORY_MATCH", "name": "Memory match", "isScored": true },
+    { "code": "SORT", "name": "Sorting", "isScored": true },
+    { "code": "PHONICS_CLASSIFICATION", "name": "Phonics classification", "isScored": true },
+    { "code": "READING", "name": "Reading passage", "isScored": true },
+    { "code": "READ_ALOUD", "name": "Read aloud", "isScored": true },
+    { "code": "WRITING", "name": "Writing", "isScored": true },
+    { "code": "TRACING", "name": "Tracing", "isScored": true }
+  ],
+  "wordCategories": [
+    { "code": "ANIMALS", "name": "Animals", "emoji": "🐾", "sortOrder": 1 },
+    { "code": "FOOD", "name": "Food", "emoji": "🍎", "sortOrder": 2 },
+    { "code": "FAMILY", "name": "Family", "emoji": "👪", "sortOrder": 3 },
+    { "code": "HOME", "name": "Home", "emoji": "🏠", "sortOrder": 4 },
+    { "code": "SCHOOL", "name": "School", "emoji": "🏫", "sortOrder": 5 },
+    { "code": "COLORS", "name": "Colors", "emoji": "🎨", "sortOrder": 6 },
+    { "code": "NUMBERS", "name": "Numbers", "emoji": "🔢", "sortOrder": 7 },
+    { "code": "BODY", "name": "Body", "emoji": "🖐️", "sortOrder": 8 },
+    { "code": "CLOTHING", "name": "Clothing", "emoji": "👕", "sortOrder": 9 },
+    { "code": "TRANSPORTATION", "name": "Transportation", "emoji": "🚗", "sortOrder": 10 },
+    { "code": "NATURE", "name": "Nature", "emoji": "🌳", "sortOrder": 11 },
+    { "code": "WEATHER", "name": "Weather", "emoji": "🌦️", "sortOrder": 12 },
+    { "code": "ACTIONS", "name": "Actions", "emoji": "🏃", "sortOrder": 13 },
+    { "code": "FEELINGS", "name": "Feelings", "emoji": "😊", "sortOrder": 14 },
+    { "code": "PLACES", "name": "Places", "emoji": "🗺️", "sortOrder": 15 },
+    { "code": "JOBS", "name": "Jobs", "emoji": "🧑‍🚒", "sortOrder": 16 },
+    { "code": "SPORTS", "name": "Sports", "emoji": "⚽", "sortOrder": 17 },
+    { "code": "TOYS", "name": "Toys", "emoji": "🧸", "sortOrder": 18 },
+    { "code": "DAILY_ACTIVITIES", "name": "Daily Activities", "emoji": "🪥", "sortOrder": 19 },
+    { "code": "COMMUNITY", "name": "Community", "emoji": "🏘️", "sortOrder": 20 },
+    { "code": "OBJECTS", "name": "Objects", "emoji": "📦", "sortOrder": 21 },
+    { "code": "TECHNOLOGY", "name": "Technology", "emoji": "💻", "sortOrder": 22 },
+    { "code": "FUNCTION_WORDS", "name": "Function Words", "emoji": "🔗", "sortOrder": 23 }
+  ],
+  "achievements": [
+    { "code": "first-lesson", "title": "First Lesson", "description": "Finished your very first lesson.", "emoji": "🎉", "criteria": { "type": "lessons_completed", "threshold": 1 }, "sortOrder": 1 },
+    { "code": "ten-words", "title": "10 Words Learned", "description": "Learned 10 words.", "emoji": "📚", "criteria": { "type": "words_learned", "threshold": 10 }, "sortOrder": 2 },
+    { "code": "phonics-explorer", "title": "Phonics Explorer", "description": "Finished 5 lessons.", "emoji": "🧭", "criteria": { "type": "lessons_completed", "threshold": 5 }, "sortOrder": 3 },
+    { "code": "reading-star", "title": "Reading Star", "description": "Earned 30 stars.", "emoji": "🌟", "criteria": { "type": "stars_earned", "threshold": 30 }, "sortOrder": 4 },
+    { "code": "seven-day-streak", "title": "7-Day Streak", "description": "Learned 7 days in a row.", "emoji": "🔥", "criteria": { "type": "streak_days", "threshold": 7 }, "sortOrder": 5 },
+    { "code": "thirty-lessons", "title": "30 Lessons Completed", "description": "Finished 30 lessons.", "emoji": "🏆", "criteria": { "type": "lessons_completed", "threshold": 30 }, "sortOrder": 6 }
+  ]
+}

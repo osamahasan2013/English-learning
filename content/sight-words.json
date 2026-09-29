@@ -1,0 +1,7 @@
+{
+  "lists": [
+    { "level": "KG2", "listName": "core", "words": ["I", "a", "the", "see", "is", "like", "can", "and", "my", "we", "go", "to", "it", "am", "you", "look"] },
+    { "level": "KG3", "listName": "core", "words": ["said", "was", "they", "have", "come", "are", "this", "that"] },
+    { "level": "GRADE2", "listName": "core", "words": ["her"] }
+  ]
+}

@@ -1,0 +1,657 @@
+{
+ "level": "KG2",
+ "units": [
+  {
+   "code": "kg2-cvc-words",
+   "subject": "BLENDING",
+   "title": "Blending CVC Words",
+   "emoji": "🔗",
+   "description": "Blend consonant–vowel–consonant words.",
+   "skills": [
+    {
+     "code": "kg2-short-a",
+     "dimension": "BLENDING",
+     "title": "Blending short a words",
+     "childTitle": "a words",
+     "pattern": "LETTER_A",
+     "importance": 5,
+     "prerequisites": [
+      "kg1-letter-a",
+      "kg1-letter-c",
+      "kg1-letter-t"
+     ],
+     "lessons": [
+      {
+       "code": "kg2-short-a-1",
+       "title": "Short a words",
+       "childTitle": "Short a words",
+       "emoji": "🐱",
+       "minutes": 6,
+       "activities": [
+        {
+         "type": "INTRO",
+         "stage": "demonstration",
+         "title": "Short a",
+         "instructions": "Listen: sounds join to make a word.",
+         "instructionsSpeech": "Listen: sounds join to make a word.",
+         "questions": [
+          {
+           "template": "pattern_intro",
+           "pattern": "LETTER_A",
+           "examples": [
+            "cat",
+            "hat",
+            "map"
+           ],
+           "body": "In these words, a makes its short sound."
+          }
+         ]
+        },
+        {
+         "type": "WORD_BUILDER",
+         "stage": "guided_practice",
+         "title": "Build the word",
+         "instructions": "Listen, then put the sounds in order.",
+         "instructionsSpeech": "Listen, then put the sounds in order.",
+         "questions": [
+          {
+           "template": "build_word",
+           "word": "cat",
+           "extra": [
+            "o"
+           ],
+           "pattern": "LETTER_A",
+           "demonstrate": true
+          },
+          {
+           "template": "build_word",
+           "word": "hat",
+           "extra": [
+            "i"
+           ],
+           "pattern": "LETTER_A",
+           "demonstrate": false
+          },
+          {
+           "template": "build_word",
+           "word": "map",
+           "extra": [
+            "t"
+           ],
+           "pattern": "LETTER_A",
+           "demonstrate": false
+          },
+          {
+           "template": "build_word",
+           "word": "bag",
+           "extra": [
+            "u"
+           ],
+           "pattern": "LETTER_A",
+           "demonstrate": false
+          }
+         ]
+        },
+        {
+         "type": "LISTEN_AND_CHOOSE",
+         "stage": "independent_practice",
+         "title": "Read and find",
+         "instructions": "Listen, then tap the word.",
+         "instructionsSpeech": "Listen, then tap the word.",
+         "questions": [
+          {
+           "template": "listen_pick_word",
+           "word": "bat",
+           "distractors": [
+            "bag",
+            "man"
+           ]
+          },
+          {
+           "template": "listen_pick_word",
+           "word": "pan",
+           "distractors": [
+            "man",
+            "map"
+           ]
+          },
+          {
+           "template": "listen_pick_word",
+           "word": "rat",
+           "distractors": [
+            "bat",
+            "hat"
+           ]
+          }
+         ]
+        },
+        {
+         "type": "MISSING_LETTER",
+         "stage": "independent_practice",
+         "title": "Missing sound",
+         "instructions": "Which sound is missing?",
+         "instructionsSpeech": "Which sound is missing?",
+         "questions": [
+          {
+           "template": "missing_pattern",
+           "word": "cat",
+           "missing": "a",
+           "pattern": "LETTER_A",
+           "choices": [
+            "i",
+            "o"
+           ]
+          },
+          {
+           "template": "missing_pattern",
+           "word": "bag",
+           "missing": "a",
+           "pattern": "LETTER_A",
+           "choices": [
+            "e",
+            "u"
+           ]
+          }
+         ]
+        },
+        {
+         "type": "SENTENCE_BUILDER",
+         "stage": "review",
+         "title": "Make a sentence",
+         "instructions": "Put the words in order.",
+         "instructionsSpeech": "Put the words in order.",
+         "questions": [
+          {
+           "template": "order_sentence",
+           "sentence": "I see a cat.",
+           "emoji": "🐱"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "code": "kg2-short-i",
+     "dimension": "BLENDING",
+     "title": "Blending short i words",
+     "childTitle": "i words",
+     "pattern": "LETTER_I",
+     "importance": 5,
+     "lessons": [
+      {
+       "code": "kg2-short-i-1",
+       "title": "Short i words",
+       "childTitle": "Short i words",
+       "emoji": "🐷",
+       "minutes": 6,
+       "activities": [
+        {
+         "type": "INTRO",
+         "stage": "demonstration",
+         "title": "Short i",
+         "instructions": "Listen: sounds join to make a word.",
+         "instructionsSpeech": "Listen: sounds join to make a word.",
+         "questions": [
+          {
+           "template": "pattern_intro",
+           "pattern": "LETTER_I",
+           "examples": [
+            "pig",
+            "pin",
+            "six"
+           ],
+           "body": "In these words, i makes its short sound."
+          }
+         ]
+        },
+        {
+         "type": "WORD_BUILDER",
+         "stage": "guided_practice",
+         "title": "Build the word",
+         "instructions": "Listen, then put the sounds in order.",
+         "instructionsSpeech": "Listen, then put the sounds in order.",
+         "questions": [
+          {
+           "template": "build_word",
+           "word": "pig",
+           "extra": [
+            "a"
+           ],
+           "pattern": "LETTER_I",
+           "demonstrate": true
+          },
+          {
+           "template": "build_word",
+           "word": "pin",
+           "extra": [
+            "e"
+           ],
+           "pattern": "LETTER_I",
+           "demonstrate": false
+          },
+          {
+           "template": "build_word",
+           "word": "sit",
+           "extra": [
+            "o"
+           ],
+           "pattern": "LETTER_I",
+           "demonstrate": false
+          },
+          {
+           "template": "build_word",
+           "word": "lip",
+           "extra": [
+            "u"
+           ],
+           "pattern": "LETTER_I",
+           "demonstrate": false
+          }
+         ]
+        },
+        {
+         "type": "LISTEN_AND_CHOOSE",
+         "stage": "independent_practice",
+         "title": "Read and find",
+         "instructions": "Listen, then tap the word.",
+         "instructionsSpeech": "Listen, then tap the word.",
+         "questions": [
+          {
+           "template": "listen_pick_word",
+           "word": "pig",
+           "distractors": [
+            "pin",
+            "big"
+           ]
+          },
+          {
+           "template": "listen_pick_word",
+           "word": "six",
+           "distractors": [
+            "sit",
+            "pin"
+           ]
+          },
+          {
+           "template": "listen_pick_word",
+           "word": "lip",
+           "distractors": [
+            "pin",
+            "sit"
+           ]
+          }
+         ]
+        },
+        {
+         "type": "MISSING_LETTER",
+         "stage": "independent_practice",
+         "title": "Missing sound",
+         "instructions": "Which sound is missing?",
+         "instructionsSpeech": "Which sound is missing?",
+         "questions": [
+          {
+           "template": "missing_pattern",
+           "word": "pig",
+           "missing": "i",
+           "pattern": "LETTER_I",
+           "choices": [
+            "a",
+            "u"
+           ]
+          },
+          {
+           "template": "missing_pattern",
+           "word": "six",
+           "missing": "i",
+           "pattern": "LETTER_I",
+           "choices": [
+            "o",
+            "e"
+           ]
+          }
+         ]
+        },
+        {
+         "type": "SENTENCE_BUILDER",
+         "stage": "review",
+         "title": "Make a sentence",
+         "instructions": "Put the words in order.",
+         "instructionsSpeech": "Put the words in order.",
+         "questions": [
+          {
+           "template": "order_sentence",
+           "sentence": "I can run.",
+           "emoji": "🏃"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "code": "kg2-short-o-u-e",
+     "dimension": "BLENDING",
+     "title": "Blending short o, u and e words",
+     "childTitle": "o, u, e words",
+     "importance": 4,
+     "lessons": [
+      {
+       "code": "kg2-short-o-u-e-1",
+       "title": "More short vowels",
+       "childTitle": "More words",
+       "emoji": "🐛",
+       "minutes": 6,
+       "activities": [
+        {
+         "type": "WORD_BUILDER",
+         "stage": "guided_practice",
+         "title": "Build the word",
+         "instructions": "Listen, then put the sounds in order.",
+         "instructionsSpeech": "Listen, then put the sounds in order.",
+         "questions": [
+          {
+           "template": "build_word",
+           "word": "dog",
+           "extra": [
+            "a"
+           ]
+          },
+          {
+           "template": "build_word",
+           "word": "bug",
+           "extra": [
+            "i"
+           ]
+          },
+          {
+           "template": "build_word",
+           "word": "hen",
+           "extra": [
+            "o"
+           ]
+          },
+          {
+           "template": "build_word",
+           "word": "pot",
+           "extra": [
+            "u"
+           ]
+          },
+          {
+           "template": "build_word",
+           "word": "ten",
+           "extra": [
+            "a"
+           ]
+          }
+         ]
+        },
+        {
+         "type": "LISTEN_AND_CHOOSE",
+         "stage": "independent_practice",
+         "title": "Listen and find",
+         "instructions": "Listen, then tap the picture.",
+         "instructionsSpeech": "Listen, then tap the picture.",
+         "questions": [
+          {
+           "template": "listen_pick_picture",
+           "word": "bug",
+           "distractors": [
+            "bed",
+            "log"
+           ]
+          },
+          {
+           "template": "listen_pick_picture",
+           "word": "hen",
+           "distractors": [
+            "nut",
+            "pot"
+           ]
+          },
+          {
+           "template": "listen_pick_picture",
+           "word": "log",
+           "distractors": [
+            "dog",
+            "bug"
+           ]
+          }
+         ]
+        },
+        {
+         "type": "MISSING_LETTER",
+         "stage": "independent_practice",
+         "title": "Missing sound",
+         "instructions": "Which sound is missing?",
+         "instructionsSpeech": "Which sound is missing?",
+         "questions": [
+          {
+           "template": "missing_pattern",
+           "word": "bed",
+           "missing": "e",
+           "choices": [
+            "a",
+            "u"
+           ]
+          },
+          {
+           "template": "missing_pattern",
+           "word": "nut",
+           "missing": "u",
+           "choices": [
+            "o",
+            "i"
+           ]
+          },
+          {
+           "template": "missing_pattern",
+           "word": "pot",
+           "missing": "o",
+           "choices": [
+            "a",
+            "e"
+           ]
+          }
+         ]
+        },
+        {
+         "type": "SENTENCE_BUILDER",
+         "stage": "review",
+         "title": "Make a sentence",
+         "instructions": "Put the words in order.",
+         "instructionsSpeech": "Put the words in order.",
+         "questions": [
+          {
+           "template": "order_sentence",
+           "sentence": "The bug is on the log.",
+           "emoji": "🐛"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "code": "kg2-sight-words",
+   "subject": "SIGHT_WORDS",
+   "title": "First Sight Words",
+   "emoji": "👀",
+   "description": "Very common words to know at a glance.",
+   "skills": [
+    {
+     "code": "kg2-sight-words-1",
+     "dimension": "SIGHT_WORDS",
+     "title": "Sight words: I, a, the, see, like",
+     "childTitle": "Quick words",
+     "importance": 5,
+     "lessons": [
+      {
+       "code": "kg2-sight-words-1-1",
+       "title": "Quick words",
+       "childTitle": "Quick words",
+       "emoji": "👀",
+       "minutes": 5,
+       "activities": [
+        {
+         "type": "INTRO",
+         "stage": "explanation",
+         "title": "New words",
+         "instructions": "Listen and look.",
+         "instructionsSpeech": "Listen and look.",
+         "questions": [
+          {
+           "template": "word_intro",
+           "word": "the"
+          },
+          {
+           "template": "word_intro",
+           "word": "see"
+          },
+          {
+           "template": "word_intro",
+           "word": "like"
+          }
+         ]
+        },
+        {
+         "type": "LISTEN_AND_CHOOSE",
+         "stage": "guided_practice",
+         "title": "Find the word",
+         "instructions": "Listen, then tap the word.",
+         "instructionsSpeech": "Listen, then tap the word.",
+         "questions": [
+          {
+           "template": "listen_pick_word",
+           "word": "the",
+           "distractors": [
+            "to",
+            "see"
+           ]
+          },
+          {
+           "template": "listen_pick_word",
+           "word": "see",
+           "distractors": [
+            "like",
+            "we"
+           ]
+          },
+          {
+           "template": "listen_pick_word",
+           "word": "like",
+           "distractors": [
+            "look",
+            "see"
+           ]
+          },
+          {
+           "template": "listen_pick_word",
+           "word": "I",
+           "distractors": [
+            "a",
+            "it"
+           ]
+          },
+          {
+           "template": "listen_pick_word",
+           "word": "is",
+           "distractors": [
+            "it",
+            "am"
+           ]
+          }
+         ]
+        },
+        {
+         "type": "SENTENCE_BUILDER",
+         "stage": "independent_practice",
+         "title": "Make a sentence",
+         "instructions": "Put the words in order.",
+         "instructionsSpeech": "Put the words in order.",
+         "questions": [
+          {
+           "template": "order_sentence",
+           "sentence": "I like apples.",
+           "emoji": "🍎"
+          },
+          {
+           "template": "order_sentence",
+           "sentence": "The cat is big.",
+           "emoji": "🐱"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "code": "kg2-first-sentences",
+   "subject": "SENTENCES",
+   "title": "First Sentences",
+   "emoji": "💬",
+   "description": "Order words into short sentences.",
+   "skills": [
+    {
+     "code": "kg2-sentence-order",
+     "dimension": "SENTENCE_FORMATION",
+     "title": "Ordering short sentences",
+     "childTitle": "Sentences",
+     "importance": 4,
+     "prerequisites": [
+      "kg2-sight-words-1"
+     ],
+     "lessons": [
+      {
+       "code": "kg2-sentence-order-1",
+       "title": "Make a sentence",
+       "childTitle": "Sentences",
+       "emoji": "💬",
+       "minutes": 5,
+       "activities": [
+        {
+         "type": "SENTENCE_BUILDER",
+         "stage": "guided_practice",
+         "title": "Make a sentence",
+         "instructions": "Listen, then put the words in order.",
+         "instructionsSpeech": "Listen, then put the words in order.",
+         "questions": [
+          {
+           "template": "order_sentence",
+           "sentence": "I am happy.",
+           "emoji": "😊"
+          },
+          {
+           "template": "order_sentence",
+           "sentence": "I see a cat.",
+           "emoji": "🐱"
+          },
+          {
+           "template": "order_sentence",
+           "sentence": "The hen is red.",
+           "emoji": "🐔"
+          },
+          {
+           "template": "order_sentence",
+           "sentence": "I can run.",
+           "emoji": "🏃"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
