@@ -30,8 +30,9 @@ Service worker (Serwist): app shell + visited pages     re-evaluate, store once,
 | Route                                                                   | Access                | Purpose                                      |
 | ----------------------------------------------------------------------- | --------------------- | -------------------------------------------- |
 | `/`                                                                     | public                | Landing; signed-in users go to the dashboard |
-| `/login`, `/register`                                                   | public                | Parent authentication                        |
-| `/auth/confirm`                                                         | public                | Email confirmation (`token_hash` or `code`)  |
+| `/login`, `/register`, `/forgot-password`                               | public                | Parent authentication                        |
+| `/update-password`                                                      | signed in             | New password (after a reset link, or change) |
+| `/auth/confirm`                                                         | public                | Email links (`token_hash` or `code`)         |
 | `/onboarding`                                                           | parent                | First child profile                          |
 | `/parent/dashboard`, `/parent/children[/new\|/:id]`, `/parent/settings` | parent                | Family area                                  |
 | `/child/home`, `/child/learn/:lessonId`, `/child/rewards`               | parent + active child | Child area                                   |
@@ -42,7 +43,38 @@ Service worker (Serwist): app shell + visited pages     re-evaluate, store once,
 Routes from the product brief that are not built yet (`/child/words`, `/child/reading`,
 `/child/writing`, `/parent/assessments`, `/admin/lessons`, …) are deliberately absent until
 their phase: there are no placeholder pages. `src/proxy.ts` redirects signed-out visitors
-away from `/parent`, `/child`, `/admin` and `/onboarding` (UX only; pages re-check).
+away from `/parent`, `/child`, `/admin`, `/onboarding` and `/update-password` (UX only;
+pages re-check).
+
+### Authentication and sessions
+
+- Supabase Auth, email + password (8–72 characters). Server Actions in
+  `app/(auth)/actions.ts`: `signUp` (stores display name and the browser's time zone as
+  sign-up metadata; `handle_new_user()` creates the profile), `signIn`, `signOut`,
+  `requestPasswordReset`, `updatePassword`. Validation schemas: `src/lib/validation`.
+- Sessions are cookies managed by `@supabase/ssr`; `proxy.ts` refreshes them on each
+  request. Authorization decisions use `getUser()` (verified with the auth server), never
+  the unverified cookie, and RLS is the boundary for every query.
+- Messages don't reveal whether an email has an account (login failure, password reset
+  request); rate-limit responses from Supabase become a "wait a minute" message.
+- `/auth/confirm` verifies email links and redirects with a **relative** `Location`: an
+  absolute URL built from `request.url` can name another host (localhost vs 127.0.0.1, or
+  an internal host behind a proxy) and lose the new session cookie.
+- Signing in or out clears the active-child cookie, so a shared device never carries one
+  family's child selection into another account.
+
+### Family model and authorization
+
+- One parent account → up to 12 child profiles (`children`), each with its own grade,
+  learning level, daily minutes and progress. Create/edit via Server Actions in
+  `app/parent/child-actions.ts`; removal is a soft delete through `archive_child()`, which
+  keeps history but hides the child and its progress.
+- Switching: the dashboard switcher (`?child=`) changes which child's progress is shown;
+  "Start learning as …" (`enterChildMode`) sets the httpOnly active-child cookie after an
+  ownership check; the grown-up gate returns to the dashboard to pick another child.
+- Ownership is verified server-side everywhere a child id arrives from the browser:
+  `getOwnedChild()` (RLS lookup) for pages, actions and the active-child cookie, and the
+  sync endpoint's RLS lookup before any write. A forged or foreign id finds nothing.
 
 ### Configuration
 

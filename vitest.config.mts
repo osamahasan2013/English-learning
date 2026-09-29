@@ -10,7 +10,8 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./tests/setup.ts"],
-    include: ["tests/unit/**/*.test.{ts,tsx}", "tests/integration/**/*.test.ts"],
+    include: ["tests/unit/**/*.test.{ts,tsx}"],
+    // tests/integration needs a running backend: npm run test:integration.
     css: false,
   },
   resolve: {

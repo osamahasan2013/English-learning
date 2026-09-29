@@ -3,13 +3,12 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { ACTIVE_CHILD_COOKIE, getOwnedChild, requireUser } from "@/lib/auth/session";
-import { AVATAR_KEYS } from "@/lib/avatars";
-import { DAILY_MINUTE_OPTIONS } from "@/lib/learning/daily-plan";
 import { errorMessage, logger } from "@/lib/logging";
 import { listPublishedLevels } from "@/lib/server/family-data";
 import { createClient } from "@/lib/supabase/server";
+import { MAX_CHILDREN_PER_FAMILY, readChildProfileForm } from "@/lib/validation/family";
+import { fieldErrors } from "@/lib/validation/shared";
 
 export type ChildFormState = {
   status: "idle" | "error";
@@ -17,45 +16,19 @@ export type ChildFormState = {
   fieldErrors?: Record<string, string>;
 };
 
-const childSchema = z.object({
-  name: z.string().trim().min(1, "Enter a name.").max(40, "Use 40 characters or fewer."),
-  avatar: z.enum(AVATAR_KEYS as [string, ...string[]], { message: "Choose an avatar." }),
-  dateOfBirth: z
-    .string()
-    .trim()
-    .optional()
-    .transform((v) => (v ? v : null))
-    .refine(
-      (v) =>
-        v === null ||
-        (/^\d{4}-\d{2}-\d{2}$/.test(v) && new Date(v) < new Date() && new Date(v) > new Date("2000-01-01")),
-      {
-        message: "Enter a valid date of birth.",
-      },
-    ),
-  gradeLevelId: z.string().uuid("Choose a grade."),
-  dailyMinutes: z.coerce.number().refine((n) => (DAILY_MINUTE_OPTIONS as readonly number[]).includes(n), {
-    message: "Choose a daily time.",
-  }),
-});
-
-function readForm(formData: FormData) {
-  return childSchema.safeParse({
-    name: formData.get("name"),
-    avatar: formData.get("avatar"),
-    dateOfBirth: formData.get("dateOfBirth") ?? undefined,
-    gradeLevelId: formData.get("gradeLevelId"),
-    dailyMinutes: formData.get("dailyMinutes"),
-  });
-}
-
-function fieldErrors(error: z.ZodError) {
-  return Object.fromEntries(error.issues.map((i) => [String(i.path[0]), i.message]));
+// Database rule violations (migration 20260930100100) → messages for the parent.
+function childSaveError(error: { message?: string } | null) {
+  const message = error?.message ?? "";
+  if (message.includes("CHILD_LIMIT_REACHED")) {
+    return `A family account can have up to ${MAX_CHILDREN_PER_FAMILY} children.`;
+  }
+  if (message.includes("LEVEL_NOT_AVAILABLE")) return "That grade is no longer available. Choose another.";
+  return null;
 }
 
 export async function createChild(_prev: ChildFormState, formData: FormData): Promise<ChildFormState> {
   const user = await requireUser();
-  const parsed = readForm(formData);
+  const parsed = readChildProfileForm(formData);
   if (!parsed.success) return { status: "error", fieldErrors: fieldErrors(parsed.error) };
   const levels = await listPublishedLevels();
   if (!levels.some((l) => l.id === parsed.data.gradeLevelId))
@@ -76,6 +49,8 @@ export async function createChild(_prev: ChildFormState, formData: FormData): Pr
     .select("id")
     .single();
   if (error || !data) {
+    const known = childSaveError(error);
+    if (known) return { status: "error", message: known };
     logger.error("children.create_failed", { userId: user.id, message: errorMessage(error) });
     return { status: "error", message: "We couldn't save the profile. Please try again." };
   }
@@ -90,13 +65,13 @@ export async function updateChild(
 ): Promise<ChildFormState> {
   const user = await requireUser();
   if (!(await getOwnedChild(childId))) return { status: "error", message: "This profile was not found." };
-  const parsed = readForm(formData);
+  const parsed = readChildProfileForm(formData);
   if (!parsed.success) return { status: "error", fieldErrors: fieldErrors(parsed.error) };
-  const levelId = z.string().uuid().safeParse(formData.get("currentLevelId"));
   const levels = await listPublishedLevels();
   if (!levels.some((l) => l.id === parsed.data.gradeLevelId))
     return { status: "error", fieldErrors: { gradeLevelId: "Choose a grade." } };
-  if (levelId.success && !levels.some((l) => l.id === levelId.data))
+  const currentLevelId = parsed.data.currentLevelId;
+  if (currentLevelId && !levels.some((l) => l.id === currentLevelId))
     return { status: "error", fieldErrors: { currentLevelId: "Choose a level." } };
 
   const supabase = await createClient();
@@ -107,11 +82,13 @@ export async function updateChild(
       avatar: parsed.data.avatar,
       date_of_birth: parsed.data.dateOfBirth,
       grade_level_id: parsed.data.gradeLevelId,
-      ...(levelId.success ? { current_level_id: levelId.data } : {}),
+      ...(currentLevelId ? { current_level_id: currentLevelId } : {}),
       daily_minutes: parsed.data.dailyMinutes,
     })
     .eq("id", childId);
   if (error) {
+    const known = childSaveError(error);
+    if (known) return { status: "error", message: known };
     logger.error("children.update_failed", { userId: user.id, childId, message: errorMessage(error) });
     return { status: "error", message: "We couldn't save the changes. Please try again." };
   }

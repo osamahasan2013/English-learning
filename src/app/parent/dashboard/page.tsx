@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { ActivityChart } from "@/components/parent/activity-chart";
 import { EnterChildModeButton } from "@/components/parent/enter-child-mode-button";
 import { SkillBadge } from "@/components/parent/skill-badge";
+import { Alert } from "@/components/ui/alert";
 import { Card, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -15,7 +16,7 @@ import { ageFromDateOfBirth, cn } from "@/lib/utils";
 export const metadata: Metadata = { title: "Dashboard" };
 
 export default async function DashboardPage(props: PageProps<"/parent/dashboard">) {
-  const { child: childParam } = await props.searchParams;
+  const { child: childParam, password } = await props.searchParams;
   const [children, profile] = await Promise.all([listChildren(), getProfile()]);
   if (children.length === 0) redirect("/onboarding");
 
@@ -29,6 +30,7 @@ export default async function DashboardPage(props: PageProps<"/parent/dashboard"
 
   return (
     <div className="space-y-6">
+      {password === "updated" ? <Alert tone="success">Your password was changed.</Alert> : null}
       {children.length > 1 ? (
         <nav aria-label="Choose a child" className="flex flex-wrap gap-2">
           {children.map((c) => (

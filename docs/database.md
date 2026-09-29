@@ -4,6 +4,19 @@ PostgreSQL on Supabase. Schema = `supabase/migrations/*.sql` (ordered, never edi
 applied). TypeScript types in `src/lib/supabase/types.ts` are generated
 (`npm run db:types`).
 
+## Migrations
+
+| File                                                  | Contents                                                                                   |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `20260929100100_foundation.sql`                       | enums, `set_updated_at()`, `profiles`, sign-up trigger, `is_admin()`                       |
+| `20260929100200_content_reference.sql`                | levels, subjects, skill dimensions, activity types, media assets                           |
+| `20260929100300_language_content.sql`                 | phonics patterns and sounds, words, sight words, sentences, stories                        |
+| `20260929100400_curriculum.sql`                       | units, skills, lessons, activities, questions, assessments, achievements                   |
+| `20260929100500_family_and_progress.sql`              | children, learner history, derived progress                                                |
+| `20260929100600_rls_and_grants.sql`                   | RLS policies, grants, `is_my_child()`, `archive_child()`                                   |
+| `20260930100100_parent_profiles_and_family_rules.sql` | time zone validation, sign-up time zone, published-level check, 12-child limit             |
+| `20260930100200_seed_levels.sql`                      | the five learning levels (KG1–Grade 2), so a fresh database works without a content import |
+
 ## Conventions
 
 - `uuid` primary keys (`gen_random_uuid()`); progress history uses **device-generated**
@@ -22,7 +35,7 @@ applied). TypeScript types in `src/lib/supabase/types.ts` are generated
 
 | Table      | Purpose                                                                                                                                                                                                                                                                       |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `profiles` | One per auth user; `role` (`parent`/`admin`), display name, locale, time zone. Created by trigger on `auth.users`.                                                                                                                                                            |
+| `profiles` | One per auth user; `role` (`parent`/`admin`), display name, locale, validated IANA time zone (from the browser at sign-up). Created by trigger on `auth.users`.                                                                                                               |
 | `children` | Child profiles (`parent_id`, name, avatar key, optional DOB, `grade_level_id` chosen by parent, `current_level_id` learned at, `daily_minutes` ∈ {10,15,20,30,45}, `placement_score`, `learning_preferences`, soft delete `deleted_at`). Age is derived from DOB, not stored. |
 
 ### Reference content
@@ -103,8 +116,22 @@ assessments 1─* assessment_items *─1 questions
 | Other families          | —    | nothing                                                              | nothing    | all          |
 
 Helpers: `is_admin()`, `is_my_child(child_id)` (both `security definer`, fixed
-`search_path`). Tests: `supabase/tests/001_rls_family_isolation.sql`,
-`002_progress_constraints.sql` (`npm run test:db`).
+`search_path`), `is_valid_time_zone(name)`.
+
+Rules enforced by the database, whatever the client sends:
+
+- `children.parent_id` has no insert/update grant; it defaults to `auth.uid()`.
+- `enforce_child_rules()` (trigger): the grade and learning level must be **published**
+  levels (a foreign key alone would accept a draft level id), names are trimmed, and a
+  family has at most **12 active children** (`CHILD_LIMIT_REACHED`; archived children
+  don't count; concurrent inserts are serialised per parent with an advisory lock).
+- `validate_profile()` (trigger): the time zone must be a real IANA name
+  (`INVALID_TIME_ZONE`); names are trimmed. `handle_new_user()` stores the browser's time
+  zone from sign-up metadata when valid, otherwise UTC.
+- `profiles.role` cannot be changed by users (no column grant).
+
+Tests: `supabase/tests/00{1,2,3}_*.sql` (`npm run test:db`) and the API-level
+integration tests in `tests/integration` (`npm run test:integration`).
 
 ## Indexes
 

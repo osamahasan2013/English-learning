@@ -131,3 +131,25 @@ sync with `globals.css` by hand.
 check, unit/component tests and a production build **without credentials**, only when
 `english-learning/**` changes. SQL and e2e tests need a Supabase backend; they run locally
 for now and move to CI with the Supabase CLI in Phase 16.
+
+## ADR-018 — Family rules and levels live in the database
+
+**Context.** Parents hold a session that can call the REST API directly, so rules checked
+only in Server Actions can be bypassed. **Decision.** Migration
+`20260930100100_parent_profiles_and_family_rules.sql` enforces them in Postgres: published
+levels only, at most 12 active children per family, valid IANA time zones, trimmed names.
+The app keeps its own (friendlier) validation in `src/lib/validation`, and maps the
+database's error codes (`CHILD_LIMIT_REACHED`, `LEVEL_NOT_AVAILABLE`, `INVALID_TIME_ZONE`)
+to messages. The five learning levels are seeded by migration
+(`20260930100200_seed_levels.sql`) because the app cannot onboard a family without them;
+all other content stays in `content/` and the importer, which treats the seeded levels as
+unchanged. **Impact:** a fresh database works without a content import (verified).
+
+## ADR-019 — Password reset and relative auth redirects
+
+Password reset uses Supabase's recovery email → `/auth/confirm` (recovery session) →
+`/update-password`. Requests always answer "if an account exists…" to avoid revealing
+accounts. `/auth/confirm` redirects with relative `Location` headers: an absolute URL
+built from `request.url` pointed at `localhost` while the browser used `127.0.0.1`, which
+dropped the session cookie (found by the e2e test; the same would happen behind a proxy
+with a different internal host).

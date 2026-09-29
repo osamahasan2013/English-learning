@@ -43,7 +43,9 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+
+        ];
       };
       activities: {
         Row: {
@@ -256,7 +258,9 @@ export type Database = {
           is_scored?: boolean;
           created_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+
+        ];
       };
       assessment_attempts: {
         Row: {
@@ -493,7 +497,9 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+
+        ];
       };
       child_achievements: {
         Row: {
@@ -635,7 +641,9 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+
+        ];
       };
       lesson_progress: {
         Row: {
@@ -871,7 +879,9 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+
+        ];
       };
       phonics_pattern_sounds: {
         Row: {
@@ -1021,7 +1031,9 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+
+        ];
       };
       questions: {
         Row: {
@@ -1371,7 +1383,9 @@ export type Database = {
           sort_order?: number;
           created_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+
+        ];
       };
       skill_mastery: {
         Row: {
@@ -1641,7 +1655,9 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+
+        ];
       };
       units: {
         Row: {
@@ -1725,7 +1741,9 @@ export type Database = {
           sort_order?: number;
           created_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+
+        ];
       };
       word_phonics_patterns: {
         Row: {
@@ -1983,6 +2001,7 @@ export type Database = {
       archive_child: { Args: { p_child_id: string }; Returns: undefined };
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
       is_my_child: { Args: { p_child_id: string }; Returns: boolean };
+      is_valid_time_zone: { Args: { p_name: string }; Returns: boolean };
     };
     Enums: {
       app_role: "parent" | "admin";

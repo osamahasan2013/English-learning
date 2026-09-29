@@ -1,6 +1,12 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // This app lives in a subfolder of a repository that has its own lockfile at the root;
+  // pin the workspace root to this folder so Turbopack resolves from here.
+  turbopack: {
+    root: path.resolve(__dirname),
+  },
   experimental: {
     // A navigation, prefetch or Server Action that hits a dropped connection waits and
     // retries when the connection returns instead of throwing. Learning progress does not

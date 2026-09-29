@@ -14,6 +14,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:db": "bash scripts/db/run-sql-tests.sh",
+    "test:integration": "vitest run --config vitest.integration.config.mts",
     "e2e": "playwright test",
     "content:import": "tsx --env-file-if-exists=.env.local scripts/content/import.mts",
     "db:types": "node scripts/db/gen-types.mjs",

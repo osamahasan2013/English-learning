@@ -68,7 +68,8 @@ tests/unit, tests/e2e    Vitest and Playwright
 
 - Server-only modules start with `import "server-only"`. The service-role client
   (`src/lib/supabase/admin.ts`) is used only by the progress writer after an ownership check.
-- Validate every external input with Zod (forms, API bodies, content files).
+- Validate every external input with Zod (forms, API bodies, content files). Form schemas
+  live in `src/lib/validation`; rules that protect data are also enforced in the database.
 - Pure logic goes in `src/lib/learning` with unit tests; keep I/O out of it.
 - Server Actions re-check auth inside the action. Redirect targets go through
   `safeNextPath`.
@@ -89,6 +90,7 @@ npm run format           # prettier --write (format:check in CI)
 npm test                 # unit + component tests (incl. validation of every shipped content file)
 npm run check            # typecheck + lint + format:check + tests
 npm run test:db          # SQL RLS/constraint tests against DATABASE_URL
+npm run test:integration # auth + RLS through the real auth server and REST API (needs the stack)
 npm run build            # next build + service worker
 npm run e2e              # Playwright (needs stack + imported content; E2E_PROD=1 after build for PWA test)
 ```

@@ -48,8 +48,8 @@ Definition of done:
 | #   | Phase                       | Status | Notes / next steps                                                                                                                        |
 | --- | --------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | Project foundation          | ✅     | Next 16, TS, Tailwind, lint, tests, docs                                                                                                  |
-| 2   | Database and authentication | ✅     | Full schema, RLS, email/password auth. Next: password reset flow, profile time-zone setting UI                                            |
-| 3   | Multi-child system          | ✅     | Create/edit/archive, switcher, child mode + grown-up gate                                                                                 |
+| 2   | Database and authentication | ✅     | Schema, RLS, email/password auth, password reset, parent profile (name, time zone), levels seeded by migration, DB-enforced family rules  |
+| 3   | Multi-child system          | ✅     | Create/edit/archive (max 12), switcher, child mode + grown-up gate, forged child ids rejected                                             |
 | 4   | Learning/content engine     | ✅     | Hierarchy, typed questions, registry, importer, templates                                                                                 |
 | 5   | Phonics                     | 🟡     | Letters, digraphs, vowel teams, r-controlled, endings authored; more lessons per pattern (only 1 each now); pattern cards outside lessons |
 | 6   | Vocabulary                  | 🟡     | Word bank + My Words data. Next: Word Explorer (`/child/words/[id]`), My Words screen, manual save, search                                |

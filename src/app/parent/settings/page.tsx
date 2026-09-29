@@ -1,27 +1,42 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { DisplayPreferencesControls } from "@/components/layout/display-preferences";
+import { ProfileForm } from "@/components/parent/profile-form";
 import { SyncStatusPanel } from "@/components/parent/sync-status-panel";
+import { buttonClasses } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
-import { getProfile, getSessionUser } from "@/lib/auth/session";
+import { updateParentProfile } from "@/app/parent/profile-actions";
+import { getProfile, requireUser } from "@/lib/auth/session";
+import { listTimeZones } from "@/lib/validation/time-zone";
 
 export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
-  const [user, profile] = await Promise.all([getSessionUser(), getProfile()]);
+  const user = await requireUser("/parent/settings");
+  const profile = await getProfile();
+  const timeZones = listTimeZones();
+  const current = profile?.timezone ?? "UTC";
+
   return (
     <div className="max-w-2xl space-y-6">
       <h1 className="text-3xl font-extrabold">Settings</h1>
-      <Card className="space-y-2">
-        <CardTitle>Account</CardTitle>
+      <Card className="space-y-4">
+        <CardTitle>Your profile</CardTitle>
+        <ProfileForm
+          action={updateParentProfile}
+          displayName={profile?.display_name ?? ""}
+          timezone={current}
+          timeZones={timeZones.includes(current) ? timeZones : [current, ...timeZones]}
+        />
+      </Card>
+      <Card className="space-y-3">
+        <CardTitle>Sign-in</CardTitle>
         <p>
-          <span className="font-semibold">Name:</span> {profile?.display_name || "—"}
+          <span className="font-semibold">Email:</span> {user.email}
         </p>
-        <p>
-          <span className="font-semibold">Email:</span> {user?.email}
-        </p>
-        <p>
-          <span className="font-semibold">Time zone:</span> {profile?.timezone}
-        </p>
+        <Link href="/update-password" className={buttonClasses("secondary", "md")}>
+          Change password
+        </Link>
       </Card>
       <Card className="space-y-3">
         <CardTitle>Display on this device</CardTitle>

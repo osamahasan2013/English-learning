@@ -5,7 +5,7 @@ import { getPublicEnv, isSupabaseConfigured } from "@/lib/env";
 // Next.js 16's `proxy` (formerly middleware): refreshes the Supabase session cookie on each
 // request and sends signed-out visitors on protected paths to /login. UX only — pages
 // re-check with getUser() and RLS is the real boundary.
-const PROTECTED_PREFIXES = ["/parent", "/child", "/admin", "/onboarding"];
+const PROTECTED_PREFIXES = ["/parent", "/child", "/admin", "/onboarding", "/update-password"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });

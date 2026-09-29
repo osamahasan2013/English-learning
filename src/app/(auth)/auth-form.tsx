@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Field, FormMessage, Input } from "@/components/ui/field";
 import type { AuthFormState } from "./actions";
@@ -14,6 +14,12 @@ type Props = {
 
 export function AuthForm({ mode, action, next }: Props) {
   const [state, formAction, pending] = useActionState(action, { status: "idle" });
+  // The family's time zone (for streaks and "today"), detected once mounted in the browser.
+  const [timezone, setTimezone] = useState("");
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- only knowable in the browser
+    setTimezone(Intl.DateTimeFormat().resolvedOptions().timeZone ?? "");
+  }, []);
 
   if (state.status === "check_email") {
     return (
@@ -29,6 +35,7 @@ export function AuthForm({ mode, action, next }: Props) {
     <form action={formAction} className="space-y-5" noValidate>
       {state.message ? <FormMessage tone="error">{state.message}</FormMessage> : null}
       {next ? <input type="hidden" name="next" value={next} /> : null}
+      {mode === "register" ? <input type="hidden" name="timezone" value={timezone} /> : null}
       {mode === "register" ? (
         <Field label="Your name" htmlFor="displayName" error={error("displayName")}>
           <Input
@@ -62,10 +69,18 @@ export function AuthForm({ mode, action, next }: Props) {
           type="password"
           autoComplete={mode === "register" ? "new-password" : "current-password"}
           required
-          minLength={8}
+          minLength={mode === "register" ? 8 : undefined}
+          maxLength={72}
           aria-invalid={!!error("password")}
         />
       </Field>
+      {mode === "login" ? (
+        <p className="-mt-2 text-right">
+          <Link href="/forgot-password" className="text-primary text-sm font-semibold underline">
+            Forgot password?
+          </Link>
+        </p>
+      ) : null}
       <Button type="submit" size="lg" className="w-full" disabled={pending}>
         {pending ? "Please wait…" : mode === "register" ? "Create account" : "Log in"}
       </Button>
