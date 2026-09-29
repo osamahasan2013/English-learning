@@ -2,8 +2,8 @@ import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // This app lives in a subfolder of a repository that has its own lockfile at the root;
-  // pin the workspace root to this folder so Turbopack resolves from here.
+  // Pin Turbopack's workspace root to this project, so a lockfile in a parent directory
+  // (e.g. a checkout nested inside another project) is never mistaken for the root.
   turbopack: {
     root: path.resolve(__dirname),
   },

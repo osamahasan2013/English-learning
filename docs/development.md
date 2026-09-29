@@ -8,7 +8,6 @@ Supabase CLI (`npx supabase start`, needs Docker), or the Docker-free local stac
 ## First run (local stack, no Docker)
 
 ```bash
-cd english-learning
 npm install
 # One-time: get the auth server and PostgREST binaries (see "Local stack" below)
 LOCAL_STACK_BIN_DIR=/path/to/bin npm run stack:start   # Postgres :54322, API :54321, writes .env.local
@@ -58,7 +57,7 @@ E2E_PROD=1 npm run e2e    # after build: also runs the PWA/offline test against 
 ```
 
 `npm run check` runs typecheck, lint, format check and unit tests in one go; CI
-(`.github/workflows/english-learning.yml`) runs those plus a production build without
+(`.github/workflows/ci.yml`) runs those plus a production build without
 credentials.
 
 `npm run test:integration` exercises sign-up, login, logout, password recovery, profiles
@@ -77,5 +76,5 @@ Add a new migration file (timestamped), include explicit grants and RLS, run
 
 ## Deploying
 
-Any Node.js host or Vercel with the project root set to `english-learning/`. Set the three
-environment variables. `npm run build` also generates `public/sw.js`.
+Any Node.js host, or Vercel with the default settings (Next.js, repository root). Set the
+three environment variables. `npm run build` also generates `public/sw.js`.

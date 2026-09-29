@@ -1,8 +1,7 @@
 // Consumed by `serwist build` (see package.json's "build" script), which bundles
 // src/sw.ts with esbuild and injects a precache manifest of the Next.js client bundle.
 // Runs as a separate step because this app builds with Turbopack, and @serwist/next's
-// webpack plugin cannot inject the manifest there. Same approach as the sibling precast
-// app in this repository.
+// webpack plugin cannot inject the manifest there.
 module.exports = {
   swSrc: "src/sw.ts",
   swDest: "public/sw.js",

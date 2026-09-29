@@ -5,8 +5,6 @@ phonics, blending, sight words, vocabulary, spelling and sentences. Parents mana
 account with separate profiles and progress for each child and see what is going well and
 what to practise next. It works offline and syncs when back online.
 
-This is a separate application from the precast monitoring system at the repository root.
-
 - **Start here:** [`docs/development.md`](docs/development.md)
 - Architecture: [`docs/architecture.md`](docs/architecture.md)
 - Database and security: [`docs/database.md`](docs/database.md)

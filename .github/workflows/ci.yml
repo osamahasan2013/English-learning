@@ -1,0 +1,29 @@
+# Static checks and a production build. The build runs WITHOUT Supabase credentials on
+# purpose: it proves the app builds in a fresh environment (unconfigured deployments show a
+# setup screen). Database (npm run test:db), integration (npm run test:integration) and
+# end-to-end (npm run e2e) tests need a Supabase backend and run locally for now — see
+# docs/development.md.
+name: ci
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm test
+      - run: npm run build

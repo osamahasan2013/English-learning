@@ -2,8 +2,8 @@
 
 # Word Garden — English learning PWA for children (KG1–Grade 2)
 
-A separate application from the precast system at the repository root. Everything for it
-lives in this folder (`english-learning/`); run all commands from here.
+A standalone application with its own repository, Supabase project and deployment. It
+shares nothing with any other app. Run all commands from the repository root.
 
 ## Purpose
 

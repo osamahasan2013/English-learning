@@ -3,7 +3,7 @@
 Each entry: context, decision, consequences. Add a new entry (don't rewrite old ones) when a
 decision changes, stating what changed, why, impact and migration needs.
 
-## ADR-001 — Separate app in its own folder of the existing repository
+## ADR-001 — Separate app in its own folder of the existing repository (superseded by ADR-020)
 
 **Context.** The repository holds the Precast Elements Monitoring System; the owner asked
 for a new, separate app. This session can only push to this repository.
@@ -16,8 +16,8 @@ lockfile, Supabase migrations, docs). It shares no code or database with the pre
 ## ADR-002 — Next.js App Router + Supabase
 
 Server Components read through the parent's RLS-scoped client; mutations are Server Actions
-or one Route Handler (`/api/sync`). Same stack as the sibling app, so tooling and patterns
-(Serwist via CLI under Turbopack, `proxy.ts`) are proven here.
+or one Route Handler (`/api/sync`). Serwist runs via its CLI under Turbopack, and
+`proxy.ts` refreshes the Supabase session.
 
 ## ADR-003 — Content as data, imported from files
 
@@ -127,9 +127,9 @@ sync with `globals.css` by hand.
 
 ## ADR-017 — CI scope
 
-`.github/workflows/english-learning.yml` runs typecheck, lint (warnings fail), format
-check, unit/component tests and a production build **without credentials**, only when
-`english-learning/**` changes. SQL and e2e tests need a Supabase backend; they run locally
+`.github/workflows/ci.yml` (originally `english-learning.yml`, see ADR-020) runs
+typecheck, lint (warnings fail), format check, unit/component tests and a production build
+**without credentials**. SQL and e2e tests need a Supabase backend; they run locally
 for now and move to CI with the Supabase CLI in Phase 16.
 
 ## ADR-018 — Family rules and levels live in the database
@@ -153,3 +153,16 @@ accounts. `/auth/confirm` redirects with relative `Location` headers: an absolut
 built from `request.url` pointed at `localhost` while the browser used `127.0.0.1`, which
 dropped the session cookie (found by the e2e test; the same would happen behind a proxy
 with a different internal host).
+
+## ADR-020 — Own repository
+
+**What changed.** The app moved out of the Precast Elements Monitoring System (PEMS)
+repository into this repository, `English-learning-app`, with its full commit history
+(`git subtree split`), and the folder was removed from the PEMS repository.
+**Why.** The owner asked for a completely separate app. As a folder inside the PEMS
+repository, it was type-checked by the PEMS build (whose `tsconfig` includes every `.ts`
+file in the repository) and broke the PEMS Vercel preview deployments. PEMS production was
+never affected.
+**Impact.** The app lives at the repository root; CI moved to `.github/workflows/ci.yml`
+without path filters; deploy with the repository root as the project root. It shares no
+code, database, Supabase project or deployment with PEMS.

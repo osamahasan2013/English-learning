@@ -34,7 +34,7 @@ Definition of done:
 | Lint (warnings fail)            | `eslint.config.mjs`, `npm run lint`                                                  |
 | Formatting                      | Prettier + Tailwind plugin, `.prettierignore`, `npm run format[:check]`              |
 | Tests                           | Vitest (unit/component), SQL tests, Playwright                                       |
-| CI                              | `.github/workflows/english-learning.yml` (typecheck, lint, format, tests, build)     |
+| CI                              | `.github/workflows/ci.yml` (typecheck, lint, format, tests, build)                   |
 | Environment handling            | `src/lib/env.ts` (lazy), setup screen, `.env.example`                                |
 | Supabase clients                | browser / server / service-role in `src/lib/supabase`                                |
 | Migrations                      | `supabase/migrations`, types via `npm run db:types`                                  |
