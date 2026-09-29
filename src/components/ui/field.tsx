@@ -1,4 +1,5 @@
 import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from "react";
+import { Alert } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 
 const inputClasses =
@@ -42,17 +43,5 @@ export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectE
 }
 
 export function FormMessage({ tone, children }: { tone: "error" | "success" | "info"; children: ReactNode }) {
-  const tones = {
-    error: "bg-danger-soft text-danger",
-    success: "bg-success-soft text-success",
-    info: "bg-accent-soft text-accent",
-  };
-  return (
-    <div
-      role={tone === "error" ? "alert" : "status"}
-      className={cn("rounded-xl px-4 py-3 font-semibold", tones[tone])}
-    >
-      {children}
-    </div>
-  );
+  return <Alert tone={tone}>{children}</Alert>;
 }

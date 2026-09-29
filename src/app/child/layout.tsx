@@ -34,7 +34,9 @@ export default async function ChildLayout({ children }: { children: React.ReactN
             <ParentGate action={exitChildMode} />
           </div>
         </header>
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">{children}</main>
+        <main id="main" className="mx-auto w-full max-w-5xl flex-1 px-4 py-6">
+          {children}
+        </main>
         <OfflineNavigation />
       </div>
     </SyncProvider>

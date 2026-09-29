@@ -53,7 +53,9 @@ supabase/migrations/     schema, RLS, grants (never edit an applied migration; a
 supabase/tests/          SQL-level RLS/constraint tests (npm run test:db)
 src/app/                 routes: (auth), onboarding, parent/*, child/*, admin/*, api/sync
 src/features/            activity renderers + registry, lesson player
-src/components/          ui/ primitives, layout/ (sync, offline, SW), parent/, child/
+src/components/          ui/ primitives (Button, Card, Field, Alert, EmptyState, Spinner, ProgressBar),
+                         layout/ (AppShell, NavLink, setup screen, sync, offline, SW), parent/, child/
+public/offline.html      static offline fallback served by the service worker
 src/lib/learning/        pure domain logic: evaluate, mastery, scoring, daily plan, placement…
 src/lib/content/         content schemas, CSV, templates, importer
 src/lib/offline/         Dexie DB, outbox, sync protocol, lesson cache
@@ -82,8 +84,10 @@ npm run dev              # dev server (needs .env.local)
 npm run stack:start      # local Postgres + auth + REST without Docker (writes .env.local)
 npm run content:import   # import /content (add -- --dry-run to validate only)
 npm run typecheck        # next typegen + tsc (app and service worker)
-npm run lint
-npm test                 # unit tests (incl. validation of every shipped content file)
+npm run lint             # warnings fail
+npm run format           # prettier --write (format:check in CI)
+npm test                 # unit + component tests (incl. validation of every shipped content file)
+npm run check            # typecheck + lint + format:check + tests
 npm run test:db          # SQL RLS/constraint tests against DATABASE_URL
 npm run build            # next build + service worker
 npm run e2e              # Playwright (needs stack + imported content; E2E_PROD=1 after build for PWA test)
@@ -93,6 +97,8 @@ npm run e2e              # Playwright (needs stack + imported content; E2E_PROD=
 
 See `.env.example`: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
 `SUPABASE_SERVICE_ROLE_KEY` (server only), `DATABASE_URL` (tests/tooling only).
+Read them only through `src/lib/env.ts` (lazy validation; never at module import). Without
+them the app still builds and shows a setup screen. `NEXT_PUBLIC_*` are inlined at build time.
 
 ## Docs
 

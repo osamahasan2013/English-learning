@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { isServerConfigured } from "@/lib/env";
 import { errorMessage, logger } from "@/lib/logging";
 import { MAX_EVENTS_PER_REQUEST, syncRequestSchema } from "@/lib/offline/sync-protocol";
 import { processSyncBatch } from "@/lib/server/progress-writer";
@@ -14,6 +15,11 @@ import { createClient } from "@/lib/supabase/server";
 const MAX_BODY_BYTES = 512 * 1024;
 
 export async function POST(request: NextRequest) {
+  if (!isServerConfigured()) {
+    logger.error("sync.not_configured");
+    // 503: the device keeps the events and retries later (src/lib/offline/outbox.ts).
+    return NextResponse.json({ error: "not_configured" }, { status: 503 });
+  }
   const supabase = await createClient();
   const {
     data: { user },

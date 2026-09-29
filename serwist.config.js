@@ -16,6 +16,9 @@ module.exports = {
     "static/*/_ssgManifest.js",
     "static/*/_clientMiddlewareManifest.js",
   ],
+  // The static offline fallback (public/offline.html). Its revision changes on every build
+  // so an edited page replaces the old copy.
+  additionalPrecacheEntries: [{ url: "/offline.html", revision: String(Date.now()) }],
   modifyURLPrefix: {
     "static/": "/_next/static/",
   },

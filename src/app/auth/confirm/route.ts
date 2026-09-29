@@ -1,11 +1,13 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 import { safeNextPath } from "@/lib/auth/redirect";
+import { isSupabaseConfigured } from "@/lib/env";
 import { logger } from "@/lib/logging";
 import { createClient } from "@/lib/supabase/server";
 
 // Target of the confirmation link in the sign-up email.
 export async function GET(request: NextRequest) {
+  if (!isSupabaseConfigured()) return NextResponse.redirect(new URL("/", request.url));
   const { searchParams } = request.nextUrl;
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;

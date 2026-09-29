@@ -14,7 +14,9 @@ declare const self: ServiceWorkerGlobalScope & {
   __SW_MANIFEST: (PrecacheEntry | string)[] | undefined;
 };
 
-const PAGES_CACHE = "pages";
+// Distinct from defaultCache's "pages"/"pages-rsc"/"pages-rsc-prefetch" caches. All of
+// them can hold a family's pages and are cleared on sign-out (sign-out-button.tsx).
+const PAGES_CACHE = "visited-pages";
 
 const pages: RuntimeCaching = {
   matcher: ({ request, url, sameOrigin }) =>
@@ -44,6 +46,11 @@ const serwist = new Serwist({
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: [pages, ...defaultCache],
+  // A page never opened on this device, requested offline, gets the precached static
+  // offline page (public/offline.html) instead of the browser's error screen.
+  fallbacks: {
+    entries: [{ url: "/offline.html", matcher: ({ request }) => request.destination === "document" }],
+  },
 });
 
 serwist.addEventListeners();

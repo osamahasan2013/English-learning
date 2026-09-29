@@ -3,6 +3,7 @@ import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
+import { isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/lib/supabase/types";
 
@@ -13,6 +14,12 @@ import type { Tables } from "@/lib/supabase/types";
 export const ACTIVE_CHILD_COOKIE = "el_active_child";
 
 export const getSessionUser = cache(async () => {
+  // Unconfigured deployment: nobody can be signed in (the root layout shows the setup
+  // screen). Reading cookies keeps the route dynamic either way.
+  if (!isSupabaseConfigured()) {
+    await cookies();
+    return null;
+  }
   const supabase = await createClient();
   const {
     data: { user },

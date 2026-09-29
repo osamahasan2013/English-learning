@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { DISPLAY_PREFERENCES_SCRIPT } from "@/components/layout/display-preferences";
 import { ServiceWorkerRegistration } from "@/components/layout/service-worker-registration";
+import { SetupRequired } from "@/components/layout/setup-required";
+import { publicConfigurationProblems } from "@/lib/env";
 import { APP_NAME, APP_SHORT_NAME } from "@/lib/app-info";
 import "./globals.css";
 
@@ -20,6 +22,7 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const configurationProblems = publicConfigurationProblems();
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -27,7 +30,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <script dangerouslySetInnerHTML={{ __html: DISPLAY_PREFERENCES_SCRIPT }} />
       </head>
       <body className="min-h-dvh antialiased">
-        {children}
+        <a
+          href="#main"
+          className="bg-primary text-primary-foreground sr-only z-50 rounded-xl px-4 py-3 font-semibold focus:not-sr-only focus:fixed focus:top-3 focus:left-3"
+        >
+          Skip to content
+        </a>
+        {configurationProblems.length > 0 ? <SetupRequired problems={configurationProblems} /> : children}
         <ServiceWorkerRegistration />
       </body>
     </html>

@@ -5,6 +5,7 @@ import { ActivityChart } from "@/components/parent/activity-chart";
 import { EnterChildModeButton } from "@/components/parent/enter-child-mode-button";
 import { SkillBadge } from "@/components/parent/skill-badge";
 import { Card, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { getProfile } from "@/lib/auth/session";
 import { avatarEmoji } from "@/lib/avatars";
@@ -137,7 +138,9 @@ export default async function DashboardPage(props: PageProps<"/parent/dashboard"
         <Card className="space-y-4 lg:col-span-2">
           <CardTitle>Skills</CardTitle>
           {progress.skills.length === 0 ? (
-            <p className="text-muted">No skills practised yet.</p>
+            <EmptyState icon="🧩" title="No skills practised yet">
+              Skills appear after the first lesson.
+            </EmptyState>
           ) : (
             <ul className="divide-border divide-y">
               {progress.skills.map((s) => (
@@ -164,7 +167,7 @@ export default async function DashboardPage(props: PageProps<"/parent/dashboard"
           <Card className="space-y-3">
             <CardTitle>Accuracy by area</CardTitle>
             {progress.accuracyByDimension.length === 0 ? (
-              <p className="text-muted">No answers yet.</p>
+              <EmptyState title="No answers yet" />
             ) : (
               <ul className="space-y-3">
                 {progress.accuracyByDimension.map((d) => (
@@ -208,7 +211,7 @@ export default async function DashboardPage(props: PageProps<"/parent/dashboard"
         <Card className="space-y-3">
           <CardTitle>Recent lessons</CardTitle>
           {progress.recentRuns.length === 0 ? (
-            <p className="text-muted">No lessons yet.</p>
+            <EmptyState icon="📘" title="No lessons yet" />
           ) : (
             <ul className="divide-border divide-y">
               {progress.recentRuns.map((r) => (
@@ -240,7 +243,9 @@ export default async function DashboardPage(props: PageProps<"/parent/dashboard"
         <Card className="space-y-3">
           <CardTitle>Achievements</CardTitle>
           {progress.achievements.length === 0 ? (
-            <p className="text-muted">Badges appear here as {child.name} earns them.</p>
+            <EmptyState icon="🏅" title="No badges yet">
+              Badges appear here as {child.name} earns them.
+            </EmptyState>
           ) : (
             <ul className="flex flex-wrap gap-2">
               {progress.achievements.map((a) => (

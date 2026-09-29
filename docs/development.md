@@ -57,6 +57,14 @@ PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/
 E2E_PROD=1 npm run e2e    # after build: also runs the PWA/offline test against `next start`
 ```
 
+`npm run check` runs typecheck, lint, format check and unit tests in one go. CI
+(`.github/workflows/english-learning.yml`) runs those plus a production build without
+credentials.
+
+The PWA test starts its own production server on port 3200 and kills it to simulate being
+offline: Playwright's `setOffline()` does not reliably block requests made by the service
+worker itself, so it cannot prove a page came from the cache.
+
 ## Schema changes
 
 Add a new migration file (timestamped), include explicit grants and RLS, run

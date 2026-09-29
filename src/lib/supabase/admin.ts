@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
-import { getServerEnv, publicEnv } from "@/lib/env";
+import { getPublicEnv, getServerEnv } from "@/lib/env";
 import type { Database } from "@/lib/supabase/types";
 
 // Service-role client: bypasses RLS. Used only by the progress writer
@@ -12,7 +12,7 @@ let adminClient: ReturnType<typeof createClient<Database>> | null = null;
 
 export function createAdminClient() {
   adminClient ??= createClient<Database>(
-    publicEnv.NEXT_PUBLIC_SUPABASE_URL,
+    getPublicEnv().NEXT_PUBLIC_SUPABASE_URL,
     getServerEnv().SUPABASE_SERVICE_ROLE_KEY,
     {
       auth: { persistSession: false, autoRefreshToken: false },

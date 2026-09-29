@@ -3,6 +3,7 @@ import Link from "next/link";
 import { EnterChildModeButton } from "@/components/parent/enter-child-mode-button";
 import { buttonClasses } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { avatarEmoji } from "@/lib/avatars";
 import { listChildren } from "@/lib/server/family-data";
 import { ageFromDateOfBirth } from "@/lib/utils";
@@ -21,7 +22,17 @@ export default async function ChildrenPage() {
       </div>
       {children.length === 0 ? (
         <Card>
-          <p>No children yet.</p>
+          <EmptyState
+            icon="👨‍👩‍👧"
+            title="No children yet"
+            action={
+              <Link href="/parent/children/new" className={buttonClasses("primary", "md")}>
+                Add a child
+              </Link>
+            }
+          >
+            Each child gets their own profile, lessons and progress.
+          </EmptyState>
         </Card>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

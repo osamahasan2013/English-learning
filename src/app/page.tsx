@@ -8,7 +8,7 @@ export default async function HomePage() {
   if (await getSessionUser()) redirect("/parent/dashboard");
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-3xl flex-col justify-center gap-8 px-4 py-12">
+    <main id="main" className="mx-auto flex min-h-dvh max-w-3xl flex-col justify-center gap-8 px-4 py-12">
       <div className="text-7xl" aria-hidden>
         🌱📚🦉
       </div>

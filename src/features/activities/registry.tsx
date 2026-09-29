@@ -12,11 +12,12 @@ import { WordBuilderRenderer } from "./renderers/word-builder";
 
 // Activity type → renderer. The lesson player looks the step's type up here; adding a new
 // activity type means adding one entry (plus its schema and evaluator), not a new page.
+// Each renderer narrows RendererProps to its own question type; the registry holds them
+// uniformly and the lesson player only passes a step to the renderer of its type.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const ACTIVITY_RENDERERS: Record<
-  (typeof RENDERABLE_QUESTION_TYPES)[number],
-  ComponentType<RendererProps<any>>
-> = {
+type AnyRenderer = ComponentType<RendererProps<any>>;
+
+export const ACTIVITY_RENDERERS: Record<(typeof RENDERABLE_QUESTION_TYPES)[number], AnyRenderer> = {
   INTRO: IntroRenderer,
   MULTIPLE_CHOICE: ChoiceRenderer,
   LISTEN_AND_CHOOSE: ChoiceRenderer,
