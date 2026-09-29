@@ -34,11 +34,9 @@ const childSchema = z.object({
       },
     ),
   gradeLevelId: z.string().uuid("Choose a grade."),
-  dailyMinutes: z.coerce
-    .number()
-    .refine((n) => (DAILY_MINUTE_OPTIONS as readonly number[]).includes(n), {
-      message: "Choose a daily time.",
-    }),
+  dailyMinutes: z.coerce.number().refine((n) => (DAILY_MINUTE_OPTIONS as readonly number[]).includes(n), {
+    message: "Choose a daily time.",
+  }),
 });
 
 function readForm(formData: FormData) {

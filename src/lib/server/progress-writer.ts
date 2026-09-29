@@ -204,18 +204,16 @@ async function storeLessonRuns(
       { onConflict: "id", ignoreDuplicates: true },
     );
     if (insertError) throw insertError;
-    const { error: rewardError } = await db
-      .from("reward_events")
-      .upsert(
-        {
-          child_id: childId,
-          source_type: "lesson_run",
-          source_id: run.id,
-          points: score.points,
-          stars: score.stars,
-        },
-        { onConflict: "child_id,source_type,source_id", ignoreDuplicates: true },
-      );
+    const { error: rewardError } = await db.from("reward_events").upsert(
+      {
+        child_id: childId,
+        source_type: "lesson_run",
+        source_id: run.id,
+        points: score.points,
+        stars: score.stars,
+      },
+      { onConflict: "child_id,source_type,source_id", ignoreDuplicates: true },
+    );
     if (rewardError) throw rewardError;
     results.set(run.id, { id: run.id, status: "stored" });
     lessonIds.add(lesson.id);

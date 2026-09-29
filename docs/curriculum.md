@@ -5,13 +5,13 @@ system; levels, scope and order can be changed by editing `content/` and re-impo
 
 ## Levels
 
-| Level | Ages | Focus |
-|---|---|---|
-| KG1 | 3–4 | Letter shapes and main sounds, listening, picture words |
-| KG2 | 4–5 | Short vowels, blending CVC words, first sight words, short sentences |
-| KG3 | 5–6 | Consonant digraphs (sh, ch, th, wh, ck, ng), tricky words, simple paragraphs |
-| Grade 1 | 6–7 | Vowel teams (ee, ea, ai/ay, oa, ow, …), longer sentences and stories |
-| Grade 2 | 7–8 | R-controlled vowels, endings (-ing, -ed, -s/-es), suffixes, multisyllabic words |
+| Level   | Ages | Focus                                                                           |
+| ------- | ---- | ------------------------------------------------------------------------------- |
+| KG1     | 3–4  | Letter shapes and main sounds, listening, picture words                         |
+| KG2     | 4–5  | Short vowels, blending CVC words, first sight words, short sentences            |
+| KG3     | 5–6  | Consonant digraphs (sh, ch, th, wh, ck, ng), tricky words, simple paragraphs    |
+| Grade 1 | 6–7  | Vowel teams (ee, ea, ai/ay, oa, ow, …), longer sentences and stories            |
+| Grade 2 | 7–8  | R-controlled vowels, endings (-ing, -ed, -s/-es), suffixes, multisyllabic words |
 
 Each concept follows **explanation → demonstration → guided practice → independent
 practice → feedback → review**, recorded as the activity `stage`.
@@ -36,14 +36,14 @@ shoe…) are flagged `is_irregular` with a `spelling_note` that explains the exc
 
 Files in `content/`:
 
-| File | Contains |
-|---|---|
-| `reference.json` | levels, subjects, skill dimensions, activity types, word categories, achievements |
-| `phonics.json` | patterns and their sounds |
-| `words/*.csv` | the word bank (same format as bulk imports, below) |
-| `sight-words.json`, `sentences.json`, `stories.json` | lists by level |
-| `curriculum/*.json` | one file per level: units → skills → lessons → activities → questions |
-| `assessments.json` | assessments by stage |
+| File                                                 | Contains                                                                          |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `reference.json`                                     | levels, subjects, skill dimensions, activity types, word categories, achievements |
+| `phonics.json`                                       | patterns and their sounds                                                         |
+| `words/*.csv`                                        | the word bank (same format as bulk imports, below)                                |
+| `sight-words.json`, `sentences.json`, `stories.json` | lists by level                                                                    |
+| `curriculum/*.json`                                  | one file per level: units → skills → lessons → activities → questions             |
+| `assessments.json`                                   | assessments by stage                                                              |
 
 Run `npm run content:import -- --dry-run` to validate, then `npm run content:import`.
 `npm test` also validates every shipped file without a database.
@@ -53,20 +53,20 @@ Run `npm run content:import -- --dry-run` to validate, then `npm run content:imp
 Questions can be written in full (`type`, `content`, `answer`) or as templates the importer
 expands from the word bank, so pictures, meanings and sounds come from one place:
 
-| Template | Produces | Parameters |
-|---|---|---|
-| `pattern_intro` | INTRO card for a pattern with its sounds and examples | `pattern`, `examples`, optional `body`, `speech` |
-| `word_intro` | INTRO card for a word | `word`, optional `body` |
-| `listen_pick_picture` | Hear a word, tap its picture | `word`, `distractors` |
-| `listen_pick_word` | Hear a word, tap it written | `word`, `distractors` |
-| `pick_starting_sound` | Which picture starts with this sound? | `pattern`, `word`, `distractors` |
-| `find_letter` | Find a letter among look-alikes | `pattern`, `distractors`, `case` |
-| `pick_word_with_pattern` | Which word has this pattern/sound? | `pattern`, `word`, `distractors`, optional `sound`, `pictures` |
-| `pick_pattern_sound` | Which sound does the pattern make in this word? | `pattern`, `word` |
-| `missing_pattern` | Fill the gap | `word`, `missing`, `choices` |
-| `build_word` | Build from sound tiles (blending) | `word`, optional `chunks`, `extra`, `demonstrate` |
-| `order_sentence` | Put words in order | `sentence`, optional `emoji` |
-| `spell_word` | Type the word you hear | `word` |
+| Template                 | Produces                                              | Parameters                                                     |
+| ------------------------ | ----------------------------------------------------- | -------------------------------------------------------------- |
+| `pattern_intro`          | INTRO card for a pattern with its sounds and examples | `pattern`, `examples`, optional `body`, `speech`               |
+| `word_intro`             | INTRO card for a word                                 | `word`, optional `body`                                        |
+| `listen_pick_picture`    | Hear a word, tap its picture                          | `word`, `distractors`                                          |
+| `listen_pick_word`       | Hear a word, tap it written                           | `word`, `distractors`                                          |
+| `pick_starting_sound`    | Which picture starts with this sound?                 | `pattern`, `word`, `distractors`                               |
+| `find_letter`            | Find a letter among look-alikes                       | `pattern`, `distractors`, `case`                               |
+| `pick_word_with_pattern` | Which word has this pattern/sound?                    | `pattern`, `word`, `distractors`, optional `sound`, `pictures` |
+| `pick_pattern_sound`     | Which sound does the pattern make in this word?       | `pattern`, `word`                                              |
+| `missing_pattern`        | Fill the gap                                          | `word`, `missing`, `choices`                                   |
+| `build_word`             | Build from sound tiles (blending)                     | `word`, optional `chunks`, `extra`, `demonstrate`              |
+| `order_sentence`         | Put words in order                                    | `sentence`, optional `emoji`                                   |
+| `spell_word`             | Type the word you hear                                | `word`                                                         |
 
 Question/activity codes default to `<lesson>-a<n>-q<n>`; give explicit `code`s if you
 reorder questions and want history to stay attached to the same question.

@@ -1,0 +1,9 @@
+# Generated or data files that should keep their own formatting.
+public/sw.js
+public/sw.js.map
+src/lib/supabase/types.ts
+content/
+.next/
+node_modules/
+playwright-report/
+test-results/
