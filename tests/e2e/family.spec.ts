@@ -37,7 +37,19 @@ test("a parent edits a child's grade and level, and removes a child", async ({ p
   await registerParent(page);
   const mia = await addChild(page, "Mia", /Kindergarten 1/);
   await page.goto("/parent/children/new");
-  await addChild(page, "Leo", /Kindergarten 2/);
+  const leo = await addChild(page, "Leo", /Kindergarten 2/);
+
+  // What Leo's profile looks like before Mia is edited.
+  const leoProfile = async () => {
+    await page.goto(`/parent/children/${leo}`);
+    return {
+      name: await page.getByLabel("Child's first name or nickname").inputValue(),
+      grade: await page.getByLabel("School grade").locator("option:checked").textContent(),
+      level: await page.getByLabel("Learning level").locator("option:checked").textContent(),
+    };
+  };
+  const leoBefore = await leoProfile();
+  expect(leoBefore).toMatchObject({ name: "Leo", grade: expect.stringMatching(/Kindergarten 2/) });
 
   await page.goto(`/parent/children/${mia}`);
   await page.getByLabel("Child's first name or nickname").fill("Mia Rose");
@@ -46,6 +58,9 @@ test("a parent edits a child's grade and level, and removes a child", async ({ p
   await page.getByRole("button", { name: "Save changes" }).click();
   await expect(page).toHaveURL(new RegExp(`/parent/dashboard\\?child=${mia}`));
   await expect(page.getByText(/Kindergarten 3 · learning at Kindergarten 2/)).toBeVisible();
+
+  // Editing Mia changed nothing about Leo.
+  expect(await leoProfile()).toEqual(leoBefore);
 
   await page.goto(`/parent/children/${mia}`);
   await page.getByRole("button", { name: /Remove Mia Rose/ }).click();

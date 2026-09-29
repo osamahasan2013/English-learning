@@ -92,7 +92,11 @@ describe("families and children (RLS through PostgREST)", () => {
     expect(forge.error?.code).toBe("42501");
   });
 
-  it("a parent edits their own child's grade and learning level", async () => {
+  it("a parent edits their own child's grade and learning level, leaving siblings untouched", async () => {
+    const sibling = () => a.client.from("children").select("*").eq("id", childA2).single();
+    const before = await sibling();
+    expect(before.error).toBeNull();
+
     const { data, error } = await a.client
       .from("children")
       .update({ grade_level_id: grade1, current_level_id: kg1, daily_minutes: 30 })
@@ -101,6 +105,8 @@ describe("families and children (RLS through PostgREST)", () => {
       .single();
     expect(error).toBeNull();
     expect(data).toEqual({ grade_level_id: grade1, current_level_id: kg1, daily_minutes: 30 });
+
+    expect((await sibling()).data).toEqual(before.data);
   });
 
   it("rejects invalid values at the database, not just in the app", async () => {

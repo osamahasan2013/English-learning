@@ -7,8 +7,22 @@ test("a parent registers, logs out, and logs back in", async ({ page }) => {
   const email = await registerParent(page, "Nadia");
   await addChild(page, "Mia", /Kindergarten 2/);
 
+  // The session survives a reload and is shared with a new tab.
+  await page.reload();
+  await expect(page).toHaveURL(/\/parent\/dashboard/);
+  await expect(page.getByRole("heading", { level: 1, name: "Mia" })).toBeVisible();
+  const tab = await page.context().newPage();
+  await tab.goto("/parent/children");
+  await expect(tab).toHaveURL(/\/parent\/children$/);
+  await expect(tab.getByRole("heading", { name: "Mia" })).toBeVisible();
+
   await page.getByRole("button", { name: "Log out" }).click();
   await expect(page).toHaveURL("/");
+
+  // Logging out ends the session everywhere, including the other tab.
+  await tab.reload();
+  await expect(tab).toHaveURL(/\/login\?next=%2Fparent%2Fchildren/);
+  await tab.close();
 
   // Protected pages now send the visitor to log in, remembering where they were going.
   await page.goto("/parent/children");
