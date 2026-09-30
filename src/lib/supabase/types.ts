@@ -134,6 +134,8 @@ export type Database = {
           response_time_ms: number;
           attempted_at: string;
           received_at: string;
+          score: number;
+          learning_session_id: string | null;
         };
         Insert: {
           id: string;
@@ -155,6 +157,8 @@ export type Database = {
           response_time_ms: number;
           attempted_at: string;
           received_at?: string;
+          score?: number;
+          learning_session_id?: string | null;
         };
         Update: {
           id?: string;
@@ -176,6 +180,8 @@ export type Database = {
           response_time_ms?: number;
           attempted_at?: string;
           received_at?: string;
+          score?: number;
+          learning_session_id?: string | null;
         };
         Relationships: [
           {
@@ -197,6 +203,13 @@ export type Database = {
             columns: ["child_id"];
             isOneToOne: false;
             referencedRelation: "children";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "activity_attempts_learning_session_id_fkey";
+            columns: ["learning_session_id"];
+            isOneToOne: false;
+            referencedRelation: "learning_sessions";
             referencedColumns: ["id"];
           },
           {
@@ -232,6 +245,79 @@ export type Database = {
             columns: ["word_id"];
             isOneToOne: false;
             referencedRelation: "words";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      activity_progress: {
+        Row: {
+          child_id: string;
+          activity_id: string;
+          lesson_id: string;
+          status: Database["public"]["Enums"]["progress_status"];
+          questions_total: number;
+          questions_answered: number;
+          attempts: number;
+          correct_attempts: number;
+          accuracy: number;
+          score: number;
+          started_at: string | null;
+          last_attempt_at: string | null;
+          completed_at: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          child_id: string;
+          activity_id: string;
+          lesson_id: string;
+          status?: Database["public"]["Enums"]["progress_status"];
+          questions_total?: number;
+          questions_answered?: number;
+          attempts?: number;
+          correct_attempts?: number;
+          accuracy?: number;
+          score?: number;
+          started_at?: string | null;
+          last_attempt_at?: string | null;
+          completed_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          child_id?: string;
+          activity_id?: string;
+          lesson_id?: string;
+          status?: Database["public"]["Enums"]["progress_status"];
+          questions_total?: number;
+          questions_answered?: number;
+          attempts?: number;
+          correct_attempts?: number;
+          accuracy?: number;
+          score?: number;
+          started_at?: string | null;
+          last_attempt_at?: string | null;
+          completed_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "activity_progress_activity_id_fkey";
+            columns: ["activity_id"];
+            isOneToOne: false;
+            referencedRelation: "activities";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "activity_progress_child_id_fkey";
+            columns: ["child_id"];
+            isOneToOne: false;
+            referencedRelation: "children";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "activity_progress_lesson_id_fkey";
+            columns: ["lesson_id"];
+            isOneToOne: false;
+            referencedRelation: "lessons";
             referencedColumns: ["id"];
           },
         ];
@@ -604,6 +690,47 @@ export type Database = {
           },
         ];
       };
+      feedback_messages: {
+        Row: {
+          id: string;
+          code: string;
+          kind: string;
+          text: string;
+          speech: string;
+          emoji: string;
+          sort_order: number;
+          status: Database["public"]["Enums"]["content_status"];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          code: string;
+          kind: string;
+          text: string;
+          speech?: string;
+          emoji?: string;
+          sort_order?: number;
+          status?: Database["public"]["Enums"]["content_status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          code?: string;
+          kind?: string;
+          text?: string;
+          speech?: string;
+          emoji?: string;
+          sort_order?: number;
+          status?: Database["public"]["Enums"]["content_status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+
+        ];
+      };
       image_assets: {
         Row: {
           id: string;
@@ -645,6 +772,118 @@ export type Database = {
 
         ];
       };
+      learning_rules: {
+        Row: {
+          code: string;
+          description: string;
+          config: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          code: string;
+          description?: string;
+          config?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          code?: string;
+          description?: string;
+          config?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+
+        ];
+      };
+      learning_sessions: {
+        Row: {
+          id: string;
+          child_id: string;
+          started_at: string;
+          ended_at: string;
+          duration_seconds: number;
+          lessons_completed: number;
+          activities_completed: number;
+          attempts: number;
+          correct_attempts: number;
+          score: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id: string;
+          child_id: string;
+          started_at: string;
+          ended_at: string;
+          duration_seconds: number;
+          lessons_completed?: number;
+          activities_completed?: number;
+          attempts?: number;
+          correct_attempts?: number;
+          score?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          child_id?: string;
+          started_at?: string;
+          ended_at?: string;
+          duration_seconds?: number;
+          lessons_completed?: number;
+          activities_completed?: number;
+          attempts?: number;
+          correct_attempts?: number;
+          score?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "learning_sessions_child_id_fkey";
+            columns: ["child_id"];
+            isOneToOne: false;
+            referencedRelation: "children";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      lesson_prerequisites: {
+        Row: {
+          lesson_id: string;
+          prerequisite_lesson_id: string;
+          created_at: string;
+        };
+        Insert: {
+          lesson_id: string;
+          prerequisite_lesson_id: string;
+          created_at?: string;
+        };
+        Update: {
+          lesson_id?: string;
+          prerequisite_lesson_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lesson_prerequisites_lesson_id_fkey";
+            columns: ["lesson_id"];
+            isOneToOne: false;
+            referencedRelation: "lessons";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lesson_prerequisites_prerequisite_lesson_id_fkey";
+            columns: ["prerequisite_lesson_id"];
+            isOneToOne: false;
+            referencedRelation: "lessons";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       lesson_progress: {
         Row: {
           child_id: string;
@@ -653,9 +892,17 @@ export type Database = {
           best_score: number;
           last_score: number;
           best_stars: number;
-          first_completed_at: string | null;
+          completed_at: string | null;
           last_completed_at: string | null;
           updated_at: string;
+          status: Database["public"]["Enums"]["progress_status"];
+          started_at: string | null;
+          attempts: number;
+          correct_attempts: number;
+          accuracy: number;
+          activities_total: number;
+          activities_completed: number;
+          last_attempt_at: string | null;
         };
         Insert: {
           child_id: string;
@@ -664,9 +911,17 @@ export type Database = {
           best_score?: number;
           last_score?: number;
           best_stars?: number;
-          first_completed_at?: string | null;
+          completed_at?: string | null;
           last_completed_at?: string | null;
           updated_at?: string;
+          status?: Database["public"]["Enums"]["progress_status"];
+          started_at?: string | null;
+          attempts?: number;
+          correct_attempts?: number;
+          accuracy?: number;
+          activities_total?: number;
+          activities_completed?: number;
+          last_attempt_at?: string | null;
         };
         Update: {
           child_id?: string;
@@ -675,9 +930,17 @@ export type Database = {
           best_score?: number;
           last_score?: number;
           best_stars?: number;
-          first_completed_at?: string | null;
+          completed_at?: string | null;
           last_completed_at?: string | null;
           updated_at?: string;
+          status?: Database["public"]["Enums"]["progress_status"];
+          started_at?: string | null;
+          attempts?: number;
+          correct_attempts?: number;
+          accuracy?: number;
+          activities_total?: number;
+          activities_completed?: number;
+          last_attempt_at?: string | null;
         };
         Relationships: [
           {
@@ -710,6 +973,7 @@ export type Database = {
           score_percent: number;
           stars: number;
           received_at: string;
+          learning_session_id: string | null;
         };
         Insert: {
           id: string;
@@ -724,6 +988,7 @@ export type Database = {
           score_percent: number;
           stars: number;
           received_at?: string;
+          learning_session_id?: string | null;
         };
         Update: {
           id?: string;
@@ -738,6 +1003,7 @@ export type Database = {
           score_percent?: number;
           stars?: number;
           received_at?: string;
+          learning_session_id?: string | null;
         };
         Relationships: [
           {
@@ -745,6 +1011,13 @@ export type Database = {
             columns: ["child_id"];
             isOneToOne: false;
             referencedRelation: "children";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lesson_runs_learning_session_id_fkey";
+            columns: ["learning_session_id"];
+            isOneToOne: false;
+            referencedRelation: "learning_sessions";
             referencedColumns: ["id"];
           },
           {
@@ -771,6 +1044,10 @@ export type Database = {
           status: Database["public"]["Enums"]["content_status"];
           created_at: string;
           updated_at: string;
+          difficulty: number;
+          intro_speech: string;
+          intro_audio_id: string | null;
+          thumbnail_image_id: string | null;
         };
         Insert: {
           id?: string;
@@ -786,6 +1063,10 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          difficulty?: number;
+          intro_speech?: string;
+          intro_audio_id?: string | null;
+          thumbnail_image_id?: string | null;
         };
         Update: {
           id?: string;
@@ -801,13 +1082,100 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          difficulty?: number;
+          intro_speech?: string;
+          intro_audio_id?: string | null;
+          thumbnail_image_id?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "lessons_intro_audio_id_fkey";
+            columns: ["intro_audio_id"];
+            isOneToOne: false;
+            referencedRelation: "audio_assets";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "lessons_skill_id_fkey";
             columns: ["skill_id"];
             isOneToOne: false;
             referencedRelation: "skills";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lessons_thumbnail_image_id_fkey";
+            columns: ["thumbnail_image_id"];
+            isOneToOne: false;
+            referencedRelation: "image_assets";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      level_progress: {
+        Row: {
+          child_id: string;
+          level_id: string;
+          status: Database["public"]["Enums"]["progress_status"];
+          lessons_total: number;
+          lessons_completed: number;
+          skills_total: number;
+          skills_mastered: number;
+          attempts: number;
+          correct_attempts: number;
+          accuracy: number;
+          score: number;
+          started_at: string | null;
+          last_attempt_at: string | null;
+          completed_at: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          child_id: string;
+          level_id: string;
+          status?: Database["public"]["Enums"]["progress_status"];
+          lessons_total?: number;
+          lessons_completed?: number;
+          skills_total?: number;
+          skills_mastered?: number;
+          attempts?: number;
+          correct_attempts?: number;
+          accuracy?: number;
+          score?: number;
+          started_at?: string | null;
+          last_attempt_at?: string | null;
+          completed_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          child_id?: string;
+          level_id?: string;
+          status?: Database["public"]["Enums"]["progress_status"];
+          lessons_total?: number;
+          lessons_completed?: number;
+          skills_total?: number;
+          skills_mastered?: number;
+          attempts?: number;
+          correct_attempts?: number;
+          accuracy?: number;
+          score?: number;
+          started_at?: string | null;
+          last_attempt_at?: string | null;
+          completed_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "level_progress_child_id_fkey";
+            columns: ["child_id"];
+            isOneToOne: false;
+            referencedRelation: "children";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "level_progress_level_id_fkey";
+            columns: ["level_id"];
+            isOneToOne: false;
+            referencedRelation: "levels";
             referencedColumns: ["id"];
           },
         ];
@@ -1056,6 +1424,10 @@ export type Database = {
           status: Database["public"]["Enums"]["content_status"];
           created_at: string;
           updated_at: string;
+          explanation: string;
+          audio_id: string | null;
+          image_id: string | null;
+          metadata: Json;
         };
         Insert: {
           id?: string;
@@ -1077,6 +1449,10 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          explanation?: string;
+          audio_id?: string | null;
+          image_id?: string | null;
+          metadata?: Json;
         };
         Update: {
           id?: string;
@@ -1098,6 +1474,10 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          explanation?: string;
+          audio_id?: string | null;
+          image_id?: string | null;
+          metadata?: Json;
         };
         Relationships: [
           {
@@ -1105,6 +1485,20 @@ export type Database = {
             columns: ["activity_id"];
             isOneToOne: false;
             referencedRelation: "activities";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "questions_audio_id_fkey";
+            columns: ["audio_id"];
+            isOneToOne: false;
+            referencedRelation: "audio_assets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "questions_image_id_fkey";
+            columns: ["image_id"];
+            isOneToOne: false;
+            referencedRelation: "image_assets";
             referencedColumns: ["id"];
           },
           {
@@ -1144,6 +1538,93 @@ export type Database = {
           },
           {
             foreignKeyName: "questions_word_id_fkey";
+            columns: ["word_id"];
+            isOneToOne: false;
+            referencedRelation: "words";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      review_items: {
+        Row: {
+          id: string;
+          child_id: string;
+          item_key: string;
+          skill_id: string | null;
+          word_id: string | null;
+          phonics_pattern_id: string | null;
+          lesson_id: string | null;
+          priority: number;
+          due_at: string;
+          reason: string;
+          status: string;
+          resolved_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          child_id: string;
+          item_key: string;
+          skill_id?: string | null;
+          word_id?: string | null;
+          phonics_pattern_id?: string | null;
+          lesson_id?: string | null;
+          priority?: number;
+          due_at: string;
+          reason: string;
+          status?: string;
+          resolved_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          child_id?: string;
+          item_key?: string;
+          skill_id?: string | null;
+          word_id?: string | null;
+          phonics_pattern_id?: string | null;
+          lesson_id?: string | null;
+          priority?: number;
+          due_at?: string;
+          reason?: string;
+          status?: string;
+          resolved_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "review_items_child_id_fkey";
+            columns: ["child_id"];
+            isOneToOne: false;
+            referencedRelation: "children";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "review_items_lesson_id_fkey";
+            columns: ["lesson_id"];
+            isOneToOne: false;
+            referencedRelation: "lessons";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "review_items_phonics_pattern_id_fkey";
+            columns: ["phonics_pattern_id"];
+            isOneToOne: false;
+            referencedRelation: "phonics_patterns";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "review_items_skill_id_fkey";
+            columns: ["skill_id"];
+            isOneToOne: false;
+            referencedRelation: "skills";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "review_items_word_id_fkey";
             columns: ["word_id"];
             isOneToOne: false;
             referencedRelation: "words";
@@ -1396,7 +1877,7 @@ export type Database = {
           accuracy: number;
           recent_accuracy: number;
           attempts: number;
-          correct: number;
+          correct_attempts: number;
           practice_days: number;
           confidence: number;
           review_priority: number;
@@ -1413,7 +1894,7 @@ export type Database = {
           accuracy?: number;
           recent_accuracy?: number;
           attempts?: number;
-          correct?: number;
+          correct_attempts?: number;
           practice_days?: number;
           confidence?: number;
           review_priority?: number;
@@ -1430,7 +1911,7 @@ export type Database = {
           accuracy?: number;
           recent_accuracy?: number;
           attempts?: number;
-          correct?: number;
+          correct_attempts?: number;
           practice_days?: number;
           confidence?: number;
           review_priority?: number;
@@ -1502,6 +1983,8 @@ export type Database = {
           status: Database["public"]["Enums"]["content_status"];
           created_at: string;
           updated_at: string;
+          difficulty: number;
+          is_active: boolean;
         };
         Insert: {
           id?: string;
@@ -1518,6 +2001,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          difficulty?: number;
+          is_active?: boolean;
         };
         Update: {
           id?: string;
@@ -1534,6 +2019,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          difficulty?: number;
+          is_active?: boolean;
         };
         Relationships: [
           {
@@ -1617,6 +2104,79 @@ export type Database = {
             columns: ["level_id"];
             isOneToOne: false;
             referencedRelation: "levels";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      subject_progress: {
+        Row: {
+          child_id: string;
+          level_id: string;
+          subject_id: string;
+          status: Database["public"]["Enums"]["progress_status"];
+          lessons_total: number;
+          lessons_completed: number;
+          attempts: number;
+          correct_attempts: number;
+          accuracy: number;
+          score: number;
+          started_at: string | null;
+          last_attempt_at: string | null;
+          completed_at: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          child_id: string;
+          level_id: string;
+          subject_id: string;
+          status?: Database["public"]["Enums"]["progress_status"];
+          lessons_total?: number;
+          lessons_completed?: number;
+          attempts?: number;
+          correct_attempts?: number;
+          accuracy?: number;
+          score?: number;
+          started_at?: string | null;
+          last_attempt_at?: string | null;
+          completed_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          child_id?: string;
+          level_id?: string;
+          subject_id?: string;
+          status?: Database["public"]["Enums"]["progress_status"];
+          lessons_total?: number;
+          lessons_completed?: number;
+          attempts?: number;
+          correct_attempts?: number;
+          accuracy?: number;
+          score?: number;
+          started_at?: string | null;
+          last_attempt_at?: string | null;
+          completed_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "subject_progress_child_id_fkey";
+            columns: ["child_id"];
+            isOneToOne: false;
+            referencedRelation: "children";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "subject_progress_level_id_fkey";
+            columns: ["level_id"];
+            isOneToOne: false;
+            referencedRelation: "levels";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "subject_progress_subject_id_fkey";
+            columns: ["subject_id"];
+            isOneToOne: false;
+            referencedRelation: "subjects";
             referencedColumns: ["id"];
           },
         ];
@@ -1996,7 +2556,42 @@ export type Database = {
         ];
       };
     };
-    Views: { [_ in never]: never };
+    Views: {
+      lesson_catalog: {
+        Row: {
+          lesson_id: string | null;
+          lesson_code: string | null;
+          lesson_title: string | null;
+          lesson_child_title: string | null;
+          lesson_description: string | null;
+          lesson_emoji: string | null;
+          lesson_difficulty: number | null;
+          estimated_minutes: number | null;
+          lesson_order: number | null;
+          skill_id: string | null;
+          skill_code: string | null;
+          skill_title: string | null;
+          skill_child_title: string | null;
+          skill_order: number | null;
+          skill_active: boolean | null;
+          skill_importance: number | null;
+          unit_id: string | null;
+          unit_title: string | null;
+          unit_emoji: string | null;
+          unit_order: number | null;
+          subject_id: string | null;
+          subject_code: string | null;
+          subject_name: string | null;
+          subject_emoji: string | null;
+          subject_order: number | null;
+          level_id: string | null;
+          level_code: string | null;
+          level_name: string | null;
+          level_order: number | null;
+        };
+        Relationships: [];
+      };
+    };
     Functions: {
       archive_child: { Args: { p_child_id: string }; Returns: undefined };
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
@@ -2007,6 +2602,7 @@ export type Database = {
       app_role: "parent" | "admin";
       content_status: "draft" | "published" | "archived";
       mastery_status: "NOT_STARTED" | "LEARNING" | "PRACTICING" | "ALMOST_MASTERED" | "MASTERED";
+      progress_status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
     };
     CompositeTypes: { [_ in never]: never };
   };
@@ -2016,4 +2612,5 @@ type PublicSchema = Database["public"];
 export type Tables<T extends keyof PublicSchema["Tables"]> = PublicSchema["Tables"][T]["Row"];
 export type TablesInsert<T extends keyof PublicSchema["Tables"]> = PublicSchema["Tables"][T]["Insert"];
 export type TablesUpdate<T extends keyof PublicSchema["Tables"]> = PublicSchema["Tables"][T]["Update"];
+export type Views<T extends keyof PublicSchema["Views"]> = PublicSchema["Views"][T]["Row"];
 export type Enums<T extends keyof PublicSchema["Enums"]> = PublicSchema["Enums"][T];

@@ -97,7 +97,12 @@ function one<T>(value: T | T[] | null | undefined): T | null {
 export type ChildProgress = Awaited<ReturnType<typeof loadChildProgress>>;
 
 // Everything the parent dashboard shows for one child.
-export async function loadChildProgress(childId: string, timeZone: string, now = new Date()) {
+export async function loadChildProgress(
+  childId: string,
+  timeZone: string,
+  now = new Date(),
+  levelId: string | null = null,
+) {
   const supabase = await createClient();
   const tz = safeTimeZone(timeZone);
   const since30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString();
@@ -148,6 +153,7 @@ export async function loadChildProgress(childId: string, timeZone: string, now =
     ]);
   for (const r of [runs, runDates, lessonsDone, rewards, wordsSaved, wordsLearned, achievements, results])
     if (r.error) throw r.error;
+  const engine = await loadEngineProgress(childId, levelId);
 
   const runSummaries = (runs.data ?? []).map((r) => ({
     completedAt: r.completed_at,
@@ -177,6 +183,7 @@ export async function loadChildProgress(childId: string, timeZone: string, now =
       now,
     ),
     lessonsCompleted: lessonsDone.count ?? 0,
+    ...engine,
     stars: (rewards.data ?? []).reduce((sum, r) => sum + r.stars, 0),
     points: (rewards.data ?? []).reduce((sum, r) => sum + r.points, 0),
     wordsSaved: wordsSaved.count ?? 0,
@@ -210,6 +217,106 @@ export async function loadChildProgress(childId: string, timeZone: string, now =
       return achievement ? [{ ...achievement, earnedAt: a.earned_at }] : [];
     }),
     assessmentResults: results.data ?? [],
+  };
+}
+
+export type SubjectProgressSummary = {
+  subjectId: string;
+  name: string;
+  emoji: string;
+  status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED";
+  lessonsCompleted: number;
+  lessonsTotal: number;
+  accuracy: number;
+  score: number;
+};
+
+// Progress-engine totals for one child: activities completed, average lesson score,
+// learning time from sessions, and subject/level progress for a level (default: the
+// child's current level). Subjects without stored progress yet are listed at zero.
+export async function loadEngineProgress(childId: string, levelId: string | null = null) {
+  const supabase = await createClient();
+  const level =
+    levelId ??
+    (await supabase.from("children").select("current_level_id").eq("id", childId).maybeSingle()).data
+      ?.current_level_id ??
+    null;
+  const [activitiesDone, scores, sessions, subjects, levelRow, catalog] = await Promise.all([
+    supabase
+      .from("activity_progress")
+      .select("activity_id", { count: "exact", head: true })
+      .eq("child_id", childId)
+      .eq("status", "COMPLETED"),
+    supabase.from("lesson_runs").select("score_percent").eq("child_id", childId),
+    supabase.from("learning_sessions").select("duration_seconds, attempts").eq("child_id", childId),
+    level
+      ? supabase
+          .from("subject_progress")
+          .select("subject_id, status, lessons_completed, lessons_total, accuracy, score")
+          .eq("child_id", childId)
+          .eq("level_id", level)
+      : Promise.resolve({ data: [], error: null }),
+    level
+      ? supabase
+          .from("level_progress")
+          .select("status, lessons_completed, lessons_total, skills_mastered, skills_total, accuracy, score")
+          .eq("child_id", childId)
+          .eq("level_id", level)
+          .maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+    level
+      ? supabase
+          .from("lesson_catalog")
+          .select("lesson_id, skill_id, subject_id, subject_name, subject_emoji, subject_order")
+          .eq("level_id", level)
+          .eq("skill_active", true)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  for (const r of [activitiesDone, scores, sessions, subjects, levelRow, catalog]) if (r.error) throw r.error;
+
+  const stored = new Map((subjects.data ?? []).map((r) => [r.subject_id, r]));
+  const bySubject = new Map<string, SubjectProgressSummary & { order: number }>();
+  for (const l of catalog.data ?? []) {
+    if (!l.subject_id) continue;
+    const entry = bySubject.get(l.subject_id) ?? {
+      subjectId: l.subject_id,
+      name: l.subject_name ?? "",
+      emoji: l.subject_emoji ?? "",
+      order: l.subject_order ?? 0,
+      status: "NOT_STARTED" as const,
+      lessonsCompleted: 0,
+      lessonsTotal: 0,
+      accuracy: 0,
+      score: 0,
+    };
+    entry.lessonsTotal++;
+    bySubject.set(l.subject_id, entry);
+  }
+  for (const entry of bySubject.values()) {
+    const row = stored.get(entry.subjectId);
+    if (!row) continue;
+    entry.status = row.status;
+    entry.lessonsCompleted = row.lessons_completed;
+    entry.accuracy = Number(row.accuracy);
+    entry.score = Number(row.score);
+  }
+  const runScores = (scores.data ?? []).map((r) => Number(r.score_percent));
+  const learningSeconds = (sessions.data ?? []).reduce((n, r) => n + r.duration_seconds, 0);
+  const lessonsTotal = (catalog.data ?? []).length;
+  return {
+    activitiesCompleted: activitiesDone.count ?? 0,
+    averageScore: runScores.length ? Math.round(runScores.reduce((a, b) => a + b, 0) / runScores.length) : 0,
+    learningMinutes: Math.round(learningSeconds / 60),
+    sessionsCount: (sessions.data ?? []).length,
+    subjectProgress: [...bySubject.values()].sort((a, b) => a.order - b.order),
+    levelProgress: {
+      lessonsCompleted: levelRow.data?.lessons_completed ?? 0,
+      lessonsTotal: levelRow.data?.lessons_total ?? lessonsTotal,
+      skillsMastered: levelRow.data?.skills_mastered ?? 0,
+      skillsTotal: levelRow.data?.skills_total ?? new Set((catalog.data ?? []).map((l) => l.skill_id)).size,
+      accuracy: Number(levelRow.data?.accuracy ?? 0),
+      score: Number(levelRow.data?.score ?? 0),
+    },
   };
 }
 
@@ -256,7 +363,7 @@ export async function loadChildHome(child: Tables<"children">, now = new Date())
     : { data: [] };
   const skillIds = (skills ?? []).map((s) => s.id);
 
-  const [lessons, progress, rewards, mastery] = await Promise.all([
+  const [lessons, progress, rewards, mastery, recent] = await Promise.all([
     skillIds.length
       ? supabase
           .from("lessons")
@@ -268,8 +375,14 @@ export async function loadChildHome(child: Tables<"children">, now = new Date())
     supabase.from("lesson_progress").select("lesson_id, runs_count, best_stars").eq("child_id", child.id),
     supabase.from("reward_events").select("stars, points").eq("child_id", child.id),
     loadSkillProgress(child.id),
+    supabase
+      .from("lesson_runs")
+      .select("id, lesson_id, stars, score_percent, completed_at, lessons(title, child_title, emoji)")
+      .eq("child_id", child.id)
+      .order("completed_at", { ascending: false })
+      .limit(3),
   ]);
-  for (const r of [lessons, progress, rewards]) if (r.error) throw r.error;
+  for (const r of [lessons, progress, rewards, recent]) if (r.error) throw r.error;
 
   const progressByLesson = new Map((progress.data ?? []).map((p) => [p.lesson_id, p]));
   const path: PathUnit[] = (units ?? []).map((unit) => {
@@ -348,6 +461,27 @@ export async function loadChildHome(child: Tables<"children">, now = new Date())
     points: (rewards.data ?? []).reduce((sum, r) => sum + r.points, 0),
     lessonsCompleted: allLessons.filter((l) => l.completed).length,
     lessonsTotal: allLessons.length,
+    recentLessons: (recent.data ?? []).map((r) => {
+      const lesson = one(r.lessons);
+      return {
+        id: r.id,
+        lessonId: r.lesson_id,
+        title: lesson?.child_title || lesson?.title || "Lesson",
+        emoji: lesson?.emoji ?? "",
+        stars: r.stars,
+        completedAt: r.completed_at,
+      };
+    }),
+    // The skills of this level with the child's mastery (not started when never practised).
+    skills: (skills ?? []).map((skill) => {
+      const m = mastery.find((x) => x.skillId === skill.id);
+      return {
+        id: skill.id,
+        title: skill.child_title || skill.title,
+        status: m?.status ?? ("NOT_STARTED" as MasteryStatus),
+        masteryScore: m?.masteryScore ?? 0,
+      };
+    }),
   };
 }
 

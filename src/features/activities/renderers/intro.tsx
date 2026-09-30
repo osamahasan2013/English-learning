@@ -2,14 +2,10 @@
 
 import { AudioControls } from "@/components/child/audio-controls";
 import { splitHighlight } from "@/lib/learning/blending";
-import type { IntroContent } from "@/lib/content/question-schemas";
-import type { RendererProps } from "../types";
+import type { QuestionOf, RendererProps } from "../types";
 
 // Explanation / demonstration: the pattern, each of its sounds, and example words.
-export function IntroRenderer({
-  step,
-  speak,
-}: RendererProps<{ type: "INTRO"; content: IntroContent; answer: null }>) {
+export function IntroRenderer({ step, speak }: RendererProps<QuestionOf<"INTRO">>) {
   const { content } = step.question;
   return (
     <div className="flex flex-col items-center gap-6 text-center">

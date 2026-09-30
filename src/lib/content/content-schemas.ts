@@ -62,6 +62,29 @@ export const referenceFileSchema = z.object({
       status,
     }),
   ),
+  // What the lesson player says after an answer and at the end ("{answer}" = the answer).
+  feedback: z
+    .array(
+      z.object({
+        code: slug,
+        kind: z.enum(["CORRECT", "INCORRECT", "TRY_AGAIN", "ALMOST_CORRECT", "COMPLETED"]),
+        text: z.string().min(1).max(120),
+        speech: z.string().max(200).default(""),
+        emoji: z.string().default(""),
+        status,
+      }),
+    )
+    .default([]),
+  // Overrides of the engine rules (src/lib/learning/rules.ts), validated on import.
+  rules: z
+    .array(
+      z.object({
+        code: z.enum(["mastery", "prerequisites", "review", "player", "scoring"]),
+        description: z.string().default(""),
+        config: z.record(z.unknown()),
+      }),
+    )
+    .default([]),
 });
 export type ReferenceFile = z.infer<typeof referenceFileSchema>;
 
@@ -193,6 +216,8 @@ export const rawQuestionSchema = z.object({
   type: z.string(),
   prompt: z.string().max(300).default(""),
   promptSpeech: z.string().max(300).default(""),
+  explanation: z.string().max(300).default(""),
+  metadata: z.record(z.unknown()).default({}),
   content: z.record(z.unknown()).default({}),
   answer: z.record(z.unknown()).nullable().default(null),
   word: z.string().optional(),
@@ -209,6 +234,7 @@ export const templateQuestionSchema = z
     template: z.string(),
     skill: slug.optional(),
     difficulty: difficulty.default(1),
+    explanation: z.string().max(300).default(""),
   })
   .passthrough();
 
@@ -234,6 +260,11 @@ const lessonInputSchema = z.object({
   description: z.string().default(""),
   emoji: z.string().default(""),
   minutes: z.number().int().min(1).max(60).default(5),
+  difficulty: difficulty.default(1),
+  // Read aloud on the lesson's intro screen.
+  introSpeech: z.string().max(400).default(""),
+  // Lessons (by code, any level) to complete first. Skill prerequisites also apply.
+  prerequisites: z.array(slug).default([]),
   status,
   activities: z.array(activityInputSchema).min(1),
 });
@@ -247,6 +278,8 @@ const skillInputSchema = z.object({
   pattern: code.optional(),
   masteryThreshold: z.number().int().min(50).max(100).default(90),
   importance: z.number().int().min(1).max(5).default(3),
+  difficulty: difficulty.default(1),
+  active: z.boolean().default(true),
   prerequisites: z.array(slug).default([]),
   status,
   lessons: z.array(lessonInputSchema).default([]),

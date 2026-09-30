@@ -1,20 +1,20 @@
 "use client";
 
-import type { AcceptedAnswer, MissingLetterContent } from "@/lib/content/question-schemas";
 import { cn } from "@/lib/utils";
-import type { RendererProps } from "../types";
+import type { QuestionOf, RendererProps } from "../types";
 import { PromptHeader } from "./prompt-header";
 
 export function MissingLetterRenderer({
   step,
   phase,
   lastResponse,
+  reveal,
   onAnswer,
   speak,
-}: RendererProps<{ type: "MISSING_LETTER"; content: MissingLetterContent; answer: AcceptedAnswer }>) {
-  const { content, answer } = step.question;
+}: RendererProps<QuestionOf<"MISSING_LETTER">>) {
+  const { content } = step.question;
   const chosen = lastResponse && "value" in lastResponse ? lastResponse.value : null;
-  const filled = phase === "reveal" ? answer.accepted[0] : phase === "correct" ? chosen : null;
+  const filled = phase === "reveal" ? (reveal?.value ?? null) : phase === "correct" ? chosen : null;
   const locked = phase !== "answering";
 
   return (

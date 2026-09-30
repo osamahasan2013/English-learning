@@ -1,35 +1,46 @@
+import { DEFAULT_RULES, type MasteryRules } from "@/lib/learning/rules";
 import type { Enums } from "@/lib/supabase/types";
 
-// Transparent, rule-based skill mastery (V1). Every number here is documented in
+// Transparent, rule-based skill mastery. Every number is a learning rule documented in
 // docs/curriculum.md → "Mastery model", so a parent-facing explanation can quote it.
 // Mastery is always recomputed from the child's stored first-try attempts, never
 // incremented, so it can be rebuilt at any time and a retried sync cannot inflate it.
 
 export type MasteryStatus = Enums<"mastery_status">;
 
-export const MASTERY_RULES = {
-  // Accuracy is judged on the most recent attempts, weighted towards the latest ones.
-  windowSize: 30,
-  recentSize: 10,
-  recentWeight: 0.6,
-  // Repeated evidence required before a skill can be MASTERED: enough attempts, spread
-  // over more than one day. One good session is never enough.
-  masteredMinAttempts: 12,
-  masteredMinPracticeDays: 2,
-  almostScore: 80,
-  almostMinAttempts: 8,
-  practicingScore: 60,
-  practicingMinAttempts: 4,
-  confidenceAttempts: 20,
-  // Days until a skill is due for review, by status.
-  reviewIntervalDays: {
-    NOT_STARTED: 0,
-    LEARNING: 1,
-    PRACTICING: 2,
-    ALMOST_MASTERED: 4,
-    MASTERED: 7,
-  } satisfies Record<MasteryStatus, number>,
-} as const;
+// Status bands, evidence and review intervals come from the learning rules
+// (src/lib/learning/rules.ts; overridable in the learning_rules table).
+export const MASTERY_STATUSES: MasteryStatus[] = [
+  "NOT_STARTED",
+  "LEARNING",
+  "PRACTICING",
+  "ALMOST_MASTERED",
+  "MASTERED",
+];
+
+export function masteryRank(status: MasteryStatus) {
+  return MASTERY_STATUSES.indexOf(status);
+}
+
+// Score → status. `masteryThreshold` is the skill's own bar: a skill can ask for more
+// than the global MASTERED band, never less.
+export function statusForScore(args: {
+  masteryScore: number;
+  attempts: number;
+  practiceDays: number;
+  masteryThreshold: number;
+  rules?: MasteryRules;
+}): MasteryStatus {
+  const rules = args.rules ?? DEFAULT_RULES.mastery;
+  if (args.attempts === 0) return "NOT_STARTED";
+  const masteredAt = Math.max(rules.bands.mastered, args.masteryThreshold);
+  if (args.masteryScore >= masteredAt) {
+    return args.practiceDays >= rules.masteredMinPracticeDays ? "MASTERED" : "ALMOST_MASTERED";
+  }
+  if (args.masteryScore >= rules.bands.almostMastered) return "ALMOST_MASTERED";
+  if (args.masteryScore >= rules.bands.practicing) return "PRACTICING";
+  return "LEARNING";
+}
 
 export type MasteryAttempt = {
   isCorrect: boolean;
@@ -53,7 +64,7 @@ export type MasteryResult = {
   accuracy: number;
   recentAccuracy: number;
   attempts: number;
-  correct: number;
+  correctAttempts: number;
   practiceDays: number;
   confidence: number;
   reviewPriority: number;
@@ -63,15 +74,18 @@ export type MasteryResult = {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export function computeMastery(input: MasteryInput): MasteryResult {
+export function computeMastery(
+  input: MasteryInput,
+  rules: MasteryRules = DEFAULT_RULES.mastery,
+): MasteryResult {
   const sorted = [...input.attempts]
     .map((a) => ({ isCorrect: a.isCorrect, at: new Date(a.attemptedAt) }))
     .sort((a, b) => b.at.getTime() - a.at.getTime());
-  const window = sorted.slice(0, MASTERY_RULES.windowSize);
-  const recent = sorted.slice(0, MASTERY_RULES.recentSize);
+  const window = sorted.slice(0, rules.windowSize);
+  const recent = sorted.slice(0, rules.recentSize);
 
   const attempts = Math.max(input.totalAttempts ?? 0, sorted.length);
-  const correct = Math.max(input.totalCorrect ?? 0, sorted.filter((a) => a.isCorrect).length);
+  const correctAttempts = Math.max(input.totalCorrect ?? 0, sorted.filter((a) => a.isCorrect).length);
 
   if (attempts === 0) {
     return {
@@ -80,7 +94,7 @@ export function computeMastery(input: MasteryInput): MasteryResult {
       accuracy: 0,
       recentAccuracy: 0,
       attempts: 0,
-      correct: 0,
+      correctAttempts: 0,
       practiceDays: 0,
       confidence: 0,
       reviewPriority: 0,
@@ -93,44 +107,33 @@ export function computeMastery(input: MasteryInput): MasteryResult {
     list.length ? list.filter((a) => a.isCorrect).length / list.length : 0;
   const windowAccuracy = ratio(window);
   const recentAccuracy = ratio(recent);
+  const evidence = Math.min(1, window.length / rules.fullEvidenceAttempts);
   const masteryScore = round(
-    100 * (MASTERY_RULES.recentWeight * recentAccuracy + (1 - MASTERY_RULES.recentWeight) * windowAccuracy),
+    100 * evidence * (rules.recentWeight * recentAccuracy + (1 - rules.recentWeight) * windowAccuracy),
   );
   const practiceDays = new Set(window.map((a) => a.at.toISOString().slice(0, 10))).size;
-  const evidence = window.length;
-
-  let status: MasteryStatus;
-  if (
-    masteryScore >= input.masteryThreshold &&
-    evidence >= MASTERY_RULES.masteredMinAttempts &&
-    practiceDays >= MASTERY_RULES.masteredMinPracticeDays
-  ) {
-    status = "MASTERED";
-  } else if (masteryScore >= MASTERY_RULES.almostScore && evidence >= MASTERY_RULES.almostMinAttempts) {
-    status = "ALMOST_MASTERED";
-  } else if (
-    masteryScore >= MASTERY_RULES.practicingScore &&
-    evidence >= MASTERY_RULES.practicingMinAttempts
-  ) {
-    status = "PRACTICING";
-  } else {
-    status = "LEARNING";
-  }
+  const status = statusForScore({
+    masteryScore,
+    attempts,
+    practiceDays,
+    masteryThreshold: input.masteryThreshold,
+    rules,
+  });
 
   const lastPracticedAt = sorted[0].at;
   const lastWasWrong = !sorted[0].isCorrect;
-  const intervalDays = lastWasWrong ? 1 : MASTERY_RULES.reviewIntervalDays[status];
+  const intervalDays = lastWasWrong ? rules.afterMistakeReviewDays : rules.reviewIntervalDays[status];
   const nextReviewAt = new Date(lastPracticedAt.getTime() + intervalDays * DAY_MS);
 
   return {
     status,
     masteryScore,
-    accuracy: round((100 * correct) / attempts),
+    accuracy: round((100 * correctAttempts) / attempts),
     recentAccuracy: round(100 * recentAccuracy),
     attempts,
-    correct,
+    correctAttempts,
     practiceDays,
-    confidence: Math.round(Math.min(1, attempts / MASTERY_RULES.confidenceAttempts) * 1000) / 1000,
+    confidence: Math.round(Math.min(1, attempts / rules.confidenceAttempts) * 1000) / 1000,
     reviewPriority: computeReviewPriority({
       masteryScore,
       recentErrors: sorted.slice(0, 5).filter((a) => !a.isCorrect).length,

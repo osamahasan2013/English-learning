@@ -2,9 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
   computeMastery,
   computeReviewPriority,
-  MASTERY_RULES,
+  statusForScore,
   type MasteryAttempt,
 } from "@/lib/learning/mastery";
+import { DEFAULT_RULES, mergeLearningRules } from "@/lib/learning/rules";
 
 const now = new Date("2026-09-29T12:00:00Z");
 
@@ -27,9 +28,12 @@ describe("computeMastery", () => {
   });
 
   it("never marks one successful attempt as mastered", () => {
+    // One answer is a tenth of the evidence needed: 100% accuracy × 0.1 = 10.
     const result = computeMastery({ ...base, attempts: attempts("1") });
-    expect(result.masteryScore).toBe(100);
+    expect(result.masteryScore).toBe(10);
     expect(result.status).toBe("LEARNING");
+    // Repeated right answers build it up.
+    expect(computeMastery({ ...base, attempts: attempts("11111") }).status).toBe("PRACTICING");
   });
 
   it("requires practice on more than one day before MASTERED", () => {
@@ -80,7 +84,55 @@ describe("computeMastery", () => {
     const result = computeMastery({ ...base, attempts: [...old, ...recent] });
     expect(result.masteryScore).toBe(100);
     expect(result.accuracy).toBeCloseTo((100 * 30) / 80, 1);
-    expect(MASTERY_RULES.windowSize).toBe(30);
+    expect(DEFAULT_RULES.mastery.windowSize).toBe(30);
+  });
+});
+
+describe("mastery status bands", () => {
+  const status = (masteryScore: number, extra: Partial<Parameters<typeof statusForScore>[0]> = {}) =>
+    statusForScore({ masteryScore, attempts: 20, practiceDays: 3, masteryThreshold: 90, ...extra });
+
+  it("maps scores to the default bands 0 / 1–39 / 40–69 / 70–89 / 90+", () => {
+    expect(status(0, { attempts: 0 })).toBe("NOT_STARTED");
+    expect(status(0)).toBe("LEARNING"); // started, but nothing right yet
+    expect(status(1)).toBe("LEARNING");
+    expect(status(39)).toBe("LEARNING");
+    expect(status(40)).toBe("PRACTICING");
+    expect(status(69.99)).toBe("PRACTICING");
+    expect(status(70)).toBe("ALMOST_MASTERED");
+    expect(status(89)).toBe("ALMOST_MASTERED");
+    expect(status(90)).toBe("MASTERED");
+    expect(status(100)).toBe("MASTERED");
+  });
+
+  it("needs practice on more than one day and respects a stricter skill threshold", () => {
+    expect(status(95, { practiceDays: 1 })).toBe("ALMOST_MASTERED");
+    expect(status(92, { masteryThreshold: 95 })).toBe("ALMOST_MASTERED");
+    expect(status(96, { masteryThreshold: 95 })).toBe("MASTERED");
+  });
+
+  it("uses configured bands from the learning rules", () => {
+    const { rules, errors } = mergeLearningRules([
+      { code: "mastery", config: { bands: { practicing: 30, almostMastered: 60, mastered: 80 } } },
+    ]);
+    expect(errors).toEqual([]);
+    expect(status(35, { rules: rules.mastery })).toBe("PRACTICING");
+    expect(status(85, { rules: rules.mastery, masteryThreshold: 50 })).toBe("MASTERED");
+  });
+
+  it("is 100% only with enough evidence and 0% when every answer is wrong", () => {
+    const perfect = computeMastery({
+      ...base,
+      attempts: [...attempts("11111", "2026-09-28"), ...attempts("11111", "2026-09-29")],
+    });
+    expect(perfect).toMatchObject({
+      masteryScore: 100,
+      accuracy: 100,
+      status: "MASTERED",
+      correctAttempts: 10,
+    });
+    const zero = computeMastery({ ...base, attempts: attempts("0000000000") });
+    expect(zero).toMatchObject({ masteryScore: 0, accuracy: 0, status: "LEARNING", attempts: 10 });
   });
 });
 

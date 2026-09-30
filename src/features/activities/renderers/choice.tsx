@@ -1,15 +1,10 @@
 "use client";
 
-import type { AcceptedAnswer, ChoiceContent } from "@/lib/content/question-schemas";
 import { cn } from "@/lib/utils";
-import type { RendererProps } from "../types";
+import type { QuestionOf, RendererProps } from "../types";
 import { PromptHeader } from "./prompt-header";
 
-type ChoiceQuestion = {
-  type: "MULTIPLE_CHOICE" | "LISTEN_AND_CHOOSE" | "PICTURE_MATCH";
-  content: ChoiceContent;
-  answer: AcceptedAnswer;
-};
+type ChoiceQuestion = QuestionOf<"MULTIPLE_CHOICE" | "LISTEN_AND_CHOOSE" | "PICTURE_MATCH" | "READING">;
 
 // Multiple choice, listen-and-choose and picture match share one renderer; they differ
 // only in content (pictures, hidden labels, a spoken prompt).
@@ -17,10 +12,11 @@ export function ChoiceRenderer({
   step,
   phase,
   lastResponse,
+  reveal,
   onAnswer,
   speak,
 }: RendererProps<ChoiceQuestion>) {
-  const { content, answer } = step.question;
+  const { content } = step.question;
   const chosen = lastResponse && "value" in lastResponse ? lastResponse.value : null;
   const locked = phase !== "answering";
   const many = content.options.length > 3;
@@ -34,10 +30,11 @@ export function ChoiceRenderer({
         aria-label="Answers"
       >
         {content.options.map((option) => {
-          const isAnswer = answer.accepted.includes(option.id);
+          const isAnswer = reveal?.optionId === option.id;
           const isChosen = chosen === option.id;
           const showRight = (phase === "correct" && isChosen) || (phase === "reveal" && isAnswer);
           const showWrong = (phase === "retry" || phase === "reveal") && isChosen && !isAnswer;
+          const status = showRight ? " (right answer)" : showWrong ? " (not right)" : "";
           const label = option.text ?? option.speech ?? option.id;
           return (
             <button
@@ -45,7 +42,7 @@ export function ChoiceRenderer({
               type="button"
               disabled={locked}
               onClick={() => onAnswer({ value: option.id })}
-              aria-label={label}
+              aria-label={`${label}${status}`}
               aria-pressed={isChosen}
               className={cn(
                 "bg-surface relative flex min-h-32 flex-col items-center justify-center gap-2 rounded-3xl border-4 p-4 shadow-sm transition enabled:hover:scale-[1.03] enabled:active:scale-95",

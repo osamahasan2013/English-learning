@@ -3,21 +3,16 @@
 import { useState } from "react";
 import { AudioControls } from "@/components/child/audio-controls";
 import { Button } from "@/components/ui/button";
-import type { AcceptedAnswer, SpellingContent } from "@/lib/content/question-schemas";
 import { cn } from "@/lib/utils";
-import type { RendererProps } from "../types";
+import type { QuestionOf, RendererProps } from "../types";
 
 // Type the word you hear.
-export function SpellingRenderer({
-  step,
-  phase,
-  onAnswer,
-  speak,
-}: RendererProps<{ type: "SPELLING"; content: SpellingContent; answer: AcceptedAnswer }>) {
-  const { content, answer } = step.question;
+export function SpellingRenderer({ step, phase, onAnswer, speak }: RendererProps<QuestionOf<"SPELLING">>) {
+  const { content } = step.question;
   const [value, setValue] = useState("");
   const locked = phase !== "answering";
-  const word = content.speech ?? answer.accepted[0];
+  // The loader always fills in the word to say (the child has to hear it).
+  const word = content.speech ?? "";
 
   return (
     <form

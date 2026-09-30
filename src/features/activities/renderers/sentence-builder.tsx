@@ -1,7 +1,6 @@
 "use client";
 
-import type { SentenceBuilderContent, SequenceAnswer } from "@/lib/content/question-schemas";
-import type { RendererProps } from "../types";
+import type { QuestionOf, RendererProps } from "../types";
 import { PromptHeader } from "./prompt-header";
 import { TileBoard } from "./tile-board";
 
@@ -10,7 +9,7 @@ export function SentenceBuilderRenderer({
   phase,
   onAnswer,
   speak,
-}: RendererProps<{ type: "SENTENCE_BUILDER"; content: SentenceBuilderContent; answer: SequenceAnswer }>) {
+}: RendererProps<QuestionOf<"SENTENCE_BUILDER">>) {
   const { content } = step.question;
   return (
     <div className="flex flex-col items-center gap-6">

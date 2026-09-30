@@ -1,8 +1,20 @@
+import type { ActivityConfig } from "@/lib/content/activity-config";
 import type { ParsedQuestion } from "@/lib/content/question-schemas";
+import type { AnswerKey } from "@/lib/learning/answer-key";
+import type { FeedbackMessage } from "@/lib/learning/feedback";
+import type { PlayerRules, ScoringRules } from "@/lib/learning/rules";
 
 // What the lesson player receives: everything needed to run a lesson offline, already
 // validated. Built on the server by src/lib/server/lesson-loader.ts and cached on the
-// device (src/lib/offline/db.ts).
+// device (src/lib/offline/db.ts). It carries no plaintext answers: each scored step has
+// an AnswerKey of salted digests instead (src/lib/learning/answer-key.ts, ADR-021).
+
+// A question as the device sees it: its content without the answer.
+export type ClientQuestion = ParsedQuestion extends infer Q
+  ? Q extends { answer: unknown }
+    ? Omit<Q, "answer">
+    : never
+  : never;
 
 export type PatternSound = { code: string; label: string; sayAs: string; ipa: string };
 
@@ -27,7 +39,14 @@ export type LessonStep = {
   skillId: string;
   wordId: string | null;
   scored: boolean;
-  question: ParsedQuestion;
+  question: ClientQuestion;
+  answerKey: AnswerKey;
+  // Tries before the answer is shown (activity config, else the player rule).
+  maxTries: number;
+  // Shown after answering.
+  explanation: string;
+  // Validated activity configuration (e.g. the passage for reading questions).
+  activityConfig: ActivityConfig;
   pattern: LessonPattern | null;
   // For word building: what speech synthesis should say for each tile's sound (from the
   // tile's phonics pattern), so blending demos say "kuh… aa… tuh", not letter names.
@@ -44,7 +63,15 @@ export type LessonPayload = {
     version: number;
     skillId: string;
     skillTitle: string;
+    description: string;
+    introSpeech: string;
+    estimatedMinutes: number;
+    difficulty: number;
+    subjectName: string;
+    levelName: string;
   };
   steps: LessonStep[];
+  feedback: FeedbackMessage[];
+  rules: { player: PlayerRules; scoring: ScoringRules };
   loadedAt: string;
 };

@@ -23,7 +23,7 @@ export default async function DashboardPage(props: PageProps<"/parent/dashboard"
   const child = children.find((c) => c.id === childParam) ?? children[0];
   const timeZone = profile?.timezone ?? "UTC";
   const [progress, dimensionNames] = await Promise.all([
-    loadChildProgress(child.id, timeZone),
+    loadChildProgress(child.id, timeZone, new Date(), child.current_level_id),
     listDimensionNames(),
   ]);
   const age = ageFromDateOfBirth(child.date_of_birth);
@@ -93,6 +93,58 @@ export default async function DashboardPage(props: PageProps<"/parent/dashboard"
           note={`${progress.wordsSaved} in My Words · ${progress.stars} ⭐`}
         />
       </section>
+
+      <section aria-label="Learning summary" className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Stat label="Activities completed" value={progress.activitiesCompleted} icon="🧩" />
+        <Stat
+          label="Average score"
+          value={progress.averageScore}
+          icon="🎯"
+          note="% right first time, per lesson"
+        />
+        <Stat
+          label="Learning time (min)"
+          value={progress.learningMinutes}
+          icon="🕒"
+          note={`${progress.sessionsCount} learning ${progress.sessionsCount === 1 ? "session" : "sessions"}`}
+        />
+        <Stat
+          label="Skills mastered"
+          value={progress.levelProgress.skillsMastered}
+          icon="🏆"
+          note={`of ${progress.levelProgress.skillsTotal} at ${child.level?.name ?? "this level"}`}
+        />
+      </section>
+
+      <Card className="space-y-4">
+        <CardTitle>Progress by subject · {child.level?.name}</CardTitle>
+        {progress.subjectProgress.length === 0 ? (
+          <EmptyState icon="🗂️" title="No lessons at this level yet" />
+        ) : (
+          <ul className="grid gap-4 sm:grid-cols-2">
+            {progress.subjectProgress.map((subject) => (
+              <li key={subject.subjectId} className="space-y-1">
+                <div className="flex justify-between gap-2">
+                  <span className="font-semibold">
+                    <span aria-hidden>{subject.emoji} </span>
+                    {subject.name}
+                  </span>
+                  <span className="text-muted text-sm">
+                    {subject.lessonsCompleted}/{subject.lessonsTotal} lessons
+                    {subject.lessonsCompleted > 0 ? ` · ${Math.round(subject.score)}% avg` : ""}
+                  </span>
+                </div>
+                <ProgressBar
+                  value={subject.lessonsCompleted}
+                  max={Math.max(1, subject.lessonsTotal)}
+                  label={`${subject.name} lessons completed`}
+                  tone={subject.status === "COMPLETED" ? "success" : "accent"}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="space-y-4 lg:col-span-2">

@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
-  aggregateLessonProgress,
   aggregateWordAttempts,
   buildAttemptRow,
   clampTimestamp,
+  deriveActivityProgress,
+  deriveLessonProgress,
+  deriveSession,
+  rollUpLessons,
+  type AttemptFact,
+  type LessonProgressFact,
 } from "@/lib/learning/progress-derivation";
 import type { AttemptEvent } from "@/lib/offline/sync-protocol";
 
@@ -23,6 +28,7 @@ const event = (value: string): AttemptEvent => ({
   id: "e1",
   questionId: "q1",
   lessonRunId: "r1",
+  sessionId: "s1",
   attemptNumber: 1,
   response: { value },
   responseTimeMs: 900,
@@ -40,9 +46,16 @@ describe("buildAttemptRow", () => {
         question_version: 3,
         correct_answer: { accepted: ["ship"] },
         child_id: "child",
+        score: 100,
+        learning_session_id: "s1",
       },
     });
-    expect(wrong).toMatchObject({ ok: true, row: { is_correct: false, error_type: "wrong_choice" } });
+    expect(wrong).toMatchObject({
+      ok: true,
+      row: { is_correct: false, error_type: "wrong_choice", score: 0 },
+    });
+    const retry = buildAttemptRow(question, { ...event("ship"), attemptNumber: 2 }, "child", now);
+    expect(retry).toMatchObject({ ok: true, row: { is_correct: true, score: 50 } });
   });
 
   it("rejects responses of the wrong shape and unscored questions", () => {
@@ -66,17 +79,26 @@ describe("clampTimestamp", () => {
 
 describe("aggregations", () => {
   it("derives lesson progress from all runs", () => {
-    const progress = aggregateLessonProgress("c", "l1", [
-      { lesson_id: "l1", score_percent: 60, stars: 1, completed_at: "2026-09-28T10:00:00Z" },
-      { lesson_id: "l1", score_percent: 90, stars: 3, completed_at: "2026-09-29T10:00:00Z" },
-      { lesson_id: "l2", score_percent: 100, stars: 3, completed_at: "2026-09-29T11:00:00Z" },
-    ]);
+    const progress = deriveLessonProgress({
+      childId: "c",
+      lessonId: "l1",
+      runs: [
+        { lesson_id: "l1", score_percent: 60, stars: 1, completed_at: "2026-09-28T10:00:00Z" },
+        { lesson_id: "l1", score_percent: 90, stars: 3, completed_at: "2026-09-29T10:00:00Z" },
+        { lesson_id: "l2", score_percent: 100, stars: 3, completed_at: "2026-09-29T11:00:00Z" },
+      ],
+      attempts: [],
+      activitiesTotal: 3,
+      activitiesCompleted: 3,
+    });
     expect(progress).toMatchObject({
+      status: "COMPLETED",
       runs_count: 2,
       best_score: 90,
       last_score: 90,
       best_stars: 3,
-      first_completed_at: "2026-09-28T10:00:00Z",
+      completed_at: "2026-09-28T10:00:00Z",
+      last_completed_at: "2026-09-29T10:00:00Z",
     });
   });
 
@@ -89,6 +111,211 @@ describe("aggregations", () => {
       attempts_count: 2,
       correct_count: 1,
       last_practiced_at: "2026-09-29T10:00:00Z",
+    });
+  });
+});
+
+const fact = (
+  question: string,
+  activity: string,
+  isCorrect: boolean,
+  at: string,
+  extra: Partial<AttemptFact> = {},
+): AttemptFact => ({
+  question_id: question,
+  activity_id: activity,
+  lesson_id: "l1",
+  lesson_run_id: "r1",
+  attempt_number: 1,
+  is_correct: isCorrect,
+  attempted_at: at,
+  ...extra,
+});
+
+describe("activity and lesson progress", () => {
+  const base = {
+    childId: "c",
+    activityId: "a1",
+    lessonId: "l1",
+    scoredQuestionIds: ["q1", "q2"],
+    lessonCompletedAt: null,
+  };
+
+  it("is not started with zero attempts", () => {
+    const p = deriveActivityProgress({ ...base, attempts: [] });
+    expect(p).toMatchObject({ status: "NOT_STARTED", attempts: 0, accuracy: 0, score: 0, started_at: null });
+    expect(
+      deriveLessonProgress({
+        childId: "c",
+        lessonId: "l1",
+        runs: [],
+        attempts: [],
+        activitiesTotal: 2,
+        activitiesCompleted: 0,
+      }).status,
+    ).toBe("NOT_STARTED");
+  });
+
+  it("is in progress part-way through (the child stopped early)", () => {
+    const attempts = [fact("q1", "a1", true, "2026-09-29T10:00:00Z")];
+    expect(deriveActivityProgress({ ...base, attempts })).toMatchObject({
+      status: "IN_PROGRESS",
+      questions_answered: 1,
+      score: 50,
+    });
+    expect(
+      deriveLessonProgress({
+        childId: "c",
+        lessonId: "l1",
+        runs: [],
+        attempts,
+        activitiesTotal: 2,
+        activitiesCompleted: 0,
+      }),
+    ).toMatchObject({ status: "IN_PROGRESS", attempts: 1, accuracy: 100, completed_at: null });
+  });
+
+  it("completes at 100% and at 0% alike, scoring first tries only", () => {
+    const perfect = deriveActivityProgress({
+      ...base,
+      attempts: [
+        fact("q1", "a1", true, "2026-09-29T10:00:00Z"),
+        fact("q2", "a1", true, "2026-09-29T10:01:00Z"),
+      ],
+    });
+    expect(perfect).toMatchObject({
+      status: "COMPLETED",
+      score: 100,
+      accuracy: 100,
+      completed_at: "2026-09-29T10:01:00Z",
+    });
+
+    const wrongThenRight = deriveActivityProgress({
+      ...base,
+      attempts: [
+        fact("q1", "a1", false, "2026-09-29T10:00:00Z"),
+        fact("q1", "a1", true, "2026-09-29T10:00:30Z", { attempt_number: 2 }),
+        fact("q2", "a1", false, "2026-09-29T10:01:00Z"),
+        fact("q2", "a1", false, "2026-09-29T10:01:30Z", { attempt_number: 2 }),
+      ],
+    });
+    // 0% on first tries even though a retry was right; every answer counts for accuracy.
+    expect(wrongThenRight).toMatchObject({
+      status: "COMPLETED",
+      score: 0,
+      attempts: 4,
+      correct_attempts: 1,
+      accuracy: 25,
+    });
+  });
+
+  it("keeps the best run when a lesson is repeated", () => {
+    const attempts = [
+      fact("q1", "a1", false, "2026-09-28T10:00:00Z", { lesson_run_id: "r1" }),
+      fact("q2", "a1", false, "2026-09-28T10:01:00Z", { lesson_run_id: "r1" }),
+      fact("q1", "a1", true, "2026-09-29T10:00:00Z", { lesson_run_id: "r2" }),
+      fact("q2", "a1", true, "2026-09-29T10:01:00Z", { lesson_run_id: "r2" }),
+    ];
+    expect(deriveActivityProgress({ ...base, attempts })).toMatchObject({
+      score: 100,
+      attempts: 4,
+      accuracy: 50,
+    });
+  });
+
+  it("completes an unscored intro activity when its lesson is completed", () => {
+    const intro = { ...base, scoredQuestionIds: [], attempts: [] };
+    expect(deriveActivityProgress(intro).status).toBe("NOT_STARTED");
+    expect(deriveActivityProgress({ ...intro, lessonCompletedAt: "2026-09-29T11:00:00Z" })).toMatchObject({
+      status: "COMPLETED",
+      completed_at: "2026-09-29T11:00:00Z",
+    });
+  });
+});
+
+describe("subject and level roll-ups", () => {
+  const row = (
+    id: string,
+    status: LessonProgressFact["status"],
+    best: number,
+  ): [string, LessonProgressFact] => [
+    id,
+    {
+      lesson_id: id,
+      status,
+      best_score: best,
+      attempts: 4,
+      correct_attempts: 3,
+      started_at: "2026-09-28T10:00:00Z",
+      last_attempt_at: "2026-09-29T10:00:00Z",
+      completed_at: status === "COMPLETED" ? "2026-09-29T10:00:00Z" : null,
+    },
+  ];
+
+  it("counts completed lessons and averages their best scores", () => {
+    const progress = new Map([
+      row("l1", "COMPLETED", 100),
+      row("l2", "COMPLETED", 60),
+      row("l3", "IN_PROGRESS", 0),
+    ]);
+    expect(rollUpLessons(["l1", "l2", "l3", "l4"], progress)).toMatchObject({
+      status: "IN_PROGRESS",
+      lessons_total: 4,
+      lessons_completed: 2,
+      attempts: 12,
+      correct_attempts: 9,
+      accuracy: 75,
+      score: 80,
+      completed_at: null,
+    });
+  });
+
+  it("is completed only when every lesson is, and not started with nothing", () => {
+    const progress = new Map([row("l1", "COMPLETED", 90)]);
+    expect(rollUpLessons(["l1"], progress)).toMatchObject({
+      status: "COMPLETED",
+      completed_at: "2026-09-29T10:00:00Z",
+    });
+    expect(rollUpLessons(["l9"], progress)).toMatchObject({ status: "NOT_STARTED", accuracy: 0, score: 0 });
+    expect(rollUpLessons([], progress).status).toBe("NOT_STARTED");
+  });
+});
+
+describe("learning sessions", () => {
+  it("derives duration, completed lessons and activities, and the first-try score", () => {
+    const session = deriveSession({
+      sessionId: "s1",
+      childId: "c",
+      attempts: [
+        fact("q1", "a1", true, "2026-09-29T10:00:00Z"),
+        fact("q2", "a1", false, "2026-09-29T10:02:00Z"),
+        fact("q2", "a1", true, "2026-09-29T10:02:30Z", { attempt_number: 2 }),
+        fact("q3", "a2", true, "2026-09-29T10:04:00Z"),
+      ],
+      runs: [
+        {
+          id: "r1",
+          lesson_id: "l1",
+          started_at: "2026-09-29T09:59:00Z",
+          completed_at: "2026-09-29T10:05:00Z",
+        },
+      ],
+      activities: new Map([
+        ["a0", { lessonId: "l1", scoredQuestions: 0 }],
+        ["a1", { lessonId: "l1", scoredQuestions: 2 }],
+        ["a2", { lessonId: "l1", scoredQuestions: 2 }],
+      ]),
+    });
+    expect(session).toMatchObject({
+      started_at: "2026-09-29T09:59:00Z",
+      ended_at: "2026-09-29T10:05:00Z",
+      duration_seconds: 360,
+      lessons_completed: 1,
+      // a1 fully answered + the intro a0 of the completed lesson; a2 only half.
+      activities_completed: 2,
+      attempts: 4,
+      correct_attempts: 3,
+      score: 66.67,
     });
   });
 });

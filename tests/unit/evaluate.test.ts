@@ -5,6 +5,7 @@ describe("evaluateResponse", () => {
   it("accepts a matching choice id", () => {
     expect(evaluateResponse("MULTIPLE_CHOICE", { accepted: ["ship"] }, { value: "ship" })).toEqual({
       isCorrect: true,
+      almost: false,
       errorType: null,
     });
   });
@@ -12,6 +13,7 @@ describe("evaluateResponse", () => {
   it("classifies a wrong choice", () => {
     expect(evaluateResponse("LISTEN_AND_CHOOSE", { accepted: ["ship"] }, { value: "chip" })).toEqual({
       isCorrect: false,
+      almost: false,
       errorType: "wrong_choice",
     });
   });
@@ -27,8 +29,10 @@ describe("evaluateResponse", () => {
   });
 
   it("reports letter order mistakes in word building", () => {
+    // Right letters in the wrong order is a near miss ("almost").
     expect(evaluateResponse("WORD_BUILDER", { accepted: ["ship"] }, { sequence: ["p", "i", "sh"] })).toEqual({
       isCorrect: false,
+      almost: true,
       errorType: "wrong_order",
     });
   });
@@ -40,6 +44,7 @@ describe("evaluateResponse", () => {
     ).toBe(true);
     expect(evaluateResponse("SENTENCE_BUILDER", answer, { sequence: ["like", "I", "apples."] })).toEqual({
       isCorrect: false,
+      almost: false,
       errorType: "wrong_order",
     });
   });
@@ -61,12 +66,97 @@ describe("evaluateResponse", () => {
       evaluateResponse("SENTENCE_BUILDER", { acceptedSequences: [["a", "b"]] }, { value: "a b" }),
     ).toEqual({
       isCorrect: false,
+      almost: false,
       errorType: "invalid_response",
     });
   });
 
   it("treats unscored questions as correct", () => {
     expect(evaluateResponse("INTRO", null, { value: "" }).isCorrect).toBe(true);
+  });
+
+  it("matches pairs as a set and calls most-right pairs almost", () => {
+    const answer = {
+      pairs: [
+        ["a", "x"],
+        ["b", "y"],
+        ["c", "z"],
+      ] as [string, string][],
+    };
+    expect(
+      evaluateResponse("MATCH", answer, {
+        pairs: [
+          ["c", "z"],
+          ["a", "x"],
+          ["b", "y"],
+        ],
+      }).isCorrect,
+    ).toBe(true);
+    expect(
+      evaluateResponse("MATCH", answer, {
+        pairs: [
+          ["a", "x"],
+          ["b", "z"],
+          ["c", "y"],
+        ],
+      }),
+    ).toEqual({
+      isCorrect: false,
+      almost: false,
+      errorType: "wrong_match",
+    });
+    expect(
+      evaluateResponse(
+        "SORT",
+        { pairs: [...answer.pairs, ["d", "x"]] },
+        {
+          pairs: [
+            ["a", "x"],
+            ["b", "y"],
+            ["c", "x"],
+            ["d", "x"],
+          ],
+        },
+      ),
+    ).toEqual({ isCorrect: false, almost: true, errorType: "wrong_group" });
+    // Repeating a right pair does not make up for a missing one.
+    expect(
+      evaluateResponse("MATCH", answer, {
+        pairs: [
+          ["a", "x"],
+          ["a", "x"],
+          ["b", "y"],
+        ],
+      }).isCorrect,
+    ).toBe(false);
+  });
+
+  it("fills blanks in order and treats most-right blanks as almost", () => {
+    const answer = { acceptedSequences: [["cat", "mat"]] };
+    expect(evaluateResponse("DRAG_DROP", answer, { sequence: ["Cat", "mat"] }).isCorrect).toBe(true);
+    expect(evaluateResponse("DRAG_DROP", answer, { sequence: ["cat", "run"] })).toEqual({
+      isCorrect: false,
+      almost: true,
+      errorType: "wrong_word",
+    });
+    expect(evaluateResponse("DRAG_DROP", answer, { sequence: ["mat", "cat"] }).almost).toBe(false);
+  });
+
+  it("checks written sentences without case or end punctuation", () => {
+    const answer = { accepted: ["I can see a bird."] };
+    expect(evaluateResponse("WRITING", answer, { value: "i can see a bird" }).isCorrect).toBe(true);
+    expect(evaluateResponse("WRITING", answer, { value: "I can see a horse." }).isCorrect).toBe(false);
+  });
+
+  it("scores tracing on coverage, with a near miss margin", () => {
+    const answer = { minCoverage: 60 };
+    expect(evaluateResponse("TRACING", answer, { coverage: 72 }).isCorrect).toBe(true);
+    expect(evaluateResponse("TRACING", answer, { coverage: 50 })).toEqual({
+      isCorrect: false,
+      almost: true,
+      errorType: "incomplete_trace",
+    });
+    expect(evaluateResponse("TRACING", answer, { coverage: 10 }).almost).toBe(false);
   });
 });
 

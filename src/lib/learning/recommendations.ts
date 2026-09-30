@@ -1,14 +1,10 @@
 import type { MasteryStatus } from "@/lib/learning/mastery";
+import { DEFAULT_RULES, type ReviewRules } from "@/lib/learning/rules";
 
 // Turns stored skill mastery into the parent's "what is difficult / what to practise next"
 // and the child's review choices. Rule-based and explainable (docs/curriculum.md).
 
-export const RECOMMENDATION_RULES = {
-  // A skill needs this much evidence before it is called weak or strong.
-  minAttempts: 4,
-  weakBelowScore: 70,
-  maxRecommendations: 3,
-} as const;
+export const RECOMMENDATION_RULES = { maxRecommendations: 3 } as const;
 
 export type SkillMasterySummary = {
   skillId: string;
@@ -20,13 +16,13 @@ export type SkillMasterySummary = {
   nextReviewAt: string | null;
 };
 
-export function weakSkills<T extends SkillMasterySummary>(skills: T[]): T[] {
+// Weak = enough evidence (review rules: minAttempts) and a score below weakBelowScore.
+export function weakSkills<T extends SkillMasterySummary>(
+  skills: T[],
+  rules: ReviewRules = DEFAULT_RULES.review,
+): T[] {
   return skills
-    .filter(
-      (s) =>
-        s.attempts >= RECOMMENDATION_RULES.minAttempts &&
-        s.masteryScore < RECOMMENDATION_RULES.weakBelowScore,
-    )
+    .filter((s) => s.attempts >= rules.minAttempts && s.masteryScore < rules.weakBelowScore)
     .sort((a, b) => b.reviewPriority - a.reviewPriority || a.masteryScore - b.masteryScore);
 }
 
@@ -38,8 +34,12 @@ export function strongSkills<T extends SkillMasterySummary>(skills: T[]): T[] {
 
 // Skills to bring back in review: weak ones first, then anything due, highest priority
 // first. Mastered skills still appear once due, so they are revisited periodically.
-export function reviewCandidates<T extends SkillMasterySummary>(skills: T[], now: Date): T[] {
-  const weakIds = new Set(weakSkills(skills).map((s) => s.skillId));
+export function reviewCandidates<T extends SkillMasterySummary>(
+  skills: T[],
+  now: Date,
+  rules: ReviewRules = DEFAULT_RULES.review,
+): T[] {
+  const weakIds = new Set(weakSkills(skills, rules).map((s) => s.skillId));
   return skills
     .filter((s) => s.status !== "NOT_STARTED")
     .filter((s) => weakIds.has(s.skillId) || (s.nextReviewAt !== null && new Date(s.nextReviewAt) <= now))
@@ -50,8 +50,11 @@ export function reviewCandidates<T extends SkillMasterySummary>(skills: T[], now
     );
 }
 
-export function practiceRecommendations<T extends SkillMasterySummary>(skills: T[]) {
-  return weakSkills(skills)
+export function practiceRecommendations<T extends SkillMasterySummary>(
+  skills: T[],
+  rules: ReviewRules = DEFAULT_RULES.review,
+) {
+  return weakSkills(skills, rules)
     .slice(0, RECOMMENDATION_RULES.maxRecommendations)
     .map((s) => ({ skill: s, message: `Practice ${s.title}` }));
 }

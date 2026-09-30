@@ -33,6 +33,14 @@ const columns = query(`
   where c.table_schema = 'public' and t.table_type = 'BASE TABLE'
   order by c.table_name, c.ordinal_position`);
 
+// Views are read-only; like the Supabase CLI, every view column is typed nullable.
+const viewColumns = query(`
+  select c.table_name, c.column_name, c.data_type, c.udt_name
+  from information_schema.columns c
+  join information_schema.tables t on t.table_schema = c.table_schema and t.table_name = c.table_name
+  where c.table_schema = 'public' and t.table_type = 'VIEW'
+  order by c.table_name, c.ordinal_position`);
+
 const enums = query(`
   select t.typname as name, json_agg(e.enumlabel order by e.enumsortorder) as values
   from pg_type t join pg_enum e on e.enumtypid = t.oid
@@ -160,8 +168,24 @@ ${indent(8)}];
 ${indent(6)}};
 `;
 }
+const views = new Map();
+for (const c of viewColumns) {
+  if (!views.has(c.table_name)) views.set(c.table_name, []);
+  views.get(c.table_name).push(c);
+}
 out += `    };
-    Views: { [_ in never]: never };
+    Views: {
+`;
+for (const [name, cols] of views) {
+  out += `${indent(6)}${name}: {
+${indent(8)}Row: {
+${cols.map((c) => `${indent(10)}${c.column_name}: ${tsType(c.data_type, c.udt_name)} | null;`).join("\n")}
+${indent(8)}};
+${indent(8)}Relationships: [];
+${indent(6)}};
+`;
+}
+out += `    };
     Functions: {
 `;
 for (const f of functions) {
@@ -187,9 +211,10 @@ type PublicSchema = Database["public"];
 export type Tables<T extends keyof PublicSchema["Tables"]> = PublicSchema["Tables"][T]["Row"];
 export type TablesInsert<T extends keyof PublicSchema["Tables"]> = PublicSchema["Tables"][T]["Insert"];
 export type TablesUpdate<T extends keyof PublicSchema["Tables"]> = PublicSchema["Tables"][T]["Update"];
+export type Views<T extends keyof PublicSchema["Views"]> = PublicSchema["Views"][T]["Row"];
 export type Enums<T extends keyof PublicSchema["Enums"]> = PublicSchema["Enums"][T];
 `;
 writeFileSync(outFile, out);
 console.log(
-  `wrote ${path.relative(process.cwd(), outFile)} (${tables.size} tables, ${enums.length} enums, ${functions.length} functions)`,
+  `wrote ${path.relative(process.cwd(), outFile)} (${tables.size} tables, ${views.size} views, ${enums.length} enums, ${functions.length} functions)`,
 );

@@ -4,11 +4,17 @@ import type { ComponentType } from "react";
 import type { RendererProps } from "./types";
 import type { RENDERABLE_QUESTION_TYPES } from "./supported-types";
 import { ChoiceRenderer } from "./renderers/choice";
+import { DragDropRenderer } from "./renderers/drag-drop";
 import { IntroRenderer } from "./renderers/intro";
+import { MatchRenderer } from "./renderers/match";
 import { MissingLetterRenderer } from "./renderers/missing-letter";
+import { ReadingRenderer } from "./renderers/reading";
 import { SentenceBuilderRenderer } from "./renderers/sentence-builder";
+import { SortRenderer } from "./renderers/sort";
 import { SpellingRenderer } from "./renderers/spelling";
+import { TracingRenderer } from "./renderers/tracing";
 import { WordBuilderRenderer } from "./renderers/word-builder";
+import { WritingRenderer } from "./renderers/writing";
 
 // Activity type → renderer. The lesson player looks the step's type up here; adding a new
 // activity type means adding one entry (plus its schema and evaluator), not a new page.
@@ -26,4 +32,10 @@ export const ACTIVITY_RENDERERS: Record<(typeof RENDERABLE_QUESTION_TYPES)[numbe
   WORD_BUILDER: WordBuilderRenderer,
   SENTENCE_BUILDER: SentenceBuilderRenderer,
   SPELLING: SpellingRenderer,
+  MATCH: MatchRenderer,
+  SORT: SortRenderer,
+  DRAG_DROP: DragDropRenderer,
+  READING: ReadingRenderer,
+  WRITING: WritingRenderer,
+  TRACING: TracingRenderer,
 };

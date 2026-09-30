@@ -2,16 +2,31 @@ import "server-only";
 
 import { isAchievementEarned } from "@/lib/learning/achievements";
 import { currentStreak } from "@/lib/learning/analytics";
-import { computeMastery, MASTERY_RULES } from "@/lib/learning/mastery";
+import { computeMastery } from "@/lib/learning/mastery";
 import {
-  aggregateLessonProgress,
   aggregateWordAttempts,
   buildAttemptRow,
   clampTimestamp,
+  countMastered,
+  deriveActivityProgress,
+  deriveLessonProgress,
+  deriveSession,
+  rollUpLessons,
   WORD_LEARNED_CORRECT_COUNT,
+  type AttemptFact,
+  type LessonProgressFact,
   type StoredQuestion,
 } from "@/lib/learning/progress-derivation";
+import {
+  deriveSkillReviewItem,
+  deriveWordReviewItem,
+  skillKey,
+  wordKey,
+  type ReviewItemRow,
+} from "@/lib/learning/review-queue";
+import type { LearningRules } from "@/lib/learning/rules";
 import { scoreLesson } from "@/lib/learning/scoring";
+import type { MasteryStatus } from "@/lib/learning/mastery";
 import type {
   AttemptEvent,
   LessonRunEvent,
@@ -19,15 +34,19 @@ import type {
   SyncResponse,
   SyncResult,
 } from "@/lib/offline/sync-protocol";
+import { logger } from "@/lib/logging";
+import { loadLearningRules } from "@/lib/server/learning-rules";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Writes a batch of synced learning events for ONE child. The caller must already have
 // verified that the signed-in parent owns `childId` (see app/api/sync/route.ts); this
 // module uses the service role and trusts that check.
 //
-// Order: attempts → lesson runs → derived caches (lesson progress, skill mastery, words)
-// → rewards and achievements. Every step is idempotent, so a retry after a partial
-// failure converges on the same state.
+// Order: learning sessions (so events can reference them) → attempts → lesson runs →
+// derived caches (activity, lesson, subject and level progress; skill mastery; review
+// queue; words; session totals) → rewards and achievements. Every step is idempotent and
+// every cache is recomputed from stored history, so a retry after a partial failure — or
+// the same event sent twice — converges on the same state.
 
 const ACHIEVEMENT_POINTS = 20;
 
@@ -39,19 +58,28 @@ export async function processSyncBatch(
   now = new Date(),
 ): Promise<SyncResponse> {
   const db = createAdminClient();
+  const rules = await loadLearningRules(db);
   const results = new Map<string, SyncResult>();
 
-  const attempts = events.filter((e): e is AttemptEvent => e.kind === "attempt");
-  const runs = events.filter((e): e is LessonRunEvent => e.kind === "lesson_run");
+  const sessionEvents = await attachSessions(db, childId, events, now);
+  const attempts = sessionEvents.filter((e): e is AttemptEvent => e.kind === "attempt");
+  const runs = sessionEvents.filter((e): e is LessonRunEvent => e.kind === "lesson_run");
 
-  const { newSkillIds, newWordIds } = await storeAttempts(db, childId, attempts, now, results);
-  const newRunLessonIds = await storeLessonRuns(db, childId, runs, now, results);
+  const stored = await storeAttempts(db, childId, attempts, now, results, rules);
+  const newRuns = await storeLessonRuns(db, childId, runs, now, results, rules);
 
-  if (newRunLessonIds.size > 0) await recomputeLessonProgress(db, childId, [...newRunLessonIds]);
-  if (newSkillIds.size > 0) await recomputeSkillMastery(db, childId, [...newSkillIds], now);
-  if (newWordIds.size > 0) await recomputeWordProgress(db, childId, [...newWordIds]);
+  const lessonIds = new Set([...stored.lessonIds, ...newRuns.lessonIds]);
+  if (lessonIds.size > 0) await recomputeLessonTree(db, childId, [...lessonIds]);
+  if (stored.newSkillIds.size > 0)
+    await recomputeSkillMastery(db, childId, [...stored.newSkillIds], now, rules);
+  if (stored.newWordIds.size > 0)
+    await recomputeWordProgress(db, childId, [...stored.newWordIds], now, rules);
+  if (lessonIds.size > 0 || stored.newSkillIds.size > 0)
+    await recomputeLevelRollups(db, childId, [...lessonIds]);
+  const sessionIds = new Set([...stored.sessionIds, ...newRuns.sessionIds]);
+  if (sessionIds.size > 0) await recomputeSessions(db, childId, [...sessionIds]);
   const newAchievements =
-    newRunLessonIds.size > 0 || newWordIds.size > 0 ? await awardAchievements(db, childId, now) : [];
+    newRuns.lessonIds.size > 0 || stored.newWordIds.size > 0 ? await awardAchievements(db, childId, now) : [];
 
   return {
     results: events.map(
@@ -68,16 +96,64 @@ async function existingIds(db: Db, table: "activity_attempts" | "lesson_runs", i
   return new Set((data ?? []).map((r) => r.id));
 }
 
+// Makes sure every session an event names exists for this child. A session id that
+// already belongs to another child is never shared: the event is kept but detached from it.
+async function attachSessions(db: Db, childId: string, events: SyncEvent[], now: Date): Promise<SyncEvent[]> {
+  const ids = [...new Set(events.map((e) => e.sessionId).filter((id): id is string => !!id))];
+  if (ids.length === 0) return events;
+  const { data: existing, error } = await db.from("learning_sessions").select("id, child_id").in("id", ids);
+  if (error) throw error;
+  const foreign = new Set((existing ?? []).filter((s) => s.child_id !== childId).map((s) => s.id));
+  if (foreign.size > 0) logger.warn("sync.session_not_owned", { childId, count: foreign.size });
+  const known = new Set((existing ?? []).map((s) => s.id));
+  const placeholders = ids
+    .filter((id) => !known.has(id))
+    .map((id) => {
+      const times = events
+        .filter((e) => e.sessionId === id)
+        .map((e) => clampTimestamp(e.kind === "attempt" ? e.attemptedAt : e.startedAt, now))
+        .sort();
+      // Totals are filled in by recomputeSessions once the events are stored.
+      return {
+        id,
+        child_id: childId,
+        started_at: times[0],
+        ended_at: times.at(-1)!,
+        duration_seconds: 0,
+      };
+    });
+  if (placeholders.length > 0) {
+    const { error: insertError } = await db
+      .from("learning_sessions")
+      .upsert(placeholders, { onConflict: "id", ignoreDuplicates: true });
+    if (insertError) throw insertError;
+    // A concurrent request for another child could have won the insert: re-check.
+    const { data: after, error: afterError } = await db
+      .from("learning_sessions")
+      .select("id, child_id")
+      .in(
+        "id",
+        placeholders.map((p) => p.id),
+      );
+    if (afterError) throw afterError;
+    for (const s of after ?? []) if (s.child_id !== childId) foreign.add(s.id);
+  }
+  return events.map((e) => (e.sessionId && foreign.has(e.sessionId) ? { ...e, sessionId: null } : e));
+}
+
 async function storeAttempts(
   db: Db,
   childId: string,
   attempts: AttemptEvent[],
   now: Date,
   results: Map<string, SyncResult>,
+  rules: LearningRules,
 ) {
   const newSkillIds = new Set<string>();
   const newWordIds = new Set<string>();
-  if (attempts.length === 0) return { newSkillIds, newWordIds };
+  const lessonIds = new Set<string>();
+  const sessionIds = new Set<string>();
+  if (attempts.length === 0) return { newSkillIds, newWordIds, lessonIds, sessionIds };
 
   const already = await existingIds(
     db,
@@ -91,7 +167,7 @@ async function storeAttempts(
     }
     return true;
   });
-  if (pending.length === 0) return { newSkillIds, newWordIds };
+  if (pending.length === 0) return { newSkillIds, newWordIds, lessonIds, sessionIds };
 
   const questionIds = [...new Set(pending.map((a) => a.questionId))];
   const { data: questionRows, error } = await db
@@ -113,7 +189,7 @@ async function storeAttempts(
       results.set(attempt.id, { id: attempt.id, status: "rejected", reason: "unknown_question" });
       continue;
     }
-    const built = buildAttemptRow(question, attempt, childId, now);
+    const built = buildAttemptRow(question, attempt, childId, now, rules.scoring);
     if (!built.ok) {
       results.set(attempt.id, { id: attempt.id, status: "rejected", reason: built.reason });
       continue;
@@ -129,12 +205,14 @@ async function storeAttempts(
   }
   for (const row of rows) {
     results.set(row.id, { id: row.id, status: "stored" });
+    if (row.lesson_id) lessonIds.add(row.lesson_id);
+    if (row.learning_session_id) sessionIds.add(row.learning_session_id);
     if (row.attempt_number === 1) {
       newSkillIds.add(row.skill_id);
       if (row.word_id) newWordIds.add(row.word_id);
     }
   }
-  return { newSkillIds, newWordIds };
+  return { newSkillIds, newWordIds, lessonIds, sessionIds };
 }
 
 async function storeLessonRuns(
@@ -143,9 +221,11 @@ async function storeLessonRuns(
   runs: LessonRunEvent[],
   now: Date,
   results: Map<string, SyncResult>,
+  rules: LearningRules,
 ) {
   const lessonIds = new Set<string>();
-  if (runs.length === 0) return lessonIds;
+  const sessionIds = new Set<string>();
+  if (runs.length === 0) return { lessonIds, sessionIds };
 
   const already = await existingIds(
     db,
@@ -179,7 +259,10 @@ async function storeLessonRuns(
       results.set(run.id, { id: run.id, status: "rejected", reason: "no_attempts_for_run" });
       continue;
     }
-    const score = scoreLesson([...byQuestion.values()].map((isCorrect) => ({ isCorrect })));
+    const score = scoreLesson(
+      [...byQuestion.values()].map((isCorrect) => ({ isCorrect })),
+      rules.scoring,
+    );
     const startedAt = clampTimestamp(run.startedAt, now);
     const completedAt = clampTimestamp(run.completedAt, now);
     const durationSeconds = Math.min(
@@ -193,6 +276,7 @@ async function storeLessonRuns(
         child_id: childId,
         lesson_id: lesson.id,
         lesson_version: lesson.version,
+        learning_session_id: run.sessionId ?? null,
         started_at: completedAt < startedAt ? completedAt : startedAt,
         completed_at: completedAt,
         duration_seconds: durationSeconds,
@@ -217,32 +301,220 @@ async function storeLessonRuns(
     if (rewardError) throw rewardError;
     results.set(run.id, { id: run.id, status: "stored" });
     lessonIds.add(lesson.id);
+    if (run.sessionId) sessionIds.add(run.sessionId);
   }
-  return lessonIds;
+  return { lessonIds, sessionIds };
 }
 
-async function recomputeLessonProgress(db: Db, childId: string, lessonIds: string[]) {
-  const { data: runs, error } = await db
-    .from("lesson_runs")
-    .select("lesson_id, score_percent, stars, completed_at")
-    .eq("child_id", childId)
-    .in("lesson_id", lessonIds);
-  if (error) throw error;
-  const rows = lessonIds.map((lessonId) => aggregateLessonProgress(childId, lessonId, runs ?? []));
-  const { error: upsertError } = await db
-    .from("lesson_progress")
-    .upsert(rows, { onConflict: "child_id,lesson_id" });
-  if (upsertError) throw upsertError;
+// Published activities of the given lessons and the scored questions in each.
+async function loadLessonStructure(db: Db, lessonIds: string[]) {
+  const activities = new Map<string, { lessonId: string; scoredQuestionIds: string[] }>();
+  if (lessonIds.length === 0) return activities;
+  const [{ data: activityRows, error }, { data: types, error: typesError }] = await Promise.all([
+    db.from("activities").select("id, lesson_id").in("lesson_id", lessonIds).eq("status", "published"),
+    db.from("activity_types").select("code, is_scored"),
+  ]);
+  if (error || typesError) throw error ?? typesError;
+  for (const a of activityRows ?? []) activities.set(a.id, { lessonId: a.lesson_id, scoredQuestionIds: [] });
+  if (activities.size === 0) return activities;
+  const scored = new Set((types ?? []).filter((t) => t.is_scored).map((t) => t.code));
+  const { data: questionRows, error: questionsError } = await db
+    .from("questions")
+    .select("id, activity_id, question_type")
+    .in("activity_id", [...activities.keys()])
+    .eq("status", "published");
+  if (questionsError) throw questionsError;
+  for (const q of questionRows ?? []) {
+    if (q.activity_id && scored.has(q.question_type))
+      activities.get(q.activity_id)?.scoredQuestionIds.push(q.id);
+  }
+  return activities;
 }
 
-async function recomputeSkillMastery(db: Db, childId: string, skillIds: string[], now: Date) {
-  const { data: skills, error } = await db
-    .from("skills")
-    .select("id, mastery_threshold, importance")
-    .in("id", skillIds);
+// Activity progress and lesson progress for the given lessons.
+async function recomputeLessonTree(db: Db, childId: string, lessonIds: string[]) {
+  const [structure, { data: attempts, error }, { data: runs, error: runsError }] = await Promise.all([
+    loadLessonStructure(db, lessonIds),
+    db
+      .from("activity_attempts")
+      .select("question_id, activity_id, lesson_id, lesson_run_id, attempt_number, is_correct, attempted_at")
+      .eq("child_id", childId)
+      .in("lesson_id", lessonIds)
+      .order("attempted_at")
+      .limit(10000),
+    db
+      .from("lesson_runs")
+      .select("id, lesson_id, score_percent, stars, started_at, completed_at")
+      .eq("child_id", childId)
+      .in("lesson_id", lessonIds),
+  ]);
+  if (error || runsError) throw error ?? runsError;
+  const facts = (attempts ?? []) as AttemptFact[];
+
+  const activityRows = [...structure].map(([activityId, a]) => {
+    const firstRun = (runs ?? [])
+      .filter((r) => r.lesson_id === a.lessonId)
+      .map((r) => r.completed_at)
+      .sort()[0];
+    return deriveActivityProgress({
+      childId,
+      activityId,
+      lessonId: a.lessonId,
+      scoredQuestionIds: a.scoredQuestionIds,
+      attempts: facts,
+      lessonCompletedAt: firstRun ?? null,
+    });
+  });
+  const startedActivities = activityRows.filter((r) => r.status !== "NOT_STARTED");
+  if (startedActivities.length > 0) {
+    const { error: upsertError } = await db
+      .from("activity_progress")
+      .upsert(startedActivities, { onConflict: "child_id,activity_id" });
+    if (upsertError) throw upsertError;
+  }
+
+  const lessonRows = lessonIds
+    .map((lessonId) => {
+      const mine = activityRows.filter((r) => r.lesson_id === lessonId);
+      return deriveLessonProgress({
+        childId,
+        lessonId,
+        runs: (runs ?? []).map((r) => ({ ...r, score_percent: Number(r.score_percent) })),
+        attempts: facts,
+        activitiesTotal: mine.length,
+        activitiesCompleted: mine.filter((r) => r.status === "COMPLETED").length,
+      });
+    })
+    .filter((r) => r.status !== "NOT_STARTED");
+  if (lessonRows.length > 0) {
+    const { error: upsertError } = await db
+      .from("lesson_progress")
+      .upsert(lessonRows, { onConflict: "child_id,lesson_id" });
+    if (upsertError) throw upsertError;
+  }
+}
+
+// Subject and level progress for every level the given lessons belong to (plus the
+// child's current level, so their dashboard always has rows).
+async function recomputeLevelRollups(db: Db, childId: string, lessonIds: string[]) {
+  const levelIds = new Set<string>();
+  if (lessonIds.length > 0) {
+    const { data, error } = await db.from("lesson_catalog").select("level_id").in("lesson_id", lessonIds);
+    if (error) throw error;
+    for (const r of data ?? []) if (r.level_id) levelIds.add(r.level_id);
+  }
+  const { data: child } = await db
+    .from("children")
+    .select("current_level_id")
+    .eq("id", childId)
+    .maybeSingle();
+  if (child) levelIds.add(child.current_level_id);
+  if (levelIds.size === 0) return;
+
+  const { data: catalog, error } = await db
+    .from("lesson_catalog")
+    .select("lesson_id, skill_id, subject_id, level_id")
+    .in("level_id", [...levelIds])
+    .eq("skill_active", true);
   if (error) throw error;
+  const lessons = (catalog ?? []).filter(
+    (c): c is { lesson_id: string; skill_id: string; subject_id: string; level_id: string } =>
+      !!(c.lesson_id && c.skill_id && c.subject_id && c.level_id),
+  );
+  const allLessonIds = lessons.map((l) => l.lesson_id);
+  const allSkillIds = [...new Set(lessons.map((l) => l.skill_id))];
+  const [{ data: progressRows, error: progressError }, { data: masteryRows, error: masteryError }] =
+    await Promise.all([
+      allLessonIds.length
+        ? db
+            .from("lesson_progress")
+            .select(
+              "lesson_id, status, best_score, attempts, correct_attempts, started_at, last_attempt_at, completed_at",
+            )
+            .eq("child_id", childId)
+            .in("lesson_id", allLessonIds)
+        : Promise.resolve({ data: [], error: null }),
+      allSkillIds.length
+        ? db
+            .from("skill_mastery")
+            .select("skill_id, status")
+            .eq("child_id", childId)
+            .in("skill_id", allSkillIds)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
+  if (progressError || masteryError) throw progressError ?? masteryError;
+  const progress = new Map<string, LessonProgressFact>(
+    (progressRows ?? []).map((r) => [
+      r.lesson_id,
+      { ...r, best_score: Number(r.best_score) } as LessonProgressFact,
+    ]),
+  );
+  const mastery = new Map<string, MasteryStatus>((masteryRows ?? []).map((r) => [r.skill_id, r.status]));
+
+  const subjectRows = [];
+  const levelRows = [];
+  for (const levelId of levelIds) {
+    const inLevel = lessons.filter((l) => l.level_id === levelId);
+    for (const subjectId of new Set(inLevel.map((l) => l.subject_id))) {
+      const ids = inLevel.filter((l) => l.subject_id === subjectId).map((l) => l.lesson_id);
+      subjectRows.push({
+        child_id: childId,
+        level_id: levelId,
+        subject_id: subjectId,
+        ...rollUpLessons(ids, progress),
+      });
+    }
+    const skillIds = [...new Set(inLevel.map((l) => l.skill_id))];
+    levelRows.push({
+      child_id: childId,
+      level_id: levelId,
+      ...rollUpLessons(
+        inLevel.map((l) => l.lesson_id),
+        progress,
+      ),
+      skills_total: skillIds.length,
+      skills_mastered: countMastered(skillIds, mastery),
+    });
+  }
+  if (subjectRows.length > 0) {
+    const { error: upsertError } = await db
+      .from("subject_progress")
+      .upsert(subjectRows, { onConflict: "child_id,level_id,subject_id" });
+    if (upsertError) throw upsertError;
+  }
+  if (levelRows.length > 0) {
+    const { error: upsertError } = await db
+      .from("level_progress")
+      .upsert(levelRows, { onConflict: "child_id,level_id" });
+    if (upsertError) throw upsertError;
+  }
+}
+
+async function recomputeSkillMastery(
+  db: Db,
+  childId: string,
+  skillIds: string[],
+  now: Date,
+  rules: LearningRules,
+) {
+  const [{ data: skills, error }, { data: skillLessons, error: lessonsError }] = await Promise.all([
+    db
+      .from("skills")
+      .select("id, mastery_threshold, importance, is_active, phonics_pattern_id")
+      .in("id", skillIds),
+    db
+      .from("lessons")
+      .select("id, skill_id, sort_order")
+      .in("skill_id", skillIds)
+      .eq("status", "published")
+      .order("sort_order"),
+  ]);
+  if (error || lessonsError) throw error ?? lessonsError;
+  const firstLesson = new Map<string, string>();
+  for (const l of skillLessons ?? []) if (!firstLesson.has(l.skill_id)) firstLesson.set(l.skill_id, l.id);
 
   const rows = [];
+  const reviewRows: ReviewItemRow[] = [];
   for (const skill of skills ?? []) {
     const base = () =>
       db
@@ -259,20 +531,23 @@ async function recomputeSkillMastery(db: Db, childId: string, skillIds: string[]
         .eq("skill_id", skill.id)
         .eq("attempt_number", 1)
         .order("attempted_at", { ascending: false })
-        .limit(MASTERY_RULES.windowSize),
+        .limit(rules.mastery.windowSize),
       base(),
       base().eq("is_correct", true),
     ]);
     if (recentError || total.error || correct.error) throw recentError ?? total.error ?? correct.error;
 
-    const mastery = computeMastery({
-      attempts: (recent ?? []).map((a) => ({ isCorrect: a.is_correct, attemptedAt: a.attempted_at })),
-      totalAttempts: total.count ?? 0,
-      totalCorrect: correct.count ?? 0,
-      masteryThreshold: skill.mastery_threshold,
-      importance: skill.importance,
-      now,
-    });
+    const mastery = computeMastery(
+      {
+        attempts: (recent ?? []).map((a) => ({ isCorrect: a.is_correct, attemptedAt: a.attempted_at })),
+        totalAttempts: total.count ?? 0,
+        totalCorrect: correct.count ?? 0,
+        masteryThreshold: skill.mastery_threshold,
+        importance: skill.importance,
+        now,
+      },
+      rules.mastery,
+    );
     rows.push({
       child_id: childId,
       skill_id: skill.id,
@@ -281,7 +556,7 @@ async function recomputeSkillMastery(db: Db, childId: string, skillIds: string[]
       accuracy: mastery.accuracy,
       recent_accuracy: mastery.recentAccuracy,
       attempts: mastery.attempts,
-      correct: mastery.correct,
+      correct_attempts: mastery.correctAttempts,
       practice_days: mastery.practiceDays,
       confidence: mastery.confidence,
       review_priority: mastery.reviewPriority,
@@ -289,6 +564,23 @@ async function recomputeSkillMastery(db: Db, childId: string, skillIds: string[]
       last_practiced_at: mastery.lastPracticedAt?.toISOString() ?? null,
       updated_at: now.toISOString(),
     });
+    const item = deriveSkillReviewItem(
+      {
+        skillId: skill.id,
+        lessonId: firstLesson.get(skill.id) ?? null,
+        phonicsPatternId: skill.phonics_pattern_id,
+        active: skill.is_active,
+        status: mastery.status,
+        masteryScore: mastery.masteryScore,
+        attempts: mastery.attempts,
+        reviewPriority: mastery.reviewPriority,
+        nextReviewAt: mastery.nextReviewAt?.toISOString() ?? null,
+        recentErrors: (recent ?? []).slice(0, 5).filter((a) => !a.is_correct).length,
+      },
+      now,
+      rules.review,
+    );
+    if (item) reviewRows.push(item);
   }
   if (rows.length > 0) {
     const { error: upsertError } = await db
@@ -296,22 +588,58 @@ async function recomputeSkillMastery(db: Db, childId: string, skillIds: string[]
       .upsert(rows, { onConflict: "child_id,skill_id" });
     if (upsertError) throw upsertError;
   }
+  await syncReviewItems(db, childId, skillIds.map(skillKey), reviewRows, now);
 }
 
-async function recomputeWordProgress(db: Db, childId: string, wordIds: string[]) {
+// Upserts the open items and resolves the items in `scopeKeys` that are no longer open.
+async function syncReviewItems(
+  db: Db,
+  childId: string,
+  scopeKeys: string[],
+  open: ReviewItemRow[],
+  now: Date,
+) {
+  if (open.length > 0) {
+    const { error } = await db.from("review_items").upsert(
+      open.map((item) => ({ ...item, child_id: childId, updated_at: now.toISOString() })),
+      { onConflict: "child_id,item_key" },
+    );
+    if (error) throw error;
+  }
+  const openKeys = new Set(open.map((i) => i.item_key));
+  const resolved = scopeKeys.filter((k) => !openKeys.has(k));
+  if (resolved.length > 0) {
+    const { error } = await db
+      .from("review_items")
+      .update({ status: "done", resolved_at: now.toISOString(), updated_at: now.toISOString() })
+      .eq("child_id", childId)
+      .eq("status", "open")
+      .in("item_key", resolved);
+    if (error) throw error;
+  }
+}
+
+async function recomputeWordProgress(
+  db: Db,
+  childId: string,
+  wordIds: string[],
+  now: Date,
+  rules: LearningRules,
+) {
   const [{ data: attempts, error }, { data: existing, error: existingError }] = await Promise.all([
     db
       .from("activity_attempts")
-      .select("word_id, is_correct, attempted_at")
+      .select("word_id, skill_id, lesson_id, is_correct, attempted_at")
       .eq("child_id", childId)
       .eq("attempt_number", 1)
       .in("word_id", wordIds),
     db.from("word_progress").select("word_id").eq("child_id", childId).in("word_id", wordIds),
   ]);
   if (error || existingError) throw error ?? existingError;
-  const stats = aggregateWordAttempts(
-    (attempts ?? []).filter((a): a is typeof a & { word_id: string } => a.word_id !== null),
+  const wordAttempts = (attempts ?? []).filter(
+    (a): a is typeof a & { word_id: string } => a.word_id !== null,
   );
+  const stats = aggregateWordAttempts(wordAttempts);
   const existingIds = new Set((existing ?? []).map((r) => r.word_id));
 
   // New words are saved to "My Words" automatically once answered correctly; existing rows
@@ -335,10 +663,79 @@ async function recomputeWordProgress(db: Db, childId: string, wordIds: string[])
     if (!existingIds.has(wordId)) continue;
     const { error: updateError } = await db
       .from("word_progress")
-      .update({ ...s, updated_at: new Date().toISOString() })
+      .update({ ...s, updated_at: now.toISOString() })
       .eq("child_id", childId)
       .eq("word_id", wordId);
     if (updateError) throw updateError;
+  }
+
+  const reviewRows = wordIds.flatMap((wordId) => {
+    const mine = wordAttempts
+      .filter((a) => a.word_id === wordId)
+      .sort((a, b) => b.attempted_at.localeCompare(a.attempted_at));
+    const item = deriveWordReviewItem(
+      {
+        wordId,
+        skillId: mine[0]?.skill_id ?? null,
+        lessonId: mine[0]?.lesson_id ?? null,
+        attempts: mine.map((a) => ({ isCorrect: a.is_correct, attemptedAt: a.attempted_at })),
+      },
+      now,
+      rules.review,
+    );
+    return item ? [item] : [];
+  });
+  await syncReviewItems(db, childId, wordIds.map(wordKey), reviewRows, now);
+}
+
+async function recomputeSessions(db: Db, childId: string, sessionIds: string[]) {
+  const [{ data: attempts, error }, { data: runs, error: runsError }] = await Promise.all([
+    db
+      .from("activity_attempts")
+      .select(
+        "question_id, activity_id, lesson_id, lesson_run_id, attempt_number, is_correct, attempted_at, learning_session_id",
+      )
+      .eq("child_id", childId)
+      .in("learning_session_id", sessionIds)
+      .limit(10000),
+    db
+      .from("lesson_runs")
+      .select("id, lesson_id, started_at, completed_at, learning_session_id")
+      .eq("child_id", childId)
+      .in("learning_session_id", sessionIds),
+  ]);
+  if (error || runsError) throw error ?? runsError;
+  const lessonIds = [
+    ...new Set([
+      ...(attempts ?? []).map((a) => a.lesson_id).filter((id): id is string => !!id),
+      ...(runs ?? []).map((r) => r.lesson_id),
+    ]),
+  ];
+  const structure = await loadLessonStructure(db, lessonIds);
+  const activities = new Map(
+    [...structure].map(([id, a]) => [
+      id,
+      { lessonId: a.lessonId, scoredQuestions: a.scoredQuestionIds.length },
+    ]),
+  );
+  const rows = sessionIds.map((sessionId) =>
+    deriveSession({
+      sessionId,
+      childId,
+      attempts: ((attempts ?? []) as (AttemptFact & { learning_session_id: string | null })[]).filter(
+        (a) => a.learning_session_id === sessionId,
+      ),
+      runs: (runs ?? []).filter((r) => r.learning_session_id === sessionId),
+      activities,
+    }),
+  );
+  // Only sessions with stored events get totals; an empty placeholder keeps its times.
+  const withEvents = rows.filter((r) => r.attempts > 0 || r.lessons_completed > 0);
+  if (withEvents.length > 0) {
+    const { error: upsertError } = await db
+      .from("learning_sessions")
+      .upsert(withEvents, { onConflict: "id" });
+    if (upsertError) throw upsertError;
   }
 }
 

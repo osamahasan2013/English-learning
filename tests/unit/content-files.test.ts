@@ -12,7 +12,12 @@ import {
   type QuestionInput,
 } from "@/lib/content/content-schemas";
 import { normalizeWord, parseWordsCsv } from "@/lib/content/csv";
-import { parseQuestion } from "@/lib/content/question-schemas";
+import { parseActivityConfig } from "@/lib/content/activity-config";
+import { parseQuestion, type AnswerSpec, type QuestionResponse } from "@/lib/content/question-schemas";
+import { buildAnswerKey, checkWithKey, revealAnswer } from "@/lib/learning/answer-key";
+import { evaluateResponse } from "@/lib/learning/evaluate";
+import type { ClientQuestion } from "@/lib/learning/lesson-payload";
+import { mergeLearningRules } from "@/lib/learning/rules";
 import { expandTemplate, type TemplateContext } from "@/lib/content/templates";
 import { RENDERABLE_QUESTION_TYPES } from "@/features/activities/supported-types";
 
@@ -37,7 +42,7 @@ const patterns = new Map(phonics.patterns.map((p) => [p.code, p]));
 
 function expand(q: QuestionInput, seed: string) {
   if ("template" in q && typeof q.template === "string") {
-    const { template, code: _c, difficulty: _d, skill: _s, ...params } = q;
+    const { template, code: _c, difficulty: _d, skill: _s, explanation: _e, ...params } = q;
     const ctx: TemplateContext = {
       seed,
       word: (t) => {
@@ -132,4 +137,101 @@ describe("shipped content", () => {
     for (const list of sight.lists)
       for (const w of list.words) expect(wordBank.has(normalizeWord(w)), w).toBe(true);
   });
+
+  it("has a valid, strict configuration for every activity", () => {
+    const problems: string[] = [];
+    for (const file of curriculum)
+      for (const unit of file.units)
+        for (const skill of unit.skills)
+          for (const lesson of skill.lessons)
+            lesson.activities.forEach((activity, a) => {
+              const parsed = parseActivityConfig(activity.type, activity.config);
+              if (!parsed.ok) problems.push(`${lesson.code}-a${a + 1}: ${parsed.error}`);
+            });
+    expect(problems).toEqual([]);
+  });
+
+  it("uses every required activity type and subject, with feedback and rules", () => {
+    const types = new Set(
+      curriculum.flatMap((f) =>
+        f.units.flatMap((u) =>
+          u.skills.flatMap((s) => s.lessons.flatMap((l) => l.activities.map((a) => a.type))),
+        ),
+      ),
+    );
+    for (const required of [
+      "MULTIPLE_CHOICE",
+      "DRAG_DROP",
+      "MATCH",
+      "WORD_BUILDER",
+      "MISSING_LETTER",
+      "LISTEN_AND_CHOOSE",
+      "SORT",
+      "SENTENCE_BUILDER",
+      "READING",
+      "SPELLING",
+      "WRITING",
+      "TRACING",
+    ])
+      expect(types.has(required), required).toBe(true);
+
+    const published = reference.subjects.filter((s) => s.status === "published").map((s) => s.code);
+    expect(published).toEqual([
+      "PHONICS",
+      "READING",
+      "VOCABULARY",
+      "SPELLING",
+      "WRITING",
+      "LISTENING",
+      "SENTENCE_BUILDING",
+      "GAMES",
+      "ASSESSMENT",
+    ]);
+    for (const file of curriculum)
+      for (const unit of file.units)
+        expect(published, `${unit.code} → ${unit.subject}`).toContain(unit.subject);
+
+    const kinds = new Set(reference.feedback.map((f) => f.kind));
+    expect(kinds).toEqual(new Set(["CORRECT", "INCORRECT", "TRY_AGAIN", "ALMOST_CORRECT", "COMPLETED"]));
+    expect(mergeLearningRules(reference.rules).errors).toEqual([]);
+  });
+
+  it("checks every shipped question the same way on the device and on the server", async () => {
+    const problems: string[] = [];
+    let count = 0;
+    for (const file of curriculum)
+      for (const unit of file.units)
+        for (const skill of unit.skills)
+          for (const lesson of skill.lessons)
+            for (const [a, activity] of lesson.activities.entries())
+              for (const [i, q] of activity.questions.entries()) {
+                const seed = `${lesson.code}-a${a + 1}-q${i + 1}`;
+                const e = expand(q, seed);
+                const parsed = parseQuestion(e.type, e.content, e.answer);
+                if (!parsed.ok || parsed.question.answer === null) continue;
+                const answer = parsed.question.answer as AnswerSpec;
+                const right = correctResponse(e.type, answer);
+                const key = await buildAnswerKey(e.type, answer, seed);
+                const device = await checkWithKey(e.type, key, right);
+                if (!device.isCorrect || !evaluateResponse(e.type, answer, right).isCorrect)
+                  problems.push(`${seed}: correct answer not accepted`);
+                const { answer: _answer, ...client } = parsed.question;
+                if (JSON.stringify(client).includes(JSON.stringify(answer)))
+                  problems.push(`${seed}: answer leaks`);
+                const reveal = await revealAnswer(client as ClientQuestion, key);
+                if (!reveal && !["WORD_BUILDER", "SPELLING"].includes(e.type))
+                  problems.push(`${seed}: cannot reveal`);
+                count++;
+              }
+    expect(problems).toEqual([]);
+    expect(count).toBeGreaterThan(250);
+  });
 });
+
+function correctResponse(type: string, answer: AnswerSpec): QuestionResponse {
+  if ("minCoverage" in answer) return { coverage: answer.minCoverage };
+  if ("pairs" in answer) return { pairs: answer.pairs };
+  if ("acceptedSequences" in answer) return { sequence: answer.acceptedSequences[0] };
+  if (type === "WORD_BUILDER") return { sequence: [...answer.accepted[0]] };
+  return { value: answer.accepted[0] };
+}

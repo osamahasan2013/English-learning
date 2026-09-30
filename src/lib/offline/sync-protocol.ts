@@ -14,6 +14,9 @@ export const attemptEventSchema = z.object({
   id: uuid,
   questionId: uuid,
   lessonRunId: uuid.nullable(),
+  // The learning session on this device (src/lib/learning/learning-session.ts). Optional
+  // so events queued by an older app version still sync.
+  sessionId: uuid.nullable().optional(),
   attemptNumber: z.number().int().min(1).max(5),
   response: responseSchema,
   responseTimeMs: z.number().int().min(0).max(3_600_000),
@@ -24,6 +27,7 @@ export const lessonRunEventSchema = z.object({
   kind: z.literal("lesson_run"),
   id: uuid,
   lessonId: uuid,
+  sessionId: uuid.nullable().optional(),
   startedAt: timestamp,
   completedAt: timestamp,
 });

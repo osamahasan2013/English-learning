@@ -79,6 +79,59 @@ export const spellingContentSchema = z.object({
   hint: z.string().trim().max(120).optional(),
 });
 
+const itemId = z.string().regex(/^[a-z0-9-]{1,40}$/);
+
+// Match pairs (left ↔ right): a picture to its word, a capital to its small letter.
+export const matchItemSchema = z.object({
+  id: itemId,
+  text: z.string().trim().max(40).optional(),
+  emoji: z.string().max(16).optional(),
+  speech: z.string().trim().max(120).optional(),
+});
+export const matchContentSchema = z.object({
+  left: z.array(matchItemSchema).min(2).max(6),
+  right: z.array(matchItemSchema).min(2).max(6),
+});
+
+// Sort items into 2–4 groups ("sh" words / "ch" words).
+export const sortContentSchema = z.object({
+  groups: z
+    .array(z.object({ id: itemId, label: text(40), emoji: z.string().max(16).optional() }))
+    .min(2)
+    .max(4),
+  items: z.array(matchItemSchema).min(2).max(10),
+});
+
+// Drag words from a bank into the blanks of a sentence or word ("The ___ sat.").
+export const dragDropContentSchema = z
+  .object({
+    emoji: z.string().max(16).optional(),
+    parts: z
+      .array(z.union([z.object({ text: text(60) }), z.object({ blank: z.literal(true) })]))
+      .min(2)
+      .max(12),
+    bank: z.array(text(24)).min(2).max(8),
+  })
+  .refine((c) => c.parts.some((p) => "blank" in p), { message: "drag-drop content needs a blank" });
+
+// Reading comprehension: the passage lives in the activity config (shared by its
+// questions); each question is a choice about it.
+export const readingContentSchema = choiceContentSchema;
+
+// Write a word or finish a sentence, with a word bank to copy from.
+export const writingContentSchema = z.object({
+  emoji: z.string().max(16).optional(),
+  starter: z.string().trim().max(80).optional(),
+  wordBank: z.array(text(24)).min(2).max(8),
+  hint: z.string().trim().max(120).optional(),
+});
+
+// Trace a letter with a finger; scored by how much of the letter the strokes cover.
+export const tracingContentSchema = z.object({
+  letter: z.string().trim().min(1).max(2),
+  speech: z.string().trim().max(60).optional(),
+});
+
 export const acceptedAnswerSchema = z.object({
   accepted: z.array(text(120)).min(1).max(10),
 });
@@ -90,9 +143,26 @@ export const sequenceAnswerSchema = z.object({
     .max(5),
 });
 
+export const pairsAnswerSchema = z.object({
+  pairs: z.array(z.tuple([itemId, itemId])).min(1).max(10),
+});
+
+export const coverageAnswerSchema = z.object({
+  minCoverage: z.number().int().min(30).max(95),
+});
+
 export const valueResponseSchema = z.object({ value: z.string().max(200) });
 export const sequenceResponseSchema = z.object({ sequence: z.array(z.string().max(40)).max(20) });
-export const responseSchema = z.union([valueResponseSchema, sequenceResponseSchema]);
+export const pairsResponseSchema = z.object({
+  pairs: z.array(z.tuple([z.string().max(40), z.string().max(40)])).max(10),
+});
+export const coverageResponseSchema = z.object({ coverage: z.number().min(0).max(100) });
+export const responseSchema = z.union([
+  valueResponseSchema,
+  sequenceResponseSchema,
+  pairsResponseSchema,
+  coverageResponseSchema,
+]);
 export type QuestionResponse = z.infer<typeof responseSchema>;
 
 // Each type's content schema, answer schema (null = unscored) and response schema.
@@ -129,6 +199,16 @@ export const questionTypeSchemas = {
     response: sequenceResponseSchema,
   },
   SPELLING: { content: spellingContentSchema, answer: acceptedAnswerSchema, response: valueResponseSchema },
+  MATCH: { content: matchContentSchema, answer: pairsAnswerSchema, response: pairsResponseSchema },
+  SORT: { content: sortContentSchema, answer: pairsAnswerSchema, response: pairsResponseSchema },
+  DRAG_DROP: {
+    content: dragDropContentSchema,
+    answer: sequenceAnswerSchema,
+    response: sequenceResponseSchema,
+  },
+  READING: { content: readingContentSchema, answer: acceptedAnswerSchema, response: valueResponseSchema },
+  WRITING: { content: writingContentSchema, answer: acceptedAnswerSchema, response: valueResponseSchema },
+  TRACING: { content: tracingContentSchema, answer: coverageAnswerSchema, response: coverageResponseSchema },
 } as const;
 
 export type SupportedQuestionType = keyof typeof questionTypeSchemas;
@@ -143,9 +223,17 @@ export type MissingLetterContent = z.infer<typeof missingLetterContentSchema>;
 export type WordBuilderContent = z.infer<typeof wordBuilderContentSchema>;
 export type SentenceBuilderContent = z.infer<typeof sentenceBuilderContentSchema>;
 export type SpellingContent = z.infer<typeof spellingContentSchema>;
+export type MatchContent = z.infer<typeof matchContentSchema>;
+export type SortContent = z.infer<typeof sortContentSchema>;
+export type DragDropContent = z.infer<typeof dragDropContentSchema>;
+export type ReadingContent = z.infer<typeof readingContentSchema>;
+export type WritingContent = z.infer<typeof writingContentSchema>;
+export type TracingContent = z.infer<typeof tracingContentSchema>;
 export type AcceptedAnswer = z.infer<typeof acceptedAnswerSchema>;
 export type SequenceAnswer = z.infer<typeof sequenceAnswerSchema>;
-export type AnswerSpec = AcceptedAnswer | SequenceAnswer;
+export type PairsAnswer = z.infer<typeof pairsAnswerSchema>;
+export type CoverageAnswer = z.infer<typeof coverageAnswerSchema>;
+export type AnswerSpec = AcceptedAnswer | SequenceAnswer | PairsAnswer | CoverageAnswer;
 
 export type ParsedQuestion =
   | { type: "INTRO"; content: IntroContent; answer: null }
@@ -157,7 +245,13 @@ export type ParsedQuestion =
   | { type: "MISSING_LETTER"; content: MissingLetterContent; answer: AcceptedAnswer }
   | { type: "WORD_BUILDER"; content: WordBuilderContent; answer: AcceptedAnswer }
   | { type: "SENTENCE_BUILDER"; content: SentenceBuilderContent; answer: SequenceAnswer }
-  | { type: "SPELLING"; content: SpellingContent; answer: AcceptedAnswer };
+  | { type: "SPELLING"; content: SpellingContent; answer: AcceptedAnswer }
+  | { type: "MATCH"; content: MatchContent; answer: PairsAnswer }
+  | { type: "SORT"; content: SortContent; answer: PairsAnswer }
+  | { type: "DRAG_DROP"; content: DragDropContent; answer: SequenceAnswer }
+  | { type: "READING"; content: ReadingContent; answer: AcceptedAnswer }
+  | { type: "WRITING"; content: WritingContent; answer: AcceptedAnswer }
+  | { type: "TRACING"; content: TracingContent; answer: CoverageAnswer };
 
 export type ParseQuestionResult = { ok: true; question: ParsedQuestion } | { ok: false; error: string };
 
@@ -188,7 +282,8 @@ function checkCrossFields(q: ParsedQuestion): string | null {
   switch (q.type) {
     case "MULTIPLE_CHOICE":
     case "LISTEN_AND_CHOOSE":
-    case "PICTURE_MATCH": {
+    case "PICTURE_MATCH":
+    case "READING": {
       const ids = new Set(q.content.options.map((o) => o.id));
       if (ids.size !== q.content.options.length) return "option ids must be unique";
       if (!q.answer.accepted.every((id) => ids.has(id))) return "answer must reference an option id";
@@ -209,6 +304,48 @@ function checkCrossFields(q: ParsedQuestion): string | null {
       return q.answer.acceptedSequences.every((s) => [...s].sort().join("\u0000") === tokens)
         ? null
         : "each accepted sequence must use exactly the given tokens";
+    }
+    case "MATCH": {
+      const left = new Set(q.content.left.map((i) => i.id));
+      const right = new Set(q.content.right.map((i) => i.id));
+      if (left.size !== q.content.left.length || right.size !== q.content.right.length)
+        return "item ids must be unique";
+      if (q.answer.pairs.length !== left.size) return "every left item needs exactly one pair";
+      if (new Set(q.answer.pairs.map((p) => p[0])).size !== left.size) return "a left item is paired twice";
+      return q.answer.pairs.every(([l, r]) => left.has(l) && right.has(r))
+        ? null
+        : "pairs must reference item ids";
+    }
+    case "SORT": {
+      const items = new Set(q.content.items.map((i) => i.id));
+      const groups = new Set(q.content.groups.map((g) => g.id));
+      if (items.size !== q.content.items.length || groups.size !== q.content.groups.length)
+        return "item and group ids must be unique";
+      if (q.answer.pairs.length !== items.size || new Set(q.answer.pairs.map((p) => p[0])).size !== items.size)
+        return "every item must be sorted into exactly one group";
+      return q.answer.pairs.every(([item, group]) => items.has(item) && groups.has(group))
+        ? null
+        : "pairs must reference item and group ids";
+    }
+    case "DRAG_DROP": {
+      const blanks = q.content.parts.filter((p) => "blank" in p).length;
+      const bank = q.content.bank.map((b) => b.toLowerCase());
+      for (const seq of q.answer.acceptedSequences) {
+        if (seq.length !== blanks) return "each accepted sequence needs one word per blank";
+        if (!seq.every((w) => bank.includes(w.toLowerCase()))) return "answers must come from the word bank";
+      }
+      return null;
+    }
+    case "WRITING": {
+      // The child copies from the word bank, so every answer must be writable from it.
+      const bank = new Set(q.content.wordBank.map((w) => w.toLowerCase()));
+      const starter = (q.content.starter ?? "").toLowerCase().trim();
+      const ok = q.answer.accepted.every((a) => {
+        const rest = a.toLowerCase().replace(/[.!?]+$/, "").trim();
+        const tail = starter && rest.startsWith(starter) ? rest.slice(starter.length).trim() : rest;
+        return tail.split(/\s+/).every((w) => bank.has(w));
+      });
+      return ok ? null : "writing answers must use words from the word bank";
     }
     default:
       return null;

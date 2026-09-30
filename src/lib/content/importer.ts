@@ -12,7 +12,9 @@ import type {
   WordInput,
 } from "@/lib/content/content-schemas";
 import { normalizeWord } from "@/lib/content/csv";
+import { parseActivityConfig } from "@/lib/content/activity-config";
 import { parseQuestion } from "@/lib/content/question-schemas";
+import { mergeLearningRules } from "@/lib/learning/rules";
 import {
   expandTemplate,
   TemplateError,
@@ -57,6 +59,8 @@ type Row = Record<string, unknown>;
 type Db = SupabaseClient;
 
 const BATCH_SIZE = 500;
+// Tables whose primary key is their code (no uuid id column).
+const CODE_KEYED_TABLES = new Set(["skill_dimensions", "activity_types", "learning_rules"]);
 const PAGE_SIZE = 1000;
 
 function emptyReport(): EntityReport {
@@ -124,7 +128,7 @@ export class ContentImporter {
 
   private async loadIds(table: string, keyColumns: string[]) {
     const map = this.idMap(table);
-    const idColumn = table === "skill_dimensions" || table === "activity_types" ? "code" : "id";
+    const idColumn = CODE_KEYED_TABLES.has(table) ? "code" : "id";
     for (const row of await fetchAll(this.db, table, [idColumn, ...keyColumns].join(","))) {
       map.set(keyColumns.map((c) => String(row[c])).join("|"), String(row[idColumn]));
     }
@@ -146,7 +150,7 @@ export class ContentImporter {
     rows: Row[],
   ): Promise<Map<string, string>> {
     const report = this.entity(entity);
-    const idColumn = table === "skill_dimensions" || table === "activity_types" ? "code" : "id";
+    const idColumn = CODE_KEYED_TABLES.has(table) ? "code" : "id";
     const existing = new Map<string, Row>();
     for (const row of await fetchAll(this.db, table))
       existing.set(keyColumns.map((c) => String(row[c])).join("|"), row);
@@ -325,6 +329,35 @@ export class ContentImporter {
         sort_order: a.sortOrder,
         status: a.status,
       })),
+    );
+    await this.sync(
+      "feedback_messages",
+      "feedback messages",
+      ["code"],
+      file.feedback.map((f, i) => ({
+        code: f.code,
+        kind: f.kind,
+        text: f.text,
+        speech: f.speech,
+        emoji: f.emoji,
+        sort_order: i,
+        status: f.status,
+      })),
+    );
+    // Rule overrides are validated against the engine's schemas before they are stored.
+    const rulesReport = this.entity("learning rules");
+    const validRules = file.rules.filter((r) => {
+      const { errors } = mergeLearningRules([r]);
+      if (errors.length === 0) return true;
+      rulesReport.invalid++;
+      rulesReport.errors.push(`rules ${r.code}: ${errors.join("; ")}`);
+      return false;
+    });
+    await this.sync(
+      "learning_rules",
+      "learning rules",
+      ["code"],
+      validRules.map((r) => ({ code: r.code, description: r.description, config: r.config })),
     );
   }
 
@@ -675,7 +708,14 @@ export class ContentImporter {
         story?: string;
       };
       if ("template" in input && typeof input.template === "string") {
-        const { template, code: _code, difficulty: _difficulty, skill: _skill, ...params } = input;
+        const {
+          template,
+          code: _code,
+          difficulty: _difficulty,
+          skill: _skill,
+          explanation: _explanation,
+          ...params
+        } = input;
         const ctx: TemplateContext = {
           seed: code,
           word: (text) => this.wordBank.get(normalizeWord(text)),
@@ -697,6 +737,8 @@ export class ContentImporter {
         prompt_speech: expanded.promptSpeech,
         content: expanded.content,
         answer: expanded.answer,
+        explanation: String(input.explanation ?? ""),
+        metadata: "metadata" in input && input.metadata ? input.metadata : {},
         word_id: expanded.word ? this.lookup("words", `${normalizeWord(expanded.word)}|1`, "word") : null,
         phonics_pattern_id: expanded.pattern
           ? this.lookup("phonics_patterns", expanded.pattern.toUpperCase(), "phonics pattern")
@@ -722,6 +764,7 @@ export class ContentImporter {
       this.loadIds("words", ["normalized_word", "sense"]),
       this.loadIds("stories", ["code"]),
       this.loadIds("skills", ["code"]),
+      this.loadIds("lessons", ["code"]),
     ]);
     await this.loadBanksFromDatabase();
     const levelId = this.lookup("levels", file.level, "level");
@@ -759,6 +802,8 @@ export class ContentImporter {
           : null,
         mastery_threshold: skill.masteryThreshold,
         importance: skill.importance,
+        difficulty: skill.difficulty,
+        is_active: skill.active,
         sort_order: order,
         status: skill.status,
       })),
@@ -801,8 +846,31 @@ export class ContentImporter {
         emoji: lesson.emoji,
         sort_order: order,
         estimated_minutes: lesson.minutes,
+        difficulty: lesson.difficulty,
+        intro_speech: lesson.introSpeech,
         status: lesson.status,
       })),
+    );
+
+    const lessonPrereqs: Row[] = [];
+    for (const { lesson } of lessons) {
+      for (const p of lesson.prerequisites) {
+        const prerequisiteId = lessonIds.get(p) ?? this.idMap("lessons").get(p);
+        if (!prerequisiteId) {
+          this.entity("lessons").errors.push(
+            `lesson ${lesson.code}: prerequisite "${p}" not found (import its level first)`,
+          );
+          continue;
+        }
+        lessonPrereqs.push({ lesson_id: lessonIds.get(lesson.code), prerequisite_lesson_id: prerequisiteId });
+      }
+    }
+    await this.syncLinks(
+      "lesson_prerequisites",
+      "lesson_id",
+      lessons.map(({ lesson }) => lessonIds.get(lesson.code)!),
+      lessonPrereqs,
+      ["lesson_id", "prerequisite_lesson_id"],
     );
     await this.archiveMissing(
       "lessons",
@@ -812,15 +880,26 @@ export class ContentImporter {
       new Set(lessons.map(({ lesson }) => lessonIds.get(lesson.code)!)),
     );
 
-    const activities = lessons.flatMap(({ skill, lesson }) =>
-      lesson.activities.map((a, i) => ({
-        skill,
-        lesson,
-        activity: a,
-        order: i,
-        code: a.code ?? `${lesson.code}-a${i + 1}`,
-      })),
-    );
+    // An activity whose configuration does not match its type's schema is rejected
+    // (and, if it was imported before, archived by archiveMissing below).
+    const activities = lessons
+      .flatMap(({ skill, lesson }) =>
+        lesson.activities.map((a, i) => ({
+          skill,
+          lesson,
+          activity: a,
+          order: i,
+          code: a.code ?? `${lesson.code}-a${i + 1}`,
+        })),
+      )
+      .filter(({ activity, code }) => {
+        const config = parseActivityConfig(activity.type, activity.config);
+        if (config.ok) return true;
+        const report = this.entity("activities");
+        report.invalid++;
+        report.errors.push(`activity ${code}: config ${config.error}`);
+        return false;
+      });
     const activityIds = await this.sync(
       "activities",
       "activities",

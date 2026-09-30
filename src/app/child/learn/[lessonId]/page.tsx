@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { LessonPlayer } from "@/features/lesson-player/lesson-player";
 import { requireActiveChild } from "@/lib/auth/session";
+import { getLessonReadiness } from "@/lib/server/learning-engine";
 import { loadLessonPayload } from "@/lib/server/lesson-loader";
 
 export const metadata: Metadata = { title: "Lesson" };
@@ -9,7 +10,10 @@ export const metadata: Metadata = { title: "Lesson" };
 export default async function LessonPage(props: PageProps<"/child/learn/[lessonId]">) {
   const child = await requireActiveChild();
   const { lessonId } = await props.params;
-  const payload = await loadLessonPayload(lessonId);
+  const [payload, readiness] = await Promise.all([
+    loadLessonPayload(lessonId),
+    getLessonReadiness(child.id, lessonId).catch(() => null),
+  ]);
 
   if (!payload) {
     return (
@@ -24,5 +28,5 @@ export default async function LessonPage(props: PageProps<"/child/learn/[lessonI
       </div>
     );
   }
-  return <LessonPlayer payload={payload} childId={child.id} />;
+  return <LessonPlayer payload={payload} childId={child.id} readiness={readiness} />;
 }

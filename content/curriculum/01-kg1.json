@@ -1,944 +1,1155 @@
 {
- "level": "KG1",
- "units": [
-  {
-   "code": "kg1-letters-and-sounds",
-   "subject": "LETTERS",
-   "title": "Letters and Sounds",
-   "emoji": "🔤",
-   "description": "Letter shapes and their main sounds, starting with the most useful letters.",
-   "skills": [
+  "level": "KG1",
+  "units": [
     {
-     "code": "kg1-letter-a",
-     "dimension": "LETTER_SOUNDS",
-     "title": "Letter A and its sound",
-     "childTitle": "A a",
-     "pattern": "LETTER_A",
-     "importance": 5,
-     "masteryThreshold": 90,
-     "lessons": [
-      {
-       "code": "kg1-letter-a-1",
-       "title": "The letter A",
-       "childTitle": "A a",
-       "emoji": "🍎",
-       "description": "Recognise A and a, hear its sound, and find words that start with it.",
-       "minutes": 5,
-       "activities": [
+      "code": "kg1-letters-and-sounds",
+      "subject": "PHONICS",
+      "title": "Letters and Sounds",
+      "emoji": "🔤",
+      "description": "Letter shapes and their main sounds, starting with the most useful letters.",
+      "skills": [
         {
-         "type": "INTRO",
-         "stage": "explanation",
-         "title": "Meet A a",
-         "instructions": "Listen and look.",
-         "instructionsSpeech": "Listen and look.",
-         "questions": [
-          {
-           "template": "pattern_intro",
-           "pattern": "LETTER_A",
-           "examples": [
-            "apple",
-            "ant",
-            "alligator"
-           ]
-          }
-         ]
+          "code": "kg1-letter-a",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter A and its sound",
+          "childTitle": "A a",
+          "pattern": "LETTER_A",
+          "importance": 5,
+          "masteryThreshold": 90,
+          "lessons": [
+            {
+              "code": "kg1-letter-a-1",
+              "title": "The letter A",
+              "childTitle": "A a",
+              "emoji": "🍎",
+              "description": "Recognise A and a, hear its sound, and find words that start with it.",
+              "minutes": 5,
+              "activities": [
+                {
+                  "type": "INTRO",
+                  "stage": "explanation",
+                  "title": "Meet A a",
+                  "instructions": "Listen and look.",
+                  "instructionsSpeech": "Listen and look.",
+                  "questions": [
+                    {
+                      "template": "pattern_intro",
+                      "pattern": "LETTER_A",
+                      "examples": [
+                        "apple",
+                        "ant",
+                        "alligator"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "MULTIPLE_CHOICE",
+                  "stage": "guided_practice",
+                  "title": "Find the letter",
+                  "instructions": "Tap the letter.",
+                  "instructionsSpeech": "Tap the letter.",
+                  "questions": [
+                    {
+                      "template": "find_letter",
+                      "pattern": "LETTER_A",
+                      "distractors": [
+                        "o",
+                        "e"
+                      ]
+                    },
+                    {
+                      "template": "find_letter",
+                      "pattern": "LETTER_A",
+                      "distractors": [
+                        "o",
+                        "e"
+                      ],
+                      "case": "upper"
+                    }
+                  ]
+                },
+                {
+                  "type": "PICTURE_MATCH",
+                  "stage": "guided_practice",
+                  "title": "Starts with",
+                  "instructions": "Which one starts with this sound?",
+                  "instructionsSpeech": "Which one starts with this sound?",
+                  "questions": [
+                    {
+                      "template": "pick_starting_sound",
+                      "pattern": "LETTER_A",
+                      "word": "apple",
+                      "distractors": [
+                        "dog",
+                        "hat"
+                      ]
+                    },
+                    {
+                      "template": "pick_starting_sound",
+                      "pattern": "LETTER_A",
+                      "word": "ant",
+                      "distractors": [
+                        "fish",
+                        "egg"
+                      ]
+                    },
+                    {
+                      "template": "pick_starting_sound",
+                      "pattern": "LETTER_A",
+                      "word": "alligator",
+                      "distractors": [
+                        "pig",
+                        "lion"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "LISTEN_AND_CHOOSE",
+                  "stage": "independent_practice",
+                  "title": "Listen and find",
+                  "instructions": "Listen, then tap the picture.",
+                  "instructionsSpeech": "Listen, then tap the picture.",
+                  "questions": [
+                    {
+                      "template": "listen_pick_picture",
+                      "word": "apple",
+                      "distractors": [
+                        "lion",
+                        "zebra"
+                      ]
+                    },
+                    {
+                      "template": "listen_pick_picture",
+                      "word": "ant",
+                      "distractors": [
+                        "fox",
+                        "rabbit"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "MISSING_LETTER",
+                  "stage": "independent_practice",
+                  "title": "First letter",
+                  "instructions": "Which letter is missing?",
+                  "instructionsSpeech": "Which letter is missing?",
+                  "questions": [
+                    {
+                      "template": "missing_pattern",
+                      "word": "ant",
+                      "missing": "a",
+                      "pattern": "LETTER_A",
+                      "choices": [
+                        "o",
+                        "e"
+                      ]
+                    },
+                    {
+                      "template": "missing_pattern",
+                      "word": "apple",
+                      "missing": "a",
+                      "pattern": "LETTER_A",
+                      "choices": [
+                        "o",
+                        "e"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         },
         {
-         "type": "MULTIPLE_CHOICE",
-         "stage": "guided_practice",
-         "title": "Find the letter",
-         "instructions": "Tap the letter.",
-         "instructionsSpeech": "Tap the letter.",
-         "questions": [
-          {
-           "template": "find_letter",
-           "pattern": "LETTER_A",
-           "distractors": [
-            "o",
-            "e"
-           ]
-          },
-          {
-           "template": "find_letter",
-           "pattern": "LETTER_A",
-           "distractors": [
-            "o",
-            "e"
-           ],
-           "case": "upper"
-          }
-         ]
+          "code": "kg1-letter-b",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter B and its sound",
+          "childTitle": "B b",
+          "pattern": "LETTER_B",
+          "importance": 5,
+          "masteryThreshold": 90,
+          "lessons": [
+            {
+              "code": "kg1-letter-b-1",
+              "title": "The letter B",
+              "childTitle": "B b",
+              "emoji": "⚽",
+              "description": "Recognise B and b, hear its sound, and find words that start with it.",
+              "minutes": 5,
+              "activities": [
+                {
+                  "type": "INTRO",
+                  "stage": "explanation",
+                  "title": "Meet B b",
+                  "instructions": "Listen and look.",
+                  "instructionsSpeech": "Listen and look.",
+                  "questions": [
+                    {
+                      "template": "pattern_intro",
+                      "pattern": "LETTER_B",
+                      "examples": [
+                        "ball",
+                        "bee",
+                        "bus"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "MULTIPLE_CHOICE",
+                  "stage": "guided_practice",
+                  "title": "Find the letter",
+                  "instructions": "Tap the letter.",
+                  "instructionsSpeech": "Tap the letter.",
+                  "questions": [
+                    {
+                      "template": "find_letter",
+                      "pattern": "LETTER_B",
+                      "distractors": [
+                        "d",
+                        "p"
+                      ]
+                    },
+                    {
+                      "template": "find_letter",
+                      "pattern": "LETTER_B",
+                      "distractors": [
+                        "d",
+                        "p"
+                      ],
+                      "case": "upper"
+                    }
+                  ]
+                },
+                {
+                  "type": "PICTURE_MATCH",
+                  "stage": "guided_practice",
+                  "title": "Starts with",
+                  "instructions": "Which one starts with this sound?",
+                  "instructionsSpeech": "Which one starts with this sound?",
+                  "questions": [
+                    {
+                      "template": "pick_starting_sound",
+                      "pattern": "LETTER_B",
+                      "word": "bear",
+                      "distractors": [
+                        "dog",
+                        "hat"
+                      ]
+                    },
+                    {
+                      "template": "pick_starting_sound",
+                      "pattern": "LETTER_B",
+                      "word": "banana",
+                      "distractors": [
+                        "fish",
+                        "egg"
+                      ]
+                    },
+                    {
+                      "template": "pick_starting_sound",
+                      "pattern": "LETTER_B",
+                      "word": "bus",
+                      "distractors": [
+                        "pig",
+                        "lion"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "LISTEN_AND_CHOOSE",
+                  "stage": "independent_practice",
+                  "title": "Listen and find",
+                  "instructions": "Listen, then tap the picture.",
+                  "instructionsSpeech": "Listen, then tap the picture.",
+                  "questions": [
+                    {
+                      "template": "listen_pick_picture",
+                      "word": "ball",
+                      "distractors": [
+                        "lion",
+                        "zebra"
+                      ]
+                    },
+                    {
+                      "template": "listen_pick_picture",
+                      "word": "bee",
+                      "distractors": [
+                        "fox",
+                        "rabbit"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "MISSING_LETTER",
+                  "stage": "independent_practice",
+                  "title": "First letter",
+                  "instructions": "Which letter is missing?",
+                  "instructionsSpeech": "Which letter is missing?",
+                  "questions": [
+                    {
+                      "template": "missing_pattern",
+                      "word": "ball",
+                      "missing": "b",
+                      "pattern": "LETTER_B",
+                      "choices": [
+                        "d",
+                        "p"
+                      ]
+                    },
+                    {
+                      "template": "missing_pattern",
+                      "word": "bee",
+                      "missing": "b",
+                      "pattern": "LETTER_B",
+                      "choices": [
+                        "d",
+                        "p"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         },
         {
-         "type": "PICTURE_MATCH",
-         "stage": "guided_practice",
-         "title": "Starts with",
-         "instructions": "Which one starts with this sound?",
-         "instructionsSpeech": "Which one starts with this sound?",
-         "questions": [
-          {
-           "template": "pick_starting_sound",
-           "pattern": "LETTER_A",
-           "word": "apple",
-           "distractors": [
-            "dog",
-            "hat"
-           ]
-          },
-          {
-           "template": "pick_starting_sound",
-           "pattern": "LETTER_A",
-           "word": "ant",
-           "distractors": [
-            "fish",
-            "egg"
-           ]
-          },
-          {
-           "template": "pick_starting_sound",
-           "pattern": "LETTER_A",
-           "word": "alligator",
-           "distractors": [
-            "pig",
-            "lion"
-           ]
-          }
-         ]
+          "code": "kg1-letter-c",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter C and its sound",
+          "childTitle": "C c",
+          "pattern": "LETTER_C",
+          "importance": 5,
+          "masteryThreshold": 90,
+          "lessons": [
+            {
+              "code": "kg1-letter-c-1",
+              "title": "The letter C",
+              "childTitle": "C c",
+              "emoji": "🐱",
+              "description": "Recognise C and c, hear its sound, and find words that start with it.",
+              "minutes": 5,
+              "activities": [
+                {
+                  "type": "INTRO",
+                  "stage": "explanation",
+                  "title": "Meet C c",
+                  "instructions": "Listen and look.",
+                  "instructionsSpeech": "Listen and look.",
+                  "questions": [
+                    {
+                      "template": "pattern_intro",
+                      "pattern": "LETTER_C",
+                      "examples": [
+                        "cat",
+                        "cup",
+                        "car"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "MULTIPLE_CHOICE",
+                  "stage": "guided_practice",
+                  "title": "Find the letter",
+                  "instructions": "Tap the letter.",
+                  "instructionsSpeech": "Tap the letter.",
+                  "questions": [
+                    {
+                      "template": "find_letter",
+                      "pattern": "LETTER_C",
+                      "distractors": [
+                        "o",
+                        "e"
+                      ]
+                    },
+                    {
+                      "template": "find_letter",
+                      "pattern": "LETTER_C",
+                      "distractors": [
+                        "o",
+                        "e"
+                      ],
+                      "case": "upper"
+                    }
+                  ]
+                },
+                {
+                  "type": "PICTURE_MATCH",
+                  "stage": "guided_practice",
+                  "title": "Starts with",
+                  "instructions": "Which one starts with this sound?",
+                  "instructionsSpeech": "Which one starts with this sound?",
+                  "questions": [
+                    {
+                      "template": "pick_starting_sound",
+                      "pattern": "LETTER_C",
+                      "word": "cat",
+                      "distractors": [
+                        "dog",
+                        "hat"
+                      ]
+                    },
+                    {
+                      "template": "pick_starting_sound",
+                      "pattern": "LETTER_C",
+                      "word": "cup",
+                      "distractors": [
+                        "fish",
+                        "egg"
+                      ]
+                    },
+                    {
+                      "template": "pick_starting_sound",
+                      "pattern": "LETTER_C",
+                      "word": "cake",
+                      "distractors": [
+                        "pig",
+                        "lion"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "LISTEN_AND_CHOOSE",
+                  "stage": "independent_practice",
+                  "title": "Listen and find",
+                  "instructions": "Listen, then tap the picture.",
+                  "instructionsSpeech": "Listen, then tap the picture.",
+                  "questions": [
+                    {
+                      "template": "listen_pick_picture",
+                      "word": "cat",
+                      "distractors": [
+                        "lion",
+                        "zebra"
+                      ]
+                    },
+                    {
+                      "template": "listen_pick_picture",
+                      "word": "cup",
+                      "distractors": [
+                        "fox",
+                        "rabbit"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "MISSING_LETTER",
+                  "stage": "independent_practice",
+                  "title": "First letter",
+                  "instructions": "Which letter is missing?",
+                  "instructionsSpeech": "Which letter is missing?",
+                  "questions": [
+                    {
+                      "template": "missing_pattern",
+                      "word": "cat",
+                      "missing": "c",
+                      "pattern": "LETTER_C",
+                      "choices": [
+                        "o",
+                        "e"
+                      ]
+                    },
+                    {
+                      "template": "missing_pattern",
+                      "word": "cup",
+                      "missing": "c",
+                      "pattern": "LETTER_C",
+                      "choices": [
+                        "o",
+                        "e"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         },
         {
-         "type": "LISTEN_AND_CHOOSE",
-         "stage": "independent_practice",
-         "title": "Listen and find",
-         "instructions": "Listen, then tap the picture.",
-         "instructionsSpeech": "Listen, then tap the picture.",
-         "questions": [
-          {
-           "template": "listen_pick_picture",
-           "word": "apple",
-           "distractors": [
-            "lion",
-            "zebra"
-           ]
-          },
-          {
-           "template": "listen_pick_picture",
-           "word": "ant",
-           "distractors": [
-            "fox",
-            "rabbit"
-           ]
-          }
-         ]
+          "code": "kg1-letter-m",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter M and its sound",
+          "childTitle": "M m",
+          "pattern": "LETTER_M",
+          "importance": 5,
+          "masteryThreshold": 90,
+          "lessons": [
+            {
+              "code": "kg1-letter-m-1",
+              "title": "The letter M",
+              "childTitle": "M m",
+              "emoji": "🌙",
+              "description": "Recognise M and m, hear its sound, and find words that start with it.",
+              "minutes": 5,
+              "activities": [
+                {
+                  "type": "INTRO",
+                  "stage": "explanation",
+                  "title": "Meet M m",
+                  "instructions": "Listen and look.",
+                  "instructionsSpeech": "Listen and look.",
+                  "questions": [
+                    {
+                      "template": "pattern_intro",
+                      "pattern": "LETTER_M",
+                      "examples": [
+                        "moon",
+                        "mouse",
+                        "milk"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "MULTIPLE_CHOICE",
+                  "stage": "guided_practice",
+                  "title": "Find the letter",
+                  "instructions": "Tap the letter.",
+                  "instructionsSpeech": "Tap the letter.",
+                  "questions": [
+                    {
+                      "template": "find_letter",
+                      "pattern": "LETTER_M",
+                      "distractors": [
+                        "n",
+                        "w"
+                      ]
+                    },
+                    {
+                      "template": "find_letter",
+                      "pattern": "LETTER_M",
+                      "distractors": [
+                        "n",
+                        "w"
+                      ],
+                      "case": "upper"
+                    }
+                  ]
+                },
+                {
+                  "type": "PICTURE_MATCH",
+                  "stage": "guided_practice",
+                  "title": "Starts with",
+                  "instructions": "Which one starts with this sound?",
+                  "instructionsSpeech": "Which one starts with this sound?",
+                  "questions": [
+                    {
+                      "template": "pick_starting_sound",
+                      "pattern": "LETTER_M",
+                      "word": "monkey",
+                      "distractors": [
+                        "dog",
+                        "hat"
+                      ]
+                    },
+                    {
+                      "template": "pick_starting_sound",
+                      "pattern": "LETTER_M",
+                      "word": "moon",
+                      "distractors": [
+                        "fish",
+                        "egg"
+                      ]
+                    },
+                    {
+                      "template": "pick_starting_sound",
+                      "pattern": "LETTER_M",
+                      "word": "milk",
+                      "distractors": [
+                        "pig",
+                        "lion"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "LISTEN_AND_CHOOSE",
+                  "stage": "independent_practice",
+                  "title": "Listen and find",
+                  "instructions": "Listen, then tap the picture.",
+                  "instructionsSpeech": "Listen, then tap the picture.",
+                  "questions": [
+                    {
+                      "template": "listen_pick_picture",
+                      "word": "moon",
+                      "distractors": [
+                        "lion",
+                        "zebra"
+                      ]
+                    },
+                    {
+                      "template": "listen_pick_picture",
+                      "word": "mouse",
+                      "distractors": [
+                        "fox",
+                        "rabbit"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "MISSING_LETTER",
+                  "stage": "independent_practice",
+                  "title": "First letter",
+                  "instructions": "Which letter is missing?",
+                  "instructionsSpeech": "Which letter is missing?",
+                  "questions": [
+                    {
+                      "template": "missing_pattern",
+                      "word": "moon",
+                      "missing": "m",
+                      "pattern": "LETTER_M",
+                      "choices": [
+                        "n",
+                        "w"
+                      ]
+                    },
+                    {
+                      "template": "missing_pattern",
+                      "word": "milk",
+                      "missing": "m",
+                      "pattern": "LETTER_M",
+                      "choices": [
+                        "n",
+                        "w"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         },
         {
-         "type": "MISSING_LETTER",
-         "stage": "independent_practice",
-         "title": "First letter",
-         "instructions": "Which letter is missing?",
-         "instructionsSpeech": "Which letter is missing?",
-         "questions": [
-          {
-           "template": "missing_pattern",
-           "word": "ant",
-           "missing": "a",
-           "pattern": "LETTER_A",
-           "choices": [
-            "o",
-            "e"
-           ]
-          },
-          {
-           "template": "missing_pattern",
-           "word": "apple",
-           "missing": "a",
-           "pattern": "LETTER_A",
-           "choices": [
-            "o",
-            "e"
-           ]
-          }
-         ]
+          "code": "kg1-letter-s",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter S and its sound",
+          "childTitle": "S s",
+          "pattern": "LETTER_S",
+          "importance": 5,
+          "masteryThreshold": 90,
+          "lessons": [
+            {
+              "code": "kg1-letter-s-1",
+              "title": "The letter S",
+              "childTitle": "S s",
+              "emoji": "☀️",
+              "description": "Recognise S and s, hear its sound, and find words that start with it.",
+              "minutes": 5,
+              "activities": [
+                {
+                  "type": "INTRO",
+                  "stage": "explanation",
+                  "title": "Meet S s",
+                  "instructions": "Listen and look.",
+                  "instructionsSpeech": "Listen and look.",
+                  "questions": [
+                    {
+                      "template": "pattern_intro",
+                      "pattern": "LETTER_S",
+                      "examples": [
+                        "sun",
+                        "sock",
+                        "snake"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "MULTIPLE_CHOICE",
+                  "stage": "guided_practice",
+                  "title": "Find the letter",
+                  "instructions": "Tap the letter.",
+                  "instructionsSpeech": "Tap the letter.",
+                  "questions": [
+                    {
+                      "template": "find_letter",
+                      "pattern": "LETTER_S",
+                      "distractors": [
+                        "z",
+                        "c"
+                      ]
+                    },
+                    {
+                      "template": "find_letter",
+                      "pattern": "LETTER_S",
+                      "distractors": [
+                        "z",
+                        "c"
+                      ],
+                      "case": "upper"
+                    }
+                  ]
+                },
+                {
+                  "type": "PICTURE_MATCH",
+                  "stage": "guided_practice",
+                  "title": "Starts with",
+                  "instructions": "Which one starts with this sound?",
+                  "instructionsSpeech": "Which one starts with this sound?",
+                  "questions": [
+                    {
+                      "template": "pick_starting_sound",
+                      "pattern": "LETTER_S",
+                      "word": "snake",
+                      "distractors": [
+                        "dog",
+                        "hat"
+                      ]
+                    },
+                    {
+                      "template": "pick_starting_sound",
+                      "pattern": "LETTER_S",
+                      "word": "star",
+                      "distractors": [
+                        "fish",
+                        "egg"
+                      ]
+                    },
+                    {
+                      "template": "pick_starting_sound",
+                      "pattern": "LETTER_S",
+                      "word": "sock",
+                      "distractors": [
+                        "pig",
+                        "lion"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "LISTEN_AND_CHOOSE",
+                  "stage": "independent_practice",
+                  "title": "Listen and find",
+                  "instructions": "Listen, then tap the picture.",
+                  "instructionsSpeech": "Listen, then tap the picture.",
+                  "questions": [
+                    {
+                      "template": "listen_pick_picture",
+                      "word": "sun",
+                      "distractors": [
+                        "lion",
+                        "zebra"
+                      ]
+                    },
+                    {
+                      "template": "listen_pick_picture",
+                      "word": "sock",
+                      "distractors": [
+                        "fox",
+                        "rabbit"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "MISSING_LETTER",
+                  "stage": "independent_practice",
+                  "title": "First letter",
+                  "instructions": "Which letter is missing?",
+                  "instructionsSpeech": "Which letter is missing?",
+                  "questions": [
+                    {
+                      "template": "missing_pattern",
+                      "word": "sun",
+                      "missing": "s",
+                      "pattern": "LETTER_S",
+                      "choices": [
+                        "z",
+                        "c"
+                      ]
+                    },
+                    {
+                      "template": "missing_pattern",
+                      "word": "sock",
+                      "missing": "s",
+                      "pattern": "LETTER_S",
+                      "choices": [
+                        "z",
+                        "c"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-t",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter T and its sound",
+          "childTitle": "T t",
+          "pattern": "LETTER_T",
+          "importance": 5,
+          "masteryThreshold": 90,
+          "lessons": [
+            {
+              "code": "kg1-letter-t-1",
+              "title": "The letter T",
+              "childTitle": "T t",
+              "emoji": "🌳",
+              "description": "Recognise T and t, hear its sound, and find words that start with it.",
+              "minutes": 5,
+              "activities": [
+                {
+                  "type": "INTRO",
+                  "stage": "explanation",
+                  "title": "Meet T t",
+                  "instructions": "Listen and look.",
+                  "instructionsSpeech": "Listen and look.",
+                  "questions": [
+                    {
+                      "template": "pattern_intro",
+                      "pattern": "LETTER_T",
+                      "examples": [
+                        "tiger",
+                        "tree",
+                        "tent"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "MULTIPLE_CHOICE",
+                  "stage": "guided_practice",
+                  "title": "Find the letter",
+                  "instructions": "Tap the letter.",
+                  "instructionsSpeech": "Tap the letter.",
+                  "questions": [
+                    {
+                      "template": "find_letter",
+                      "pattern": "LETTER_T",
+                      "distractors": [
+                        "f",
+                        "l"
+                      ]
+                    },
+                    {
+                      "template": "find_letter",
+                      "pattern": "LETTER_T",
+                      "distractors": [
+                        "f",
+                        "l"
+                      ],
+                      "case": "upper"
+                    }
+                  ]
+                },
+                {
+                  "type": "PICTURE_MATCH",
+                  "stage": "guided_practice",
+                  "title": "Starts with",
+                  "instructions": "Which one starts with this sound?",
+                  "instructionsSpeech": "Which one starts with this sound?",
+                  "questions": [
+                    {
+                      "template": "pick_starting_sound",
+                      "pattern": "LETTER_T",
+                      "word": "tiger",
+                      "distractors": [
+                        "dog",
+                        "hat"
+                      ]
+                    },
+                    {
+                      "template": "pick_starting_sound",
+                      "pattern": "LETTER_T",
+                      "word": "turtle",
+                      "distractors": [
+                        "fish",
+                        "egg"
+                      ]
+                    },
+                    {
+                      "template": "pick_starting_sound",
+                      "pattern": "LETTER_T",
+                      "word": "tent",
+                      "distractors": [
+                        "pig",
+                        "lion"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "LISTEN_AND_CHOOSE",
+                  "stage": "independent_practice",
+                  "title": "Listen and find",
+                  "instructions": "Listen, then tap the picture.",
+                  "instructionsSpeech": "Listen, then tap the picture.",
+                  "questions": [
+                    {
+                      "template": "listen_pick_picture",
+                      "word": "tiger",
+                      "distractors": [
+                        "lion",
+                        "zebra"
+                      ]
+                    },
+                    {
+                      "template": "listen_pick_picture",
+                      "word": "tree",
+                      "distractors": [
+                        "fox",
+                        "rabbit"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "MISSING_LETTER",
+                  "stage": "independent_practice",
+                  "title": "First letter",
+                  "instructions": "Which letter is missing?",
+                  "instructionsSpeech": "Which letter is missing?",
+                  "questions": [
+                    {
+                      "template": "missing_pattern",
+                      "word": "tree",
+                      "missing": "t",
+                      "pattern": "LETTER_T",
+                      "choices": [
+                        "f",
+                        "l"
+                      ]
+                    },
+                    {
+                      "template": "missing_pattern",
+                      "word": "tent",
+                      "missing": "t",
+                      "pattern": "LETTER_T",
+                      "choices": [
+                        "f",
+                        "l"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
-       ]
-      }
-     ]
+      ]
     },
     {
-     "code": "kg1-letter-b",
-     "dimension": "LETTER_SOUNDS",
-     "title": "Letter B and its sound",
-     "childTitle": "B b",
-     "pattern": "LETTER_B",
-     "importance": 5,
-     "masteryThreshold": 90,
-     "lessons": [
-      {
-       "code": "kg1-letter-b-1",
-       "title": "The letter B",
-       "childTitle": "B b",
-       "emoji": "⚽",
-       "description": "Recognise B and b, hear its sound, and find words that start with it.",
-       "minutes": 5,
-       "activities": [
+      "code": "kg1-letter-writing",
+      "subject": "WRITING",
+      "title": "Writing Letters",
+      "emoji": "✍️",
+      "description": "Trace letters and match big and small letters.",
+      "skills": [
         {
-         "type": "INTRO",
-         "stage": "explanation",
-         "title": "Meet B b",
-         "instructions": "Listen and look.",
-         "instructionsSpeech": "Listen and look.",
-         "questions": [
-          {
-           "template": "pattern_intro",
-           "pattern": "LETTER_B",
-           "examples": [
-            "ball",
-            "bee",
-            "bus"
-           ]
-          }
-         ]
-        },
-        {
-         "type": "MULTIPLE_CHOICE",
-         "stage": "guided_practice",
-         "title": "Find the letter",
-         "instructions": "Tap the letter.",
-         "instructionsSpeech": "Tap the letter.",
-         "questions": [
-          {
-           "template": "find_letter",
-           "pattern": "LETTER_B",
-           "distractors": [
-            "d",
-            "p"
-           ]
-          },
-          {
-           "template": "find_letter",
-           "pattern": "LETTER_B",
-           "distractors": [
-            "d",
-            "p"
-           ],
-           "case": "upper"
-          }
-         ]
-        },
-        {
-         "type": "PICTURE_MATCH",
-         "stage": "guided_practice",
-         "title": "Starts with",
-         "instructions": "Which one starts with this sound?",
-         "instructionsSpeech": "Which one starts with this sound?",
-         "questions": [
-          {
-           "template": "pick_starting_sound",
-           "pattern": "LETTER_B",
-           "word": "bear",
-           "distractors": [
-            "dog",
-            "hat"
-           ]
-          },
-          {
-           "template": "pick_starting_sound",
-           "pattern": "LETTER_B",
-           "word": "banana",
-           "distractors": [
-            "fish",
-            "egg"
-           ]
-          },
-          {
-           "template": "pick_starting_sound",
-           "pattern": "LETTER_B",
-           "word": "bus",
-           "distractors": [
-            "pig",
-            "lion"
-           ]
-          }
-         ]
-        },
-        {
-         "type": "LISTEN_AND_CHOOSE",
-         "stage": "independent_practice",
-         "title": "Listen and find",
-         "instructions": "Listen, then tap the picture.",
-         "instructionsSpeech": "Listen, then tap the picture.",
-         "questions": [
-          {
-           "template": "listen_pick_picture",
-           "word": "ball",
-           "distractors": [
-            "lion",
-            "zebra"
-           ]
-          },
-          {
-           "template": "listen_pick_picture",
-           "word": "bee",
-           "distractors": [
-            "fox",
-            "rabbit"
-           ]
-          }
-         ]
-        },
-        {
-         "type": "MISSING_LETTER",
-         "stage": "independent_practice",
-         "title": "First letter",
-         "instructions": "Which letter is missing?",
-         "instructionsSpeech": "Which letter is missing?",
-         "questions": [
-          {
-           "template": "missing_pattern",
-           "word": "ball",
-           "missing": "b",
-           "pattern": "LETTER_B",
-           "choices": [
-            "d",
-            "p"
-           ]
-          },
-          {
-           "template": "missing_pattern",
-           "word": "bee",
-           "missing": "b",
-           "pattern": "LETTER_B",
-           "choices": [
-            "d",
-            "p"
-           ]
-          }
-         ]
+          "code": "kg1-letter-formation",
+          "dimension": "WRITING",
+          "title": "Letter formation",
+          "childTitle": "Write letters",
+          "description": "Forms letters by tracing and matches capital and small letters.",
+          "difficulty": 1,
+          "importance": 3,
+          "prerequisites": [
+            "kg1-letter-a"
+          ],
+          "lessons": [
+            {
+              "code": "kg1-trace-letters-1",
+              "title": "Trace a, c and t",
+              "childTitle": "Trace letters",
+              "description": "Trace letters with your finger, then match big and small letters.",
+              "emoji": "✍️",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Let's write letters! Trace each letter with your finger.",
+              "activities": [
+                {
+                  "type": "TRACING",
+                  "stage": "guided_practice",
+                  "title": "Trace the letter",
+                  "instructions": "Trace the letter with your finger.",
+                  "instructionsSpeech": "Trace the letter with your finger.",
+                  "config": {
+                    "showModel": true
+                  },
+                  "questions": [
+                    {
+                      "type": "TRACING",
+                      "prompt": "Trace a",
+                      "promptSpeech": "Trace the letter a.",
+                      "explanation": "Start at the top and follow the shape of a.",
+                      "content": {
+                        "letter": "a",
+                        "speech": "Trace the letter a."
+                      },
+                      "answer": {
+                        "minCoverage": 60
+                      }
+                    },
+                    {
+                      "type": "TRACING",
+                      "prompt": "Trace c",
+                      "promptSpeech": "Trace the letter c.",
+                      "explanation": "Start at the top and follow the shape of c.",
+                      "content": {
+                        "letter": "c",
+                        "speech": "Trace the letter c."
+                      },
+                      "answer": {
+                        "minCoverage": 60
+                      }
+                    },
+                    {
+                      "type": "TRACING",
+                      "prompt": "Trace t",
+                      "promptSpeech": "Trace the letter t.",
+                      "explanation": "Start at the top and follow the shape of t.",
+                      "content": {
+                        "letter": "t",
+                        "speech": "Trace the letter t."
+                      },
+                      "answer": {
+                        "minCoverage": 60
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "MATCH",
+                  "stage": "independent_practice",
+                  "title": "Big and small letters",
+                  "instructions": "Match each big letter to its small letter.",
+                  "instructionsSpeech": "Match each big letter to its small letter.",
+                  "questions": [
+                    {
+                      "type": "MATCH",
+                      "prompt": "Match big and small letters",
+                      "promptSpeech": "Match big and small letters",
+                      "explanation": "A big letter and its small letter make the same sound.",
+                      "content": {
+                        "left": [
+                          {
+                            "id": "big-a",
+                            "text": "A",
+                            "speech": "big A"
+                          },
+                          {
+                            "id": "big-c",
+                            "text": "C",
+                            "speech": "big C"
+                          },
+                          {
+                            "id": "big-t",
+                            "text": "T",
+                            "speech": "big T"
+                          }
+                        ],
+                        "right": [
+                          {
+                            "id": "small-t",
+                            "text": "t",
+                            "speech": "small t"
+                          },
+                          {
+                            "id": "small-a",
+                            "text": "a",
+                            "speech": "small a"
+                          },
+                          {
+                            "id": "small-c",
+                            "text": "c",
+                            "speech": "small c"
+                          }
+                        ]
+                      },
+                      "answer": {
+                        "pairs": [
+                          [
+                            "big-a",
+                            "small-a"
+                          ],
+                          [
+                            "big-c",
+                            "small-c"
+                          ],
+                          [
+                            "big-t",
+                            "small-t"
+                          ]
+                        ]
+                      }
+                    },
+                    {
+                      "type": "MATCH",
+                      "prompt": "Match big and small letters",
+                      "promptSpeech": "Match big and small letters",
+                      "explanation": "A big letter and its small letter make the same sound.",
+                      "content": {
+                        "left": [
+                          {
+                            "id": "big-m",
+                            "text": "M",
+                            "speech": "big M"
+                          },
+                          {
+                            "id": "big-s",
+                            "text": "S",
+                            "speech": "big S"
+                          },
+                          {
+                            "id": "big-b",
+                            "text": "B",
+                            "speech": "big B"
+                          }
+                        ],
+                        "right": [
+                          {
+                            "id": "small-s",
+                            "text": "s",
+                            "speech": "small s"
+                          },
+                          {
+                            "id": "small-b",
+                            "text": "b",
+                            "speech": "small b"
+                          },
+                          {
+                            "id": "small-m",
+                            "text": "m",
+                            "speech": "small m"
+                          }
+                        ]
+                      },
+                      "answer": {
+                        "pairs": [
+                          [
+                            "big-m",
+                            "small-m"
+                          ],
+                          [
+                            "big-s",
+                            "small-s"
+                          ],
+                          [
+                            "big-b",
+                            "small-b"
+                          ]
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
-       ]
-      }
-     ]
-    },
-    {
-     "code": "kg1-letter-c",
-     "dimension": "LETTER_SOUNDS",
-     "title": "Letter C and its sound",
-     "childTitle": "C c",
-     "pattern": "LETTER_C",
-     "importance": 5,
-     "masteryThreshold": 90,
-     "lessons": [
-      {
-       "code": "kg1-letter-c-1",
-       "title": "The letter C",
-       "childTitle": "C c",
-       "emoji": "🐱",
-       "description": "Recognise C and c, hear its sound, and find words that start with it.",
-       "minutes": 5,
-       "activities": [
-        {
-         "type": "INTRO",
-         "stage": "explanation",
-         "title": "Meet C c",
-         "instructions": "Listen and look.",
-         "instructionsSpeech": "Listen and look.",
-         "questions": [
-          {
-           "template": "pattern_intro",
-           "pattern": "LETTER_C",
-           "examples": [
-            "cat",
-            "cup",
-            "car"
-           ]
-          }
-         ]
-        },
-        {
-         "type": "MULTIPLE_CHOICE",
-         "stage": "guided_practice",
-         "title": "Find the letter",
-         "instructions": "Tap the letter.",
-         "instructionsSpeech": "Tap the letter.",
-         "questions": [
-          {
-           "template": "find_letter",
-           "pattern": "LETTER_C",
-           "distractors": [
-            "o",
-            "e"
-           ]
-          },
-          {
-           "template": "find_letter",
-           "pattern": "LETTER_C",
-           "distractors": [
-            "o",
-            "e"
-           ],
-           "case": "upper"
-          }
-         ]
-        },
-        {
-         "type": "PICTURE_MATCH",
-         "stage": "guided_practice",
-         "title": "Starts with",
-         "instructions": "Which one starts with this sound?",
-         "instructionsSpeech": "Which one starts with this sound?",
-         "questions": [
-          {
-           "template": "pick_starting_sound",
-           "pattern": "LETTER_C",
-           "word": "cat",
-           "distractors": [
-            "dog",
-            "hat"
-           ]
-          },
-          {
-           "template": "pick_starting_sound",
-           "pattern": "LETTER_C",
-           "word": "cup",
-           "distractors": [
-            "fish",
-            "egg"
-           ]
-          },
-          {
-           "template": "pick_starting_sound",
-           "pattern": "LETTER_C",
-           "word": "cake",
-           "distractors": [
-            "pig",
-            "lion"
-           ]
-          }
-         ]
-        },
-        {
-         "type": "LISTEN_AND_CHOOSE",
-         "stage": "independent_practice",
-         "title": "Listen and find",
-         "instructions": "Listen, then tap the picture.",
-         "instructionsSpeech": "Listen, then tap the picture.",
-         "questions": [
-          {
-           "template": "listen_pick_picture",
-           "word": "cat",
-           "distractors": [
-            "lion",
-            "zebra"
-           ]
-          },
-          {
-           "template": "listen_pick_picture",
-           "word": "cup",
-           "distractors": [
-            "fox",
-            "rabbit"
-           ]
-          }
-         ]
-        },
-        {
-         "type": "MISSING_LETTER",
-         "stage": "independent_practice",
-         "title": "First letter",
-         "instructions": "Which letter is missing?",
-         "instructionsSpeech": "Which letter is missing?",
-         "questions": [
-          {
-           "template": "missing_pattern",
-           "word": "cat",
-           "missing": "c",
-           "pattern": "LETTER_C",
-           "choices": [
-            "o",
-            "e"
-           ]
-          },
-          {
-           "template": "missing_pattern",
-           "word": "cup",
-           "missing": "c",
-           "pattern": "LETTER_C",
-           "choices": [
-            "o",
-            "e"
-           ]
-          }
-         ]
-        }
-       ]
-      }
-     ]
-    },
-    {
-     "code": "kg1-letter-m",
-     "dimension": "LETTER_SOUNDS",
-     "title": "Letter M and its sound",
-     "childTitle": "M m",
-     "pattern": "LETTER_M",
-     "importance": 5,
-     "masteryThreshold": 90,
-     "lessons": [
-      {
-       "code": "kg1-letter-m-1",
-       "title": "The letter M",
-       "childTitle": "M m",
-       "emoji": "🌙",
-       "description": "Recognise M and m, hear its sound, and find words that start with it.",
-       "minutes": 5,
-       "activities": [
-        {
-         "type": "INTRO",
-         "stage": "explanation",
-         "title": "Meet M m",
-         "instructions": "Listen and look.",
-         "instructionsSpeech": "Listen and look.",
-         "questions": [
-          {
-           "template": "pattern_intro",
-           "pattern": "LETTER_M",
-           "examples": [
-            "moon",
-            "mouse",
-            "milk"
-           ]
-          }
-         ]
-        },
-        {
-         "type": "MULTIPLE_CHOICE",
-         "stage": "guided_practice",
-         "title": "Find the letter",
-         "instructions": "Tap the letter.",
-         "instructionsSpeech": "Tap the letter.",
-         "questions": [
-          {
-           "template": "find_letter",
-           "pattern": "LETTER_M",
-           "distractors": [
-            "n",
-            "w"
-           ]
-          },
-          {
-           "template": "find_letter",
-           "pattern": "LETTER_M",
-           "distractors": [
-            "n",
-            "w"
-           ],
-           "case": "upper"
-          }
-         ]
-        },
-        {
-         "type": "PICTURE_MATCH",
-         "stage": "guided_practice",
-         "title": "Starts with",
-         "instructions": "Which one starts with this sound?",
-         "instructionsSpeech": "Which one starts with this sound?",
-         "questions": [
-          {
-           "template": "pick_starting_sound",
-           "pattern": "LETTER_M",
-           "word": "monkey",
-           "distractors": [
-            "dog",
-            "hat"
-           ]
-          },
-          {
-           "template": "pick_starting_sound",
-           "pattern": "LETTER_M",
-           "word": "moon",
-           "distractors": [
-            "fish",
-            "egg"
-           ]
-          },
-          {
-           "template": "pick_starting_sound",
-           "pattern": "LETTER_M",
-           "word": "milk",
-           "distractors": [
-            "pig",
-            "lion"
-           ]
-          }
-         ]
-        },
-        {
-         "type": "LISTEN_AND_CHOOSE",
-         "stage": "independent_practice",
-         "title": "Listen and find",
-         "instructions": "Listen, then tap the picture.",
-         "instructionsSpeech": "Listen, then tap the picture.",
-         "questions": [
-          {
-           "template": "listen_pick_picture",
-           "word": "moon",
-           "distractors": [
-            "lion",
-            "zebra"
-           ]
-          },
-          {
-           "template": "listen_pick_picture",
-           "word": "mouse",
-           "distractors": [
-            "fox",
-            "rabbit"
-           ]
-          }
-         ]
-        },
-        {
-         "type": "MISSING_LETTER",
-         "stage": "independent_practice",
-         "title": "First letter",
-         "instructions": "Which letter is missing?",
-         "instructionsSpeech": "Which letter is missing?",
-         "questions": [
-          {
-           "template": "missing_pattern",
-           "word": "moon",
-           "missing": "m",
-           "pattern": "LETTER_M",
-           "choices": [
-            "n",
-            "w"
-           ]
-          },
-          {
-           "template": "missing_pattern",
-           "word": "milk",
-           "missing": "m",
-           "pattern": "LETTER_M",
-           "choices": [
-            "n",
-            "w"
-           ]
-          }
-         ]
-        }
-       ]
-      }
-     ]
-    },
-    {
-     "code": "kg1-letter-s",
-     "dimension": "LETTER_SOUNDS",
-     "title": "Letter S and its sound",
-     "childTitle": "S s",
-     "pattern": "LETTER_S",
-     "importance": 5,
-     "masteryThreshold": 90,
-     "lessons": [
-      {
-       "code": "kg1-letter-s-1",
-       "title": "The letter S",
-       "childTitle": "S s",
-       "emoji": "☀️",
-       "description": "Recognise S and s, hear its sound, and find words that start with it.",
-       "minutes": 5,
-       "activities": [
-        {
-         "type": "INTRO",
-         "stage": "explanation",
-         "title": "Meet S s",
-         "instructions": "Listen and look.",
-         "instructionsSpeech": "Listen and look.",
-         "questions": [
-          {
-           "template": "pattern_intro",
-           "pattern": "LETTER_S",
-           "examples": [
-            "sun",
-            "sock",
-            "snake"
-           ]
-          }
-         ]
-        },
-        {
-         "type": "MULTIPLE_CHOICE",
-         "stage": "guided_practice",
-         "title": "Find the letter",
-         "instructions": "Tap the letter.",
-         "instructionsSpeech": "Tap the letter.",
-         "questions": [
-          {
-           "template": "find_letter",
-           "pattern": "LETTER_S",
-           "distractors": [
-            "z",
-            "c"
-           ]
-          },
-          {
-           "template": "find_letter",
-           "pattern": "LETTER_S",
-           "distractors": [
-            "z",
-            "c"
-           ],
-           "case": "upper"
-          }
-         ]
-        },
-        {
-         "type": "PICTURE_MATCH",
-         "stage": "guided_practice",
-         "title": "Starts with",
-         "instructions": "Which one starts with this sound?",
-         "instructionsSpeech": "Which one starts with this sound?",
-         "questions": [
-          {
-           "template": "pick_starting_sound",
-           "pattern": "LETTER_S",
-           "word": "snake",
-           "distractors": [
-            "dog",
-            "hat"
-           ]
-          },
-          {
-           "template": "pick_starting_sound",
-           "pattern": "LETTER_S",
-           "word": "star",
-           "distractors": [
-            "fish",
-            "egg"
-           ]
-          },
-          {
-           "template": "pick_starting_sound",
-           "pattern": "LETTER_S",
-           "word": "sock",
-           "distractors": [
-            "pig",
-            "lion"
-           ]
-          }
-         ]
-        },
-        {
-         "type": "LISTEN_AND_CHOOSE",
-         "stage": "independent_practice",
-         "title": "Listen and find",
-         "instructions": "Listen, then tap the picture.",
-         "instructionsSpeech": "Listen, then tap the picture.",
-         "questions": [
-          {
-           "template": "listen_pick_picture",
-           "word": "sun",
-           "distractors": [
-            "lion",
-            "zebra"
-           ]
-          },
-          {
-           "template": "listen_pick_picture",
-           "word": "sock",
-           "distractors": [
-            "fox",
-            "rabbit"
-           ]
-          }
-         ]
-        },
-        {
-         "type": "MISSING_LETTER",
-         "stage": "independent_practice",
-         "title": "First letter",
-         "instructions": "Which letter is missing?",
-         "instructionsSpeech": "Which letter is missing?",
-         "questions": [
-          {
-           "template": "missing_pattern",
-           "word": "sun",
-           "missing": "s",
-           "pattern": "LETTER_S",
-           "choices": [
-            "z",
-            "c"
-           ]
-          },
-          {
-           "template": "missing_pattern",
-           "word": "sock",
-           "missing": "s",
-           "pattern": "LETTER_S",
-           "choices": [
-            "z",
-            "c"
-           ]
-          }
-         ]
-        }
-       ]
-      }
-     ]
-    },
-    {
-     "code": "kg1-letter-t",
-     "dimension": "LETTER_SOUNDS",
-     "title": "Letter T and its sound",
-     "childTitle": "T t",
-     "pattern": "LETTER_T",
-     "importance": 5,
-     "masteryThreshold": 90,
-     "lessons": [
-      {
-       "code": "kg1-letter-t-1",
-       "title": "The letter T",
-       "childTitle": "T t",
-       "emoji": "🌳",
-       "description": "Recognise T and t, hear its sound, and find words that start with it.",
-       "minutes": 5,
-       "activities": [
-        {
-         "type": "INTRO",
-         "stage": "explanation",
-         "title": "Meet T t",
-         "instructions": "Listen and look.",
-         "instructionsSpeech": "Listen and look.",
-         "questions": [
-          {
-           "template": "pattern_intro",
-           "pattern": "LETTER_T",
-           "examples": [
-            "tiger",
-            "tree",
-            "tent"
-           ]
-          }
-         ]
-        },
-        {
-         "type": "MULTIPLE_CHOICE",
-         "stage": "guided_practice",
-         "title": "Find the letter",
-         "instructions": "Tap the letter.",
-         "instructionsSpeech": "Tap the letter.",
-         "questions": [
-          {
-           "template": "find_letter",
-           "pattern": "LETTER_T",
-           "distractors": [
-            "f",
-            "l"
-           ]
-          },
-          {
-           "template": "find_letter",
-           "pattern": "LETTER_T",
-           "distractors": [
-            "f",
-            "l"
-           ],
-           "case": "upper"
-          }
-         ]
-        },
-        {
-         "type": "PICTURE_MATCH",
-         "stage": "guided_practice",
-         "title": "Starts with",
-         "instructions": "Which one starts with this sound?",
-         "instructionsSpeech": "Which one starts with this sound?",
-         "questions": [
-          {
-           "template": "pick_starting_sound",
-           "pattern": "LETTER_T",
-           "word": "tiger",
-           "distractors": [
-            "dog",
-            "hat"
-           ]
-          },
-          {
-           "template": "pick_starting_sound",
-           "pattern": "LETTER_T",
-           "word": "turtle",
-           "distractors": [
-            "fish",
-            "egg"
-           ]
-          },
-          {
-           "template": "pick_starting_sound",
-           "pattern": "LETTER_T",
-           "word": "tent",
-           "distractors": [
-            "pig",
-            "lion"
-           ]
-          }
-         ]
-        },
-        {
-         "type": "LISTEN_AND_CHOOSE",
-         "stage": "independent_practice",
-         "title": "Listen and find",
-         "instructions": "Listen, then tap the picture.",
-         "instructionsSpeech": "Listen, then tap the picture.",
-         "questions": [
-          {
-           "template": "listen_pick_picture",
-           "word": "tiger",
-           "distractors": [
-            "lion",
-            "zebra"
-           ]
-          },
-          {
-           "template": "listen_pick_picture",
-           "word": "tree",
-           "distractors": [
-            "fox",
-            "rabbit"
-           ]
-          }
-         ]
-        },
-        {
-         "type": "MISSING_LETTER",
-         "stage": "independent_practice",
-         "title": "First letter",
-         "instructions": "Which letter is missing?",
-         "instructionsSpeech": "Which letter is missing?",
-         "questions": [
-          {
-           "template": "missing_pattern",
-           "word": "tree",
-           "missing": "t",
-           "pattern": "LETTER_T",
-           "choices": [
-            "f",
-            "l"
-           ]
-          },
-          {
-           "template": "missing_pattern",
-           "word": "tent",
-           "missing": "t",
-           "pattern": "LETTER_T",
-           "choices": [
-            "f",
-            "l"
-           ]
-          }
-         ]
-        }
-       ]
-      }
-     ]
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

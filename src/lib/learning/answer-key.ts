@@ -1,0 +1,221 @@
+import type { AnswerSpec, QuestionResponse } from "@/lib/content/question-schemas";
+import type { ClientQuestion } from "@/lib/learning/lesson-payload";
+import {
+  canonicalAccepted,
+  canonicalPair,
+  canonicalPosition,
+  canonicalSequence,
+  canonicalValue,
+  isAlmostShare,
+  sortedLetters,
+  TRACE_ALMOST_MARGIN,
+} from "@/lib/learning/evaluate";
+import { sha256 } from "@/lib/learning/sha256";
+
+// Correct answers never travel to the device in plain text. The lesson loader turns each
+// question's answer into an AnswerKey of salted SHA-256 digests of the answer's canonical
+// forms (the same forms evaluate.ts compares). The device can then check a response — and
+// tell a near miss — offline, and after the last try it can recover the answer only by
+// testing the options already on screen. The server re-evaluates every stored answer
+// against the real answer, so a modified client cannot forge progress (ADR-021).
+
+export type AnswerKey =
+  | { mode: "none" }
+  | { mode: "values"; salt: string; digests: string[]; letters: string[] }
+  | { mode: "sequence"; salt: string; digests: string[]; positions: string[] }
+  | { mode: "pairs"; salt: string; digests: string[] }
+  // Tracing is scored on coverage; the threshold is not a secret.
+  | { mode: "coverage"; minCoverage: number };
+
+export type KeyCheck = { isCorrect: boolean; almost: boolean };
+
+const DIGEST_HEX_LENGTH = 24;
+
+export async function digest(salt: string, value: string): Promise<string> {
+  const bytes = new TextEncoder().encode(`${salt}\u0000${value}`);
+  const hash =
+    typeof crypto !== "undefined" && crypto.subtle
+      ? new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))
+      : sha256(bytes);
+  return Array.from(hash, (b) => b.toString(16).padStart(2, "0"))
+    .join("")
+    .slice(0, DIGEST_HEX_LENGTH);
+}
+
+const LETTER_TYPES = new Set(["WORD_BUILDER", "SPELLING"]);
+
+export async function buildAnswerKey(
+  questionType: string,
+  answer: AnswerSpec | null,
+  salt: string,
+): Promise<AnswerKey> {
+  if (answer === null) return { mode: "none" };
+  if ("minCoverage" in answer) return { mode: "coverage", minCoverage: answer.minCoverage };
+  const hash = (values: string[]) => Promise.all([...new Set(values)].map((v) => digest(salt, v)));
+  if ("pairs" in answer) return { mode: "pairs", salt, digests: await hash(answer.pairs.map(canonicalPair)) };
+  if ("acceptedSequences" in answer) {
+    return {
+      mode: "sequence",
+      salt,
+      digests: await hash(answer.acceptedSequences.map(canonicalSequence)),
+      // In order, so position i of the first accepted sequence is positions[i].
+      positions: await Promise.all(
+        answer.acceptedSequences[0].map((t, i) => digest(salt, canonicalPosition(i, t))),
+      ),
+    };
+  }
+  const accepted = canonicalAccepted(questionType, answer.accepted);
+  return {
+    mode: "values",
+    salt,
+    digests: await hash(accepted),
+    letters: LETTER_TYPES.has(questionType) ? await hash(accepted.map((a) => `~${sortedLetters(a)}`)) : [],
+  };
+}
+
+export async function checkWithKey(
+  questionType: string,
+  key: AnswerKey,
+  response: QuestionResponse,
+): Promise<KeyCheck> {
+  const no = { isCorrect: false, almost: false };
+  switch (key.mode) {
+    case "none":
+      return { isCorrect: true, almost: false };
+    case "coverage":
+      if (!("coverage" in response)) return no;
+      return {
+        isCorrect: response.coverage >= key.minCoverage,
+        almost:
+          response.coverage < key.minCoverage && response.coverage >= key.minCoverage - TRACE_ALMOST_MARGIN,
+      };
+    case "pairs": {
+      if (!("pairs" in response)) return no;
+      const given = [...new Set(response.pairs.map(canonicalPair))];
+      const hashes = await Promise.all(given.map((p) => digest(key.salt, p)));
+      const right = hashes.filter((h) => key.digests.includes(h)).length;
+      const total = key.digests.length;
+      return right === total && response.pairs.length === total
+        ? { isCorrect: true, almost: false }
+        : { isCorrect: false, almost: isAlmostShare(right, total) };
+    }
+    case "sequence": {
+      if (!("sequence" in response)) return no;
+      if (key.digests.includes(await digest(key.salt, canonicalSequence(response.sequence))))
+        return { isCorrect: true, almost: false };
+      const hashes = await Promise.all(
+        response.sequence
+          .slice(0, key.positions.length)
+          .map((t, i) => digest(key.salt, canonicalPosition(i, t))),
+      );
+      const right = hashes.filter((h, i) => h === key.positions[i]).length;
+      return { isCorrect: false, almost: isAlmostShare(right, key.positions.length) };
+    }
+    case "values": {
+      const value = canonicalValue(questionType, response);
+      if (value === null) return no;
+      if (key.digests.includes(await digest(key.salt, value))) return { isCorrect: true, almost: false };
+      const almost =
+        key.letters.length > 0 && key.letters.includes(await digest(key.salt, `~${sortedLetters(value)}`));
+      return { isCorrect: false, almost };
+    }
+  }
+}
+
+// What to show once the tries are used up. Recovered by testing what is on screen
+// (options, choices, bank words, tiles in each position); the spoken word for listening
+// types is already part of the question.
+export type Reveal = {
+  text: string;
+  optionId?: string;
+  value?: string;
+  sequence?: string[];
+  pairs?: [string, string][];
+};
+
+export async function revealAnswer(question: ClientQuestion, key: AnswerKey): Promise<Reveal | null> {
+  if (key.mode === "none") return null;
+  if (key.mode === "coverage") return question.type === "TRACING" ? { text: question.content.letter } : null;
+  const matches = async (value: string) => {
+    if (key.mode === "values") return key.digests.includes(await digest(key.salt, value));
+    return false;
+  };
+
+  switch (question.type) {
+    case "MULTIPLE_CHOICE":
+    case "LISTEN_AND_CHOOSE":
+    case "PICTURE_MATCH":
+    case "READING": {
+      for (const option of question.content.options) {
+        if (await matches(canonicalValue(question.type, { value: option.id })!)) {
+          return { text: option.text ?? option.speech ?? option.id, optionId: option.id };
+        }
+      }
+      return null;
+    }
+    case "MISSING_LETTER": {
+      for (const choice of question.content.choices) {
+        if (await matches(canonicalValue(question.type, { value: choice })!))
+          return { text: question.content.word, value: choice };
+      }
+      return null;
+    }
+    case "WORD_BUILDER":
+    case "SPELLING":
+      return question.content.speech ? { text: question.content.speech } : null;
+    case "WRITING": {
+      const starter = question.content.starter?.trim();
+      for (const word of question.content.wordBank) {
+        const candidate = starter ? `${starter} ${word}` : word;
+        for (const c of [candidate, word]) {
+          if (await matches(canonicalValue("WRITING", { value: c })!)) {
+            return { text: candidate, value: c };
+          }
+        }
+      }
+      return null;
+    }
+    case "SENTENCE_BUILDER":
+    case "DRAG_DROP": {
+      if (key.mode !== "sequence") return null;
+      const pool = question.type === "SENTENCE_BUILDER" ? question.content.tokens : question.content.bank;
+      const sequence: string[] = [];
+      for (let i = 0; i < key.positions.length; i++) {
+        let found: string | undefined;
+        for (const token of pool) {
+          if ((await digest(key.salt, canonicalPosition(i, token))) === key.positions[i]) {
+            found = token;
+            break;
+          }
+        }
+        if (found === undefined) return null;
+        sequence.push(found);
+      }
+      if (question.type === "SENTENCE_BUILDER") return { text: sequence.join(" "), sequence };
+      let blank = 0;
+      const text = question.content.parts
+        .map((p) => ("blank" in p ? sequence[blank++] : p.text))
+        .join(" ")
+        .replace(/\s+([.,!?])/g, "$1");
+      return { text, sequence };
+    }
+    case "MATCH":
+    case "SORT": {
+      if (key.mode !== "pairs") return null;
+      const lefts = question.type === "MATCH" ? question.content.left : question.content.items;
+      const rights = question.type === "MATCH" ? question.content.right : question.content.groups;
+      const pairs: [string, string][] = [];
+      for (const l of lefts) {
+        for (const r of rights) {
+          if (key.digests.includes(await digest(key.salt, canonicalPair([l.id, r.id])))) {
+            pairs.push([l.id, r.id]);
+            break;
+          }
+        }
+      }
+      return { text: "", pairs };
+    }
+    default:
+      return null;
+  }
+}

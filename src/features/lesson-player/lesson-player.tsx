@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { AudioControls } from "@/components/child/audio-controls";
 import { notifyQueued } from "@/components/layout/sync-provider";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -10,49 +11,138 @@ import { isRenderableQuestionType } from "@/features/activities/supported-types"
 import { useAudio } from "@/lib/audio/use-audio";
 import type { AudioSpeed } from "@/lib/audio/audio-service";
 import type { QuestionResponse } from "@/lib/content/question-schemas";
-import { answerText } from "@/lib/learning/answer-text";
-import { evaluateResponse } from "@/lib/learning/evaluate";
-import type { LessonPayload } from "@/lib/learning/lesson-payload";
-import { firstTryResults, initialSessionState, sessionReducer } from "@/lib/learning/lesson-session";
+import { checkWithKey, revealAnswer, type Reveal } from "@/lib/learning/answer-key";
+import { pickFeedback, renderFeedback, type FeedbackKind } from "@/lib/learning/feedback";
+import type { LessonPayload, LessonStep } from "@/lib/learning/lesson-payload";
+import {
+  canGoBack,
+  currentView,
+  firstTryResults,
+  initialSessionState,
+  isResumable,
+  sessionReducer,
+  type SessionState,
+} from "@/lib/learning/lesson-session";
+import type { PrerequisiteCheck } from "@/lib/learning/prerequisites";
 import { scoreLesson } from "@/lib/learning/scoring";
+import { getLearningDb, type SavedRun } from "@/lib/offline/db";
 import { cacheLesson } from "@/lib/offline/lesson-cache";
 import { recordEvent } from "@/lib/offline/outbox";
+import { currentSessionId } from "@/lib/offline/session-store";
 import { cn } from "@/lib/utils";
 import { newId } from "@/lib/uuid";
 
-const PRAISE = ["Great job!", "Well done!", "You got it!", "Super!", "Brilliant!"];
+// The reusable lesson player: Intro → Activities → Summary for any lesson, whatever its
+// activity types (each step is drawn by the renderer registered for its type).
+//
+// No progress is lost by accident: every answer goes to the device outbox before
+// anything else (src/lib/offline/outbox.ts), and the player's own state is saved on the
+// device after every change, so closing the tab or pressing Exit leaves a lesson that
+// can be continued where the child left off.
 
 type Achievement = { code: string; title: string; emoji: string };
 
-export function LessonPlayer({ payload, childId }: { payload: LessonPayload; childId: string }) {
-  const [runKey, setRunKey] = useState(0);
+export function LessonPlayer({
+  payload,
+  childId,
+  readiness = null,
+}: {
+  payload: LessonPayload;
+  childId: string;
+  readiness?: PrerequisiteCheck | null;
+}) {
+  const [run, setRun] = useState<{
+    key: number;
+    saved: SavedRun | null;
+    preview: boolean;
+    autoStart: boolean;
+  } | null>(null);
+  const saveKey = `${childId}:${payload.lesson.id}`;
+
+  // Look for a lesson in progress on this device before showing anything.
+  useEffect(() => {
+    let active = true;
+    getLearningDb()
+      .runs.get(saveKey)
+      .catch(() => undefined)
+      .then((saved) => {
+        if (active) setRun({ key: 0, saved: saved ?? null, preview: false, autoStart: false });
+      });
+    return () => {
+      active = false;
+    };
+  }, [saveKey]);
+
+  if (!run) return <p className="text-muted py-16 text-center text-2xl">Getting ready…</p>;
   return (
-    <LessonRun key={runKey} payload={payload} childId={childId} onPlayAgain={() => setRunKey((k) => k + 1)} />
+    <LessonRun
+      key={run.key}
+      payload={payload}
+      childId={childId}
+      readiness={readiness}
+      saved={run.saved}
+      preview={run.preview}
+      autoStart={run.autoStart}
+      onRestart={(preview) => {
+        void getLearningDb()
+          .runs.delete(saveKey)
+          .catch(() => {});
+        setRun((r) => ({ key: (r?.key ?? 0) + 1, saved: null, preview, autoStart: true }));
+      }}
+    />
   );
 }
 
 function LessonRun({
   payload,
   childId,
-  onPlayAgain,
+  readiness,
+  saved,
+  preview: startAsPreview,
+  autoStart,
+  onRestart,
 }: {
   payload: LessonPayload;
   childId: string;
-  onPlayAgain: () => void;
+  readiness: PrerequisiteCheck | null;
+  saved: SavedRun | null;
+  preview: boolean;
+  autoStart: boolean;
+  onRestart: (preview: boolean) => void;
 }) {
-  const [state, dispatch] = useReducer(sessionReducer, payload.steps, (steps) =>
-    initialSessionState(steps.map((s) => ({ questionId: s.questionId, scored: s.scored }))),
+  const saveKey = `${childId}:${payload.lesson.id}`;
+  const previewLimit = readiness && !readiness.ready ? readiness.previewSteps : null;
+  const allSteps = payload.steps;
+
+  const [preview, setPreview] = useState(saved?.preview ?? startAsPreview);
+  const steps = preview && previewLimit ? allSteps.slice(0, previewLimit) : allSteps;
+  const sessionSteps = steps.map((s) => ({
+    questionId: s.questionId,
+    scored: s.scored,
+    maxTries: s.maxTries,
+  }));
+  const resumable = isResumable(saved?.state, sessionSteps) ? saved : null;
+
+  const [state, dispatch] = useReducer(
+    (s: SessionState, a: Parameters<typeof sessionReducer>[1] | { type: "load"; state: SessionState }) =>
+      a.type === "load" ? a.state : sessionReducer(s, a),
+    null,
+    () => initialSessionState(sessionSteps, { skipIntro: autoStart }),
   );
-  const [runId] = useState(newId);
-  const [startedAt] = useState(() => new Date().toISOString());
-  const [lastResponse, setLastResponse] = useState<QuestionResponse | null>(null);
+  const [runId, setRunId] = useState(() => resumable?.runId ?? newId());
+  const [startedAt, setStartedAt] = useState(() => resumable?.startedAt ?? new Date().toISOString());
+  const [reveals, setReveals] = useState<Record<string, Reveal | null>>({});
   const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [confirmExit, setConfirmExit] = useState(false);
+  const [checking, setChecking] = useState(false);
   const shownAt = useRef(0);
   const runRecorded = useRef(false);
   const { speak: play } = useAudio();
 
   const speak = useCallback((text: string, speed: AudioSpeed = "normal") => play({ text, speed }), [play]);
-  const step = payload.steps[state.index];
+  const step: LessonStep | undefined = steps[state.index];
+  const view = currentView(state);
+  const sessionId = () => currentSessionId(childId, payload.rules.player.sessionTimeoutMinutes);
 
   useEffect(() => {
     cacheLesson(payload).catch(() => {});
@@ -65,94 +155,179 @@ function LessonRun({
     return () => window.removeEventListener("learning:achievements", onAchievements);
   }, []);
 
+  // Save the player's place after every change (never the summary: that run is done).
+  useEffect(() => {
+    const runs = getLearningDb().runs;
+    if (state.screen === "summary") {
+      void runs.delete(saveKey).catch(() => {});
+      return;
+    }
+    if (state.screen === "intro") return;
+    void runs.put({ key: saveKey, runId, startedAt, preview, state, updatedAt: Date.now() }).catch(() => {});
+  }, [state, saveKey, runId, startedAt, preview]);
+
   // A new step or a retry: restart the response timer and read the prompt aloud.
   useEffect(() => {
-    if (state.finished) return;
+    if (state.screen !== "steps" || !step || view.reviewing) return;
     shownAt.current = performance.now();
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- clears the previous step's response when the step changes
-    setLastResponse(null);
-    const current = payload.steps[state.index];
     const text =
-      current.question.type === "INTRO"
-        ? current.question.content.speech || current.question.content.body
-        : current.promptSpeech || current.instructionsSpeech;
+      step.question.type === "INTRO"
+        ? step.question.content.speech || step.question.content.body
+        : step.promptSpeech || step.instructionsSpeech;
     if (text) void speak(text);
-  }, [state.index, state.attemptNumber, state.finished, payload.steps, speak]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when the step or try changes
+  }, [state.screen, state.index, state.attemptNumber, speak]);
 
-  // Lesson finished: record the run once (the server scores it from the answers).
+  // Recover the answer to show for a revealed step (live or revisited).
   useEffect(() => {
-    if (!state.finished || runRecorded.current) return;
+    if (!step || view.phase !== "reveal" || step.questionId in reveals) return;
+    let active = true;
+    void revealAnswer(step.question, step.answerKey).then((r) => {
+      if (active) setReveals((all) => ({ ...all, [step.questionId]: r }));
+    });
+    return () => {
+      active = false;
+    };
+  }, [step, view.phase, reveals]);
+
+  // Lesson finished: record the run once (the server scores it from the answers). A
+  // preview is not a completed lesson, so it records answers but no run.
+  useEffect(() => {
+    if (state.screen !== "summary" || runRecorded.current || preview) return;
     runRecorded.current = true;
     void recordEvent(childId, {
       kind: "lesson_run",
       id: runId,
       lessonId: payload.lesson.id,
+      sessionId: sessionId(),
       startedAt,
       completedAt: new Date().toISOString(),
     }).then(() => notifyQueued());
-  }, [state.finished, childId, runId, payload.lesson.id, startedAt]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per finished run
+  }, [state.screen]);
 
-  function handleAnswer(response: QuestionResponse) {
-    if (state.phase !== "answering" || !step.scored) return;
-    const result = evaluateResponse(step.question.type, step.question.answer, response);
-    setLastResponse(response);
-    dispatch({ type: "answered", isCorrect: result.isCorrect });
+  async function handleAnswer(response: QuestionResponse) {
+    if (!step || view.reviewing || state.phase !== "answering" || !step.scored || checking) return;
+    setChecking(true);
+    const attemptNumber = state.attemptNumber;
+    const responseTimeMs = Math.min(3_600_000, Math.round(performance.now() - shownAt.current));
+    // Saved first: the answer is on the device before any feedback is shown.
     void recordEvent(childId, {
       kind: "attempt",
       id: newId(),
       questionId: step.questionId,
       lessonRunId: runId,
-      attemptNumber: state.attemptNumber,
+      sessionId: sessionId(),
+      attemptNumber,
       response,
-      responseTimeMs: Math.min(3_600_000, Math.round(performance.now() - shownAt.current)),
+      responseTimeMs,
       attemptedAt: new Date().toISOString(),
     }).then(() => notifyQueued());
+    const result = await checkWithKey(step.question.type, step.answerKey, response);
+    setChecking(false);
+    dispatch({ type: "answered", isCorrect: result.isCorrect, almost: result.almost, response });
 
-    if (result.isCorrect) void speak(PRAISE[state.index % PRAISE.length]);
-    else if (state.attemptNumber < 2) void speak("Almost! Try again.");
-    else void speak(`The answer is ${answerText(step.question)}.`);
+    const kind: FeedbackKind = result.isCorrect
+      ? "CORRECT"
+      : attemptNumber < step.maxTries
+        ? result.almost
+          ? "ALMOST_CORRECT"
+          : "TRY_AGAIN"
+        : "INCORRECT";
+    let answer: string | undefined;
+    if (kind === "INCORRECT") {
+      const reveal = await revealAnswer(step.question, step.answerKey);
+      setReveals((all) => ({ ...all, [step.questionId]: reveal }));
+      answer = reveal?.text || undefined;
+    }
+    const message = renderFeedback(
+      pickFeedback(payload.feedback, kind, state.index + attemptNumber, { hasAnswer: !!answer }),
+      { answer },
+    );
+    void speak(message.speech);
   }
 
-  if (state.finished) {
-    const score = scoreLesson(firstTryResults(state));
+  if (state.screen === "intro") {
+    return (
+      <LessonIntro
+        payload={payload}
+        readiness={readiness}
+        resumable={resumable}
+        stepCount={steps.length}
+        speak={speak}
+        onStart={(asPreview) => {
+          if (asPreview !== preview) {
+            onRestart(asPreview);
+            return;
+          }
+          setRunId(newId());
+          setStartedAt(new Date().toISOString());
+          dispatch({ type: "start" });
+        }}
+        onResume={() => {
+          if (!resumable) return;
+          setPreview(resumable.preview);
+          dispatch({ type: "load", state: resumable.state });
+        }}
+      />
+    );
+  }
+
+  if (state.screen === "summary") {
     return (
       <LessonSummary
         payload={payload}
-        score={score}
+        score={scoreLesson(firstTryResults(state), payload.rules.scoring)}
+        startedAt={startedAt}
         achievements={achievements}
-        onPlayAgain={onPlayAgain}
+        preview={preview}
+        recommendation={readiness?.recommendation ?? null}
+        onPlayAgain={() => onRestart(false)}
         speak={speak}
       />
     );
   }
 
+  if (!step) return null;
   const Renderer = isRenderableQuestionType(step.question.type)
     ? ACTIVITY_RENDERERS[step.question.type]
     : null;
-  const newActivity = state.index === 0 || payload.steps[state.index - 1].activityId !== step.activityId;
+  const newActivity = state.index === 0 || steps[state.index - 1].activityId !== step.activityId;
+  const reveal = reveals[step.questionId] ?? null;
 
   return (
     <div className="flex min-h-[70dvh] flex-col gap-6">
       <div className="flex items-center gap-4">
-        <Link
-          href="/child/home"
-          aria-label="Stop the lesson and go home"
+        <button
+          type="button"
+          onClick={() => setConfirmExit(true)}
+          aria-label="Stop the lesson"
           className="bg-surface flex size-12 shrink-0 items-center justify-center rounded-full text-2xl font-bold shadow-sm"
         >
           <span aria-hidden>✕</span>
-        </Link>
+        </button>
         <ProgressBar
-          value={state.index}
-          max={payload.steps.length}
-          label="Lesson progress"
+          value={state.furthest}
+          max={steps.length}
+          label={`Step ${state.index + 1} of ${steps.length}`}
           className="h-5"
           tone="success"
         />
-        <span className="text-3xl" aria-hidden>
-          {payload.lesson.emoji}
+        <span className="text-muted shrink-0 text-lg font-bold" aria-hidden>
+          {state.index + 1}/{steps.length}
         </span>
       </div>
 
+      {preview ? (
+        <p className="bg-accent-soft text-accent rounded-2xl px-4 py-2 text-center text-lg font-bold">
+          <span aria-hidden>👀 </span>Sneak peek
+        </p>
+      ) : null}
+      {view.reviewing ? (
+        <p className="bg-surface-muted rounded-2xl px-4 py-2 text-center text-lg font-semibold">
+          <span aria-hidden>⏪ </span>Looking back. Your answer is saved.
+        </p>
+      ) : null}
       {newActivity && step.instructions && step.question.type !== "INTRO" ? (
         <p className="text-muted text-center text-xl font-semibold">{step.instructions}</p>
       ) : null}
@@ -160,15 +335,16 @@ function LessonRun({
       <section
         aria-live="polite"
         className="flex-1"
-        key={`${step.questionId}-${state.attemptNumber}`}
+        key={`${step.questionId}-${view.attemptNumber}-${view.reviewing ? "review" : "live"}`}
         data-question-id={step.questionId}
       >
         {Renderer ? (
           <Renderer
             step={step}
-            phase={state.phase}
-            lastResponse={lastResponse}
-            onAnswer={handleAnswer}
+            phase={view.phase}
+            lastResponse={view.response}
+            reveal={reveal}
+            onAnswer={(r) => void handleAnswer(r)}
             speak={speak}
           />
         ) : (
@@ -177,87 +353,246 @@ function LessonRun({
       </section>
 
       <FeedbackBar
-        scored={step.scored}
-        phase={state.phase}
-        praise={PRAISE[state.index % PRAISE.length]}
-        answer={step.scored ? answerText(step.question) : ""}
+        step={step}
+        payload={payload}
+        seed={state.index + view.attemptNumber}
+        phase={view.phase}
+        feedback={view.feedback}
+        reveal={reveal}
+        reviewing={view.reviewing}
+        canGoBack={canGoBack(state)}
+        onPrevious={() => dispatch({ type: "previous" })}
         onNext={() => dispatch({ type: "next" })}
         onRetry={() => dispatch({ type: "retry" })}
         speak={speak}
       />
+
+      {confirmExit ? <ExitDialog onStay={() => setConfirmExit(false)} /> : null}
+    </div>
+  );
+}
+
+function LessonIntro({
+  payload,
+  readiness,
+  resumable,
+  stepCount,
+  speak,
+  onStart,
+  onResume,
+}: {
+  payload: LessonPayload;
+  readiness: PrerequisiteCheck | null;
+  resumable: SavedRun | null;
+  stepCount: number;
+  speak: (text: string) => Promise<unknown>;
+  onStart: (preview: boolean) => void;
+  onResume: () => void;
+}) {
+  const { lesson } = payload;
+  const intro = lesson.introSpeech || `${lesson.childTitle}. ${lesson.description}`.trim();
+  const stretch = readiness !== null && !readiness.ready;
+
+  useEffect(() => {
+    void speak(intro);
+  }, [intro, speak]);
+
+  return (
+    <div className="animate-pop flex flex-col items-center gap-6 py-6 text-center">
+      <Link
+        href="/child/home"
+        aria-label="Go home"
+        className="bg-surface flex size-12 items-center justify-center self-start rounded-full text-2xl font-bold shadow-sm"
+      >
+        <span aria-hidden>🏠</span>
+      </Link>
+      <p className="text-8xl" aria-hidden>
+        {lesson.emoji || "📘"}
+      </p>
+      <h1 className="text-4xl font-extrabold">{lesson.childTitle}</h1>
+      {lesson.description ? <p className="max-w-xl text-2xl">{lesson.description}</p> : null}
+      <p className="text-muted text-lg font-semibold">
+        {[lesson.subjectName, lesson.levelName, `about ${lesson.estimatedMinutes} min`]
+          .filter(Boolean)
+          .join(" · ")}
+      </p>
+      <AudioControls text={intro} speak={speak} className="justify-center" />
+
+      {stretch ? (
+        <div role="note" className="bg-accent-soft text-accent max-w-xl space-y-3 rounded-3xl p-5">
+          <p className="text-2xl font-extrabold">
+            <span aria-hidden>🧗 </span>This one is a stretch!
+          </p>
+          {readiness.recommendation ? (
+            <p className="text-xl">Practise {readiness.recommendation.title} first, or take a sneak peek.</p>
+          ) : (
+            <p className="text-xl">Take a sneak peek, then come back after more practice.</p>
+          )}
+          <div className="flex flex-wrap justify-center gap-3">
+            {readiness.recommendation ? (
+              <Link
+                href={`/child/learn/${readiness.recommendation.lessonId}`}
+                className="bg-success inline-flex min-h-16 items-center gap-2 rounded-3xl px-6 text-xl font-bold text-white"
+              >
+                <span aria-hidden>💪</span> Practise {readiness.recommendation.title}
+              </Link>
+            ) : null}
+            <Button size="lg" variant="secondary" onClick={() => onStart(true)}>
+              <span aria-hidden>👀</span> Sneak peek
+            </Button>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="flex flex-wrap justify-center gap-3">
+        {resumable ? (
+          <>
+            <Button size="xl" onClick={onResume}>
+              <span aria-hidden>▶</span> Keep going
+            </Button>
+            <Button size="xl" variant="secondary" onClick={() => onStart(false)}>
+              <span aria-hidden>🔁</span> Start again
+            </Button>
+          </>
+        ) : (
+          <Button size="xl" variant={stretch ? "secondary" : "primary"} onClick={() => onStart(false)}>
+            <span aria-hidden>▶</span> {stretch ? "Try the whole lesson" : "Start"}
+          </Button>
+        )}
+      </div>
+      <p className="text-muted" aria-hidden>
+        {stepCount} steps
+      </p>
     </div>
   );
 }
 
 function FeedbackBar({
-  scored,
+  step,
+  payload,
+  seed,
   phase,
-  praise,
-  answer,
+  feedback,
+  reveal,
+  reviewing,
+  canGoBack: back,
+  onPrevious,
   onNext,
   onRetry,
   speak,
 }: {
-  scored: boolean;
+  step: LessonStep;
+  payload: LessonPayload;
+  seed: number;
   phase: string;
-  praise: string;
-  answer: string;
+  feedback: FeedbackKind | null;
+  reveal: Reveal | null;
+  reviewing: boolean;
+  canGoBack: boolean;
+  onPrevious: () => void;
   onNext: () => void;
   onRetry: () => void;
   speak: (text: string) => Promise<unknown>;
 }) {
-  if (!scored) {
+  const previous = back ? (
+    <Button variant="secondary" size="lg" onClick={onPrevious}>
+      <span aria-hidden>⬅</span> Back
+    </Button>
+  ) : null;
+
+  if (!step.scored || (phase === "answering" && !feedback)) {
     return (
-      <div className="sticky bottom-4 flex justify-center">
-        <Button size="xl" onClick={onNext}>
-          Next <span aria-hidden>➜</span>
-        </Button>
+      <div className="sticky bottom-4 flex justify-center gap-3">
+        {previous}
+        {!step.scored || reviewing ? (
+          <Button size="xl" onClick={onNext}>
+            Next <span aria-hidden>➜</span>
+          </Button>
+        ) : null}
       </div>
     );
   }
-  if (phase === "answering") return null;
 
-  const tone =
-    phase === "correct"
-      ? { box: "bg-success text-white", icon: "✓", text: praise }
-      : phase === "retry"
-        ? { box: "bg-warning-soft text-warning", icon: "↻", text: "Almost! Try again." }
-        : { box: "bg-accent-soft text-accent", icon: "💡", text: `The answer is: ${answer}` };
+  const kind = feedback ?? (phase === "correct" ? "CORRECT" : "INCORRECT");
+  const answer = reveal?.text || undefined;
+  const message = renderFeedback(pickFeedback(payload.feedback, kind, seed, { hasAnswer: !!answer }), {
+    answer,
+  });
+  const box =
+    kind === "CORRECT"
+      ? "bg-success text-white"
+      : kind === "TRY_AGAIN" || kind === "ALMOST_CORRECT"
+        ? "bg-warning-soft text-warning"
+        : "bg-accent-soft text-accent";
+  const showExplanation = step.explanation && (kind === "CORRECT" || kind === "INCORRECT");
 
   return (
     <div
       role="status"
-      className={cn(
-        "animate-pop sticky bottom-4 flex flex-wrap items-center justify-between gap-4 rounded-[2rem] p-5 shadow-lg",
-        tone.box,
-      )}
+      className={cn("animate-pop sticky bottom-4 flex flex-col gap-3 rounded-[2rem] p-5 shadow-lg", box)}
     >
-      <p className="flex items-center gap-3 text-3xl font-extrabold">
-        <span className="flex size-12 items-center justify-center rounded-full bg-white/30" aria-hidden>
-          {tone.icon}
-        </span>
-        {tone.text}
-      </p>
-      <div className="flex gap-2">
-        {phase === "reveal" ? (
-          <Button variant="secondary" size="lg" onClick={() => void speak(answer)}>
-            <span aria-hidden>🔊</span> Listen
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <p className="flex items-center gap-3 text-3xl font-extrabold">
+          <span className="flex size-12 items-center justify-center rounded-full bg-white/30" aria-hidden>
+            {message.emoji}
+          </span>
+          {message.text}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {previous}
+          {kind === "INCORRECT" && answer ? (
+            <Button variant="secondary" size="lg" onClick={() => void speak(answer)}>
+              <span aria-hidden>🔊</span> Listen
+            </Button>
+          ) : null}
+          {phase === "retry" ? (
+            <Button size="xl" onClick={onRetry}>
+              Try again
+            </Button>
+          ) : (
+            <Button
+              size="xl"
+              variant={kind === "CORRECT" ? "secondary" : "primary"}
+              onClick={onNext}
+              autoFocus
+            >
+              Next <span aria-hidden>➜</span>
+            </Button>
+          )}
+        </div>
+      </div>
+      {showExplanation ? <p className="text-xl font-semibold">{step.explanation}</p> : null}
+    </div>
+  );
+}
+
+function ExitDialog({ onStay }: { onStay: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="exit-title"
+        className="bg-surface animate-pop w-full max-w-md space-y-5 rounded-[2rem] p-6 text-center shadow-xl"
+      >
+        <p className="text-6xl" aria-hidden>
+          ✋
+        </p>
+        <h2 id="exit-title" className="text-3xl font-extrabold">
+          Stop for now?
+        </h2>
+        <p className="text-xl">Your answers are saved. You can keep going later.</p>
+        <div className="flex flex-wrap justify-center gap-3">
+          <Button size="lg" onClick={onStay} autoFocus>
+            <span aria-hidden>▶</span> Keep going
           </Button>
-        ) : null}
-        {phase === "retry" ? (
-          <Button size="xl" onClick={onRetry}>
-            Try again
-          </Button>
-        ) : (
-          <Button
-            size="xl"
-            variant={phase === "correct" ? "secondary" : "primary"}
-            onClick={onNext}
-            autoFocus
+          <Link
+            href="/child/home"
+            className="bg-surface-muted inline-flex min-h-16 items-center gap-2 rounded-3xl px-6 text-xl font-bold"
           >
-            Next <span aria-hidden>➜</span>
-          </Button>
-        )}
+            <span aria-hidden>🏠</span> Stop
+          </Link>
+        </div>
       </div>
     </div>
   );
@@ -266,38 +601,48 @@ function FeedbackBar({
 function LessonSummary({
   payload,
   score,
+  startedAt,
   achievements,
+  preview,
+  recommendation,
   onPlayAgain,
   speak,
 }: {
   payload: LessonPayload;
   score: ReturnType<typeof scoreLesson>;
+  startedAt: string;
   achievements: Achievement[];
+  preview: boolean;
+  recommendation: { lessonId: string; title: string } | null;
   onPlayAgain: () => void;
   speak: (text: string) => Promise<unknown>;
 }) {
+  const completed = renderFeedback(pickFeedback(payload.feedback, "COMPLETED", score.stars));
+  const [minutes] = useState(() => Math.max(1, Math.round((Date.now() - Date.parse(startedAt)) / 60000)));
   useEffect(() => {
-    void speak(
-      score.stars === 3
-        ? "Amazing! Three stars!"
-        : score.stars === 2
-          ? "Great work! Two stars!"
-          : "Good try! You finished!",
-    );
-  }, [score.stars, speak]);
+    void speak(completed.speech);
+  }, [completed.speech, speak]);
 
   return (
     <div className="animate-pop flex flex-col items-center gap-6 py-8 text-center">
       <p className="text-8xl" aria-hidden>
-        {score.stars === 3 ? "🏆" : "🎉"}
+        {preview ? "👀" : score.stars === 3 ? "🏆" : completed.emoji || "🎉"}
       </p>
-      <h1 className="text-4xl font-extrabold">You finished {payload.lesson.childTitle}!</h1>
-      <p className="text-6xl" aria-label={`${score.stars} out of 3 stars`}>
-        {"⭐".repeat(score.stars)}
-        <span className="opacity-25">{"⭐".repeat(3 - score.stars)}</span>
-      </p>
+      <h1 className="text-4xl font-extrabold">
+        {preview ? "Nice peek!" : `You finished ${payload.lesson.childTitle}!`}
+      </h1>
+      <p className="text-2xl font-bold">{completed.text}</p>
+      {!preview ? (
+        <p className="text-6xl" aria-label={`${score.stars} out of 3 stars`}>
+          {"⭐".repeat(score.stars)}
+          <span className="opacity-25">{"⭐".repeat(3 - score.stars)}</span>
+        </p>
+      ) : null}
       <p className="text-2xl font-semibold">
         You got {score.correct} of {score.total} right the first time.
+      </p>
+      <p className="text-muted text-lg">
+        {Math.round(score.percent)}% · {minutes} min
       </p>
       {achievements.length > 0 ? (
         <div role="status" className="bg-accent-soft text-accent rounded-3xl p-5">
@@ -311,8 +656,16 @@ function LessonSummary({
         </div>
       ) : null}
       <div className="flex flex-wrap justify-center gap-3">
+        {preview && recommendation ? (
+          <Link
+            href={`/child/learn/${recommendation.lessonId}`}
+            className="bg-success inline-flex min-h-20 items-center gap-2 rounded-3xl px-8 text-2xl font-semibold text-white"
+          >
+            <span aria-hidden>💪</span> Practise {recommendation.title}
+          </Link>
+        ) : null}
         <Button size="xl" variant="secondary" onClick={onPlayAgain}>
-          <span aria-hidden>🔁</span> Play again
+          <span aria-hidden>🔁</span> {preview ? "Play the whole lesson" : "Play again"}
         </Button>
         <Link
           href="/child/home"

@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { AudioControls } from "@/components/child/audio-controls";
 import { segmentWord } from "@/lib/learning/blending";
-import type { AcceptedAnswer, WordBuilderContent } from "@/lib/content/question-schemas";
 import { cn } from "@/lib/utils";
-import type { RendererProps } from "../types";
+import type { QuestionOf, RendererProps } from "../types";
 import { TileBoard } from "./tile-board";
 
 // Blending: hear the word, see it blended sound by sound (c → a → t → cat), then build it.
@@ -15,10 +14,11 @@ export function WordBuilderRenderer({
   lastResponse,
   onAnswer,
   speak,
-}: RendererProps<{ type: "WORD_BUILDER"; content: WordBuilderContent; answer: AcceptedAnswer }>) {
-  const { content, answer } = step.question;
-  const word = content.speech ?? answer.accepted[0];
-  const chunks = segmentWord(answer.accepted[0], content.tiles);
+}: RendererProps<QuestionOf<"WORD_BUILDER">>) {
+  const { content } = step.question;
+  // The loader always fills in the word to say: the child blends what they hear.
+  const word = content.speech ?? "";
+  const chunks = segmentWord(word, content.tiles);
   const [blendIndex, setBlendIndex] = useState<number | null>(null);
   const built = lastResponse && "sequence" in lastResponse ? lastResponse.sequence.join("") : null;
 
