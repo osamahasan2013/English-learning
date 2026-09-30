@@ -6,13 +6,13 @@ import { SyncStatusPanel } from "@/components/parent/sync-status-panel";
 import { buttonClasses } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { updateParentProfile } from "@/app/parent/profile-actions";
-import { getProfile, requireUser } from "@/lib/auth/session";
+import { getProfile, requireParentMode } from "@/lib/auth/session";
 import { listTimeZones } from "@/lib/validation/time-zone";
 
 export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
-  const user = await requireUser("/parent/settings");
+  const user = await requireParentMode("/parent/settings");
   const profile = await getProfile();
   const timeZones = listTimeZones();
   const current = profile?.timezone ?? "UTC";

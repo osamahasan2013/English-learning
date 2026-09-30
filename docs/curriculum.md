@@ -157,7 +157,9 @@ overridable in the `learning_rules` table:
 - Status bands by score: **NOT_STARTED** no answers · **LEARNING** 1–39 (or 0 with
   answers) · **PRACTICING** 40–69 · **ALMOST_MASTERED** 70–89 · **MASTERED** 90+.
 - **MASTERED** also needs practice on at least 2 different days (otherwise ALMOST) and the
-  skill's own threshold (`skills.mastery_threshold`) when that is stricter.
+  skill's own threshold (`skills.mastery_threshold`) when that is stricter. Days are the
+  family's calendar days (the parent's time zone). Answers with the same timestamp are
+  ordered by id, so the result never depends on arrival order.
 - Stored per child and skill: mastery score, attempts, correct attempts, accuracy, recent
   accuracy, last practised, last assessed, status.
 - Next review: LEARNING 1 day, PRACTICING 2, ALMOST 4, MASTERED 7; 1 day after a mistake.

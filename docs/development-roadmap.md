@@ -15,7 +15,7 @@ Definition of done:
 | Authentication works                | ✅     | e2e register/login; `(auth)/actions.ts`                        |
 | Child creation, grade selection     | ✅     | e2e; `parent/child-actions.ts`                                 |
 | Child dashboard                     | ✅     | `/child/home` with path, today's plan, stars                   |
-| Phonics lesson loads from database  | ✅     | `lesson-loader.ts`; 27 lessons imported                        |
+| Phonics lesson loads from database  | ✅     | `lesson-loader.ts`; lessons imported from `content/`           |
 | Audio works                         | ✅     | `lib/audio` (TTS, recorded-asset ready); unit tests            |
 | ≥ 3 activity types                  | ✅     | 8 renderers                                                    |
 | Answers evaluated, score calculated | ✅     | client + server re-evaluation; unit tests                      |

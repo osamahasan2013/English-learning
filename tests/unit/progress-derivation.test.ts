@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
   aggregateWordAttempts,
+  attemptRejection,
   buildAttemptRow,
   clampTimestamp,
   deriveActivityProgress,
   deriveLessonProgress,
   deriveSession,
   rollUpLessons,
+  RUN_MIN_COVERAGE,
+  scoreRun,
   type AttemptFact,
   type LessonProgressFact,
 } from "@/lib/learning/progress-derivation";
@@ -317,5 +320,54 @@ describe("learning sessions", () => {
       correct_attempts: 3,
       score: 66.67,
     });
+  });
+});
+
+describe("attemptRejection", () => {
+  const inLesson = { activity_id: "a1" };
+  const ok = { available: true, maxTries: 2 };
+  const answer = (attemptNumber: number, assessmentAttemptId: string | null = null) => ({
+    attemptNumber,
+    assessmentAttemptId,
+  });
+
+  it("accepts a published question within its tries", () => {
+    expect(attemptRejection(inLesson, ok, answer(1))).toBeNull();
+    expect(attemptRejection(inLesson, ok, answer(2))).toBeNull();
+  });
+
+  it("refuses unpublished content, extra tries and stray assessment items", () => {
+    expect(attemptRejection(inLesson, { ...ok, available: false }, answer(1))).toBe("question_not_available");
+    expect(attemptRejection(inLesson, ok, answer(3))).toBe("too_many_tries");
+    expect(attemptRejection({ activity_id: null }, ok, answer(1))).toBe("question_needs_assessment");
+  });
+
+  it("allows one try in an assessment sitting", () => {
+    expect(attemptRejection({ activity_id: null }, ok, answer(1, "s1"))).toBeNull();
+    expect(attemptRejection({ activity_id: null }, ok, answer(2, "s1"))).toBe("too_many_tries");
+  });
+});
+
+describe("scoreRun", () => {
+  const lesson = ["q1", "q2", "q3", "q4"];
+  const tries = (...pairs: [string, boolean][]) =>
+    pairs.map(([question_id, is_correct]) => ({ question_id, is_correct }));
+
+  it("scores the lesson's own questions only", () => {
+    const result = scoreRun(tries(["q1", true], ["q2", true], ["other-lesson", true], ["q3", false]), lesson);
+    expect(result).toMatchObject({ ok: true, score: { total: 3, correct: 2 } });
+  });
+
+  it("refuses a run with no answers, or answers only to other lessons' questions", () => {
+    expect(scoreRun([], lesson)).toEqual({ ok: false, reason: "no_attempts_for_run" });
+    expect(scoreRun(tries(["elsewhere", true]), lesson)).toEqual({
+      ok: false,
+      reason: "no_attempts_for_run",
+    });
+  });
+
+  it(`needs at least ${RUN_MIN_COVERAGE * 100}% of the lesson's questions answered`, () => {
+    expect(scoreRun(tries(["q1", true]), lesson)).toEqual({ ok: false, reason: "incomplete_run" });
+    expect(scoreRun(tries(["q1", true], ["q2", true]), lesson)).toMatchObject({ ok: true });
   });
 });

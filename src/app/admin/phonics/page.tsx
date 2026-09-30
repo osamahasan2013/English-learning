@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdmin } from "@/lib/auth/session";
 import { PatternSearchView, readPatternSearch } from "@/components/phonics/pattern-search";
 import { Card, CardTitle } from "@/components/ui/card";
 import { loadContentFlags } from "@/lib/server/phonics";
@@ -6,6 +7,8 @@ import { loadContentFlags } from "@/lib/server/phonics";
 export const metadata: Metadata = { title: "Phonics" };
 
 export default async function AdminPhonicsPage(props: PageProps<"/admin/phonics">) {
+  // Checked here too, not only in the layout (layouts are not re-run on every navigation).
+  await requireAdmin();
   const search = readPatternSearch(await props.searchParams);
   const flags = await loadContentFlags();
   return (

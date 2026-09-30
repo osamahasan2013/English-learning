@@ -19,7 +19,12 @@ Service worker (Serwist): app shell + visited pages     re-evaluate, store once,
   Server Actions that re-check the session.
 - **Child area** (`/child/*`): requires a signed-in parent plus an "active child" httpOnly
   cookie, re-verified against the parent's account on every request. Leaving it requires a
-  grown-up gate (a multiplication question — a usability barrier, not security).
+  grown-up gate (a multiplication question — a usability barrier, not security). While
+  that cookie names one of the parent's children, grown-up pages and actions (parent area,
+  settings, password change, admin) send the child back to `/child/home`
+  (`requireParentMode()`); opening a link from an auth email leaves child mode. The
+  installed app starts at `/child/home` (a parent without child mode is sent on to the
+  dashboard).
 - **Admin area** (`/admin/*`): `profiles.role = 'admin'` only. Admins manage content and
   have no access to family data (RLS).
 
@@ -254,10 +259,13 @@ progress or assessment system (ADR-024 – ADR-027).
 3. `POST /api/sync` authenticates, rate-limits, validates (Zod), confirms the child belongs
    to the parent via RLS, then calls `processSyncBatch` (`src/lib/server/progress-writer.ts`).
 4. The writer makes sure each named learning session exists for this child (a session id
-   belonging to another child is never shared — the event is detached from it), re-evaluates
+   belonging to another child is never shared — the event is detached from it), refuses
+   answers to unpublished questions, tries beyond the question's `maxTries`, replayed first
+   tries and lesson-less questions outside an assessment sitting, re-evaluates
    every answer (the device never sends correctness), stores attempts with a per-answer
    score (100 first try / 50 after feedback / 0) and runs with `on conflict (id) do
-nothing`, scores runs from their stored first tries, then recomputes from history:
+nothing`, scores a run only from first tries at that (published) lesson's own questions
+   and only when at least half of them were answered (ADR-028), then recomputes from history:
    activity progress → lesson progress → skill mastery and the review queue → My Words →
    subject and level progress → session totals → rewards and achievements. Every step is
    idempotent, so retries and duplicates converge.

@@ -6,7 +6,7 @@ import {
 import { evaluateResponse } from "@/lib/learning/evaluate";
 import { masteryRank, type MasteryStatus } from "@/lib/learning/mastery";
 import { DEFAULT_RULES, type ScoringRules } from "@/lib/learning/rules";
-import { attemptScore, percentage } from "@/lib/learning/scoring";
+import { attemptScore, percentage, scoreLesson, type LessonScore } from "@/lib/learning/scoring";
 import type { AttemptEvent } from "@/lib/offline/sync-protocol";
 
 // Pure functions the progress writer uses to turn synced events into stored rows and to
@@ -66,6 +66,22 @@ export type AttemptRowResult =
 
 // Re-evaluates the answer against the stored question. The device's own verdict is never
 // part of the event, so it cannot be forged.
+// Whether an answer may be stored at all, before it is evaluated. `available`: the question,
+// and its activity and lesson if it has one, are published. `maxTries`: the tries the
+// player allows for it (1 for an assessment question). A question outside every lesson
+// (an assessment item) is only answered inside an assessment sitting.
+export function attemptRejection(
+  question: Pick<StoredQuestion, "activity_id">,
+  eligibility: { available: boolean; maxTries: number },
+  event: Pick<AttemptEvent, "attemptNumber" | "assessmentAttemptId">,
+): string | null {
+  if (!eligibility.available) return "question_not_available";
+  if (!question.activity_id && !event.assessmentAttemptId) return "question_needs_assessment";
+  const maxTries = event.assessmentAttemptId ? 1 : eligibility.maxTries;
+  if (event.attemptNumber > maxTries) return "too_many_tries";
+  return null;
+}
+
 export function buildAttemptRow(
   question: StoredQuestion,
   event: AttemptEvent,
@@ -108,6 +124,33 @@ export function buildAttemptRow(
       response_time_ms: event.responseTimeMs,
       attempted_at: clampTimestamp(event.attemptedAt, now),
     },
+  };
+}
+
+// A finished lesson run is scored only from first tries at the lesson's own published,
+// scored questions (answers to other lessons' questions never count), and only when the
+// child answered at least RUN_MIN_COVERAGE of them — so a run cannot be completed, or
+// earn stars, with a stray answer. The score is over the questions answered, as on the
+// child's summary screen (a step with no renderer is skipped there, not failed).
+export const RUN_MIN_COVERAGE = 0.5;
+
+export function scoreRun(
+  firstTries: { question_id: string; is_correct: boolean }[],
+  scoredQuestionIds: string[],
+  rules: ScoringRules = DEFAULT_RULES.scoring,
+): { ok: true; score: LessonScore } | { ok: false; reason: "no_attempts_for_run" | "incomplete_run" } {
+  const scored = new Set(scoredQuestionIds);
+  const byQuestion = new Map<string, boolean>();
+  for (const t of firstTries) if (scored.has(t.question_id)) byQuestion.set(t.question_id, t.is_correct);
+  if (byQuestion.size === 0) return { ok: false, reason: "no_attempts_for_run" };
+  if (byQuestion.size < Math.max(1, Math.ceil(scored.size * RUN_MIN_COVERAGE)))
+    return { ok: false, reason: "incomplete_run" };
+  return {
+    ok: true,
+    score: scoreLesson(
+      [...byQuestion.values()].map((isCorrect) => ({ isCorrect })),
+      rules,
+    ),
   };
 }
 

@@ -41,8 +41,19 @@ export async function requireUser(nextPath = "/parent") {
   return user;
 }
 
+// Grown-up pages and actions (parent area, settings, password change, admin). While the
+// device is in child mode (a valid active-child cookie), they send the child back to the
+// child area: leaving child mode goes through the grown-up gate (exitChildMode). A stale
+// cookie for a child that no longer exists is ignored, so this can never loop with
+// requireActiveChild.
+export async function requireParentMode(nextPath = "/parent") {
+  const user = await requireUser(nextPath);
+  if (await getActiveChild()) redirect("/child/home");
+  return user;
+}
+
 export async function requireAdmin() {
-  await requireUser("/admin");
+  await requireParentMode("/admin");
   const profile = await getProfile();
   // Not-found rather than "forbidden": the admin area's existence is not advertised.
   if (profile?.role !== "admin") notFound();

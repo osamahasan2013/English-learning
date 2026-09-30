@@ -167,3 +167,36 @@ describe("computeReviewPriority", () => {
     );
   });
 });
+
+describe("computeMastery determinism and calendar", () => {
+  it("gives the same result whatever order same-time answers arrive in", () => {
+    const earlier = attempts("111111111", "2026-09-24");
+    const t = "2026-09-29T08:00:00Z";
+    const right: MasteryAttempt = { id: "b", isCorrect: true, attemptedAt: t };
+    const wrong: MasteryAttempt = { id: "a", isCorrect: false, attemptedAt: t };
+    const one = computeMastery({ ...base, attempts: [...earlier, right, wrong] });
+    const two = computeMastery({ ...base, attempts: [...earlier, wrong, right] });
+    expect(one).toEqual(two);
+  });
+
+  it("counts practice days on the family's calendar, not UTC", () => {
+    // 20:00 and 23:30 UTC on 28 Sep are both 29 Sep in Tokyo (UTC+9): one practice day
+    // there, so ten perfect answers stay ALMOST_MASTERED; in UTC they span two days.
+    const evening = [...Array(10)].map<MasteryAttempt>((_, i) => ({
+      isCorrect: true,
+      attemptedAt: i < 5 ? `2026-09-28T20:0${i}:00Z` : `2026-09-28T23:3${i - 5}:00Z`,
+    }));
+    const utc = computeMastery({ ...base, attempts: evening });
+    const tokyo = computeMastery({ ...base, attempts: evening, timeZone: "Asia/Tokyo" });
+    expect(utc.practiceDays).toBe(1);
+    expect(tokyo.practiceDays).toBe(1);
+    const split = [...Array(10)].map<MasteryAttempt>((_, i) => ({
+      isCorrect: true,
+      attemptedAt: i < 5 ? `2026-09-28T13:0${i}:00Z` : `2026-09-28T16:0${i - 5}:00Z`,
+    }));
+    // 13:00 UTC = 22:00 Tokyo (28th); 16:00 UTC = 01:00 Tokyo (29th).
+    expect(computeMastery({ ...base, attempts: split }).practiceDays).toBe(1);
+    expect(computeMastery({ ...base, attempts: split, timeZone: "Asia/Tokyo" }).practiceDays).toBe(2);
+    expect(computeMastery({ ...base, attempts: split, timeZone: "Asia/Tokyo" }).status).toBe("MASTERED");
+  });
+});

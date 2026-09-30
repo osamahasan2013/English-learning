@@ -6,18 +6,19 @@ applied). TypeScript types in `src/lib/supabase/types.ts` are generated
 
 ## Migrations
 
-| File                                                  | Contents                                                                                                                                                                                                                     |
-| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `20260929100100_foundation.sql`                       | enums, `set_updated_at()`, `profiles`, sign-up trigger, `is_admin()`                                                                                                                                                         |
-| `20260929100200_content_reference.sql`                | levels, subjects, skill dimensions, activity types, media assets                                                                                                                                                             |
-| `20260929100300_language_content.sql`                 | phonics patterns and sounds, words, sight words, sentences, stories                                                                                                                                                          |
-| `20260929100400_curriculum.sql`                       | units, skills, lessons, activities, questions, assessments, achievements                                                                                                                                                     |
-| `20260929100500_family_and_progress.sql`              | children, learner history, derived progress                                                                                                                                                                                  |
-| `20260929100600_rls_and_grants.sql`                   | RLS policies, grants, `is_my_child()`, `archive_child()`                                                                                                                                                                     |
-| `20260930100100_parent_profiles_and_family_rules.sql` | time zone validation, sign-up time zone, published-level check, 12-child limit                                                                                                                                               |
-| `20260930100200_seed_levels.sql`                      | the five learning levels (KG1–Grade 2), so a fresh database works without a content import                                                                                                                                   |
-| `20261001100100_learning_engine.sql`                  | Phase 3 engine: skill/lesson/question fields, lesson prerequisites, feedback messages, engine rules, learning sessions, activity/subject/level progress, review queue, attempt scores, hidden answers, `lesson_catalog` view |
-| `20261002100100_phonics_engine.sql`                   | Phase 4 phonics: phoneme inventory, phonics stages, pattern fields (stage, position, letter case/name, image), sound phonemes, pattern relations, word segments, word shape/decodable, skill stage, content review flags     |
+| File                                                  | Contents                                                                                                                                                                                                                          |
+| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `20260929100100_foundation.sql`                       | enums, `set_updated_at()`, `profiles`, sign-up trigger, `is_admin()`                                                                                                                                                              |
+| `20260929100200_content_reference.sql`                | levels, subjects, skill dimensions, activity types, media assets                                                                                                                                                                  |
+| `20260929100300_language_content.sql`                 | phonics patterns and sounds, words, sight words, sentences, stories                                                                                                                                                               |
+| `20260929100400_curriculum.sql`                       | units, skills, lessons, activities, questions, assessments, achievements                                                                                                                                                          |
+| `20260929100500_family_and_progress.sql`              | children, learner history, derived progress                                                                                                                                                                                       |
+| `20260929100600_rls_and_grants.sql`                   | RLS policies, grants, `is_my_child()`, `archive_child()`                                                                                                                                                                          |
+| `20260930100100_parent_profiles_and_family_rules.sql` | time zone validation, sign-up time zone, published-level check, 12-child limit                                                                                                                                                    |
+| `20260930100200_seed_levels.sql`                      | the five learning levels (KG1–Grade 2), so a fresh database works without a content import                                                                                                                                        |
+| `20261001100100_learning_engine.sql`                  | Phase 3 engine: skill/lesson/question fields, lesson prerequisites, feedback messages, engine rules, learning sessions, activity/subject/level progress, review queue, attempt scores, hidden answers, `lesson_catalog` view      |
+| `20261002100100_phonics_engine.sql`                   | Phase 4 phonics: phoneme inventory, phonics stages, pattern fields (stage, position, letter case/name, image), sound phonemes, pattern relations, word segments, word shape/decodable, skill stage, content review flags          |
+| `20261003100100_progress_integrity.sql`               | Audit fixes (ADR-028): one first try per question per lesson run / assessment sitting (unique indexes), `activity_attempts.correct_answer` hidden from parents, content link tables readable only when their content is published |
 
 ## Conventions
 
@@ -154,7 +155,14 @@ Rules enforced by the database, whatever the client sends:
 - `enforce_publishable_question()` (trigger): a scored question cannot be published
   without an answer; `activities.config.maxTries` must be 1, 2 or 3.
 - `questions.answer` has no SELECT grant for signed-in users (admins included): answers
-  are read only by the server with the service role (ADR-021).
+  are read only by the server with the service role (ADR-021). The same holds for the
+  answer snapshot `activity_attempts.correct_answer` (column-level grant, ADR-028).
+- One first try per question per lesson run and per assessment sitting (partial unique
+  indexes on `activity_attempts`); a replayed first try is refused (ADR-028).
+- Content link tables (`phonics_pattern_sounds`, `word_phonics_patterns`, `word_relations`,
+  `sight_words`, `sentence_words`, `sentence_phonics_patterns`, `skill_prerequisites`,
+  `lesson_prerequisites`, `assessment_items`, `word_segments`, `phonics_pattern_relations`)
+  are readable by families only when the rows they link are published.
 - `check_phoneme_codes()` (trigger): every phoneme in `phonics_pattern_sounds.phonemes` and
   `word_segments.phonemes` must exist in `phonemes` (`UNKNOWN_PHONEME`). Graphemes are
   lowercase letters; `phonics_shape` is C/V only; a pattern cannot relate to itself.

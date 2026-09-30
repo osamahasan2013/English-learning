@@ -1,3 +1,4 @@
+import { localDate } from "@/lib/learning/analytics";
 import { DEFAULT_RULES, type MasteryRules } from "@/lib/learning/rules";
 import type { Enums } from "@/lib/supabase/types";
 
@@ -45,6 +46,9 @@ export function statusForScore(args: {
 export type MasteryAttempt = {
   isCorrect: boolean;
   attemptedAt: string | Date;
+  // Breaks ties between answers with the same timestamp (e.g. clamped device clocks), so
+  // the result never depends on the order the rows arrived in.
+  id?: string;
 };
 
 export type MasteryInput = {
@@ -56,6 +60,8 @@ export type MasteryInput = {
   masteryThreshold: number;
   importance: number;
   now: Date;
+  // The family's time zone: practice days are counted on their calendar (default UTC).
+  timeZone?: string;
 };
 
 export type MasteryResult = {
@@ -79,8 +85,8 @@ export function computeMastery(
   rules: MasteryRules = DEFAULT_RULES.mastery,
 ): MasteryResult {
   const sorted = [...input.attempts]
-    .map((a) => ({ isCorrect: a.isCorrect, at: new Date(a.attemptedAt) }))
-    .sort((a, b) => b.at.getTime() - a.at.getTime());
+    .map((a) => ({ isCorrect: a.isCorrect, at: new Date(a.attemptedAt), id: a.id ?? "" }))
+    .sort((a, b) => b.at.getTime() - a.at.getTime() || (a.id < b.id ? 1 : a.id > b.id ? -1 : 0));
   const window = sorted.slice(0, rules.windowSize);
   const recent = sorted.slice(0, rules.recentSize);
 
@@ -111,7 +117,7 @@ export function computeMastery(
   const masteryScore = round(
     100 * evidence * (rules.recentWeight * recentAccuracy + (1 - rules.recentWeight) * windowAccuracy),
   );
-  const practiceDays = new Set(window.map((a) => a.at.toISOString().slice(0, 10))).size;
+  const practiceDays = new Set(window.map((a) => localDate(a.at, input.timeZone ?? "UTC"))).size;
   const status = statusForScore({
     masteryScore,
     attempts,

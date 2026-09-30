@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { requireUser } from "@/lib/auth/session";
+import { requireParentMode } from "@/lib/auth/session";
 import { errorMessage, logger } from "@/lib/logging";
 import { createClient } from "@/lib/supabase/server";
 import { parentProfileSchema } from "@/lib/validation/family";
@@ -19,7 +19,7 @@ export async function updateParentProfile(
   _prev: ProfileFormState,
   formData: FormData,
 ): Promise<ProfileFormState> {
-  const user = await requireUser("/parent/settings");
+  const user = await requireParentMode("/parent/settings");
   const parsed = parentProfileSchema.safeParse({
     displayName: formData.get("displayName"),
     timezone: formData.get("timezone"),

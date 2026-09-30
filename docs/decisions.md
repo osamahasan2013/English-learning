@@ -272,3 +272,29 @@ architecture; one answer pipeline keeps offline sync, idempotency, server re-eva
 and mastery identical for lessons and checks.
 **Consequences.** Check answers count toward skill mastery (they are real evidence);
 placement ("Find My Level") can use the same player later with its own scoring.
+
+## ADR-028 — The server credits only real evidence (audit fixes)
+
+**Decision.** From the Phase 1–4 audit:
+
+- A lesson run is scored only from first tries at that published lesson's own scored
+  questions, and only when at least half of them were answered (`scoreRun`,
+  `RUN_MIN_COVERAGE`).
+- The progress writer refuses answers to draft or archived questions (or questions in
+  unpublished activities or lessons), tries beyond `maxTries` (1 in an assessment), a
+  second first try at a question in the same run or sitting (also a unique index), and
+  answers to lesson-less (assessment) questions outside a sitting.
+- `activity_attempts.correct_answer` is not readable by signed-in users (column grant).
+- Content link tables are readable by families only when what they link is published.
+- `safeNextPath` resolves the path like a browser and refuses control characters and
+  backslashes (`/\t/evil.example` would otherwise become `//evil.example`).
+- Grown-up pages and actions refuse to run in child mode (`requireParentMode`).
+- Mastery breaks timestamp ties by attempt id and counts practice days in the family's
+  time zone.
+  **Why.** Each was reproduced: one right answer to a KG1 question could mark a Grade 2
+  lesson COMPLETED with 3 stars; a parent could read any correct answer after one attempt;
+  a login link could redirect off-site; a child could open parent settings from the
+  installed app.
+  **Consequences.** A modified client can no longer inflate progress or read answers;
+  genuine offline runs are unaffected (they answer every question). Existing duplicate first
+  tries were re-marked as retries by the migration, keeping history.

@@ -2,7 +2,7 @@ import { AppShell, type NavItem } from "@/components/layout/app-shell";
 import { OfflineIndicator } from "@/components/layout/offline-indicator";
 import { SignOutButton } from "@/components/layout/sign-out-button";
 import { SyncProvider } from "@/components/layout/sync-provider";
-import { getProfile, requireUser } from "@/lib/auth/session";
+import { getProfile, requireParentMode } from "@/lib/auth/session";
 import { APP_SHORT_NAME } from "@/lib/app-info";
 
 const NAV: NavItem[] = [
@@ -13,7 +13,7 @@ const NAV: NavItem[] = [
 ];
 
 export default async function ParentLayout({ children }: { children: React.ReactNode }) {
-  await requireUser("/parent/dashboard");
+  await requireParentMode("/parent/dashboard");
   const profile = await getProfile();
   const nav =
     profile?.role === "admin" ? [...NAV, { href: "/admin/dashboard", label: "Content admin" }] : NAV;

@@ -150,7 +150,10 @@ test("a child learns phonics from letters to digraphs, takes the Sound Check, an
   // Parents can look patterns up (from the database, filtered and paged).
   await page.goto("/parent/phonics?type=consonant_digraph");
   await expect(page.getByRole("heading", { name: "Phonics patterns" })).toBeVisible();
-  await expect(page.getByText(/sh as in ship/)).toBeVisible();
-  await expect(page.getByText(/\(\d+ patterns\)/)).toBeVisible();
+  // Scoped to <main>: while the page streams in, React briefly holds a hidden copy of the
+  // results outside it, which an unscoped locator can match twice.
+  const main = page.getByRole("main");
+  await expect(main.getByText(/sh as in ship/)).toBeVisible();
+  await expect(main.getByText(/\(\d+ patterns\)/)).toBeVisible();
   await noSideScroll(page);
 });

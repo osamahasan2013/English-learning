@@ -3,7 +3,7 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { safeNextPath } from "@/lib/auth/redirect";
-import { ACTIVE_CHILD_COOKIE } from "@/lib/auth/session";
+import { ACTIVE_CHILD_COOKIE, getActiveChild } from "@/lib/auth/session";
 import { errorMessage, logger } from "@/lib/logging";
 import { createClient } from "@/lib/supabase/server";
 import { forgotPasswordSchema, newPasswordSchema, registerSchema, signInSchema } from "@/lib/validation/auth";
@@ -133,6 +133,8 @@ export async function updatePassword(_prev: AuthFormState, formData: FormData): 
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { status: "error", message: "Your reset link has expired. Request a new one." };
+  // In child mode only a grown-up (through the gate) may change the password.
+  if (await getActiveChild()) redirect("/child/home");
 
   const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
   if (error) {

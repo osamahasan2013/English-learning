@@ -6,7 +6,9 @@ export default function manifest(): MetadataRoute.Manifest {
     name: APP_NAME,
     short_name: APP_SHORT_NAME,
     description: "Phonics, reading, vocabulary and spelling for children from KG1 to Grade 2.",
-    start_url: "/parent/dashboard",
+    // Opens in the child area when the device is in child mode (and offline, from the
+    // cached page); otherwise requireActiveChild sends a parent on to the dashboard.
+    start_url: "/child/home",
     scope: "/",
     display: "standalone",
     orientation: "any",

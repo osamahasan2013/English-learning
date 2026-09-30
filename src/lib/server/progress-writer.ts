@@ -10,6 +10,7 @@ import { currentStreak } from "@/lib/learning/analytics";
 import { computeMastery } from "@/lib/learning/mastery";
 import {
   aggregateWordAttempts,
+  attemptRejection,
   buildAttemptRow,
   clampTimestamp,
   countMastered,
@@ -17,6 +18,7 @@ import {
   deriveLessonProgress,
   deriveSession,
   rollUpLessons,
+  scoreRun,
   WORD_LEARNED_CORRECT_COUNT,
   type AttemptFact,
   type LessonProgressFact,
@@ -409,15 +411,52 @@ async function storeAttempts(
   const questionIds = [...new Set(pending.map((a) => a.questionId))];
   const { data: questionRows, error } = await db
     .from("questions")
-    .select("id, skill_id, question_type, answer, version, activity_id, word_id, activities(lesson_id)")
+    .select(
+      "id, skill_id, question_type, answer, version, activity_id, word_id, status, activities(lesson_id, status, config, lessons(status))",
+    )
     .in("id", questionIds);
   if (error) throw error;
-  const questions = new Map<string, StoredQuestion>(
-    (questionRows ?? []).map((q) => {
-      const activity = Array.isArray(q.activities) ? q.activities[0] : q.activities;
-      return [q.id, { ...q, lesson_id: activity?.lesson_id ?? null }];
-    }),
-  );
+  const questions = new Map<string, StoredQuestion>();
+  // Only published content counts: a draft or archived question (or one in an unpublished
+  // activity or lesson) is never evidence, and its answer must not be recorded.
+  const eligibility = new Map<string, { available: boolean; maxTries: number }>();
+  for (const q of questionRows ?? []) {
+    const activity = Array.isArray(q.activities) ? q.activities[0] : q.activities;
+    const lesson = activity
+      ? Array.isArray(activity.lessons)
+        ? activity.lessons[0]
+        : activity.lessons
+      : null;
+    questions.set(q.id, {
+      id: q.id,
+      skill_id: q.skill_id,
+      question_type: q.question_type,
+      answer: q.answer,
+      version: q.version,
+      activity_id: q.activity_id,
+      word_id: q.word_id,
+      lesson_id: activity?.lesson_id ?? null,
+    });
+    const configTries = (activity?.config as { maxTries?: unknown } | null)?.maxTries;
+    eligibility.set(q.id, {
+      available:
+        q.status === "published" &&
+        (!q.activity_id || (activity?.status === "published" && lesson?.status === "published")),
+      maxTries: typeof configTries === "number" ? configTries : rules.player.maxTries,
+    });
+  }
+
+  // One first try per question per lesson run (or assessment sitting): a second one is a
+  // replayed or forged answer and would skew the score. Enforced by unique indexes too.
+  const firstTryKey = (a: AttemptEvent) =>
+    a.attemptNumber !== 1
+      ? null
+      : a.assessmentAttemptId
+        ? `${a.questionId}|sitting:${a.assessmentAttemptId}`
+        : a.lessonRunId
+          ? `${a.questionId}|run:${a.lessonRunId}`
+          : null;
+  const takenFirstTries = await existingFirstTries(db, childId, pending);
 
   // Assessment answers must be for a question of that assessment.
   const assessmentIds = [...new Set(pending.map((a) => a.assessmentId).filter((id): id is string => !!id))];
@@ -442,11 +481,22 @@ async function storeAttempts(
       results.set(attempt.id, { id: attempt.id, status: "rejected", reason: "question_not_in_assessment" });
       continue;
     }
+    const rejection = attemptRejection(question, eligibility.get(question.id)!, attempt);
+    if (rejection) {
+      results.set(attempt.id, { id: attempt.id, status: "rejected", reason: rejection });
+      continue;
+    }
+    const key = firstTryKey(attempt);
+    if (key && takenFirstTries.has(key)) {
+      results.set(attempt.id, { id: attempt.id, status: "rejected", reason: "duplicate_first_try" });
+      continue;
+    }
     const built = buildAttemptRow(question, attempt, childId, now, rules.scoring);
     if (!built.ok) {
       results.set(attempt.id, { id: attempt.id, status: "rejected", reason: built.reason });
       continue;
     }
+    if (key) takenFirstTries.add(key);
     rows.push(built.row);
   }
   if (rows.length > 0) {
@@ -466,6 +516,38 @@ async function storeAttempts(
     }
   }
   return { newSkillIds, newWordIds, lessonIds, sessionIds };
+}
+
+// First tries already stored for the runs and sittings these answers name, as
+// "question|run:<id>" / "question|sitting:<id>" keys (see storeAttempts).
+async function existingFirstTries(db: Db, childId: string, attempts: AttemptEvent[]) {
+  const keys = new Set<string>();
+  const runIds = [
+    ...new Set(attempts.map((a) => (a.assessmentAttemptId ? null : a.lessonRunId)).filter(Boolean)),
+  ];
+  const sittingIds = [...new Set(attempts.map((a) => a.assessmentAttemptId).filter(Boolean))];
+  const [runs, sittings] = await Promise.all([
+    runIds.length
+      ? db
+          .from("activity_attempts")
+          .select("question_id, lesson_run_id")
+          .eq("child_id", childId)
+          .eq("attempt_number", 1)
+          .in("lesson_run_id", runIds as string[])
+      : null,
+    sittingIds.length
+      ? db
+          .from("activity_attempts")
+          .select("question_id, assessment_attempt_id")
+          .eq("child_id", childId)
+          .eq("attempt_number", 1)
+          .in("assessment_attempt_id", sittingIds as string[])
+      : null,
+  ]);
+  if (runs?.error || sittings?.error) throw runs?.error ?? sittings?.error;
+  for (const r of runs?.data ?? []) keys.add(`${r.question_id}|run:${r.lesson_run_id}`);
+  for (const s of sittings?.data ?? []) keys.add(`${s.question_id}|sitting:${s.assessment_attempt_id}`);
+  return keys;
 }
 
 async function storeLessonRuns(
@@ -494,28 +576,35 @@ async function storeLessonRuns(
       .from("lessons")
       .select("id, version")
       .eq("id", run.lessonId)
+      .eq("status", "published")
       .maybeSingle();
     if (!lesson) {
       results.set(run.id, { id: run.id, status: "rejected", reason: "unknown_lesson" });
       continue;
     }
-    // Score from the run's stored first tries, never from the device.
-    const { data: firstTries, error } = await db
-      .from("activity_attempts")
-      .select("question_id, is_correct")
-      .eq("child_id", childId)
-      .eq("lesson_run_id", run.id)
-      .eq("attempt_number", 1);
+    // Score from the run's stored first tries at THIS lesson's questions, never from the
+    // device (scoreRun: coverage and scoring rules).
+    const [{ data: firstTries, error }, structure] = await Promise.all([
+      db
+        .from("activity_attempts")
+        .select("question_id, is_correct")
+        .eq("child_id", childId)
+        .eq("lesson_run_id", run.id)
+        .eq("lesson_id", lesson.id)
+        .eq("attempt_number", 1),
+      loadLessonStructure(db, [lesson.id]),
+    ]);
     if (error) throw error;
-    const byQuestion = new Map((firstTries ?? []).map((a) => [a.question_id, a.is_correct]));
-    if (byQuestion.size === 0) {
-      results.set(run.id, { id: run.id, status: "rejected", reason: "no_attempts_for_run" });
-      continue;
-    }
-    const score = scoreLesson(
-      [...byQuestion.values()].map((isCorrect) => ({ isCorrect })),
+    const scored = scoreRun(
+      firstTries ?? [],
+      [...structure.values()].flatMap((a) => a.scoredQuestionIds),
       rules.scoring,
     );
+    if (!scored.ok) {
+      results.set(run.id, { id: run.id, status: "rejected", reason: scored.reason });
+      continue;
+    }
+    const score = scored.score;
     const startedAt = clampTimestamp(run.startedAt, now);
     const completedAt = clampTimestamp(run.completedAt, now);
     const durationSeconds = Math.min(
@@ -743,6 +832,18 @@ async function recomputeLevelRollups(db: Db, childId: string, lessonIds: string[
   }
 }
 
+// The parent's time zone (practice days and streaks follow the family's calendar).
+async function familyTimeZone(db: Db, childId: string) {
+  const { data, error } = await db
+    .from("children")
+    .select("profiles(timezone)")
+    .eq("id", childId)
+    .maybeSingle();
+  if (error) throw error;
+  const profile = data ? (Array.isArray(data.profiles) ? data.profiles[0] : data.profiles) : null;
+  return profile?.timezone ?? "UTC";
+}
+
 async function recomputeSkillMastery(
   db: Db,
   childId: string,
@@ -750,7 +851,7 @@ async function recomputeSkillMastery(
   now: Date,
   rules: LearningRules,
 ) {
-  const [{ data: skills, error }, { data: skillLessons, error: lessonsError }] = await Promise.all([
+  const [{ data: skills, error }, { data: skillLessons, error: lessonsError }, timeZone] = await Promise.all([
     db
       .from("skills")
       .select("id, mastery_threshold, importance, is_active, phonics_pattern_id")
@@ -761,6 +862,7 @@ async function recomputeSkillMastery(
       .in("skill_id", skillIds)
       .eq("status", "published")
       .order("sort_order"),
+    familyTimeZone(db, childId),
   ]);
   if (error || lessonsError) throw error ?? lessonsError;
   const firstLesson = new Map<string, string>();
@@ -779,11 +881,12 @@ async function recomputeSkillMastery(
     const [{ data: recent, error: recentError }, total, correct] = await Promise.all([
       db
         .from("activity_attempts")
-        .select("is_correct, attempted_at")
+        .select("id, is_correct, attempted_at")
         .eq("child_id", childId)
         .eq("skill_id", skill.id)
         .eq("attempt_number", 1)
         .order("attempted_at", { ascending: false })
+        .order("id", { ascending: false })
         .limit(rules.mastery.windowSize),
       base(),
       base().eq("is_correct", true),
@@ -792,12 +895,17 @@ async function recomputeSkillMastery(
 
     const mastery = computeMastery(
       {
-        attempts: (recent ?? []).map((a) => ({ isCorrect: a.is_correct, attemptedAt: a.attempted_at })),
+        attempts: (recent ?? []).map((a) => ({
+          id: a.id,
+          isCorrect: a.is_correct,
+          attemptedAt: a.attempted_at,
+        })),
         totalAttempts: total.count ?? 0,
         totalCorrect: correct.count ?? 0,
         masteryThreshold: skill.mastery_threshold,
         importance: skill.importance,
         now,
+        timeZone,
       },
       rules.mastery,
     );

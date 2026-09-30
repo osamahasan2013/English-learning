@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdmin } from "@/lib/auth/session";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/field";
@@ -11,6 +12,8 @@ const PAGE_SIZE = 50;
 // Server-side search and pagination: the word bank is meant to grow to thousands of
 // entries, so it is never loaded into the browser in full.
 export default async function AdminWordsPage(props: PageProps<"/admin/words">) {
+  // Checked here too, not only in the layout (layouts are not re-run on every navigation).
+  await requireAdmin();
   const params = await props.searchParams;
   const q = typeof params.q === "string" ? params.q.trim().slice(0, 40) : "";
   const page = Math.max(1, Number(typeof params.page === "string" ? params.page : 1) || 1);

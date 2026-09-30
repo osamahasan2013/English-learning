@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { ACTIVE_CHILD_COOKIE, getOwnedChild, requireUser } from "@/lib/auth/session";
+import { ACTIVE_CHILD_COOKIE, getOwnedChild, requireParentMode, requireUser } from "@/lib/auth/session";
 import { errorMessage, logger } from "@/lib/logging";
 import { listPublishedLevels } from "@/lib/server/family-data";
 import { createClient } from "@/lib/supabase/server";
@@ -27,7 +27,7 @@ function childSaveError(error: { message?: string } | null) {
 }
 
 export async function createChild(_prev: ChildFormState, formData: FormData): Promise<ChildFormState> {
-  const user = await requireUser();
+  const user = await requireParentMode();
   const parsed = readChildProfileForm(formData);
   if (!parsed.success) return { status: "error", fieldErrors: fieldErrors(parsed.error) };
   const levels = await listPublishedLevels();
@@ -63,7 +63,7 @@ export async function updateChild(
   _prev: ChildFormState,
   formData: FormData,
 ): Promise<ChildFormState> {
-  const user = await requireUser();
+  const user = await requireParentMode();
   if (!(await getOwnedChild(childId))) return { status: "error", message: "This profile was not found." };
   const parsed = readChildProfileForm(formData);
   if (!parsed.success) return { status: "error", fieldErrors: fieldErrors(parsed.error) };
@@ -97,7 +97,7 @@ export async function updateChild(
 }
 
 export async function archiveChild(childId: string) {
-  const user = await requireUser();
+  const user = await requireParentMode();
   const supabase = await createClient();
   const { error } = await supabase.rpc("archive_child", { p_child_id: childId });
   if (error) {

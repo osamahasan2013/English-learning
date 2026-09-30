@@ -1,6 +1,8 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 import { safeNextPath } from "@/lib/auth/redirect";
+import { ACTIVE_CHILD_COOKIE } from "@/lib/auth/session";
 import { isSupabaseConfigured } from "@/lib/env";
 import { logger } from "@/lib/logging";
 import { createClient } from "@/lib/supabase/server";
@@ -27,13 +29,21 @@ export async function GET(request: NextRequest) {
   const next = safeNextPath(searchParams.get("next"), "/onboarding");
 
   const supabase = await createClient();
+  // Whoever opens an auth email link is a grown-up: leave child mode on this device.
+  const leaveChildMode = async () => (await cookies()).delete(ACTIVE_CHILD_COOKIE);
   if (tokenHash && type) {
     const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
-    if (!error) return redirectTo(next);
+    if (!error) {
+      await leaveChildMode();
+      return redirectTo(next);
+    }
     logger.warn("auth.confirm_failed", { code: error.code ?? error.name, type });
   } else if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) return redirectTo(next);
+    if (!error) {
+      await leaveChildMode();
+      return redirectTo(next);
+    }
     logger.warn("auth.confirm_failed", { code: error.code ?? error.name, type: "code" });
   }
   return redirectTo("/login?error=confirmation");

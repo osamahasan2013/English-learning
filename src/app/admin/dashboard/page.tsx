@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireAdmin } from "@/lib/auth/session";
 import { Card } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,6 +21,8 @@ const TABLES = [
 ] as const;
 
 export default async function AdminDashboard() {
+  // Checked here too, not only in the layout (layouts are not re-run on every navigation).
+  await requireAdmin();
   const supabase = await createClient();
   const counts = await Promise.all(
     TABLES.map(async ([table, label]) => {
