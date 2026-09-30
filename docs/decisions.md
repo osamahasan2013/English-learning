@@ -157,7 +157,7 @@ with a different internal host).
 ## ADR-020 — Own repository
 
 **What changed.** The app moved out of the Precast Elements Monitoring System (PEMS)
-repository into this repository, `English-learning-app`, with its full commit history
+repository into this repository, `English-learning`, with its full commit history
 (`git subtree split`), and the folder was removed from the PEMS repository.
 **Why.** The owner asked for a completely separate app. As a folder inside the PEMS
 repository, it was type-checked by the PEMS build (whose `tsconfig` includes every `.ts`
