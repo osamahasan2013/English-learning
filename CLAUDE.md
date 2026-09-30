@@ -27,8 +27,9 @@ globals, `proxy.ts` instead of `middleware.ts`).
    with `npm run content:import`. Components are generic renderers.
 2. **Activities are typed data.** A question's `question_type` selects a renderer from
    `src/features/activities/registry.tsx`; its `content`/`answer` JSON is validated by
-   `src/lib/content/question-schemas.ts`. New type = schema + evaluator branch + renderer +
-   `activity_types` row.
+   `src/lib/content/question-schemas.ts` and the activity's `config` by
+   `src/lib/content/activity-config.ts`. New type = schemas + evaluator branch (and its
+   canonical form in `answer-key.ts`) + renderer + `activity_types` row.
 3. **Never trust the client.** Child ids are verified against the signed-in parent via RLS
    before anything is written; answers are re-evaluated on the server; scores, stars and
    mastery are computed server-side from stored attempts.
@@ -67,7 +68,13 @@ tests/unit, tests/e2e    Vitest and Playwright
 ## Conventions
 
 - Server-only modules start with `import "server-only"`. The service-role client
-  (`src/lib/supabase/admin.ts`) is used only by the progress writer after an ownership check.
+  (`src/lib/supabase/admin.ts`) is used only by the progress writer (after an ownership
+  check) and the lesson loader (to build digest-only answer keys; ADR-021).
+- Correct answers never reach the browser in plain text: `questions.answer` is not readable
+  by signed-in users, and renderers get a `reveal` from the answer key, never the answer.
+- Engine numbers (mastery bands, tries, review, scoring) live in `src/lib/learning/rules.ts`
+  (overridable in `learning_rules`); feedback words in `feedback_messages`. Don't hard-code
+  either in components.
 - Validate every external input with Zod (forms, API bodies, content files). Form schemas
   live in `src/lib/validation`; rules that protect data are also enforced in the database.
 - Pure logic goes in `src/lib/learning` with unit tests; keep I/O out of it.

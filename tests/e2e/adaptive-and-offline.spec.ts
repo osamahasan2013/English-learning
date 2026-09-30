@@ -6,6 +6,7 @@ import {
   passParentGate,
   playLesson,
   registerParent,
+  startLesson,
   waitForSynced,
 } from "./helpers";
 
@@ -44,7 +45,7 @@ test("answers given offline are kept on the device and synced exactly once after
   const childId = await addChild(page, "Lina", /Kindergarten 3/);
   await page.getByRole("button", { name: /Start learning as Lina/ }).click();
   await page.getByRole("link", { name: /Next.*sh/ }).click();
-  await page.locator("section[data-question-id]").waitFor();
+  await startLesson(page);
 
   const { lessonId, questions } = await lessonQuestions("kg3-sh-1");
   await context.setOffline(true);

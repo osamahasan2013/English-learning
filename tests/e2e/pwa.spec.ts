@@ -1,7 +1,7 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import path from "node:path";
 import { expect, test } from "@playwright/test";
-import { addChild, registerParent } from "./helpers";
+import { addChild, registerParent, startLesson } from "./helpers";
 
 // PWA shell: installable manifest, service worker, a previously opened lesson that reopens
 // without a connection, and the static offline page for everything else.
@@ -71,12 +71,12 @@ test("the app is installable, a visited lesson reopens offline, and other pages 
   await page.evaluate(() => navigator.serviceWorker.ready.then(() => true));
 
   await page.getByRole("link", { name: /Next/ }).click();
-  await page.locator("section[data-question-id]").waitFor();
+  await startLesson(page);
   const lessonUrl = page.url();
   // A full load while the worker controls the page stores the page for offline use.
   await page.goto(lessonUrl);
   // .first(): while streaming, Next.js briefly holds the page in a hidden container too.
-  await page.locator("section[data-question-id]").first().waitFor();
+  await page.getByRole("button", { name: "Start" }).first().waitFor();
 
   // The server goes away (wait until it really refuses connections: fromServiceWorker() is
   // also true when the worker passes a request through to a still-running server).
@@ -94,6 +94,8 @@ test("the app is installable, a visited lesson reopens offline, and other pages 
 
   const lesson = await page.reload();
   expect(lesson?.fromServiceWorker()).toBe(true);
+  // The lesson starts and runs with no connection at all.
+  await page.getByRole("button", { name: "Start" }).first().click();
   await expect(page.locator("section[data-question-id]").first()).toBeVisible();
   await expect(page.getByRole("button", { name: /Listen/ }).first()).toBeVisible();
   await expect(page.getByText("Offline")).toBeVisible();

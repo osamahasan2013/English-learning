@@ -55,7 +55,7 @@ Instead of separate reading/spelling/writing attempt tables, one immutable table
 or specialised tables can be added when a modality needs extra columns (e.g. writing stroke
 metrics, read-aloud word timings).
 
-## ADR-007 — Derived progress tables; `skill_mastery` doubles as the review queue
+## ADR-007 — Derived progress tables; `skill_mastery` doubles as the review queue (review queue superseded by ADR-022)
 
 History is append-only; `lesson_progress`, `skill_mastery`, `word_progress` are caches
 recomputed from it after each sync. The review queue is `skill_mastery` ordered by
@@ -166,3 +166,55 @@ never affected.
 **Impact.** The app lives at the repository root; CI moved to `.github/workflows/ci.yml`
 without path filters; deploy with the repository root as the project root. It shares no
 code, database, Supabase project or deployment with PEMS.
+
+## ADR-021 — Answers stay on the server; the device gets digest answer keys
+
+**Context.** Offline-first feedback (ADR-008) meant each lesson payload carried the correct
+answers, and `questions.answer` was readable by every signed-in user. The Phase 3 brief:
+do not expose correct answers to the client before submission; evaluate on the server
+where possible.
+**Decision.** Signed-in users (admins included) have no SELECT on `questions.answer`. The
+lesson loader reads answers with the service role — only for the published question ids
+the parent's RLS query returned — and ships an _answer key_: salted SHA-256 digests of the
+answer's canonical forms (one per accepted value or sequence, one per pair, one per
+position for near-miss detection; tracing ships its public coverage threshold). The
+device verifies a response offline by hashing it the same way; after the last try it
+recovers the answer to show only by testing what is on screen. `evaluate.ts` and
+`answer-key.ts` share the canonical forms, and a unit test checks every shipped question
+gives the same verdict both ways. The server still re-evaluates every stored answer
+against the real answer.
+**Consequences.** No plaintext answer in the page, the lesson cache or the REST API.
+Small option sets can still be brute-forced on a modified client (four options = four
+tries); that only affects the child's own instant feedback, never stored progress. The
+lesson loader is a second, narrowly scoped user of the service-role client. Content
+tooling reads answers with the service role (the importer already did).
+
+## ADR-022 — Explicit review queue and a progress model per hierarchy level
+
+**Decision.** Replace "`skill_mastery` doubles as the review queue" (ADR-007) with a
+`review_items` table: one open item per skill or word, with priority, due date and reason,
+resolved rather than deleted. Add derived `activity_progress`, `subject_progress`,
+`level_progress` and `learning_sessions`, and give `lesson_progress` a status, answer
+counts and accuracy. All of them are recomputed from append-only history by the progress
+writer, like the existing caches. Sessions are identified by a device-generated id
+carried on every event (a new one after 30 minutes idle); the server never lets one child's
+session id collect another child's events.
+**Why.** The Phase 3 brief asks for progress at every level of the hierarchy, a session
+model and a review queue that can reference words and patterns as well as skills — and a
+queue table is what later spaced-repetition work will extend.
+**Consequences.** More derived rows per sync (bounded by the lessons touched); every cache
+can still be rebuilt from history.
+
+## ADR-023 — Engine rules and feedback words are data
+
+**Decision.** Mastery bands and evidence, prerequisite readiness, review, player
+(`maxTries`, session timeout) and scoring numbers live in `src/lib/learning/rules.ts` as
+Zod-validated defaults that the `learning_rules` table can override per rule set; an
+invalid override is ignored and logged. Feedback words are `feedback_messages` rows. The
+subject list became the nine content categories of the brief (PHONICS … ASSESSMENT); the
+Phase 2 subjects LETTERS, BLENDING, SIGHT_WORDS and SENTENCES were folded into PHONICS,
+READING and SENTENCE_BUILDING and archived (units were re-pointed by the importer).
+**Why.** The brief requires configurable thresholds and feedback without strings in
+components, and subjects as content categories.
+**Consequences.** Changing a band is a data change, reviewed like content. The defaults
+stay in code so a fresh database works without any rule rows.

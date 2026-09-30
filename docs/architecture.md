@@ -111,39 +111,118 @@ present for `npm run build`. The service-role key is read only on the server.
 
 ## Data-driven learning engine
 
-Hierarchy: LEVEL → SUBJECT → UNIT → SKILL → LESSON → ACTIVITY → QUESTION (see
-`docs/database.md`). Content is authored in `content/` and imported; nothing about a
-specific lesson exists in code.
+Hierarchy: LEVEL → SUBJECT → UNIT → SKILL → LESSON → ACTIVITY → QUESTION → ANSWER →
+ATTEMPT → PROGRESS → SKILL MASTERY (see `docs/database.md`). Content is authored in
+`content/` and imported; nothing about a specific lesson exists in code. The
+`lesson_catalog` view flattens level → subject → unit → skill → lesson for the engine
+(a security-invoker view, so RLS still decides what a family sees).
 
-A question's `question_type` picks a renderer (`src/features/activities/registry.tsx`).
-`content`/`answer` are JSON validated by `src/lib/content/question-schemas.ts` at import
-and again at load (`src/lib/server/lesson-loader.ts`), which skips and logs invalid
-questions or types without a renderer instead of breaking the lesson.
+**Levels and subjects** are rows (`levels`: KG1, KG2, KG3, GRADE1, GRADE2; `subjects`:
+PHONICS, READING, VOCABULARY, SPELLING, WRITING, LISTENING, SENTENCE_BUILDING, GAMES,
+ASSESSMENT). A unit belongs to one level and one subject, which is how a subject is
+organised within a level.
 
-Renderers implemented in this milestone: `INTRO` (explanation/demonstration),
-`MULTIPLE_CHOICE`, `LISTEN_AND_CHOOSE`, `PICTURE_MATCH`, `MISSING_LETTER`, `WORD_BUILDER`
-(with a blending demonstration), `SENTENCE_BUILDER`, `SPELLING`.
+**Activity types.** A question's `question_type` picks a renderer
+(`src/features/activities/registry.tsx`); there is no page per activity:
 
-The lesson player (`src/features/lesson-player`) runs a pure state machine
-(`src/lib/learning/lesson-session.ts`): answer → feedback → one retry → reveal → next.
-Only first tries are scored.
+| Type                                                    | Renderer                                     | Child's response   |
+| ------------------------------------------------------- | -------------------------------------------- | ------------------ |
+| `INTRO`                                                 | explanation / demonstration                  | — (unscored)       |
+| `MULTIPLE_CHOICE`, `LISTEN_AND_CHOOSE`, `PICTURE_MATCH` | `ChoiceRenderer`                             | an option          |
+| `READING`                                               | passage (activity config) + choice           | an option          |
+| `MISSING_LETTER`                                        | fill the gap in a word                       | a letter/pattern   |
+| `WORD_BUILDER`                                          | sound tiles + blending demo                  | tiles in order     |
+| `SENTENCE_BUILDER`                                      | word tiles                                   | tokens in order    |
+| `DRAG_DROP`                                             | fill a sentence from a bank                  | one word per blank |
+| `MATCH`                                                 | two columns, numbered pairs                  | pairs              |
+| `SORT`                                                  | items into 2–4 groups                        | item → group pairs |
+| `SPELLING`                                              | type the word you hear                       | text               |
+| `WRITING`                                               | write a word / finish a sentence (word bank) | text               |
+| `TRACING`                                               | trace a letter on a canvas                   | coverage 0–100     |
+
+Tap is the primary interaction everywhere (drag works with a mouse too), with icons,
+words and audio; feedback never relies on colour alone.
+
+**Typed data, validated twice.** Question `content`/`answer` JSON is validated by
+`src/lib/content/question-schemas.ts` (plus cross-field rules: a choice answer names an
+option, every MATCH/SORT item is paired once, DRAG_DROP answers come from the bank...).
+Activity `config` is validated by a strict per-type schema
+(`src/lib/content/activity-config.ts`, e.g. `maxTries`, a READING passage, `showModel`
+for tracing). The importer rejects invalid content before it is published; the lesson
+loader validates again and skips (and logs) anything invalid, so a content mistake never
+breaks a lesson. The database adds guards of its own: a scored question cannot be
+published without an answer, `maxTries` must be 1–3.
+
+**Answers stay on the server** (ADR-021). Signed-in users have no SELECT on
+`questions.answer`. The lesson loader (`src/lib/server/lesson-loader.ts`) reads answers
+with the service role for the published questions RLS returned and ships an _answer key_
+instead: salted SHA-256 digests of the answer's canonical forms
+(`src/lib/learning/answer-key.ts`). The device checks a response — including near
+misses — offline and instantly; after the last try it recovers the answer only by
+testing what is already on screen. The server re-evaluates every stored answer against
+the real answer (`src/lib/learning/evaluate.ts`, sharing the same canonical forms), so a
+modified client cannot forge progress.
+
+**Engine rules are data.** Mastery bands, evidence, review, prerequisite, player and
+scoring numbers have defaults in `src/lib/learning/rules.ts` and can be overridden per rule
+set in `learning_rules` (validated; an invalid override is ignored and logged). Feedback
+words (`CORRECT`, `INCORRECT`, `TRY_AGAIN`, `ALMOST_CORRECT`, `COMPLETED`) come from
+`feedback_messages`; `{answer}` is filled in.
+
+**Lesson player** (`src/features/lesson-player`): Intro → Activities → Summary for any
+lesson. The intro shows the lesson, its subject/level and length and reads `intro_speech`
+aloud; if prerequisites are not ready it offers the prerequisite first or a sneak peek
+(see below). Each step has a progress indicator, immediate feedback (correct, almost,
+try again, the answer with an explanation), Back (read-only review of finished steps) and
+Next, and an Exit that asks first. The flow is a pure, serializable reducer
+(`src/lib/learning/lesson-session.ts`); its state is saved to IndexedDB after every change,
+so closing the tab or exiting never loses the child's place ("Keep going" on return). Only
+first tries are scored; a step allows `maxTries` tries (default 2).
+
+**Prerequisites** (`src/lib/learning/prerequisites.ts`) are guidance, not locks: skill
+prerequisites are ready from `PRACTICING` (configurable), lesson prerequisites once
+completed; skills from a level below the child's current level are assumed known until
+practice shows otherwise. A lesson that is not ready shows "This one is a stretch!" with a
+link to practise the prerequisite, a sneak peek (the first `previewSteps` steps; answers
+count as practice, no lesson run is recorded) or the whole lesson.
+
+**Service interface** (`src/lib/server/learning-engine.ts`): `getNextLesson(childId)`,
+`getRecommendedLessons(childId)`, `getWeakSkills(childId)`, `getReviewItems(childId)` and
+`getLessonReadiness(childId, lessonId)`. Each loads the child with the parent's RLS client
+first, so another family's child id is simply not found. The selection rules are pure
+functions in `src/lib/learning/engine.ts`: next = the first unfinished lesson on the
+level path whose prerequisites are ready; recommendations = continue a started lesson,
+the next lesson (after its missing prerequisite), then due review items — each with a
+reason.
 
 ## Progress pipeline
 
-1. The child answers. The player evaluates locally for instant feedback
-   (`src/lib/learning/evaluate.ts`) and writes an `attempt` event with a device-generated
-   UUID to the IndexedDB outbox. At the end it writes a `lesson_run` event.
+1. The child answers. The player writes an `attempt` event (device-generated UUID, the
+   lesson run id and the learning session id) to the IndexedDB outbox **before** showing
+   feedback, then checks the response against the answer key. At the end it writes a
+   `lesson_run` event (not for a sneak peek).
 2. `SyncProvider` flushes the outbox on load, on reconnect, when the app returns to the
    foreground, after each answer and every 30 s while anything is pending.
 3. `POST /api/sync` authenticates, rate-limits, validates (Zod), confirms the child belongs
    to the parent via RLS, then calls `processSyncBatch` (`src/lib/server/progress-writer.ts`).
-4. The writer re-evaluates every answer against the stored question (the device never sends
-   correctness), inserts attempts and runs with `on conflict (id) do nothing`, scores runs
-   from their stored first tries, then recomputes lesson progress, skill mastery, My Words,
-   rewards and achievements. Every step is idempotent, so retries converge.
+4. The writer makes sure each named learning session exists for this child (a session id
+   belonging to another child is never shared — the event is detached from it), re-evaluates
+   every answer (the device never sends correctness), stores attempts with a per-answer
+   score (100 first try / 50 after feedback / 0) and runs with `on conflict (id) do
+nothing`, scores runs from their stored first tries, then recomputes from history:
+   activity progress → lesson progress → skill mastery and the review queue → My Words →
+   subject and level progress → session totals → rewards and achievements. Every step is
+   idempotent, so retries and duplicates converge.
 5. The device removes only events the server confirmed (`stored`/`duplicate`). Rejected
    events are kept as `failed` with a reason and shown in parent Settings, where they can be
    retried.
+
+Progress levels (all derived, all per child): activity (`activity_progress`), lesson
+(`lesson_progress`), skill (`skill_mastery`), subject within a level (`subject_progress`),
+level (`level_progress`), each with a `NOT_STARTED` / `IN_PROGRESS` / `COMPLETED` status,
+answer counts, accuracy, score and timestamps. Learning sessions (`learning_sessions`)
+group activity on a device, ending after 30 minutes without an answer
+(`src/lib/learning/learning-session.ts`).
 
 Conflict policy: history is append-only, so there are no write conflicts — the union of all
 devices' events is the truth. Derived tables are recomputed from that union. Device
@@ -151,12 +230,19 @@ timestamps are clamped to [now − 60 days, now + 5 min].
 
 ## Adaptive learning (V1, rule-based)
 
-- `src/lib/learning/mastery.ts` — mastery score, status and review schedule per skill from
-  the latest 30 first-try attempts (documented in `docs/curriculum.md`).
-- `src/lib/learning/recommendations.ts` — weak/strong skills, review candidates,
-  "Practice X" messages.
+- `src/lib/learning/mastery.ts` — per skill, from the latest 30 first tries: accuracy
+  (weighted to the latest 10) × evidence (min(1, attempts / 10)) = mastery score; status by
+  configurable bands NOT_STARTED 0 · LEARNING 1–39 · PRACTICING 40–69 · ALMOST_MASTERED
+  70–89 · MASTERED 90+ (MASTERED also needs practice on two days); review schedule.
+- `src/lib/learning/review-queue.ts` — the review queue (`review_items`): every practised
+  skill is scheduled; weak skills, recent mistakes and missed words are due now; items are
+  resolved when no longer needed.
+- `src/lib/learning/engine.ts`, `recommendations.ts` — next lesson, recommendations, weak
+  and strong skills, "Practice X" messages.
 - `src/lib/learning/daily-plan.ts` — today's plan from the parent's daily minutes, weak and
   due skills first.
+- `src/lib/learning/scoring.ts` — raw score, percentage, accuracy, per-answer score,
+  stars/points, time.
 
 ## Audio
 
@@ -188,8 +274,11 @@ recordings exist.
 
 - RLS on every table (`supabase/migrations/20260929100600_rls_and_grants.sql`), explicit
   grants, column-level grants for user-editable columns, no user write access to progress.
-- Service-role key is server-only (`getServerEnv()` throws in the browser) and used by one
-  module, after an ownership check.
+- Service-role key is server-only (`getServerEnv()` throws in the browser) and used by two
+  modules: the progress writer (after the sync route's ownership check) and the lesson
+  loader (only to turn published answers into digest-only answer keys; ADR-021).
+- Correct answers are never readable by signed-in users (`questions.answer` has no SELECT
+  grant) and never sent to the browser in plain text.
 - Server Actions and the sync route re-check `getUser()`; redirects are same-site only.
 - Security headers in `next.config.ts`. Rate limiting on `/api/sync` (in-memory, per
   instance — see ADR-009).

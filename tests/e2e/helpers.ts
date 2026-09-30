@@ -87,13 +87,26 @@ export async function lessonQuestions(lessonCode: string) {
   };
 }
 
+// Leaves the lesson's intro screen (Start, or Try the whole lesson for a stretch lesson).
+export async function startLesson(page: Page) {
+  await page.getByRole("button", { name: /^(Start|Try the whole lesson|Start again)$/ }).click();
+  await page.locator("section[data-question-id]").waitFor();
+}
+
 // Plays the lesson currently on screen to the end. `correct` answers every question
 // correctly on the first try; otherwise every first try is wrong.
 export async function playLesson(page: Page, questions: Map<string, QuestionRow>, correct: boolean) {
   for (let guard = 0; guard < 200; guard++) {
-    if (await page.getByText(/You finished/).isVisible()) return;
+    const finished = page.getByRole("heading", { level: 1, name: /You finished|Nice peek/ });
+    const start = page.getByRole("button", { name: /^(Start|Try the whole lesson)$/ });
     const section = page.locator("section[data-question-id]");
-    await section.waitFor();
+    // Whichever screen the player is on (it first checks the device for a saved run).
+    await finished.or(start).or(section).first().waitFor();
+    if (await finished.isVisible()) return;
+    if (await start.isVisible()) {
+      await start.click();
+      continue;
+    }
     const q = questions.get((await section.getAttribute("data-question-id"))!)!;
 
     const next = page.getByRole("button", { name: /^Next/ });
@@ -105,19 +118,20 @@ export async function playLesson(page: Page, questions: Map<string, QuestionRow>
       await page.waitForTimeout(50);
       continue;
     }
-    await answer(page, q, correct);
+    await answerQuestion(page, q, correct);
     await page.waitForTimeout(50);
   }
   throw new Error("lesson did not finish");
 }
 
-async function answer(page: Page, q: QuestionRow, correct: boolean) {
+export async function answerQuestion(page: Page, q: QuestionRow, correct: boolean) {
   const content = q.content as Record<string, never>;
   const answerSpec = q.answer as { accepted?: string[]; acceptedSequences?: string[][] };
   switch (q.question_type) {
     case "MULTIPLE_CHOICE":
     case "LISTEN_AND_CHOOSE":
-    case "PICTURE_MATCH": {
+    case "PICTURE_MATCH":
+    case "READING": {
       const options = content.options as { id: string; text?: string; speech?: string }[];
       const target = correct
         ? options.find((o) => answerSpec.accepted!.includes(o.id))
@@ -163,6 +177,100 @@ async function answer(page: Page, q: QuestionRow, correct: boolean) {
       await page.getByLabel("Type the word").fill(correct ? answerSpec.accepted![0] : "zzz");
       await page.getByRole("button", { name: /Check/ }).click();
       return;
+    case "MATCH": {
+      const left = content.left as Item[];
+      const right = content.right as Item[];
+      const pairs = (q.answer as { pairs: [string, string][] }).pairs;
+      for (const [i, [l, r]] of pairs.entries()) {
+        // Wrong: pair each left item with the next one's partner.
+        const target = correct ? r : pairs[(i + 1) % pairs.length][1];
+        await page
+          .getByRole("list", { name: "Match these" })
+          .getByRole("button", { name: itemLabel(left.find((x) => x.id === l)!), exact: true })
+          .click();
+        await page
+          .getByRole("list", { name: "With these" })
+          .getByRole("button", {
+            name: new RegExp(`^${escape(itemLabel(right.find((x) => x.id === target)!))}`),
+          })
+          .click();
+      }
+      await page.getByRole("button", { name: /Check/ }).click();
+      return;
+    }
+    case "SORT": {
+      const items = content.items as Item[];
+      const groups = content.groups as { id: string; label: string }[];
+      const pairs = (q.answer as { pairs: [string, string][] }).pairs;
+      for (const [itemId, groupId] of pairs) {
+        const target = correct ? groupId : groups.find((g) => g.id !== groupId)!.id;
+        await page
+          .getByRole("group", { name: "Things to sort" })
+          .getByRole("button", { name: itemLabel(items.find((x) => x.id === itemId)!), exact: true })
+          .click();
+        await page
+          .getByRole("region", { name: groups.find((g) => g.id === target)!.label, exact: true })
+          .getByRole("button")
+          .first()
+          .click();
+      }
+      await page.getByRole("button", { name: /Check/ }).click();
+      return;
+    }
+    case "DRAG_DROP": {
+      const bank = content.bank as string[];
+      const expected = answerSpec.acceptedSequences![0];
+      const words = correct ? expected : expected.map((w) => bank.find((b) => b !== w)!);
+      for (const word of words) {
+        await page
+          .getByRole("group", { name: "Word bank" })
+          .getByRole("button", { name: word, exact: true })
+          .click();
+      }
+      await page.getByRole("button", { name: /Check/ }).click();
+      return;
+    }
+    case "WRITING": {
+      const starter = ((content.starter as string | undefined) ?? "").trim();
+      const full = answerSpec.accepted![0];
+      const typed = starter && full.startsWith(starter) ? full.slice(starter.length).trim() : full;
+      await page.locator(`#write-${q.id}`).fill(correct ? typed : "zzz");
+      await page.getByRole("button", { name: /Check/ }).click();
+      return;
+    }
+    case "TRACING": {
+      const canvas = page.getByTestId("tracing-canvas");
+      const box = (await canvas.boundingBox())!;
+      // Read where the letter is drawn on the guide canvas, then trace along it row by row.
+      const segments = correct
+        ? await canvas.evaluate((ink) => {
+            const guide = ink.previousElementSibling as HTMLCanvasElement;
+            const ctx = guide.getContext("2d")!;
+            const { data, width, height } = ctx.getImageData(0, 0, guide.width, guide.height);
+            const out: [number, number, number][] = [];
+            for (let y = 4; y < height; y += 8) {
+              let start = -1;
+              for (let x = 0; x <= width; x++) {
+                const on = x < width && data[(y * width + x) * 4 + 3] > 40;
+                if (on && start < 0) start = x;
+                if (!on && start >= 0) {
+                  out.push([start, y, x - 1]);
+                  start = -1;
+                }
+              }
+            }
+            return out.map(([a, y, b]) => [a / width, y / height, b / width] as [number, number, number]);
+          })
+        : [[0.02, 0.02, 0.06] as [number, number, number]];
+      for (const [x1, y, x2] of segments) {
+        await page.mouse.move(box.x + x1 * box.width, box.y + y * box.height);
+        await page.mouse.down();
+        await page.mouse.move(box.x + x2 * box.width, box.y + y * box.height, { steps: 3 });
+        await page.mouse.up();
+      }
+      await page.getByRole("button", { name: /Done/ }).click();
+      return;
+    }
     default:
       throw new Error(`no automation for ${q.question_type}`);
   }
@@ -190,3 +298,7 @@ export async function waitForSynced(page: Page) {
     )
     .toBe(0);
 }
+
+type Item = { id: string; text?: string; emoji?: string; speech?: string };
+const itemLabel = (item: Item) => item.text ?? item.speech ?? item.emoji ?? item.id;
+const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

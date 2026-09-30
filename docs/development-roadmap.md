@@ -43,6 +43,23 @@ Definition of done:
 | Error / loading / empty states  | `error.tsx` per area, `loading.tsx`, `EmptyState`                                    |
 | PWA                             | manifest, icons, Serwist service worker, `offline.html` fallback                     |
 
+## Phase 3 — learning engine ✅ (completed 2026-10-01)
+
+The project plan's Phase 3 (the reusable, data-driven learning engine — not the full phonics
+programme) maps to row 4 below and parts of rows 8, 9, 11, 12 and 13:
+
+| Area                         | Where                                                                                                                                  |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Hierarchy and content models | migrations `…100400`, `20261001100100`; `lesson_catalog` view; subjects/levels as data                                                 |
+| Activity system              | 12 scored types + intro, typed content and config schemas, registry, 6 new renderers                                                   |
+| Answers                      | server-only `questions.answer`, digest answer keys, server re-evaluation (ADR-021)                                                     |
+| Progress                     | attempts with scores; activity, lesson, skill, subject and level progress; learning sessions                                           |
+| Mastery and review           | configurable bands, repeated evidence, review queue (ADR-022), prerequisites with preview                                              |
+| Services                     | `getNextLesson`, `getRecommendedLessons`, `getWeakSkills`, `getReviewItems`, `getLessonReadiness`                                      |
+| Lesson player                | intro → activities → summary, back/next/exit, configurable feedback, resume after closing                                              |
+| Dashboards                   | child: level, recommended lesson, subjects, recent lessons, skills; parent: activities, average score, learning time, subject progress |
+| Tests                        | unit, SQL (`004_learning_engine.sql`), integration (`learning-engine.test.ts`), e2e (`learning-engine.spec.ts`)                        |
+
 ## Phases
 
 | #   | Phase                       | Status | Notes / next steps                                                                                                                        |
@@ -50,16 +67,16 @@ Definition of done:
 | 1   | Project foundation          | ✅     | Next 16, TS, Tailwind, lint, tests, docs                                                                                                  |
 | 2   | Database and authentication | ✅     | Schema, RLS, email/password auth, password reset, parent profile (name, time zone), levels seeded by migration, DB-enforced family rules  |
 | 3   | Multi-child system          | ✅     | Create/edit/archive (max 12), switcher, child mode + grown-up gate, forged child ids rejected                                             |
-| 4   | Learning/content engine     | ✅     | Hierarchy, typed questions, registry, importer, templates                                                                                 |
+| 4   | Learning/content engine     | ✅     | Hierarchy, typed questions and activity config, registry (13 renderers), importer, templates, answer keys, engine services (Phase 3)      |
 | 5   | Phonics                     | 🟡     | Letters, digraphs, vowel teams, r-controlled, endings authored; more lessons per pattern (only 1 each now); pattern cards outside lessons |
 | 6   | Vocabulary                  | 🟡     | Word bank + My Words data. Next: Word Explorer (`/child/words/[id]`), My Words screen, manual save, search                                |
 | 7   | Spelling                    | 🟡     | SPELLING type + error classification. Next: spelling sessions, error-type analytics                                                       |
-| 8   | Reading                     | ⬜     | READING renderer (stories exist), read-aloud with optional speech recognition + self-check fallback                                       |
-| 9   | Writing                     | ⬜     | Canvas (touch/stylus, clear/undo/eraser/example), TRACING/WRITING renderers, stroke metrics                                               |
+| 8   | Reading                     | 🟡     | READING renderer (passage + comprehension) done. Next: story library screens, read-aloud with optional speech recognition + self-check    |
+| 9   | Writing                     | 🟡     | TRACING (canvas, coverage scoring) and WRITING (word bank) done. Next: undo/eraser, stroke order and direction metrics                    |
 | 10  | Assessment                  | 🟡     | Schema, placement config + scoring logic, seeded placement. Next: assessment player, results, reassessment timeline                       |
-| 11  | Adaptive learning           | 🟡     | Mastery, recommendations, daily plan. Next: mixed review sessions drawing questions across skills                                         |
-| 12  | Parent dashboard            | 🟡     | Stats, chart, skills, weak/strong, recommendations, recent lessons, badges. Next: monthly view, words list, assessment history charts     |
-| 13  | Games and rewards           | 🟡     | Stars, points, badges, streaks. Next: MATCH, MEMORY_MATCH, SORT, PHONICS_CLASSIFICATION renderers                                         |
+| 11  | Adaptive learning           | 🟡     | Mastery bands, prerequisites, review queue, next lesson and recommendations, daily plan. Next: mixed review sessions across skills, SRS   |
+| 12  | Parent dashboard            | 🟡     | Stats, activities, average score, learning time, subject progress, skills, recommendations, badges. Next: monthly view, words list        |
+| 13  | Games and rewards           | 🟡     | Stars, points, badges, streaks; MATCH, SORT, DRAG_DROP renderers. Next: MEMORY_MATCH, PHONICS_CLASSIFICATION                              |
 | 14  | PWA/offline/sync            | 🟡     | Outbox, idempotent sync, SW. Next: fully client-side offline lesson loader from IndexedDB; background sync                                |
 | 15  | Admin CMS                   | 🟡     | Guarded area, overview, word search. Next: reusable Zod-driven edit forms, CSV upload in UI, media upload with type/size validation       |
 | 16  | Testing and optimisation    | 🟡     | CI for static checks and build. Next: DB + e2e tests in CI (Supabase CLI), axe accessibility checks, Lighthouse budget                    |
@@ -70,6 +87,12 @@ Definition of done:
   audio is added; voice quality depends on the device.
 - Drag-and-drop works with a mouse; on touch screens tiles are tapped into place (drag on
   touch is on the Phase 13 list).
+- Answer keys stop answers being read from the page, but small option sets can always be
+  tried one by one on a modified client; the server's re-evaluation is what protects
+  progress (ADR-021).
+- Tracing is scored on coverage of the letter only (no stroke order or direction yet).
+- VOCABULARY, SPELLING and LISTENING are defined subjects without units of their own yet
+  (spelling and listening activities sit inside phonics and reading lessons).
 - The rate limiter is per server instance.
 - Assessment and placement have data and logic but no UI yet; parents set the level manually.
 - Pictures are emoji (render slightly differently per platform); `image_assets` is ready
