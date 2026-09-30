@@ -2,478 +2,294 @@
   "level": "GRADE2",
   "units": [
     {
-      "code": "g2-r-controlled",
+      "code": "g2-suffixes",
       "subject": "PHONICS",
-      "title": "Bossy R",
-      "emoji": "🦖",
-      "description": "R changes the vowel before it: ar, or, er, ir, ur.",
+      "title": "Suffixes",
+      "emoji": "🚀",
+      "description": "-tion, -sion, -ment, -ness, -ful, -less: endings that change a word.",
       "skills": [
         {
-          "code": "g2-r-controlled-ar",
+          "code": "g2-tion-sion",
           "dimension": "PHONICS",
-          "title": "AR",
-          "childTitle": "ar",
-          "pattern": "AR",
-          "importance": 4,
+          "title": "-TION and -SION",
+          "childTitle": "tion sion",
+          "description": "Reads -tion (shun) and -sion (zhun or shun).",
+          "difficulty": 8,
+          "importance": 3,
+          "phonicsStage": "ADVANCED",
           "prerequisites": [
-            "g1-vowel-team-ai-ay"
+            "g1-ending-ed"
           ],
+          "pattern": "TION",
           "lessons": [
             {
-              "code": "g2-ar-1",
-              "title": "The ar team",
-              "childTitle": "ar",
-              "emoji": "🚗",
-              "minutes": 8,
-              "activities": [
-                {
-                  "type": "INTRO",
-                  "stage": "explanation",
-                  "title": "Meet ar",
-                  "instructions": "Listen and look.",
-                  "instructionsSpeech": "Listen and look.",
-                  "questions": [
-                    {
-                      "template": "pattern_intro",
-                      "pattern": "AR",
-                      "examples": [
-                        "car",
-                        "star",
-                        "farm"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "MULTIPLE_CHOICE",
-                  "stage": "guided_practice",
-                  "title": "Which word?",
-                  "instructions": "Tap the word with the sound.",
-                  "instructionsSpeech": "Tap the word with the sound.",
-                  "questions": [
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "AR",
-                      "word": "jar",
-                      "distractors": [
-                        "pan",
-                        "bag"
-                      ]
-                    },
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "AR",
-                      "word": "arm",
-                      "distractors": [
-                        "ant",
-                        "egg"
-                      ]
-                    },
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "AR",
-                      "word": "shark",
-                      "distractors": [
-                        "ship",
-                        "shell"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "LISTEN_AND_CHOOSE",
-                  "stage": "guided_practice",
-                  "title": "Listen and read",
-                  "instructions": "Listen, then tap the word.",
-                  "instructionsSpeech": "Listen, then tap the word.",
-                  "questions": [
-                    {
-                      "template": "listen_pick_word",
-                      "word": "farm",
-                      "distractors": [
-                        "fork",
-                        "fish"
-                      ]
-                    },
-                    {
-                      "template": "listen_pick_word",
-                      "word": "star",
-                      "distractors": [
-                        "storm",
-                        "sun"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "MISSING_LETTER",
-                  "stage": "independent_practice",
-                  "title": "Missing letters",
-                  "instructions": "Which letters are missing?",
-                  "instructionsSpeech": "Which letters are missing?",
-                  "questions": [
-                    {
-                      "template": "missing_pattern",
-                      "word": "car",
-                      "missing": "ar",
-                      "pattern": "AR",
-                      "choices": [
-                        "or",
-                        "ur"
-                      ]
-                    },
-                    {
-                      "template": "missing_pattern",
-                      "word": "farm",
-                      "missing": "ar",
-                      "pattern": "AR",
-                      "choices": [
-                        "ir",
-                        "or"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "SPELLING",
-                  "stage": "independent_practice",
-                  "title": "Spell it",
-                  "instructions": "Listen, then type the word.",
-                  "instructionsSpeech": "Listen, then type the word.",
-                  "questions": [
-                    {
-                      "template": "spell_word",
-                      "word": "car"
-                    },
-                    {
-                      "template": "spell_word",
-                      "word": "arm"
-                    }
-                  ]
-                },
-                {
-                  "type": "SENTENCE_BUILDER",
-                  "stage": "review",
-                  "title": "Make a sentence",
-                  "instructions": "Put the words in order.",
-                  "instructionsSpeech": "Put the words in order.",
-                  "questions": [
-                    {
-                      "template": "order_sentence",
-                      "sentence": "The bird sat on the girl's arm.",
-                      "emoji": "🐦"
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "code": "g2-r-controlled-or",
-          "dimension": "PHONICS",
-          "title": "OR",
-          "childTitle": "or",
-          "pattern": "OR",
-          "importance": 4,
-          "prerequisites": [
-            "g2-r-controlled-ar"
-          ],
-          "lessons": [
-            {
-              "code": "g2-or-1",
-              "title": "The or team",
-              "childTitle": "or",
-              "emoji": "🐴",
-              "minutes": 8,
-              "activities": [
-                {
-                  "type": "INTRO",
-                  "stage": "explanation",
-                  "title": "Meet or",
-                  "instructions": "Listen and look.",
-                  "instructionsSpeech": "Listen and look.",
-                  "questions": [
-                    {
-                      "template": "pattern_intro",
-                      "pattern": "OR",
-                      "examples": [
-                        "fork",
-                        "horse",
-                        "corn"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "MULTIPLE_CHOICE",
-                  "stage": "guided_practice",
-                  "title": "Which word?",
-                  "instructions": "Tap the word with the sound.",
-                  "instructionsSpeech": "Tap the word with the sound.",
-                  "questions": [
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "OR",
-                      "word": "fork",
-                      "distractors": [
-                        "farm",
-                        "fish"
-                      ]
-                    },
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "OR",
-                      "word": "storm",
-                      "distractors": [
-                        "star",
-                        "sun"
-                      ]
-                    },
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "OR",
-                      "word": "corn",
-                      "distractors": [
-                        "car",
-                        "cup"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "LISTEN_AND_CHOOSE",
-                  "stage": "guided_practice",
-                  "title": "Listen and read",
-                  "instructions": "Listen, then tap the word.",
-                  "instructionsSpeech": "Listen, then tap the word.",
-                  "questions": [
-                    {
-                      "template": "listen_pick_word",
-                      "word": "horse",
-                      "distractors": [
-                        "house",
-                        "hen"
-                      ]
-                    },
-                    {
-                      "template": "listen_pick_word",
-                      "word": "storm",
-                      "distractors": [
-                        "star",
-                        "snow"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "MISSING_LETTER",
-                  "stage": "independent_practice",
-                  "title": "Missing letters",
-                  "instructions": "Which letters are missing?",
-                  "instructionsSpeech": "Which letters are missing?",
-                  "questions": [
-                    {
-                      "template": "missing_pattern",
-                      "word": "fork",
-                      "missing": "or",
-                      "pattern": "OR",
-                      "choices": [
-                        "ar",
-                        "ur"
-                      ]
-                    },
-                    {
-                      "template": "missing_pattern",
-                      "word": "corn",
-                      "missing": "or",
-                      "pattern": "OR",
-                      "choices": [
-                        "ar",
-                        "ir"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "SPELLING",
-                  "stage": "independent_practice",
-                  "title": "Spell it",
-                  "instructions": "Listen, then type the word.",
-                  "instructionsSpeech": "Listen, then type the word.",
-                  "questions": [
-                    {
-                      "template": "spell_word",
-                      "word": "fork"
-                    },
-                    {
-                      "template": "spell_word",
-                      "word": "corn"
-                    }
-                  ]
-                },
-                {
-                  "type": "SENTENCE_BUILDER",
-                  "stage": "review",
-                  "title": "Make a sentence",
-                  "instructions": "Put the words in order.",
-                  "instructionsSpeech": "Put the words in order.",
-                  "questions": [
-                    {
-                      "template": "order_sentence",
-                      "sentence": "The horse ran across the farm before the storm.",
-                      "emoji": "🐴"
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "code": "g2-r-controlled-er-ir-ur",
-          "dimension": "PHONICS",
-          "title": "ER, IR and UR",
-          "childTitle": "er ir ur",
-          "importance": 4,
-          "prerequisites": [
-            "g2-r-controlled-or"
-          ],
-          "lessons": [
-            {
-              "code": "g2-er-ir-ur-1",
-              "title": "er, ir and ur",
-              "childTitle": "er ir ur",
-              "emoji": "🐦",
+              "code": "g2-tion-sion-1",
+              "title": "-TION and -SION",
+              "childTitle": "tion sion",
+              "description": "Endings that say shun and zhun.",
+              "emoji": "📺",
               "minutes": 7,
+              "difficulty": 8,
+              "introSpeech": "Some endings sound nothing like their letters: tion says shun!",
               "activities": [
                 {
                   "type": "INTRO",
                   "stage": "explanation",
-                  "title": "Three spellings, one sound",
-                  "instructions": "er, ir and ur all say the same sound.",
-                  "instructionsSpeech": "er, ir and ur all say the same sound.",
+                  "title": "Hear it",
+                  "instructions": "Listen to the ending.",
+                  "instructionsSpeech": "Listen to the ending.",
                   "questions": [
                     {
                       "template": "pattern_intro",
-                      "pattern": "IR",
+                      "pattern": "TION",
                       "examples": [
-                        "bird",
-                        "girl",
-                        "shirt"
+                        "station",
+                        "action",
+                        "lotion"
                       ]
                     },
                     {
                       "template": "pattern_intro",
-                      "pattern": "UR",
+                      "pattern": "SION",
                       "examples": [
-                        "nurse",
-                        "purse",
-                        "turtle"
+                        "television",
+                        "vision",
+                        "mansion"
                       ]
                     }
                   ]
                 },
                 {
-                  "type": "LISTEN_AND_CHOOSE",
-                  "stage": "guided_practice",
-                  "title": "Listen and read",
-                  "instructions": "Listen, then tap the word.",
-                  "instructionsSpeech": "Listen, then tap the word.",
+                  "type": "FIND_PATTERN",
+                  "stage": "demonstration",
+                  "title": "See it",
+                  "instructions": "Find the ending.",
+                  "instructionsSpeech": "Find the ending.",
                   "questions": [
                     {
-                      "template": "listen_pick_word",
-                      "word": "bird",
-                      "distractors": [
-                        "bed",
-                        "bread"
-                      ]
+                      "template": "find_pattern",
+                      "pattern": "TION",
+                      "word": "station"
                     },
                     {
-                      "template": "listen_pick_word",
-                      "word": "nurse",
-                      "distractors": [
-                        "nut",
-                        "horse"
-                      ]
-                    },
+                      "template": "find_pattern",
+                      "pattern": "SION",
+                      "word": "vision"
+                    }
+                  ]
+                },
+                {
+                  "type": "SORT",
+                  "stage": "guided_practice",
+                  "title": "Sort it",
+                  "instructions": "-tion or -sion?",
+                  "instructionsSpeech": "-tion or -sion?",
+                  "questions": [
                     {
-                      "template": "listen_pick_word",
-                      "word": "girl",
-                      "distractors": [
-                        "goat",
-                        "king"
+                      "template": "sort_by_pattern",
+                      "groups": [
+                        {
+                          "pattern": "TION",
+                          "words": [
+                            "station",
+                            "action",
+                            "lotion"
+                          ]
+                        },
+                        {
+                          "pattern": "SION",
+                          "words": [
+                            "television",
+                            "vision",
+                            "mansion"
+                          ]
+                        }
                       ]
-                    },
+                    }
+                  ]
+                },
+                {
+                  "type": "SORT",
+                  "stage": "guided_practice",
+                  "title": "Two sounds",
+                  "instructions": "Does sion say zhun or shun?",
+                  "instructionsSpeech": "Does sion say zhun or shun?",
+                  "questions": [
                     {
-                      "template": "listen_pick_word",
-                      "word": "her",
+                      "template": "sort_by_sound",
+                      "pattern": "SION",
+                      "words": [
+                        "television",
+                        "vision",
+                        "mansion"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "PICTURE_MATCH",
+                  "stage": "independent_practice",
+                  "title": "Read it",
+                  "instructions": "Read the word. Tap its picture.",
+                  "instructionsSpeech": "Read the word. Tap its picture.",
+                  "questions": [
+                    {
+                      "template": "read_word",
+                      "word": "lotion",
                       "distractors": [
-                        "hen",
-                        "hat"
+                        "station",
+                        "mansion"
                       ]
                     }
                   ]
                 },
                 {
                   "type": "MISSING_LETTER",
-                  "stage": "independent_practice",
-                  "title": "Which spelling?",
+                  "stage": "review",
+                  "title": "Spell it",
                   "instructions": "Which letters are missing?",
                   "instructionsSpeech": "Which letters are missing?",
                   "questions": [
                     {
                       "template": "missing_pattern",
-                      "word": "bird",
-                      "missing": "ir",
+                      "word": "action",
+                      "missing": "tion",
+                      "pattern": "TION",
                       "choices": [
-                        "ur",
-                        "er"
+                        "sion"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "g2-suffixes",
+          "dimension": "PHONICS",
+          "title": "-MENT, -NESS, -FUL and -LESS",
+          "childTitle": "suffixes",
+          "description": "Reads words built with -ment, -ness, -ful and -less and knows what the ending adds.",
+          "difficulty": 7,
+          "importance": 3,
+          "phonicsStage": "ADVANCED",
+          "prerequisites": [
+            "g2-tion-sion"
+          ],
+          "pattern": "FUL",
+          "lessons": [
+            {
+              "code": "g2-suffixes-1",
+              "title": "Word endings that change meaning",
+              "childTitle": "Big endings",
+              "description": "help + ful = helpful; care + less = careless.",
+              "emoji": "🤝",
+              "minutes": 7,
+              "difficulty": 7,
+              "introSpeech": "Add an ending to a word to make a new word!",
+              "activities": [
+                {
+                  "type": "INTRO",
+                  "stage": "explanation",
+                  "title": "Hear it",
+                  "instructions": "Listen to the ending.",
+                  "instructionsSpeech": "Listen to the ending.",
+                  "questions": [
+                    {
+                      "template": "pattern_intro",
+                      "pattern": "FUL",
+                      "examples": [
+                        "helpful",
+                        "playful"
                       ]
                     },
                     {
-                      "template": "missing_pattern",
-                      "word": "nurse",
-                      "missing": "ur",
-                      "choices": [
-                        "ir",
-                        "er"
+                      "template": "pattern_intro",
+                      "pattern": "LESS",
+                      "examples": [
+                        "helpless",
+                        "careless"
                       ]
+                    }
+                  ]
+                },
+                {
+                  "type": "MATCH",
+                  "stage": "guided_practice",
+                  "title": "Match it",
+                  "instructions": "Match each ending to a word.",
+                  "instructionsSpeech": "Match each ending to a word.",
+                  "questions": [
+                    {
+                      "template": "match_pattern_word",
+                      "pairs": [
+                        {
+                          "pattern": "FUL",
+                          "word": "playful"
+                        },
+                        {
+                          "pattern": "LESS",
+                          "word": "helpless"
+                        },
+                        {
+                          "pattern": "NESS",
+                          "word": "sadness"
+                        },
+                        {
+                          "pattern": "MENT",
+                          "word": "shipment"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "FIND_PATTERN",
+                  "stage": "guided_practice",
+                  "title": "See it",
+                  "instructions": "Find the ending.",
+                  "instructionsSpeech": "Find the ending.",
+                  "questions": [
+                    {
+                      "template": "find_pattern",
+                      "pattern": "NESS",
+                      "word": "kindness"
                     },
                     {
-                      "template": "missing_pattern",
-                      "word": "shirt",
-                      "missing": "ir",
-                      "choices": [
-                        "ur",
-                        "er"
-                      ]
-                    },
+                      "template": "find_pattern",
+                      "pattern": "MENT",
+                      "word": "payment"
+                    }
+                  ]
+                },
+                {
+                  "type": "PICTURE_MATCH",
+                  "stage": "independent_practice",
+                  "title": "Read it",
+                  "instructions": "Read the word. Tap its picture.",
+                  "instructionsSpeech": "Read the word. Tap its picture.",
+                  "questions": [
                     {
-                      "template": "missing_pattern",
-                      "word": "purse",
-                      "missing": "ur",
-                      "choices": [
-                        "ir",
-                        "er"
+                      "template": "read_word",
+                      "word": "sadness",
+                      "distractors": [
+                        "playful",
+                        "shipment"
                       ]
                     }
                   ]
                 },
                 {
                   "type": "SPELLING",
-                  "stage": "independent_practice",
+                  "stage": "review",
                   "title": "Spell it",
-                  "instructions": "Listen, then type the word.",
-                  "instructionsSpeech": "Listen, then type the word.",
+                  "instructions": "Type the word you hear.",
+                  "instructionsSpeech": "Type the word you hear.",
                   "questions": [
                     {
                       "template": "spell_word",
-                      "word": "bird"
-                    },
-                    {
-                      "template": "spell_word",
-                      "word": "girl"
+                      "word": "helpful"
                     }
                   ]
                 }
@@ -484,253 +300,105 @@
       ]
     },
     {
-      "code": "g2-word-endings",
+      "code": "g2-multisyllable",
       "subject": "PHONICS",
-      "title": "Word Endings",
-      "emoji": "🔚",
-      "description": "-ing, -ed (three sounds), -s and -es.",
+      "title": "Longer Words",
+      "emoji": "🌵",
+      "description": "Reading words with two syllables, one chunk at a time.",
       "skills": [
         {
-          "code": "g2-ending-ing",
-          "dimension": "PHONICS",
-          "title": "-ING",
-          "childTitle": "ing",
-          "pattern": "ING",
-          "importance": 4,
-          "lessons": [
-            {
-              "code": "g2-ing-1",
-              "title": "The -ing ending",
-              "childTitle": "ing",
-              "emoji": "🤸",
-              "minutes": 5,
-              "activities": [
-                {
-                  "type": "INTRO",
-                  "stage": "explanation",
-                  "title": "Meet -ing",
-                  "instructions": "Listen and look.",
-                  "instructionsSpeech": "Listen and look.",
-                  "questions": [
-                    {
-                      "template": "pattern_intro",
-                      "pattern": "ING",
-                      "examples": [
-                        "jumping",
-                        "singing"
-                      ],
-                      "body": "When we add i n g to a doing word, it means it is happening now. i n g says"
-                    }
-                  ]
-                },
-                {
-                  "type": "LISTEN_AND_CHOOSE",
-                  "stage": "guided_practice",
-                  "title": "Listen and read",
-                  "instructions": "Listen, then tap the word.",
-                  "instructionsSpeech": "Listen, then tap the word.",
-                  "questions": [
-                    {
-                      "template": "listen_pick_word",
-                      "word": "jumping",
-                      "distractors": [
-                        "jumped",
-                        "played"
-                      ]
-                    },
-                    {
-                      "template": "listen_pick_word",
-                      "word": "singing",
-                      "distractors": [
-                        "sing",
-                        "king"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "SENTENCE_BUILDER",
-                  "stage": "independent_practice",
-                  "title": "Make a sentence",
-                  "instructions": "Put the words in order.",
-                  "instructionsSpeech": "Put the words in order.",
-                  "questions": [
-                    {
-                      "template": "order_sentence",
-                      "sentence": "The frog is jumping.",
-                      "emoji": "🐸"
-                    },
-                    {
-                      "template": "order_sentence",
-                      "sentence": "The bird is singing.",
-                      "emoji": "🐦"
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "code": "g2-ending-ed",
-          "dimension": "PHONICS",
-          "title": "-ED (three sounds)",
-          "childTitle": "ed",
-          "pattern": "ED",
-          "importance": 4,
+          "code": "g2-multisyllable",
+          "dimension": "WORD_READING",
+          "title": "Two-syllable words",
+          "childTitle": "Longer words",
+          "description": "Decodes two-syllable words by chunks (sun·set, pic·nic).",
+          "difficulty": 6,
+          "importance": 3,
+          "phonicsStage": "ADVANCED",
           "prerequisites": [
-            "g2-ending-ing"
+            "kg2-short-u"
           ],
           "lessons": [
             {
-              "code": "g2-ed-1",
-              "title": "The -ed ending",
-              "childTitle": "ed",
-              "emoji": "🎨",
+              "code": "g2-multisyllable-1",
+              "title": "Two-syllable words",
+              "childTitle": "Longer words",
+              "description": "Read long words in two chunks: sun-set, pic-nic.",
+              "emoji": "🌅",
               "minutes": 6,
+              "difficulty": 6,
+              "introSpeech": "Long words are easy in chunks: sun, set, sunset!",
               "activities": [
                 {
-                  "type": "INTRO",
-                  "stage": "explanation",
-                  "title": "Meet -ed",
-                  "instructions": "Listen and look.",
-                  "instructionsSpeech": "Listen and look.",
+                  "type": "BLEND_SOUNDS",
+                  "stage": "guided_practice",
+                  "title": "Blend it",
+                  "instructions": "Blend the sounds. What word is it?",
+                  "instructionsSpeech": "Blend the sounds. What word is it?",
                   "questions": [
                     {
-                      "template": "pattern_intro",
-                      "pattern": "ED",
-                      "examples": [
-                        "jumped",
-                        "played",
-                        "painted"
+                      "template": "blend_word",
+                      "word": "sunset",
+                      "distractors": [
+                        "picnic",
+                        "napkin"
                       ],
-                      "body": "When we add e d, it means it already happened. The ending can sound like t, d, or id. Listen:",
-                      "speech": "When we add e d, it means it already happened. The ending can sound like t, as in jumped. Or d, as in played. Or id, as in painted."
+                      "pictures": true
                     }
                   ]
                 },
                 {
-                  "type": "MULTIPLE_CHOICE",
-                  "stage": "guided_practice",
-                  "title": "Which sound?",
-                  "instructions": "What does -ed say in this word?",
-                  "instructionsSpeech": "What does -ed say in this word?",
+                  "type": "PICTURE_MATCH",
+                  "stage": "independent_practice",
+                  "title": "Read it",
+                  "instructions": "Read the word. Tap its picture.",
+                  "instructionsSpeech": "Read the word. Tap its picture.",
                   "questions": [
                     {
-                      "template": "pick_pattern_sound",
-                      "pattern": "ED",
-                      "word": "jumped"
-                    },
-                    {
-                      "template": "pick_pattern_sound",
-                      "pattern": "ED",
-                      "word": "played"
-                    },
-                    {
-                      "template": "pick_pattern_sound",
-                      "pattern": "ED",
-                      "word": "painted"
-                    }
-                  ]
-                },
-                {
-                  "type": "SENTENCE_BUILDER",
-                  "stage": "review",
-                  "title": "Make a sentence",
-                  "instructions": "Put the words in order.",
-                  "instructionsSpeech": "Put the words in order.",
-                  "questions": [
-                    {
-                      "template": "order_sentence",
-                      "sentence": "We played in the park and jumped over puddles.",
-                      "emoji": "🌧️"
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "code": "g2-ending-s-es",
-          "dimension": "PHONICS",
-          "title": "-S and -ES",
-          "childTitle": "s es",
-          "pattern": "ENDING_S",
-          "importance": 3,
-          "lessons": [
-            {
-              "code": "g2-s-es-1",
-              "title": "More than one",
-              "childTitle": "s es",
-              "emoji": "📦",
-              "minutes": 5,
-              "activities": [
-                {
-                  "type": "INTRO",
-                  "stage": "explanation",
-                  "title": "More than one",
-                  "instructions": "Listen and look.",
-                  "instructionsSpeech": "Listen and look.",
-                  "questions": [
-                    {
-                      "template": "pattern_intro",
-                      "pattern": "ENDING_S",
-                      "examples": [
-                        "cats",
-                        "dogs"
+                      "template": "read_word",
+                      "word": "picnic",
+                      "distractors": [
+                        "cactus",
+                        "pumpkin"
                       ]
                     },
                     {
-                      "template": "pattern_intro",
-                      "pattern": "ES",
-                      "examples": [
-                        "boxes"
+                      "template": "read_word",
+                      "word": "pumpkin",
+                      "distractors": [
+                        "napkin",
+                        "sunset"
                       ]
-                    }
-                  ]
-                },
-                {
-                  "type": "MULTIPLE_CHOICE",
-                  "stage": "guided_practice",
-                  "title": "s or z?",
-                  "instructions": "What does the s say?",
-                  "instructionsSpeech": "What does the s say?",
-                  "questions": [
-                    {
-                      "template": "pick_pattern_sound",
-                      "pattern": "ENDING_S",
-                      "word": "cats"
-                    },
-                    {
-                      "template": "pick_pattern_sound",
-                      "pattern": "ENDING_S",
-                      "word": "dogs"
                     }
                   ]
                 },
                 {
                   "type": "LISTEN_AND_CHOOSE",
                   "stage": "independent_practice",
-                  "title": "Listen and read",
+                  "title": "Listen and find",
                   "instructions": "Listen, then tap the word.",
                   "instructionsSpeech": "Listen, then tap the word.",
                   "questions": [
                     {
                       "template": "listen_pick_word",
-                      "word": "boxes",
+                      "word": "napkin",
                       "distractors": [
-                        "box",
-                        "dogs"
+                        "picnic",
+                        "cactus"
                       ]
-                    },
+                    }
+                  ]
+                },
+                {
+                  "type": "SPELLING",
+                  "stage": "review",
+                  "title": "Spell it",
+                  "instructions": "Type the word you hear.",
+                  "instructionsSpeech": "Type the word you hear.",
+                  "questions": [
                     {
-                      "template": "listen_pick_word",
-                      "word": "cats",
-                      "distractors": [
-                        "cat",
-                        "dogs"
-                      ]
+                      "template": "spell_word",
+                      "word": "cactus"
                     }
                   ]
                 }
@@ -756,7 +424,7 @@
           "difficulty": 7,
           "importance": 3,
           "prerequisites": [
-            "g2-ending-ed"
+            "g1-ending-ed"
           ],
           "lessons": [
             {
@@ -967,6 +635,759 @@
           ]
         }
       ]
+    },
+    {
+      "code": "g2-r-controlled",
+      "subject": "PHONICS",
+      "title": "Bossy R",
+      "emoji": "🦖",
+      "description": "R changes the vowel before it: ar, or, er, ir, ur.",
+      "skills": [
+        {
+          "code": "g2-r-controlled-ar",
+          "dimension": "PHONICS",
+          "title": "AR",
+          "childTitle": "ar",
+          "pattern": "AR",
+          "importance": 4,
+          "prerequisites": [
+            "g1-vowel-team-ai-ay"
+          ],
+          "lessons": [
+            {
+              "code": "g2-ar-1",
+              "title": "The ar team",
+              "childTitle": "ar",
+              "emoji": "🚗",
+              "minutes": 8,
+              "activities": [
+                {
+                  "type": "INTRO",
+                  "stage": "explanation",
+                  "title": "Meet ar",
+                  "instructions": "Listen and look.",
+                  "instructionsSpeech": "Listen and look.",
+                  "questions": [
+                    {
+                      "template": "pattern_intro",
+                      "pattern": "AR",
+                      "examples": [
+                        "car",
+                        "star",
+                        "farm"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "MULTIPLE_CHOICE",
+                  "stage": "guided_practice",
+                  "title": "Which word?",
+                  "instructions": "Tap the word with the sound.",
+                  "instructionsSpeech": "Tap the word with the sound.",
+                  "questions": [
+                    {
+                      "template": "pick_word_with_pattern",
+                      "pattern": "AR",
+                      "word": "jar",
+                      "distractors": [
+                        "pan",
+                        "bag"
+                      ]
+                    },
+                    {
+                      "template": "pick_word_with_pattern",
+                      "pattern": "AR",
+                      "word": "arm",
+                      "distractors": [
+                        "ant",
+                        "egg"
+                      ]
+                    },
+                    {
+                      "template": "pick_word_with_pattern",
+                      "pattern": "AR",
+                      "word": "shark",
+                      "distractors": [
+                        "ship",
+                        "shell"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "LISTEN_AND_CHOOSE",
+                  "stage": "guided_practice",
+                  "title": "Listen and read",
+                  "instructions": "Listen, then tap the word.",
+                  "instructionsSpeech": "Listen, then tap the word.",
+                  "questions": [
+                    {
+                      "template": "listen_pick_word",
+                      "word": "farm",
+                      "distractors": [
+                        "fork",
+                        "fish"
+                      ]
+                    },
+                    {
+                      "template": "listen_pick_word",
+                      "word": "star",
+                      "distractors": [
+                        "storm",
+                        "sun"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "MISSING_LETTER",
+                  "stage": "independent_practice",
+                  "title": "Missing letters",
+                  "instructions": "Which letters are missing?",
+                  "instructionsSpeech": "Which letters are missing?",
+                  "questions": [
+                    {
+                      "template": "missing_pattern",
+                      "word": "car",
+                      "missing": "ar",
+                      "pattern": "AR",
+                      "choices": [
+                        "or",
+                        "ur"
+                      ]
+                    },
+                    {
+                      "template": "missing_pattern",
+                      "word": "farm",
+                      "missing": "ar",
+                      "pattern": "AR",
+                      "choices": [
+                        "ir",
+                        "or"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "SPELLING",
+                  "stage": "independent_practice",
+                  "title": "Spell it",
+                  "instructions": "Listen, then type the word.",
+                  "instructionsSpeech": "Listen, then type the word.",
+                  "questions": [
+                    {
+                      "template": "spell_word",
+                      "word": "car"
+                    },
+                    {
+                      "template": "spell_word",
+                      "word": "arm"
+                    }
+                  ]
+                },
+                {
+                  "type": "SENTENCE_BUILDER",
+                  "stage": "review",
+                  "title": "Make a sentence",
+                  "instructions": "Put the words in order.",
+                  "instructionsSpeech": "Put the words in order.",
+                  "questions": [
+                    {
+                      "template": "order_sentence",
+                      "sentence": "The bird sat on the girl's arm.",
+                      "emoji": "🐦"
+                    }
+                  ]
+                }
+              ],
+              "status": "archived"
+            }
+          ],
+          "status": "archived"
+        },
+        {
+          "code": "g2-r-controlled-or",
+          "dimension": "PHONICS",
+          "title": "OR",
+          "childTitle": "or",
+          "pattern": "OR",
+          "importance": 4,
+          "prerequisites": [
+            "g2-r-controlled-ar"
+          ],
+          "lessons": [
+            {
+              "code": "g2-or-1",
+              "title": "The or team",
+              "childTitle": "or",
+              "emoji": "🐴",
+              "minutes": 8,
+              "activities": [
+                {
+                  "type": "INTRO",
+                  "stage": "explanation",
+                  "title": "Meet or",
+                  "instructions": "Listen and look.",
+                  "instructionsSpeech": "Listen and look.",
+                  "questions": [
+                    {
+                      "template": "pattern_intro",
+                      "pattern": "OR",
+                      "examples": [
+                        "fork",
+                        "horse",
+                        "corn"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "MULTIPLE_CHOICE",
+                  "stage": "guided_practice",
+                  "title": "Which word?",
+                  "instructions": "Tap the word with the sound.",
+                  "instructionsSpeech": "Tap the word with the sound.",
+                  "questions": [
+                    {
+                      "template": "pick_word_with_pattern",
+                      "pattern": "OR",
+                      "word": "fork",
+                      "distractors": [
+                        "farm",
+                        "fish"
+                      ]
+                    },
+                    {
+                      "template": "pick_word_with_pattern",
+                      "pattern": "OR",
+                      "word": "storm",
+                      "distractors": [
+                        "star",
+                        "sun"
+                      ]
+                    },
+                    {
+                      "template": "pick_word_with_pattern",
+                      "pattern": "OR",
+                      "word": "corn",
+                      "distractors": [
+                        "car",
+                        "cup"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "LISTEN_AND_CHOOSE",
+                  "stage": "guided_practice",
+                  "title": "Listen and read",
+                  "instructions": "Listen, then tap the word.",
+                  "instructionsSpeech": "Listen, then tap the word.",
+                  "questions": [
+                    {
+                      "template": "listen_pick_word",
+                      "word": "horse",
+                      "distractors": [
+                        "house",
+                        "hen"
+                      ]
+                    },
+                    {
+                      "template": "listen_pick_word",
+                      "word": "storm",
+                      "distractors": [
+                        "star",
+                        "snow"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "MISSING_LETTER",
+                  "stage": "independent_practice",
+                  "title": "Missing letters",
+                  "instructions": "Which letters are missing?",
+                  "instructionsSpeech": "Which letters are missing?",
+                  "questions": [
+                    {
+                      "template": "missing_pattern",
+                      "word": "fork",
+                      "missing": "or",
+                      "pattern": "OR",
+                      "choices": [
+                        "ar",
+                        "ur"
+                      ]
+                    },
+                    {
+                      "template": "missing_pattern",
+                      "word": "corn",
+                      "missing": "or",
+                      "pattern": "OR",
+                      "choices": [
+                        "ar",
+                        "ir"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "SPELLING",
+                  "stage": "independent_practice",
+                  "title": "Spell it",
+                  "instructions": "Listen, then type the word.",
+                  "instructionsSpeech": "Listen, then type the word.",
+                  "questions": [
+                    {
+                      "template": "spell_word",
+                      "word": "fork"
+                    },
+                    {
+                      "template": "spell_word",
+                      "word": "corn"
+                    }
+                  ]
+                },
+                {
+                  "type": "SENTENCE_BUILDER",
+                  "stage": "review",
+                  "title": "Make a sentence",
+                  "instructions": "Put the words in order.",
+                  "instructionsSpeech": "Put the words in order.",
+                  "questions": [
+                    {
+                      "template": "order_sentence",
+                      "sentence": "The horse ran across the farm before the storm.",
+                      "emoji": "🐴"
+                    }
+                  ]
+                }
+              ],
+              "status": "archived"
+            }
+          ],
+          "status": "archived"
+        },
+        {
+          "code": "g2-r-controlled-er-ir-ur",
+          "dimension": "PHONICS",
+          "title": "ER, IR and UR",
+          "childTitle": "er ir ur",
+          "importance": 4,
+          "prerequisites": [
+            "g2-r-controlled-or"
+          ],
+          "lessons": [
+            {
+              "code": "g2-er-ir-ur-1",
+              "title": "er, ir and ur",
+              "childTitle": "er ir ur",
+              "emoji": "🐦",
+              "minutes": 7,
+              "activities": [
+                {
+                  "type": "INTRO",
+                  "stage": "explanation",
+                  "title": "Three spellings, one sound",
+                  "instructions": "er, ir and ur all say the same sound.",
+                  "instructionsSpeech": "er, ir and ur all say the same sound.",
+                  "questions": [
+                    {
+                      "template": "pattern_intro",
+                      "pattern": "IR",
+                      "examples": [
+                        "bird",
+                        "girl",
+                        "shirt"
+                      ]
+                    },
+                    {
+                      "template": "pattern_intro",
+                      "pattern": "UR",
+                      "examples": [
+                        "nurse",
+                        "purse",
+                        "turtle"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "LISTEN_AND_CHOOSE",
+                  "stage": "guided_practice",
+                  "title": "Listen and read",
+                  "instructions": "Listen, then tap the word.",
+                  "instructionsSpeech": "Listen, then tap the word.",
+                  "questions": [
+                    {
+                      "template": "listen_pick_word",
+                      "word": "bird",
+                      "distractors": [
+                        "bed",
+                        "bread"
+                      ]
+                    },
+                    {
+                      "template": "listen_pick_word",
+                      "word": "nurse",
+                      "distractors": [
+                        "nut",
+                        "horse"
+                      ]
+                    },
+                    {
+                      "template": "listen_pick_word",
+                      "word": "girl",
+                      "distractors": [
+                        "goat",
+                        "king"
+                      ]
+                    },
+                    {
+                      "template": "listen_pick_word",
+                      "word": "her",
+                      "distractors": [
+                        "hen",
+                        "hat"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "MISSING_LETTER",
+                  "stage": "independent_practice",
+                  "title": "Which spelling?",
+                  "instructions": "Which letters are missing?",
+                  "instructionsSpeech": "Which letters are missing?",
+                  "questions": [
+                    {
+                      "template": "missing_pattern",
+                      "word": "bird",
+                      "missing": "ir",
+                      "choices": [
+                        "ur",
+                        "er"
+                      ]
+                    },
+                    {
+                      "template": "missing_pattern",
+                      "word": "nurse",
+                      "missing": "ur",
+                      "choices": [
+                        "ir",
+                        "er"
+                      ]
+                    },
+                    {
+                      "template": "missing_pattern",
+                      "word": "shirt",
+                      "missing": "ir",
+                      "choices": [
+                        "ur",
+                        "er"
+                      ]
+                    },
+                    {
+                      "template": "missing_pattern",
+                      "word": "purse",
+                      "missing": "ur",
+                      "choices": [
+                        "ir",
+                        "er"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "SPELLING",
+                  "stage": "independent_practice",
+                  "title": "Spell it",
+                  "instructions": "Listen, then type the word.",
+                  "instructionsSpeech": "Listen, then type the word.",
+                  "questions": [
+                    {
+                      "template": "spell_word",
+                      "word": "bird"
+                    },
+                    {
+                      "template": "spell_word",
+                      "word": "girl"
+                    }
+                  ]
+                }
+              ],
+              "status": "archived"
+            }
+          ],
+          "status": "archived"
+        }
+      ],
+      "status": "archived"
+    },
+    {
+      "code": "g2-word-endings",
+      "subject": "PHONICS",
+      "title": "Word Endings",
+      "emoji": "🔚",
+      "description": "-ing, -ed (three sounds), -s and -es.",
+      "skills": [
+        {
+          "code": "g2-ending-ing",
+          "dimension": "PHONICS",
+          "title": "-ING",
+          "childTitle": "ing",
+          "pattern": "ING",
+          "importance": 4,
+          "lessons": [
+            {
+              "code": "g2-ing-1",
+              "title": "The -ing ending",
+              "childTitle": "ing",
+              "emoji": "🤸",
+              "minutes": 5,
+              "activities": [
+                {
+                  "type": "INTRO",
+                  "stage": "explanation",
+                  "title": "Meet -ing",
+                  "instructions": "Listen and look.",
+                  "instructionsSpeech": "Listen and look.",
+                  "questions": [
+                    {
+                      "template": "pattern_intro",
+                      "pattern": "ING",
+                      "examples": [
+                        "jumping",
+                        "singing"
+                      ],
+                      "body": "When we add i n g to a doing word, it means it is happening now. i n g says"
+                    }
+                  ]
+                },
+                {
+                  "type": "LISTEN_AND_CHOOSE",
+                  "stage": "guided_practice",
+                  "title": "Listen and read",
+                  "instructions": "Listen, then tap the word.",
+                  "instructionsSpeech": "Listen, then tap the word.",
+                  "questions": [
+                    {
+                      "template": "listen_pick_word",
+                      "word": "jumping",
+                      "distractors": [
+                        "jumped",
+                        "played"
+                      ]
+                    },
+                    {
+                      "template": "listen_pick_word",
+                      "word": "singing",
+                      "distractors": [
+                        "sing",
+                        "king"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "SENTENCE_BUILDER",
+                  "stage": "independent_practice",
+                  "title": "Make a sentence",
+                  "instructions": "Put the words in order.",
+                  "instructionsSpeech": "Put the words in order.",
+                  "questions": [
+                    {
+                      "template": "order_sentence",
+                      "sentence": "The frog is jumping.",
+                      "emoji": "🐸"
+                    },
+                    {
+                      "template": "order_sentence",
+                      "sentence": "The bird is singing.",
+                      "emoji": "🐦"
+                    }
+                  ]
+                }
+              ],
+              "status": "archived"
+            }
+          ],
+          "status": "archived"
+        },
+        {
+          "code": "g2-ending-ed",
+          "dimension": "PHONICS",
+          "title": "-ED (three sounds)",
+          "childTitle": "ed",
+          "pattern": "ED",
+          "importance": 4,
+          "prerequisites": [
+            "g2-ending-ing"
+          ],
+          "lessons": [
+            {
+              "code": "g2-ed-1",
+              "title": "The -ed ending",
+              "childTitle": "ed",
+              "emoji": "🎨",
+              "minutes": 6,
+              "activities": [
+                {
+                  "type": "INTRO",
+                  "stage": "explanation",
+                  "title": "Meet -ed",
+                  "instructions": "Listen and look.",
+                  "instructionsSpeech": "Listen and look.",
+                  "questions": [
+                    {
+                      "template": "pattern_intro",
+                      "pattern": "ED",
+                      "examples": [
+                        "jumped",
+                        "played",
+                        "painted"
+                      ],
+                      "body": "When we add e d, it means it already happened. The ending can sound like t, d, or id. Listen:",
+                      "speech": "When we add e d, it means it already happened. The ending can sound like t, as in jumped. Or d, as in played. Or id, as in painted."
+                    }
+                  ]
+                },
+                {
+                  "type": "MULTIPLE_CHOICE",
+                  "stage": "guided_practice",
+                  "title": "Which sound?",
+                  "instructions": "What does -ed say in this word?",
+                  "instructionsSpeech": "What does -ed say in this word?",
+                  "questions": [
+                    {
+                      "template": "pick_pattern_sound",
+                      "pattern": "ED",
+                      "word": "jumped"
+                    },
+                    {
+                      "template": "pick_pattern_sound",
+                      "pattern": "ED",
+                      "word": "played"
+                    },
+                    {
+                      "template": "pick_pattern_sound",
+                      "pattern": "ED",
+                      "word": "painted"
+                    }
+                  ]
+                },
+                {
+                  "type": "SENTENCE_BUILDER",
+                  "stage": "review",
+                  "title": "Make a sentence",
+                  "instructions": "Put the words in order.",
+                  "instructionsSpeech": "Put the words in order.",
+                  "questions": [
+                    {
+                      "template": "order_sentence",
+                      "sentence": "We played in the park and jumped over puddles.",
+                      "emoji": "🌧️"
+                    }
+                  ]
+                }
+              ],
+              "status": "archived"
+            }
+          ],
+          "status": "archived"
+        },
+        {
+          "code": "g2-ending-s-es",
+          "dimension": "PHONICS",
+          "title": "-S and -ES",
+          "childTitle": "s es",
+          "pattern": "ENDING_S",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g2-s-es-1",
+              "title": "More than one",
+              "childTitle": "s es",
+              "emoji": "📦",
+              "minutes": 5,
+              "activities": [
+                {
+                  "type": "INTRO",
+                  "stage": "explanation",
+                  "title": "More than one",
+                  "instructions": "Listen and look.",
+                  "instructionsSpeech": "Listen and look.",
+                  "questions": [
+                    {
+                      "template": "pattern_intro",
+                      "pattern": "ENDING_S",
+                      "examples": [
+                        "cats",
+                        "dogs"
+                      ]
+                    },
+                    {
+                      "template": "pattern_intro",
+                      "pattern": "ES",
+                      "examples": [
+                        "boxes"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "MULTIPLE_CHOICE",
+                  "stage": "guided_practice",
+                  "title": "s or z?",
+                  "instructions": "What does the s say?",
+                  "instructionsSpeech": "What does the s say?",
+                  "questions": [
+                    {
+                      "template": "pick_pattern_sound",
+                      "pattern": "ENDING_S",
+                      "word": "cats"
+                    },
+                    {
+                      "template": "pick_pattern_sound",
+                      "pattern": "ENDING_S",
+                      "word": "dogs"
+                    }
+                  ]
+                },
+                {
+                  "type": "LISTEN_AND_CHOOSE",
+                  "stage": "independent_practice",
+                  "title": "Listen and read",
+                  "instructions": "Listen, then tap the word.",
+                  "instructionsSpeech": "Listen, then tap the word.",
+                  "questions": [
+                    {
+                      "template": "listen_pick_word",
+                      "word": "boxes",
+                      "distractors": [
+                        "box",
+                        "dogs"
+                      ]
+                    },
+                    {
+                      "template": "listen_pick_word",
+                      "word": "cats",
+                      "distractors": [
+                        "cat",
+                        "dogs"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "status": "archived"
+            }
+          ],
+          "status": "archived"
+        }
+      ],
+      "status": "archived"
     }
   ]
 }

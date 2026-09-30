@@ -131,6 +131,7 @@ export async function answerQuestion(page: Page, q: QuestionRow, correct: boolea
     case "MULTIPLE_CHOICE":
     case "LISTEN_AND_CHOOSE":
     case "PICTURE_MATCH":
+    case "BLEND_SOUNDS":
     case "READING": {
       const options = content.options as { id: string; text?: string; speech?: string }[];
       const target = correct
@@ -170,6 +171,40 @@ export async function answerQuestion(page: Page, q: QuestionRow, correct: boolea
           .first()
           .click();
       }
+      await page.getByRole("button", { name: /Check/ }).click();
+      return;
+    }
+    case "SEGMENT_WORD": {
+      const sounds = content.sounds as { id: string; label: string }[];
+      const expected = answerSpec.acceptedSequences![0];
+      // Wrong: one sound too few (or too many for a two-sound word).
+      const count = correct ? expected.length : expected.length === 2 ? 3 : expected.length - 1;
+      await page
+        .getByRole("group", { name: "Number of sounds" })
+        .getByRole("button", { name: `${count} sounds`, exact: true })
+        .click();
+      const order = correct
+        ? expected
+        : Array.from({ length: count }, (_, i) => sounds[i % sounds.length].id);
+      for (const id of order) {
+        const sound = sounds.find((x) => x.id === id)!;
+        await page
+          .getByRole("group", { name: "Sound cards" })
+          .getByRole("button", { name: `/${sound.label}/`, exact: true })
+          .first()
+          .click();
+      }
+      await page.getByRole("button", { name: /Check/ }).click();
+      return;
+    }
+    case "FIND_PATTERN": {
+      const word = content.word as string;
+      const [start, end] = answerSpec.accepted![0].split("-").map(Number);
+      const indexes = correct
+        ? Array.from({ length: end - start + 1 }, (_, i) => start + i)
+        : [end + 1 < word.length ? end + 1 : Math.max(0, start - 1)];
+      const letters = page.getByRole("group", { name: "Letters in the word" }).getByRole("button");
+      for (const i of indexes) await letters.nth(i).click();
       await page.getByRole("button", { name: /Check/ }).click();
       return;
     }

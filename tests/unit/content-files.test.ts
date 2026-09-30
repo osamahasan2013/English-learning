@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   assessmentsFileSchema,
   curriculumFileSchema,
+  type CurriculumFile,
   phonicsFileSchema,
   referenceFileSchema,
   sentencesFileSchema,
@@ -20,6 +21,13 @@ import type { ClientQuestion } from "@/lib/learning/lesson-payload";
 import { mergeLearningRules } from "@/lib/learning/rules";
 import { expandTemplate, type TemplateContext } from "@/lib/content/templates";
 import { RENDERABLE_QUESTION_TYPES } from "@/features/activities/supported-types";
+import { expandBlueprint } from "@/lib/content/lesson-blueprints";
+import {
+  decomposeWord,
+  segmentsUsePattern,
+  type PatternInfo,
+  type PhonemeInfo,
+} from "@/lib/learning/phonics";
 
 // Validates the shipped curriculum without a database, so a content mistake fails CI
 // before it reaches an import.
@@ -39,6 +47,35 @@ const assessments = assessmentsFileSchema.parse(json("assessments.json"));
 const levelCodes = new Set(reference.levels.map((l) => l.code));
 const wordBank = new Map(words.flatMap((r) => (r.ok ? [[normalizeWord(r.word.word), r.word] as const] : [])));
 const patterns = new Map(phonics.patterns.map((p) => [p.code, p]));
+const phonemes = new Map<string, PhonemeInfo>(
+  phonics.phonemes.map((ph) => [
+    ph.code,
+    { code: ph.code, ipa: ph.ipa, label: ph.label, sayAs: ph.sayAs, kind: ph.kind, voiced: ph.voiced },
+  ]),
+);
+const patternInfo: PatternInfo[] = phonics.patterns.map((p) => ({
+  code: p.code,
+  pattern: p.pattern,
+  type: p.type,
+  position: p.position,
+  sounds: p.sounds,
+}));
+const patternsByCode = new Map(patternInfo.map((p) => [p.code, p]));
+// The same grapheme split the importer stores in word_segments.
+const splits = new Map(
+  [...wordBank].map(([key, w]) => [
+    key,
+    decomposeWord({
+      word: w.word,
+      patterns: patternInfo,
+      links: w.patterns,
+      phonemes,
+      irregular: w.irregular,
+      authored: w.segments,
+    }),
+  ]),
+);
+const speech = (codes: string[]) => codes.map((c) => phonemes.get(c)?.sayAs ?? c.toLowerCase()).join(" ");
 
 function expand(q: QuestionInput, seed: string) {
   if ("template" in q && typeof q.template === "string") {
@@ -48,7 +85,18 @@ function expand(q: QuestionInput, seed: string) {
       word: (t) => {
         const w = wordBank.get(normalizeWord(t));
         return (
-          w && { word: w.word, emoji: w.emoji, childDefinition: w.childDefinition, patterns: w.patterns }
+          w && {
+            word: w.word,
+            emoji: w.emoji,
+            childDefinition: w.childDefinition,
+            patterns: w.patterns,
+            segments: (splits.get(normalizeWord(t))?.segments ?? []).map((seg) => ({
+              grapheme: seg.grapheme,
+              patternCode: seg.patternCode,
+              sayAs: seg.sayAs || speech(seg.phonemes),
+              phonemes: seg.phonemes,
+            })),
+          }
         );
       },
       pattern: (code) => {
@@ -59,14 +107,31 @@ function expand(q: QuestionInput, seed: string) {
             pattern: p.pattern,
             type: p.type,
             childExplanation: p.childExplanation,
+            uppercase: p.uppercase ?? null,
+            letterName: p.letterName,
+            letterNameSayAs: p.letterNameSayAs,
             sounds: p.sounds,
           }
         );
       },
+      phoneme: (code) => {
+        const p = phonemes.get(code);
+        return p && { code: p.code, label: p.label, sayAs: p.sayAs, kind: p.kind };
+      },
     };
     return expandTemplate(template, params as Record<string, unknown>, ctx);
   }
-  return q as { type: string; content: unknown; answer: unknown };
+  return q as { type: string; content: unknown; answer: unknown; pattern?: string; word?: string };
+}
+
+// Lessons written as a blueprint, expanded the way the importer does.
+function lessonActivities(lesson: CurriculumFile["units"][number]["skills"][number]["lessons"][number]) {
+  if (!lesson.blueprint) return lesson.activities;
+  return expandBlueprint(lesson.blueprint).map((a) => ({
+    ...a,
+    config: {},
+    questions: a.questions.map((q) => ({ difficulty: 1, explanation: "", ...q }) as QuestionInput),
+  }));
 }
 
 describe("shipped content", () => {
@@ -101,13 +166,18 @@ describe("shipped content", () => {
       for (const unit of file.units)
         for (const skill of unit.skills)
           for (const lesson of skill.lessons)
-            lesson.activities.forEach((activity, a) =>
+            lessonActivities(lesson).forEach((activity, a) =>
               activity.questions.forEach((q, i) => {
                 const seed = `${lesson.code}-a${a + 1}-q${i + 1}`;
                 try {
                   const e = expand(q, seed);
                   const parsed = parseQuestion(e.type, e.content, e.answer);
                   if (!parsed.ok) problems.push(`${seed}: ${parsed.error}`);
+                  // A pattern question's word must really use the pattern's sound.
+                  const target = "pattern" in e && e.pattern ? patternsByCode.get(e.pattern) : undefined;
+                  const split = "word" in e && e.word ? splits.get(normalizeWord(e.word)) : undefined;
+                  if (target && split && !segmentsUsePattern(split.segments, target, patternsByCode))
+                    problems.push(`${seed}: "${e.word}" does not use ${target.code}`);
                   if (!(RENDERABLE_QUESTION_TYPES as readonly string[]).includes(e.type))
                     problems.push(`${seed}: no renderer for ${e.type}`);
                   count++;
@@ -144,7 +214,7 @@ describe("shipped content", () => {
       for (const unit of file.units)
         for (const skill of unit.skills)
           for (const lesson of skill.lessons)
-            lesson.activities.forEach((activity, a) => {
+            lessonActivities(lesson).forEach((activity, a) => {
               const parsed = parseActivityConfig(activity.type, activity.config);
               if (!parsed.ok) problems.push(`${lesson.code}-a${a + 1}: ${parsed.error}`);
             });
@@ -155,7 +225,7 @@ describe("shipped content", () => {
     const types = new Set(
       curriculum.flatMap((f) =>
         f.units.flatMap((u) =>
-          u.skills.flatMap((s) => s.lessons.flatMap((l) => l.activities.map((a) => a.type))),
+          u.skills.flatMap((s) => s.lessons.flatMap((l) => lessonActivities(l).map((a) => a.type))),
         ),
       ),
     );
@@ -172,6 +242,9 @@ describe("shipped content", () => {
       "SPELLING",
       "WRITING",
       "TRACING",
+      "BLEND_SOUNDS",
+      "SEGMENT_WORD",
+      "FIND_PATTERN",
     ])
       expect(types.has(required), required).toBe(true);
 
@@ -203,7 +276,7 @@ describe("shipped content", () => {
       for (const unit of file.units)
         for (const skill of unit.skills)
           for (const lesson of skill.lessons)
-            for (const [a, activity] of lesson.activities.entries())
+            for (const [a, activity] of lessonActivities(lesson).entries())
               for (const [i, q] of activity.questions.entries()) {
                 const seed = `${lesson.code}-a${a + 1}-q${i + 1}`;
                 const e = expand(q, seed);

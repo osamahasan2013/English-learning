@@ -218,3 +218,57 @@ READING and SENTENCE_BUILDING and archived (units were re-pointed by the importe
 components, and subjects as content categories.
 **Consequences.** Changing a band is a data change, reviewed like content. The defaults
 stay in code so a fresh database works without any rule rows.
+
+## ADR-024 — Graphemes and phonemes are separate data; words carry their split
+
+**Decision.** Sounds are an inventory of 39 ARPAbet phonemes (`phonemes`); each pattern
+pronunciation is a phoneme sequence; every word is stored as grapheme segments with their
+phonemes (`word_segments`). The importer derives the split with a small, conservative rule
+set (`src/lib/learning/phonics.ts`: longest match, digraphs always one unit, other
+multi-letter patterns only when the word is linked to them, magic e, double consonants,
+final y) and an author can override it (CSV `segments`). The letter NAME ("bee") and the
+letter SOUND (/b/) are separate fields.
+**Why.** Phonics activities need to know what a child hears, not only what is written:
+ship has three sounds, box has four, the e in cake is silent, th has two sounds. Counting
+letters or matching substrings gives wrong questions ("mishap" is not an sh word).
+**Consequences.** Every activity that talks about sounds (blend, segment, beginning /
+middle / end sound, find the letters) is generated from the split; a wrong split is fixed
+once in the word bank. ARPAbet is American English; British English would need another
+inventory or per-locale pronunciations.
+
+## ADR-025 — Phonics lessons are blueprints expanded at import
+
+**Decision.** A phonics lesson may be one `blueprint` line (`letter_sound`,
+`cvc_blending`, `phonics_pattern`) that the importer expands into ordinary activities and
+questions (`src/lib/content/lesson-blueprints.ts`). The result is stored exactly like a
+hand-written lesson.
+**Why.** The brief asks for a reusable, data-driven lesson structure (hear → see →
+practise → identify → read → spell → sentence → check) across ~50 patterns. Writing each
+by hand repeats the structure fifty times and lets lessons drift apart.
+**Consequences.** The structure is code, reviewed like code; the content (pattern, words,
+contrast, sentence) is data. Question codes are positional, so changing a blueprint's
+activity order re-keys questions — history stays attached to the old (archived) rows.
+
+## ADR-026 — Doubtful content is flagged for review, not guessed or rejected
+
+**Decision.** The importer rejects content that is certainly wrong (unknown phoneme,
+a lesson word that does not use the lesson's pattern) and records content that may be
+wrong in `content_flags` (admin-only, replaced per import), shown on `/admin/phonics`.
+**Why.** English spelling has many exceptions ("careless" contains "ar" but not /ar/).
+A strict importer would block good content; a silent one would teach wrong sounds.
+**Consequences.** The shipped content has four intentional flags as review examples
+(alligator, careless, cherry, giraffe).
+
+## ADR-027 — Skill checks reuse the lesson player and the attempt history
+
+**Decision.** The Phonics Check is an ordinary `assessments` row. Its payload is built by
+the lesson loader (digest answer keys, one try per question) and played by the lesson
+player. Answers are ordinary `activity_attempts` with an `assessment_attempt_id`; the
+sitting row is created by the server from the first synced answer (device-generated id,
+checked to belong to the same child and assessment), and an `assessment_run` event makes
+the server score it per area into `assessment_results`.
+**Why.** The brief requires the assessment to use the existing assessment and progress
+architecture; one answer pipeline keeps offline sync, idempotency, server re-evaluation
+and mastery identical for lessons and checks.
+**Consequences.** Check answers count toward skill mastery (they are real evidence);
+placement ("Find My Level") can use the same player later with its own scoring.

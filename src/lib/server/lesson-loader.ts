@@ -48,9 +48,7 @@ export async function loadLessonPayload(lessonId: string): Promise<LessonPayload
   const [{ data: questions, error: questionsError }, feedbackRows, rules] = await Promise.all([
     supabase
       .from("questions")
-      .select(
-        "id, activity_id, skill_id, question_type, prompt, prompt_speech, content, explanation, word_id, phonics_pattern_id, version, sort_order",
-      )
+      .select(QUESTION_COLUMNS)
       .in("activity_id", activityIds)
       .eq("status", "published")
       .order("sort_order"),
@@ -64,14 +62,185 @@ export async function loadLessonPayload(lessonId: string): Promise<LessonPayload
   if (questionsError) throw questionsError;
   if (feedbackRows.error) throw feedbackRows.error;
 
+  const support = await loadQuestionSupport(supabase, questions ?? []);
+
+  const steps: LessonStep[] = [];
+  for (const activity of activities ?? []) {
+    const config = parseActivityConfig(activity.activity_type, activity.config);
+    if (!config.ok) {
+      logger.warn("lesson.activity_invalid", { lessonId, activityId: activity.id, reason: config.error });
+      continue;
+    }
+    for (const q of (questions ?? []).filter((x) => x.activity_id === activity.id)) {
+      const step = await buildStep(q, support, lessonId, {
+        activityId: activity.id,
+        activityTitle: activity.title,
+        instructions: activity.instructions,
+        instructionsSpeech: activity.instructions_speech,
+        stage: activity.stage,
+        config: config.config,
+        maxTries: config.config.maxTries ?? rules.player.maxTries,
+        explanation: q.explanation,
+      });
+      if (step) steps.push(step);
+    }
+  }
+  if (steps.length === 0) return null;
+
+  const skill = one(lesson.skills);
+  const unit = one(skill?.units);
+  return {
+    lesson: {
+      id: lesson.id,
+      code: lesson.code,
+      title: lesson.title,
+      childTitle: lesson.child_title || lesson.title,
+      emoji: lesson.emoji,
+      version: lesson.version,
+      skillId: lesson.skill_id,
+      skillTitle: skill?.child_title || skill?.title || "",
+      description: lesson.description,
+      introSpeech: lesson.intro_speech,
+      estimatedMinutes: lesson.estimated_minutes,
+      difficulty: lesson.difficulty,
+      subjectName: one(unit?.subjects)?.name ?? "",
+      levelName: one(unit?.levels)?.name ?? "",
+    },
+    steps,
+    feedback: toFeedback(feedbackRows.data ?? []),
+    rules: { player: rules.player, scoring: rules.scoring },
+    loadedAt: new Date().toISOString(),
+  };
+}
+
+// A published assessment (e.g. the Phonics Check) as a player payload: one step per item,
+// in stage order, one try each and no teaching explanations. Answers become digest-only
+// keys exactly as for lessons.
+export async function loadAssessmentPayload(code: string): Promise<LessonPayload | null> {
+  if (!/^[a-z0-9-]{2,80}$/.test(code)) return null;
+  const supabase = await createClient();
+  const { data: assessment } = await supabase
+    .from("assessments")
+    .select("id, code, title, description, config, version")
+    .eq("code", code)
+    .eq("status", "published")
+    .maybeSingle();
+  if (!assessment) return null;
+  const { data: items, error: itemsError } = await supabase
+    .from("assessment_items")
+    .select("question_id, stage, stage_label, sort_order")
+    .eq("assessment_id", assessment.id)
+    .order("stage")
+    .order("sort_order");
+  if (itemsError) throw itemsError;
+  if (!items?.length) return null;
+
+  const [{ data: questions, error: questionsError }, feedbackRows, rules] = await Promise.all([
+    supabase
+      .from("questions")
+      .select(QUESTION_COLUMNS)
+      .in(
+        "id",
+        items.map((i) => i.question_id),
+      )
+      .eq("status", "published"),
+    supabase
+      .from("feedback_messages")
+      .select("kind, text, speech, emoji")
+      .eq("status", "published")
+      .order("sort_order"),
+    loadLearningRules(supabase),
+  ]);
+  if (questionsError) throw questionsError;
+  if (feedbackRows.error) throw feedbackRows.error;
+  const byId = new Map(questions.map((q) => [q.id, q]));
+  const support = await loadQuestionSupport(supabase, questions ?? []);
+
+  const steps: LessonStep[] = [];
+  const areas: { stage: number; label: string }[] = [];
+  for (const item of items) {
+    const q = byId.get(item.question_id);
+    if (!q) continue;
+    const config = parseActivityConfig(q.question_type, {});
+    if (!config.ok) continue;
+    const step = await buildStep(q, support, assessment.id, {
+      activityId: `${assessment.id}:${item.stage}`,
+      activityTitle: item.stage_label,
+      instructions: item.stage_label,
+      instructionsSpeech: "",
+      stage: "assessment",
+      config: config.config,
+      maxTries: 1,
+      explanation: "",
+    });
+    if (!step) continue;
+    steps.push(step);
+    if (!areas.some((a) => a.stage === item.stage))
+      areas.push({ stage: item.stage, label: item.stage_label });
+  }
+  if (steps.length === 0) return null;
+
+  const config = (assessment.config ?? {}) as { childTitle?: unknown; emoji?: unknown };
+  const childTitle = typeof config.childTitle === "string" ? config.childTitle : assessment.title;
+  return {
+    lesson: {
+      id: assessment.id,
+      code: assessment.code,
+      title: assessment.title,
+      childTitle,
+      emoji: typeof config.emoji === "string" ? config.emoji : "🎯",
+      version: assessment.version,
+      skillId: steps[0].skillId,
+      skillTitle: "",
+      description: "Show what you know! Just do your best.",
+      introSpeech: `${childTitle}. Show what you know! Listen, then do your best. There is one try for each question.`,
+      estimatedMinutes: Math.max(3, Math.round(steps.length / 3)),
+      difficulty: 1,
+      subjectName: "Phonics",
+      levelName: "",
+    },
+    assessment: { id: assessment.id, code: assessment.code, areas },
+    steps,
+    feedback: toFeedback(feedbackRows.data ?? []),
+    rules: { player: rules.player, scoring: rules.scoring },
+    loadedAt: new Date().toISOString(),
+  };
+}
+
+const QUESTION_COLUMNS =
+  "id, activity_id, skill_id, question_type, prompt, prompt_speech, content, explanation, word_id, phonics_pattern_id, version, sort_order";
+
+type QuestionRow = {
+  id: string;
+  skill_id: string;
+  question_type: string;
+  prompt: string;
+  prompt_speech: string;
+  content: unknown;
+  word_id: string | null;
+  phonics_pattern_id: string | null;
+  version: number;
+};
+
+type Supabase = Awaited<ReturnType<typeof createClient>>;
+
+type QuestionSupport = {
+  answers: Map<string, unknown>;
+  patterns: Map<string, LessonPattern>;
+  tileSounds: Record<string, string>;
+};
+
+// Answers (service role, for exactly these RLS-visible question ids), phonics patterns and
+// word-builder tile sounds for a set of questions.
+async function loadQuestionSupport(supabase: Supabase, questions: QuestionRow[]): Promise<QuestionSupport> {
   const answers = new Map<string, unknown>();
-  if ((questions ?? []).length > 0) {
+  if (questions.length > 0) {
     const { data: answerRows, error: answersError } = await createAdminClient()
       .from("questions")
       .select("id, answer")
       .in(
         "id",
-        (questions ?? []).map((q) => q.id),
+        questions.map((q) => q.id),
       )
       .eq("status", "published");
     if (answersError) throw answersError;
@@ -79,7 +248,7 @@ export async function loadLessonPayload(lessonId: string): Promise<LessonPayload
   }
 
   const patternIds = [
-    ...new Set((questions ?? []).map((q) => q.phonics_pattern_id).filter((id): id is string => !!id)),
+    ...new Set(questions.map((q) => q.phonics_pattern_id).filter((id): id is string => !!id)),
   ];
   const patterns = new Map<string, LessonPattern>();
   if (patternIds.length > 0) {
@@ -126,82 +295,59 @@ export async function loadLessonPayload(lessonId: string): Promise<LessonPayload
     }
   }
 
-  const steps: LessonStep[] = [];
-  for (const activity of activities ?? []) {
-    const config = parseActivityConfig(activity.activity_type, activity.config);
-    if (!config.ok) {
-      logger.warn("lesson.activity_invalid", { lessonId, activityId: activity.id, reason: config.error });
-      continue;
-    }
-    for (const q of (questions ?? []).filter((x) => x.activity_id === activity.id)) {
-      if (!isRenderableQuestionType(q.question_type)) {
-        logger.warn("lesson.question_skipped", {
-          lessonId,
-          questionId: q.id,
-          reason: `no renderer for ${q.question_type}`,
-        });
-        continue;
-      }
-      const parsed = parseQuestion(q.question_type, q.content, answers.get(q.id) ?? null);
-      if (!parsed.ok) {
-        logger.warn("lesson.question_invalid", { lessonId, questionId: q.id, reason: parsed.error });
-        continue;
-      }
-      const scored = parsed.question.answer !== null;
-      steps.push({
-        questionId: q.id,
-        questionVersion: q.version,
-        activityId: activity.id,
-        activityTitle: activity.title,
-        instructions: activity.instructions,
-        instructionsSpeech: activity.instructions_speech,
-        stage: activity.stage,
-        prompt: q.prompt,
-        promptSpeech: q.prompt_speech,
-        skillId: q.skill_id,
-        wordId: q.word_id,
-        scored,
-        question: toClientQuestion(parsed.question),
-        answerKey: await buildAnswerKey(q.question_type, parsed.question.answer, crypto.randomUUID()),
-        maxTries: config.config.maxTries ?? rules.player.maxTries,
-        explanation: q.explanation,
-        activityConfig: config.config,
-        pattern: q.phonics_pattern_id ? (patterns.get(q.phonics_pattern_id) ?? null) : null,
-        tileSounds: q.question_type === "WORD_BUILDER" ? tileSounds : {},
-      });
-    }
-  }
-  if (steps.length === 0) return null;
+  return { answers, patterns, tileSounds };
+}
 
-  const skill = one(lesson.skills);
-  const unit = one(skill?.units);
+async function buildStep(
+  q: QuestionRow,
+  support: QuestionSupport,
+  ownerId: string,
+  context: Pick<
+    LessonStep,
+    | "activityId"
+    | "activityTitle"
+    | "instructions"
+    | "instructionsSpeech"
+    | "stage"
+    | "maxTries"
+    | "explanation"
+  > & { config: LessonStep["activityConfig"] },
+): Promise<LessonStep | null> {
+  if (!isRenderableQuestionType(q.question_type)) {
+    logger.warn("lesson.question_skipped", {
+      lessonId: ownerId,
+      questionId: q.id,
+      reason: `no renderer for ${q.question_type}`,
+    });
+    return null;
+  }
+  const parsed = parseQuestion(q.question_type, q.content, support.answers.get(q.id) ?? null);
+  if (!parsed.ok) {
+    logger.warn("lesson.question_invalid", { lessonId: ownerId, questionId: q.id, reason: parsed.error });
+    return null;
+  }
+  const { config, ...rest } = context;
   return {
-    lesson: {
-      id: lesson.id,
-      code: lesson.code,
-      title: lesson.title,
-      childTitle: lesson.child_title || lesson.title,
-      emoji: lesson.emoji,
-      version: lesson.version,
-      skillId: lesson.skill_id,
-      skillTitle: skill?.child_title || skill?.title || "",
-      description: lesson.description,
-      introSpeech: lesson.intro_speech,
-      estimatedMinutes: lesson.estimated_minutes,
-      difficulty: lesson.difficulty,
-      subjectName: one(unit?.subjects)?.name ?? "",
-      levelName: one(unit?.levels)?.name ?? "",
-    },
-    steps,
-    feedback: (feedbackRows.data ?? []).map((m): FeedbackMessage => ({
-      kind: m.kind as FeedbackKind,
-      text: m.text,
-      speech: m.speech,
-      emoji: m.emoji,
-    })),
-    rules: { player: rules.player, scoring: rules.scoring },
-    loadedAt: new Date().toISOString(),
+    ...rest,
+    questionId: q.id,
+    questionVersion: q.version,
+    prompt: q.prompt,
+    promptSpeech: q.prompt_speech,
+    skillId: q.skill_id,
+    wordId: q.word_id,
+    scored: parsed.question.answer !== null,
+    question: toClientQuestion(parsed.question),
+    answerKey: await buildAnswerKey(q.question_type, parsed.question.answer, crypto.randomUUID()),
+    activityConfig: config,
+    pattern: q.phonics_pattern_id ? (support.patterns.get(q.phonics_pattern_id) ?? null) : null,
+    tileSounds: q.question_type === "WORD_BUILDER" ? support.tileSounds : {},
   };
+}
+
+function toFeedback(
+  rows: { kind: string; text: string; speech: string; emoji: string }[],
+): FeedbackMessage[] {
+  return rows.map((m) => ({ kind: m.kind as FeedbackKind, text: m.text, speech: m.speech, emoji: m.emoji }));
 }
 
 // Drops the answer. Listening types need the spoken word itself (the child has to hear

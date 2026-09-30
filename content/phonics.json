@@ -1,1290 +1,2807 @@
 {
- "patterns": [
-  {
-   "code": "LETTER_A",
-   "pattern": "a",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 1,
-   "explanation": "The letter a: uppercase A, lowercase a. Main sound /æ/; also /eɪ/ (a as in cake).",
-   "childExplanation": "This is the letter a. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 1,
-   "sounds": [
+  "patterns": [
     {
-     "code": "A_SHORT",
-     "ipa": "/æ/",
-     "label": "a as in apple",
-     "sayAs": "aa",
-     "primary": true
+      "code": "LETTER_A",
+      "pattern": "a",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 1,
+      "explanation": "The letter a: uppercase A, lowercase a. Main sound /æ/; also /eɪ/ (a as in cake).",
+      "childExplanation": "This is the letter a.",
+      "masteryThreshold": 85,
+      "sortOrder": 1,
+      "sounds": [
+        {
+          "code": "A_SHORT",
+          "ipa": "/æ/",
+          "label": "a as in apple",
+          "sayAs": "aa",
+          "primary": true,
+          "phonemes": [
+            "AE"
+          ]
+        },
+        {
+          "code": "A_LONG",
+          "ipa": "/eɪ/",
+          "label": "a as in cake",
+          "sayAs": "ay",
+          "primary": false,
+          "phonemes": [
+            "EY"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "A",
+      "letterName": "ay",
+      "letterNameSayAs": "ay",
+      "relations": []
     },
     {
-     "code": "A_LONG",
-     "ipa": "/eɪ/",
-     "label": "a as in cake",
-     "sayAs": "ay",
-     "primary": false
-    }
-   ]
-  },
-  {
-   "code": "LETTER_B",
-   "pattern": "b",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 1,
-   "explanation": "The letter b: uppercase B, lowercase b. Main sound /b/.",
-   "childExplanation": "This is the letter b. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 2,
-   "sounds": [
-    {
-     "code": "B",
-     "ipa": "/b/",
-     "label": "b as in ball",
-     "sayAs": "buh",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "LETTER_C",
-   "pattern": "c",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 1,
-   "explanation": "The letter c: uppercase C, lowercase c. Main sound /k/; also /s/ (c as in city).",
-   "childExplanation": "This is the letter c. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 3,
-   "sounds": [
-    {
-     "code": "C_HARD",
-     "ipa": "/k/",
-     "label": "c as in cat",
-     "sayAs": "kuh",
-     "primary": true
+      "code": "LETTER_B",
+      "pattern": "b",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 1,
+      "explanation": "The letter b: uppercase B, lowercase b. Main sound /b/.",
+      "childExplanation": "This is the letter b.",
+      "masteryThreshold": 85,
+      "sortOrder": 2,
+      "sounds": [
+        {
+          "code": "B",
+          "ipa": "/b/",
+          "label": "b as in ball",
+          "sayAs": "buh",
+          "primary": true,
+          "phonemes": [
+            "B"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "B",
+      "letterName": "bee",
+      "letterNameSayAs": "bee",
+      "relations": []
     },
     {
-     "code": "C_SOFT",
-     "ipa": "/s/",
-     "label": "c as in city",
-     "sayAs": "sss",
-     "primary": false
-    }
-   ]
-  },
-  {
-   "code": "LETTER_D",
-   "pattern": "d",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 1,
-   "explanation": "The letter d: uppercase D, lowercase d. Main sound /d/.",
-   "childExplanation": "This is the letter d. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 4,
-   "sounds": [
-    {
-     "code": "D",
-     "ipa": "/d/",
-     "label": "d as in dog",
-     "sayAs": "duh",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "LETTER_E",
-   "pattern": "e",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 2,
-   "explanation": "The letter e: uppercase E, lowercase e. Main sound /ɛ/; also /iː/ (e as in me).",
-   "childExplanation": "This is the letter e. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 5,
-   "sounds": [
-    {
-     "code": "E_SHORT",
-     "ipa": "/ɛ/",
-     "label": "e as in egg",
-     "sayAs": "eh",
-     "primary": true
+      "code": "LETTER_C",
+      "pattern": "c",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 1,
+      "explanation": "The letter c: uppercase C, lowercase c. Main sound /k/; also /s/ (c as in city).",
+      "childExplanation": "This is the letter c.",
+      "masteryThreshold": 85,
+      "sortOrder": 3,
+      "sounds": [
+        {
+          "code": "C_HARD",
+          "ipa": "/k/",
+          "label": "c as in cat",
+          "sayAs": "kuh",
+          "primary": true,
+          "phonemes": [
+            "K"
+          ]
+        },
+        {
+          "code": "C_SOFT",
+          "ipa": "/s/",
+          "label": "c as in city",
+          "sayAs": "sss",
+          "primary": false,
+          "phonemes": [
+            "S"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "C",
+      "letterName": "see",
+      "letterNameSayAs": "see",
+      "relations": []
     },
     {
-     "code": "E_LONG",
-     "ipa": "/iː/",
-     "label": "e as in me",
-     "sayAs": "ee",
-     "primary": false
-    }
-   ]
-  },
-  {
-   "code": "LETTER_F",
-   "pattern": "f",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 2,
-   "explanation": "The letter f: uppercase F, lowercase f. Main sound /f/.",
-   "childExplanation": "This is the letter f. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 6,
-   "sounds": [
-    {
-     "code": "F",
-     "ipa": "/f/",
-     "label": "f as in fish",
-     "sayAs": "fff",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "LETTER_G",
-   "pattern": "g",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 2,
-   "explanation": "The letter g: uppercase G, lowercase g. Main sound /ɡ/; also /dʒ/ (g as in giraffe).",
-   "childExplanation": "This is the letter g. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 7,
-   "sounds": [
-    {
-     "code": "G_HARD",
-     "ipa": "/ɡ/",
-     "label": "g as in goat",
-     "sayAs": "guh",
-     "primary": true
+      "code": "LETTER_D",
+      "pattern": "d",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 1,
+      "explanation": "The letter d: uppercase D, lowercase d. Main sound /d/.",
+      "childExplanation": "This is the letter d.",
+      "masteryThreshold": 85,
+      "sortOrder": 4,
+      "sounds": [
+        {
+          "code": "D",
+          "ipa": "/d/",
+          "label": "d as in dog",
+          "sayAs": "duh",
+          "primary": true,
+          "phonemes": [
+            "D"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "D",
+      "letterName": "dee",
+      "letterNameSayAs": "dee",
+      "relations": []
     },
     {
-     "code": "G_SOFT",
-     "ipa": "/dʒ/",
-     "label": "g as in giraffe",
-     "sayAs": "juh",
-     "primary": false
-    }
-   ]
-  },
-  {
-   "code": "LETTER_H",
-   "pattern": "h",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 2,
-   "explanation": "The letter h: uppercase H, lowercase h. Main sound /h/.",
-   "childExplanation": "This is the letter h. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 8,
-   "sounds": [
-    {
-     "code": "H",
-     "ipa": "/h/",
-     "label": "h as in hat",
-     "sayAs": "hh",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "LETTER_I",
-   "pattern": "i",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 2,
-   "explanation": "The letter i: uppercase I, lowercase i. Main sound /ɪ/; also /aɪ/ (i as in kite).",
-   "childExplanation": "This is the letter i. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 9,
-   "sounds": [
-    {
-     "code": "I_SHORT",
-     "ipa": "/ɪ/",
-     "label": "i as in insect",
-     "sayAs": "ih",
-     "primary": true
+      "code": "LETTER_E",
+      "pattern": "e",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 2,
+      "explanation": "The letter e: uppercase E, lowercase e. Main sound /ɛ/; also /iː/ (e as in me).",
+      "childExplanation": "This is the letter e.",
+      "masteryThreshold": 85,
+      "sortOrder": 5,
+      "sounds": [
+        {
+          "code": "E_SHORT",
+          "ipa": "/ɛ/",
+          "label": "e as in egg",
+          "sayAs": "eh",
+          "primary": true,
+          "phonemes": [
+            "EH"
+          ]
+        },
+        {
+          "code": "E_LONG",
+          "ipa": "/iː/",
+          "label": "e as in me",
+          "sayAs": "ee",
+          "primary": false,
+          "phonemes": [
+            "IY"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "E",
+      "letterName": "ee",
+      "letterNameSayAs": "ee",
+      "relations": []
     },
     {
-     "code": "I_LONG",
-     "ipa": "/aɪ/",
-     "label": "i as in kite",
-     "sayAs": "eye",
-     "primary": false
-    }
-   ]
-  },
-  {
-   "code": "LETTER_J",
-   "pattern": "j",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 2,
-   "explanation": "The letter j: uppercase J, lowercase j. Main sound /dʒ/.",
-   "childExplanation": "This is the letter j. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 10,
-   "sounds": [
-    {
-     "code": "J",
-     "ipa": "/dʒ/",
-     "label": "j as in jam",
-     "sayAs": "juh",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "LETTER_K",
-   "pattern": "k",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 2,
-   "explanation": "The letter k: uppercase K, lowercase k. Main sound /k/.",
-   "childExplanation": "This is the letter k. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 11,
-   "sounds": [
-    {
-     "code": "K",
-     "ipa": "/k/",
-     "label": "k as in kite",
-     "sayAs": "kuh",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "LETTER_L",
-   "pattern": "l",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 2,
-   "explanation": "The letter l: uppercase L, lowercase l. Main sound /l/.",
-   "childExplanation": "This is the letter l. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 12,
-   "sounds": [
-    {
-     "code": "L",
-     "ipa": "/l/",
-     "label": "l as in lion",
-     "sayAs": "lll",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "LETTER_M",
-   "pattern": "m",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 1,
-   "explanation": "The letter m: uppercase M, lowercase m. Main sound /m/.",
-   "childExplanation": "This is the letter m. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 13,
-   "sounds": [
-    {
-     "code": "M",
-     "ipa": "/m/",
-     "label": "m as in moon",
-     "sayAs": "mmm",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "LETTER_N",
-   "pattern": "n",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 2,
-   "explanation": "The letter n: uppercase N, lowercase n. Main sound /n/.",
-   "childExplanation": "This is the letter n. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 14,
-   "sounds": [
-    {
-     "code": "N",
-     "ipa": "/n/",
-     "label": "n as in net",
-     "sayAs": "nnn",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "LETTER_O",
-   "pattern": "o",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 2,
-   "explanation": "The letter o: uppercase O, lowercase o. Main sound /ɑ/; also /oʊ/ (o as in go).",
-   "childExplanation": "This is the letter o. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 15,
-   "sounds": [
-    {
-     "code": "O_SHORT",
-     "ipa": "/ɑ/",
-     "label": "o as in octopus",
-     "sayAs": "ah",
-     "primary": true
+      "code": "LETTER_F",
+      "pattern": "f",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 2,
+      "explanation": "The letter f: uppercase F, lowercase f. Main sound /f/.",
+      "childExplanation": "This is the letter f.",
+      "masteryThreshold": 85,
+      "sortOrder": 6,
+      "sounds": [
+        {
+          "code": "F",
+          "ipa": "/f/",
+          "label": "f as in fish",
+          "sayAs": "fff",
+          "primary": true,
+          "phonemes": [
+            "F"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "F",
+      "letterName": "ef",
+      "letterNameSayAs": "ef",
+      "relations": []
     },
     {
-     "code": "O_LONG",
-     "ipa": "/oʊ/",
-     "label": "o as in go",
-     "sayAs": "oh",
-     "primary": false
-    }
-   ]
-  },
-  {
-   "code": "LETTER_P",
-   "pattern": "p",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 2,
-   "explanation": "The letter p: uppercase P, lowercase p. Main sound /p/.",
-   "childExplanation": "This is the letter p. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 16,
-   "sounds": [
-    {
-     "code": "P",
-     "ipa": "/p/",
-     "label": "p as in pig",
-     "sayAs": "puh",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "LETTER_Q",
-   "pattern": "q",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 3,
-   "explanation": "The letter q: uppercase Q, lowercase q. Main sound /kw/.",
-   "childExplanation": "This is the letter q. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 17,
-   "sounds": [
-    {
-     "code": "Q",
-     "ipa": "/kw/",
-     "label": "qu as in queen",
-     "sayAs": "kwuh",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "LETTER_R",
-   "pattern": "r",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 2,
-   "explanation": "The letter r: uppercase R, lowercase r. Main sound /ɹ/.",
-   "childExplanation": "This is the letter r. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 18,
-   "sounds": [
-    {
-     "code": "R",
-     "ipa": "/ɹ/",
-     "label": "r as in rabbit",
-     "sayAs": "rrr",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "LETTER_S",
-   "pattern": "s",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 1,
-   "explanation": "The letter s: uppercase S, lowercase s. Main sound /s/; also /z/ (s as in is).",
-   "childExplanation": "This is the letter s. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 19,
-   "sounds": [
-    {
-     "code": "S",
-     "ipa": "/s/",
-     "label": "s as in sun",
-     "sayAs": "sss",
-     "primary": true
+      "code": "LETTER_G",
+      "pattern": "g",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 2,
+      "explanation": "The letter g: uppercase G, lowercase g. Main sound /ɡ/; also /dʒ/ (g as in giraffe).",
+      "childExplanation": "This is the letter g.",
+      "masteryThreshold": 85,
+      "sortOrder": 7,
+      "sounds": [
+        {
+          "code": "G_HARD",
+          "ipa": "/ɡ/",
+          "label": "g as in goat",
+          "sayAs": "guh",
+          "primary": true,
+          "phonemes": [
+            "G"
+          ]
+        },
+        {
+          "code": "G_SOFT",
+          "ipa": "/dʒ/",
+          "label": "g as in giraffe",
+          "sayAs": "juh",
+          "primary": false,
+          "phonemes": [
+            "JH"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "G",
+      "letterName": "jee",
+      "letterNameSayAs": "jee",
+      "relations": []
     },
     {
-     "code": "S_Z",
-     "ipa": "/z/",
-     "label": "s as in is",
-     "sayAs": "zzz",
-     "primary": false
-    }
-   ]
-  },
-  {
-   "code": "LETTER_T",
-   "pattern": "t",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 1,
-   "explanation": "The letter t: uppercase T, lowercase t. Main sound /t/.",
-   "childExplanation": "This is the letter t. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 20,
-   "sounds": [
-    {
-     "code": "T",
-     "ipa": "/t/",
-     "label": "t as in tiger",
-     "sayAs": "tuh",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "LETTER_U",
-   "pattern": "u",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 2,
-   "explanation": "The letter u: uppercase U, lowercase u. Main sound /ʌ/; also /juː/ (u as in unicorn).",
-   "childExplanation": "This is the letter u. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 21,
-   "sounds": [
-    {
-     "code": "U_SHORT",
-     "ipa": "/ʌ/",
-     "label": "u as in umbrella",
-     "sayAs": "uh",
-     "primary": true
+      "code": "LETTER_H",
+      "pattern": "h",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 2,
+      "explanation": "The letter h: uppercase H, lowercase h. Main sound /h/.",
+      "childExplanation": "This is the letter h.",
+      "masteryThreshold": 85,
+      "sortOrder": 8,
+      "sounds": [
+        {
+          "code": "H",
+          "ipa": "/h/",
+          "label": "h as in hat",
+          "sayAs": "hh",
+          "primary": true,
+          "phonemes": [
+            "HH"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "H",
+      "letterName": "aitch",
+      "letterNameSayAs": "aitch",
+      "relations": []
     },
     {
-     "code": "U_LONG",
-     "ipa": "/juː/",
-     "label": "u as in unicorn",
-     "sayAs": "you",
-     "primary": false
-    }
-   ]
-  },
-  {
-   "code": "LETTER_V",
-   "pattern": "v",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 2,
-   "explanation": "The letter v: uppercase V, lowercase v. Main sound /v/.",
-   "childExplanation": "This is the letter v. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 22,
-   "sounds": [
-    {
-     "code": "V",
-     "ipa": "/v/",
-     "label": "v as in van",
-     "sayAs": "vvv",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "LETTER_W",
-   "pattern": "w",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 2,
-   "explanation": "The letter w: uppercase W, lowercase w. Main sound /w/.",
-   "childExplanation": "This is the letter w. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 23,
-   "sounds": [
-    {
-     "code": "W",
-     "ipa": "/w/",
-     "label": "w as in web",
-     "sayAs": "wuh",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "LETTER_X",
-   "pattern": "x",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 3,
-   "explanation": "The letter x: uppercase X, lowercase x. Main sound /ks/.",
-   "childExplanation": "This is the letter x. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 24,
-   "sounds": [
-    {
-     "code": "X",
-     "ipa": "/ks/",
-     "label": "x as in box",
-     "sayAs": "ks",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "LETTER_Y",
-   "pattern": "y",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 3,
-   "explanation": "The letter y: uppercase Y, lowercase y. Main sound /j/; also /aɪ/ (y as in my), /i/ (y as in happy).",
-   "childExplanation": "This is the letter y. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 25,
-   "sounds": [
-    {
-     "code": "Y",
-     "ipa": "/j/",
-     "label": "y as in yes",
-     "sayAs": "yuh",
-     "primary": true
+      "code": "LETTER_I",
+      "pattern": "i",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 2,
+      "explanation": "The letter i: uppercase I, lowercase i. Main sound /ɪ/; also /aɪ/ (i as in kite).",
+      "childExplanation": "This is the letter i.",
+      "masteryThreshold": 85,
+      "sortOrder": 9,
+      "sounds": [
+        {
+          "code": "I_SHORT",
+          "ipa": "/ɪ/",
+          "label": "i as in insect",
+          "sayAs": "ih",
+          "primary": true,
+          "phonemes": [
+            "IH"
+          ]
+        },
+        {
+          "code": "I_LONG",
+          "ipa": "/aɪ/",
+          "label": "i as in kite",
+          "sayAs": "eye",
+          "primary": false,
+          "phonemes": [
+            "AY"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "I",
+      "letterName": "eye",
+      "letterNameSayAs": "eye",
+      "relations": []
     },
     {
-     "code": "Y_LONG_I",
-     "ipa": "/aɪ/",
-     "label": "y as in my",
-     "sayAs": "eye",
-     "primary": false
+      "code": "LETTER_J",
+      "pattern": "j",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 2,
+      "explanation": "The letter j: uppercase J, lowercase j. Main sound /dʒ/.",
+      "childExplanation": "This is the letter j.",
+      "masteryThreshold": 85,
+      "sortOrder": 10,
+      "sounds": [
+        {
+          "code": "J",
+          "ipa": "/dʒ/",
+          "label": "j as in jam",
+          "sayAs": "juh",
+          "primary": true,
+          "phonemes": [
+            "JH"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "J",
+      "letterName": "jay",
+      "letterNameSayAs": "jay",
+      "relations": []
     },
     {
-     "code": "Y_LONG_E",
-     "ipa": "/i/",
-     "label": "y as in happy",
-     "sayAs": "ee",
-     "primary": false
-    }
-   ]
-  },
-  {
-   "code": "LETTER_Z",
-   "pattern": "z",
-   "type": "letter",
-   "level": "KG1",
-   "difficulty": 3,
-   "explanation": "The letter z: uppercase Z, lowercase z. Main sound /z/.",
-   "childExplanation": "This is the letter z. It says",
-   "masteryThreshold": 85,
-   "sortOrder": 26,
-   "sounds": [
-    {
-     "code": "Z",
-     "ipa": "/z/",
-     "label": "z as in zebra",
-     "sayAs": "zzz",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "SH",
-   "pattern": "sh",
-   "type": "consonant_digraph",
-   "level": "KG3",
-   "difficulty": 3,
-   "explanation": "s and h together make one sound:",
-   "childExplanation": "s and h together make one sound:",
-   "masteryThreshold": 85,
-   "sortOrder": 27,
-   "sounds": [
-    {
-     "code": "SH",
-     "ipa": "/ʃ/",
-     "label": "sh as in ship",
-     "sayAs": "shh",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "CH",
-   "pattern": "ch",
-   "type": "consonant_digraph",
-   "level": "KG3",
-   "difficulty": 3,
-   "explanation": "c and h together make one sound:",
-   "childExplanation": "c and h together make one sound:",
-   "masteryThreshold": 85,
-   "sortOrder": 28,
-   "sounds": [
-    {
-     "code": "CH",
-     "ipa": "/tʃ/",
-     "label": "ch as in chick",
-     "sayAs": "chuh",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "TH",
-   "pattern": "th",
-   "type": "consonant_digraph",
-   "level": "KG3",
-   "difficulty": 4,
-   "explanation": "TH has two common sounds: voiceless /θ/ (thumb, three, bath) and voiced /ð/ (this, that, mother). They are taught and tracked separately.",
-   "childExplanation": "t and h together make one sound. It can be quiet or buzzy:",
-   "masteryThreshold": 85,
-   "sortOrder": 29,
-   "sounds": [
-    {
-     "code": "TH_VOICELESS",
-     "ipa": "/θ/",
-     "label": "th as in thumb",
-     "sayAs": "th, as in thumb",
-     "primary": true
+      "code": "LETTER_K",
+      "pattern": "k",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 2,
+      "explanation": "The letter k: uppercase K, lowercase k. Main sound /k/.",
+      "childExplanation": "This is the letter k.",
+      "masteryThreshold": 85,
+      "sortOrder": 11,
+      "sounds": [
+        {
+          "code": "K",
+          "ipa": "/k/",
+          "label": "k as in kite",
+          "sayAs": "kuh",
+          "primary": true,
+          "phonemes": [
+            "K"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "K",
+      "letterName": "kay",
+      "letterNameSayAs": "kay",
+      "relations": []
     },
     {
-     "code": "TH_VOICED",
-     "ipa": "/ð/",
-     "label": "th as in this",
-     "sayAs": "th, as in this",
-     "primary": false
-    }
-   ]
-  },
-  {
-   "code": "PH",
-   "pattern": "ph",
-   "type": "consonant_digraph",
-   "level": "GRADE1",
-   "difficulty": 5,
-   "explanation": "p and h together say",
-   "childExplanation": "p and h together say",
-   "masteryThreshold": 85,
-   "sortOrder": 30,
-   "sounds": [
-    {
-     "code": "PH",
-     "ipa": "/f/",
-     "label": "ph as in phone",
-     "sayAs": "fff",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "WH",
-   "pattern": "wh",
-   "type": "consonant_digraph",
-   "level": "KG3",
-   "difficulty": 4,
-   "explanation": "w and h together say",
-   "childExplanation": "w and h together say",
-   "masteryThreshold": 85,
-   "sortOrder": 31,
-   "sounds": [
-    {
-     "code": "WH",
-     "ipa": "/w/",
-     "label": "wh as in whale",
-     "sayAs": "wuh",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "CK",
-   "pattern": "ck",
-   "type": "consonant_digraph",
-   "level": "KG3",
-   "difficulty": 3,
-   "explanation": "c and k together say one sound at the end of a word:",
-   "childExplanation": "c and k together say one sound at the end of a word:",
-   "masteryThreshold": 85,
-   "sortOrder": 32,
-   "sounds": [
-    {
-     "code": "CK",
-     "ipa": "/k/",
-     "label": "ck as in duck",
-     "sayAs": "kuh",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "NG",
-   "pattern": "ng",
-   "type": "consonant_digraph",
-   "level": "KG3",
-   "difficulty": 4,
-   "explanation": "n and g together make one sound:",
-   "childExplanation": "n and g together make one sound:",
-   "masteryThreshold": 85,
-   "sortOrder": 33,
-   "sounds": [
-    {
-     "code": "NG",
-     "ipa": "/ŋ/",
-     "label": "ng as in ring",
-     "sayAs": "ng, as in ring",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "EE",
-   "pattern": "ee",
-   "type": "vowel_team",
-   "level": "GRADE1",
-   "difficulty": 4,
-   "explanation": "Two e's together say",
-   "childExplanation": "Two e's together say",
-   "masteryThreshold": 85,
-   "sortOrder": 34,
-   "sounds": [
-    {
-     "code": "EE",
-     "ipa": "/iː/",
-     "label": "ee as in bee",
-     "sayAs": "ee",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "EA",
-   "pattern": "ea",
-   "type": "vowel_team",
-   "level": "GRADE1",
-   "difficulty": 5,
-   "explanation": "EA is usually /iː/ (leaf, sea) but is /ɛ/ in a common group of words (bread, head, feather). Both are modelled.",
-   "childExplanation": "e and a together often say ee, but sometimes eh:",
-   "masteryThreshold": 85,
-   "sortOrder": 35,
-   "sounds": [
-    {
-     "code": "EA_LONG_E",
-     "ipa": "/iː/",
-     "label": "ea as in leaf",
-     "sayAs": "ee, as in leaf",
-     "primary": true
+      "code": "LETTER_L",
+      "pattern": "l",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 2,
+      "explanation": "The letter l: uppercase L, lowercase l. Main sound /l/.",
+      "childExplanation": "This is the letter l.",
+      "masteryThreshold": 85,
+      "sortOrder": 12,
+      "sounds": [
+        {
+          "code": "L",
+          "ipa": "/l/",
+          "label": "l as in lion",
+          "sayAs": "lll",
+          "primary": true,
+          "phonemes": [
+            "L"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "L",
+      "letterName": "el",
+      "letterNameSayAs": "el",
+      "relations": []
     },
     {
-     "code": "EA_SHORT_E",
-     "ipa": "/ɛ/",
-     "label": "ea as in bread",
-     "sayAs": "eh, as in bread",
-     "primary": false
-    }
-   ]
-  },
-  {
-   "code": "AI",
-   "pattern": "ai",
-   "type": "vowel_team",
-   "level": "GRADE1",
-   "difficulty": 5,
-   "explanation": "a and i together say",
-   "childExplanation": "a and i together say",
-   "masteryThreshold": 85,
-   "sortOrder": 36,
-   "sounds": [
-    {
-     "code": "AI",
-     "ipa": "/eɪ/",
-     "label": "ai as in rain",
-     "sayAs": "ay, as in rain",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "AY",
-   "pattern": "ay",
-   "type": "vowel_team",
-   "level": "GRADE1",
-   "difficulty": 5,
-   "explanation": "a and y together say",
-   "childExplanation": "a and y together say",
-   "masteryThreshold": 85,
-   "sortOrder": 37,
-   "sounds": [
-    {
-     "code": "AY",
-     "ipa": "/eɪ/",
-     "label": "ay as in play",
-     "sayAs": "ay, as in play",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "OA",
-   "pattern": "oa",
-   "type": "vowel_team",
-   "level": "GRADE1",
-   "difficulty": 5,
-   "explanation": "o and a together say",
-   "childExplanation": "o and a together say",
-   "masteryThreshold": 85,
-   "sortOrder": 38,
-   "sounds": [
-    {
-     "code": "OA",
-     "ipa": "/oʊ/",
-     "label": "oa as in boat",
-     "sayAs": "oh, as in boat",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "OW",
-   "pattern": "ow",
-   "type": "vowel_team",
-   "level": "GRADE1",
-   "difficulty": 6,
-   "explanation": "OW is /oʊ/ in snow, bow (ribbon), window and /aʊ/ in cow, owl, crown. Both are modelled.",
-   "childExplanation": "o and w can say oh or ow:",
-   "masteryThreshold": 85,
-   "sortOrder": 39,
-   "sounds": [
-    {
-     "code": "OW_LONG_O",
-     "ipa": "/oʊ/",
-     "label": "ow as in snow",
-     "sayAs": "oh, as in snow",
-     "primary": true
+      "code": "LETTER_M",
+      "pattern": "m",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 1,
+      "explanation": "The letter m: uppercase M, lowercase m. Main sound /m/.",
+      "childExplanation": "This is the letter m.",
+      "masteryThreshold": 85,
+      "sortOrder": 13,
+      "sounds": [
+        {
+          "code": "M",
+          "ipa": "/m/",
+          "label": "m as in moon",
+          "sayAs": "mmm",
+          "primary": true,
+          "phonemes": [
+            "M"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "M",
+      "letterName": "em",
+      "letterNameSayAs": "em",
+      "relations": []
     },
     {
-     "code": "OW_OU",
-     "ipa": "/aʊ/",
-     "label": "ow as in cow",
-     "sayAs": "ow, as in cow",
-     "primary": false
-    }
-   ]
-  },
-  {
-   "code": "OO",
-   "pattern": "oo",
-   "type": "vowel_team",
-   "level": "GRADE1",
-   "difficulty": 6,
-   "explanation": "Two o's can say oo as in moon, or oo as in book:",
-   "childExplanation": "Two o's can say oo as in moon, or oo as in book:",
-   "masteryThreshold": 85,
-   "sortOrder": 40,
-   "sounds": [
-    {
-     "code": "OO_LONG",
-     "ipa": "/uː/",
-     "label": "oo as in moon",
-     "sayAs": "oo, as in moon",
-     "primary": true
+      "code": "LETTER_N",
+      "pattern": "n",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 2,
+      "explanation": "The letter n: uppercase N, lowercase n. Main sound /n/.",
+      "childExplanation": "This is the letter n.",
+      "masteryThreshold": 85,
+      "sortOrder": 14,
+      "sounds": [
+        {
+          "code": "N",
+          "ipa": "/n/",
+          "label": "n as in net",
+          "sayAs": "nnn",
+          "primary": true,
+          "phonemes": [
+            "N"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "N",
+      "letterName": "en",
+      "letterNameSayAs": "en",
+      "relations": []
     },
     {
-     "code": "OO_SHORT",
-     "ipa": "/ʊ/",
-     "label": "oo as in book",
-     "sayAs": "oo, as in book",
-     "primary": false
-    }
-   ]
-  },
-  {
-   "code": "OU",
-   "pattern": "ou",
-   "type": "vowel_team",
-   "level": "GRADE1",
-   "difficulty": 6,
-   "explanation": "o and u together say",
-   "childExplanation": "o and u together say",
-   "masteryThreshold": 85,
-   "sortOrder": 41,
-   "sounds": [
-    {
-     "code": "OU",
-     "ipa": "/aʊ/",
-     "label": "ou as in out",
-     "sayAs": "ow, as in out",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "OI",
-   "pattern": "oi",
-   "type": "vowel_team",
-   "level": "GRADE1",
-   "difficulty": 6,
-   "explanation": "o and i together say",
-   "childExplanation": "o and i together say",
-   "masteryThreshold": 85,
-   "sortOrder": 42,
-   "sounds": [
-    {
-     "code": "OI",
-     "ipa": "/ɔɪ/",
-     "label": "oi as in coin",
-     "sayAs": "oy, as in coin",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "OY",
-   "pattern": "oy",
-   "type": "vowel_team",
-   "level": "GRADE1",
-   "difficulty": 6,
-   "explanation": "o and y together say",
-   "childExplanation": "o and y together say",
-   "masteryThreshold": 85,
-   "sortOrder": 43,
-   "sounds": [
-    {
-     "code": "OY",
-     "ipa": "/ɔɪ/",
-     "label": "oy as in boy",
-     "sayAs": "oy, as in boy",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "AR",
-   "pattern": "ar",
-   "type": "r_controlled",
-   "level": "GRADE2",
-   "difficulty": 6,
-   "explanation": "When r comes after a, they say",
-   "childExplanation": "When r comes after a, they say",
-   "masteryThreshold": 85,
-   "sortOrder": 44,
-   "sounds": [
-    {
-     "code": "AR",
-     "ipa": "/ɑɹ/",
-     "label": "ar as in car",
-     "sayAs": "ar, as in car",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "ER",
-   "pattern": "er",
-   "type": "r_controlled",
-   "level": "GRADE2",
-   "difficulty": 6,
-   "explanation": "e and r together say",
-   "childExplanation": "e and r together say",
-   "masteryThreshold": 85,
-   "sortOrder": 45,
-   "sounds": [
-    {
-     "code": "ER",
-     "ipa": "/ɝ/",
-     "label": "er as in her",
-     "sayAs": "er, as in her",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "IR",
-   "pattern": "ir",
-   "type": "r_controlled",
-   "level": "GRADE2",
-   "difficulty": 6,
-   "explanation": "i and r together say",
-   "childExplanation": "i and r together say",
-   "masteryThreshold": 85,
-   "sortOrder": 46,
-   "sounds": [
-    {
-     "code": "IR",
-     "ipa": "/ɝ/",
-     "label": "ir as in bird",
-     "sayAs": "er, as in bird",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "OR",
-   "pattern": "or",
-   "type": "r_controlled",
-   "level": "GRADE2",
-   "difficulty": 6,
-   "explanation": "o and r together say",
-   "childExplanation": "o and r together say",
-   "masteryThreshold": 85,
-   "sortOrder": 47,
-   "sounds": [
-    {
-     "code": "OR",
-     "ipa": "/ɔɹ/",
-     "label": "or as in fork",
-     "sayAs": "or, as in fork",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "UR",
-   "pattern": "ur",
-   "type": "r_controlled",
-   "level": "GRADE2",
-   "difficulty": 6,
-   "explanation": "u and r together say",
-   "childExplanation": "u and r together say",
-   "masteryThreshold": 85,
-   "sortOrder": 48,
-   "sounds": [
-    {
-     "code": "UR",
-     "ipa": "/ɝ/",
-     "label": "ur as in nurse",
-     "sayAs": "er, as in nurse",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "ING",
-   "pattern": "ing",
-   "type": "word_ending",
-   "level": "GRADE2",
-   "difficulty": 6,
-   "explanation": "At the end of a word, i n g says",
-   "childExplanation": "At the end of a word, i n g says",
-   "masteryThreshold": 85,
-   "sortOrder": 49,
-   "sounds": [
-    {
-     "code": "ING",
-     "ipa": "/ɪŋ/",
-     "label": "ing as in jumping",
-     "sayAs": "ing, as in jumping",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "ED",
-   "pattern": "ed",
-   "type": "word_ending",
-   "level": "GRADE2",
-   "difficulty": 7,
-   "explanation": "-ED has three pronunciations: /t/ after voiceless sounds (jumped), /d/ after voiced sounds (played), /ɪd/ after t or d (painted). Modelled separately.",
-   "childExplanation": "The ending e d can say t, d, or id:",
-   "masteryThreshold": 85,
-   "sortOrder": 50,
-   "sounds": [
-    {
-     "code": "ED_T",
-     "ipa": "/t/",
-     "label": "ed as in jumped",
-     "sayAs": "t, as in jumped",
-     "primary": true
+      "code": "LETTER_O",
+      "pattern": "o",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 2,
+      "explanation": "The letter o: uppercase O, lowercase o. Main sound /ɑ/; also /oʊ/ (o as in go).",
+      "childExplanation": "This is the letter o.",
+      "masteryThreshold": 85,
+      "sortOrder": 15,
+      "sounds": [
+        {
+          "code": "O_SHORT",
+          "ipa": "/ɑ/",
+          "label": "o as in octopus",
+          "sayAs": "ah",
+          "primary": true,
+          "phonemes": [
+            "AA"
+          ]
+        },
+        {
+          "code": "O_LONG",
+          "ipa": "/oʊ/",
+          "label": "o as in go",
+          "sayAs": "oh",
+          "primary": false,
+          "phonemes": [
+            "OW"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "O",
+      "letterName": "oh",
+      "letterNameSayAs": "oh",
+      "relations": []
     },
     {
-     "code": "ED_D",
-     "ipa": "/d/",
-     "label": "ed as in played",
-     "sayAs": "d, as in played",
-     "primary": false
+      "code": "LETTER_P",
+      "pattern": "p",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 2,
+      "explanation": "The letter p: uppercase P, lowercase p. Main sound /p/.",
+      "childExplanation": "This is the letter p.",
+      "masteryThreshold": 85,
+      "sortOrder": 16,
+      "sounds": [
+        {
+          "code": "P",
+          "ipa": "/p/",
+          "label": "p as in pig",
+          "sayAs": "puh",
+          "primary": true,
+          "phonemes": [
+            "P"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "P",
+      "letterName": "pee",
+      "letterNameSayAs": "pee",
+      "relations": []
     },
     {
-     "code": "ED_ID",
-     "ipa": "/ɪd/",
-     "label": "ed as in painted",
-     "sayAs": "id, as in painted",
-     "primary": false
-    }
-   ]
-  },
-  {
-   "code": "ENDING_S",
-   "pattern": "s",
-   "type": "word_ending",
-   "level": "GRADE2",
-   "difficulty": 6,
-   "explanation": "An s at the end can say s or z:",
-   "childExplanation": "An s at the end can say s or z:",
-   "masteryThreshold": 85,
-   "sortOrder": 51,
-   "sounds": [
-    {
-     "code": "ENDING_S_S",
-     "ipa": "/s/",
-     "label": "s as in cats",
-     "sayAs": "sss, as in cats",
-     "primary": true
+      "code": "LETTER_Q",
+      "pattern": "q",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 3,
+      "explanation": "The letter q: uppercase Q, lowercase q. Main sound /kw/.",
+      "childExplanation": "This is the letter q.",
+      "masteryThreshold": 85,
+      "sortOrder": 17,
+      "sounds": [
+        {
+          "code": "Q",
+          "ipa": "/kw/",
+          "label": "qu as in queen",
+          "sayAs": "kwuh",
+          "primary": true,
+          "phonemes": [
+            "K",
+            "W"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "Q",
+      "letterName": "cue",
+      "letterNameSayAs": "cue",
+      "relations": []
     },
     {
-     "code": "ENDING_S_Z",
-     "ipa": "/z/",
-     "label": "s as in dogs",
-     "sayAs": "zzz, as in dogs",
-     "primary": false
-    }
-   ]
-  },
-  {
-   "code": "ES",
-   "pattern": "es",
-   "type": "word_ending",
-   "level": "GRADE2",
-   "difficulty": 6,
-   "explanation": "The ending e s says",
-   "childExplanation": "The ending e s says",
-   "masteryThreshold": 85,
-   "sortOrder": 52,
-   "sounds": [
-    {
-     "code": "ES",
-     "ipa": "/ɪz/",
-     "label": "es as in boxes",
-     "sayAs": "iz, as in boxes",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "TION",
-   "pattern": "tion",
-   "type": "suffix",
-   "level": "GRADE2",
-   "difficulty": 8,
-   "explanation": "t i o n at the end says",
-   "childExplanation": "t i o n at the end says",
-   "masteryThreshold": 85,
-   "sortOrder": 53,
-   "sounds": [
-    {
-     "code": "TION",
-     "ipa": "/ʃən/",
-     "label": "tion as in station",
-     "sayAs": "shun, as in station",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "SION",
-   "pattern": "sion",
-   "type": "suffix",
-   "level": "GRADE2",
-   "difficulty": 8,
-   "explanation": "s i o n can say zhun or shun:",
-   "childExplanation": "s i o n can say zhun or shun:",
-   "masteryThreshold": 85,
-   "sortOrder": 54,
-   "sounds": [
-    {
-     "code": "SION_ZHUN",
-     "ipa": "/ʒən/",
-     "label": "sion as in television",
-     "sayAs": "zhun, as in television",
-     "primary": true
+      "code": "LETTER_R",
+      "pattern": "r",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 2,
+      "explanation": "The letter r: uppercase R, lowercase r. Main sound /ɹ/.",
+      "childExplanation": "This is the letter r.",
+      "masteryThreshold": 85,
+      "sortOrder": 18,
+      "sounds": [
+        {
+          "code": "R",
+          "ipa": "/ɹ/",
+          "label": "r as in rabbit",
+          "sayAs": "rrr",
+          "primary": true,
+          "phonemes": [
+            "R"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "R",
+      "letterName": "ar",
+      "letterNameSayAs": "ar",
+      "relations": []
     },
     {
-     "code": "SION_SHUN",
-     "ipa": "/ʃən/",
-     "label": "sion as in mansion",
-     "sayAs": "shun, as in mansion",
-     "primary": false
-    }
-   ]
-  },
-  {
-   "code": "MENT",
-   "pattern": "ment",
-   "type": "suffix",
-   "level": "GRADE2",
-   "difficulty": 7,
-   "explanation": "m e n t at the end says",
-   "childExplanation": "m e n t at the end says",
-   "masteryThreshold": 85,
-   "sortOrder": 55,
-   "sounds": [
+      "code": "LETTER_S",
+      "pattern": "s",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 1,
+      "explanation": "The letter s: uppercase S, lowercase s. Main sound /s/; also /z/ (s as in is).",
+      "childExplanation": "This is the letter s.",
+      "masteryThreshold": 85,
+      "sortOrder": 19,
+      "sounds": [
+        {
+          "code": "S",
+          "ipa": "/s/",
+          "label": "s as in sun",
+          "sayAs": "sss",
+          "primary": true,
+          "phonemes": [
+            "S"
+          ]
+        },
+        {
+          "code": "S_Z",
+          "ipa": "/z/",
+          "label": "s as in is",
+          "sayAs": "zzz",
+          "primary": false,
+          "phonemes": [
+            "Z"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "S",
+      "letterName": "ess",
+      "letterNameSayAs": "ess",
+      "relations": []
+    },
     {
-     "code": "MENT",
-     "ipa": "/mənt/",
-     "label": "ment as in payment",
-     "sayAs": "ment, as in payment",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "NESS",
-   "pattern": "ness",
-   "type": "suffix",
-   "level": "GRADE2",
-   "difficulty": 7,
-   "explanation": "n e s s at the end says",
-   "childExplanation": "n e s s at the end says",
-   "masteryThreshold": 85,
-   "sortOrder": 56,
-   "sounds": [
+      "code": "LETTER_T",
+      "pattern": "t",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 1,
+      "explanation": "The letter t: uppercase T, lowercase t. Main sound /t/.",
+      "childExplanation": "This is the letter t.",
+      "masteryThreshold": 85,
+      "sortOrder": 20,
+      "sounds": [
+        {
+          "code": "T",
+          "ipa": "/t/",
+          "label": "t as in tiger",
+          "sayAs": "tuh",
+          "primary": true,
+          "phonemes": [
+            "T"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "T",
+      "letterName": "tee",
+      "letterNameSayAs": "tee",
+      "relations": []
+    },
     {
-     "code": "NESS",
-     "ipa": "/nəs/",
-     "label": "ness as in kindness",
-     "sayAs": "ness, as in kindness",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "FUL",
-   "pattern": "ful",
-   "type": "suffix",
-   "level": "GRADE2",
-   "difficulty": 7,
-   "explanation": "f u l at the end means full of, and says",
-   "childExplanation": "f u l at the end means full of, and says",
-   "masteryThreshold": 85,
-   "sortOrder": 57,
-   "sounds": [
+      "code": "LETTER_U",
+      "pattern": "u",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 2,
+      "explanation": "The letter u: uppercase U, lowercase u. Main sound /ʌ/; also /juː/ (u as in unicorn).",
+      "childExplanation": "This is the letter u.",
+      "masteryThreshold": 85,
+      "sortOrder": 21,
+      "sounds": [
+        {
+          "code": "U_SHORT",
+          "ipa": "/ʌ/",
+          "label": "u as in umbrella",
+          "sayAs": "uh",
+          "primary": true,
+          "phonemes": [
+            "AH"
+          ]
+        },
+        {
+          "code": "U_LONG",
+          "ipa": "/juː/",
+          "label": "u as in unicorn",
+          "sayAs": "you",
+          "primary": false,
+          "phonemes": [
+            "Y",
+            "UW"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "U",
+      "letterName": "you",
+      "letterNameSayAs": "you",
+      "relations": []
+    },
     {
-     "code": "FUL",
-     "ipa": "/fəl/",
-     "label": "ful as in helpful",
-     "sayAs": "ful, as in helpful",
-     "primary": true
-    }
-   ]
-  },
-  {
-   "code": "LESS",
-   "pattern": "less",
-   "type": "suffix",
-   "level": "GRADE2",
-   "difficulty": 7,
-   "explanation": "l e s s at the end means without, and says",
-   "childExplanation": "l e s s at the end means without, and says",
-   "masteryThreshold": 85,
-   "sortOrder": 58,
-   "sounds": [
+      "code": "LETTER_V",
+      "pattern": "v",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 2,
+      "explanation": "The letter v: uppercase V, lowercase v. Main sound /v/.",
+      "childExplanation": "This is the letter v.",
+      "masteryThreshold": 85,
+      "sortOrder": 22,
+      "sounds": [
+        {
+          "code": "V",
+          "ipa": "/v/",
+          "label": "v as in van",
+          "sayAs": "vvv",
+          "primary": true,
+          "phonemes": [
+            "V"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "V",
+      "letterName": "vee",
+      "letterNameSayAs": "vee",
+      "relations": []
+    },
     {
-     "code": "LESS",
-     "ipa": "/ləs/",
-     "label": "less as in helpless",
-     "sayAs": "less, as in helpless",
-     "primary": true
+      "code": "LETTER_W",
+      "pattern": "w",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 2,
+      "explanation": "The letter w: uppercase W, lowercase w. Main sound /w/.",
+      "childExplanation": "This is the letter w.",
+      "masteryThreshold": 85,
+      "sortOrder": 23,
+      "sounds": [
+        {
+          "code": "W",
+          "ipa": "/w/",
+          "label": "w as in web",
+          "sayAs": "wuh",
+          "primary": true,
+          "phonemes": [
+            "W"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "W",
+      "letterName": "double you",
+      "letterNameSayAs": "double you",
+      "relations": []
+    },
+    {
+      "code": "LETTER_X",
+      "pattern": "x",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 3,
+      "explanation": "The letter x: uppercase X, lowercase x. Main sound /ks/.",
+      "childExplanation": "This is the letter x.",
+      "masteryThreshold": 85,
+      "sortOrder": 24,
+      "sounds": [
+        {
+          "code": "X",
+          "ipa": "/ks/",
+          "label": "x as in box",
+          "sayAs": "ks",
+          "primary": true,
+          "phonemes": [
+            "K",
+            "S"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "X",
+      "letterName": "ex",
+      "letterNameSayAs": "ex",
+      "relations": []
+    },
+    {
+      "code": "LETTER_Y",
+      "pattern": "y",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 3,
+      "explanation": "The letter y: uppercase Y, lowercase y. Main sound /j/; also /aɪ/ (y as in my), /i/ (y as in happy).",
+      "childExplanation": "This is the letter y.",
+      "masteryThreshold": 85,
+      "sortOrder": 25,
+      "sounds": [
+        {
+          "code": "Y",
+          "ipa": "/j/",
+          "label": "y as in yes",
+          "sayAs": "yuh",
+          "primary": true,
+          "phonemes": [
+            "Y"
+          ]
+        },
+        {
+          "code": "Y_LONG_I",
+          "ipa": "/aɪ/",
+          "label": "y as in my",
+          "sayAs": "eye",
+          "primary": false,
+          "phonemes": [
+            "AY"
+          ]
+        },
+        {
+          "code": "Y_LONG_E",
+          "ipa": "/i/",
+          "label": "y as in happy",
+          "sayAs": "ee",
+          "primary": false,
+          "phonemes": [
+            "IY"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "Y",
+      "letterName": "why",
+      "letterNameSayAs": "why",
+      "relations": []
+    },
+    {
+      "code": "LETTER_Z",
+      "pattern": "z",
+      "type": "letter",
+      "level": "KG1",
+      "difficulty": 3,
+      "explanation": "The letter z: uppercase Z, lowercase z. Main sound /z/.",
+      "childExplanation": "This is the letter z.",
+      "masteryThreshold": 85,
+      "sortOrder": 26,
+      "sounds": [
+        {
+          "code": "Z",
+          "ipa": "/z/",
+          "label": "z as in zebra",
+          "sayAs": "zzz",
+          "primary": true,
+          "phonemes": [
+            "Z"
+          ]
+        }
+      ],
+      "stage": "LETTER_SOUNDS",
+      "position": "any",
+      "uppercase": "Z",
+      "letterName": "zee",
+      "letterNameSayAs": "zee",
+      "relations": []
+    },
+    {
+      "code": "SH",
+      "pattern": "sh",
+      "type": "consonant_digraph",
+      "level": "KG3",
+      "difficulty": 3,
+      "explanation": "s and h together make one sound: shh, as in ship.",
+      "childExplanation": "s and h together make one sound: shh, as in ship.",
+      "masteryThreshold": 85,
+      "sortOrder": 27,
+      "sounds": [
+        {
+          "code": "SH",
+          "ipa": "/ʃ/",
+          "label": "sh as in ship",
+          "sayAs": "shh",
+          "primary": true,
+          "phonemes": [
+            "SH"
+          ]
+        }
+      ],
+      "stage": "DIGRAPHS",
+      "position": "any",
+      "relations": [
+        {
+          "code": "CH",
+          "type": "contrast"
+        },
+        {
+          "code": "LETTER_S",
+          "type": "related"
+        }
+      ]
+    },
+    {
+      "code": "CH",
+      "pattern": "ch",
+      "type": "consonant_digraph",
+      "level": "KG3",
+      "difficulty": 3,
+      "explanation": "c and h together make one sound: ch, as in chip.",
+      "childExplanation": "c and h together make one sound: ch, as in chip.",
+      "masteryThreshold": 85,
+      "sortOrder": 28,
+      "sounds": [
+        {
+          "code": "CH",
+          "ipa": "/tʃ/",
+          "label": "ch as in chick",
+          "sayAs": "chuh",
+          "primary": true,
+          "phonemes": [
+            "CH"
+          ]
+        }
+      ],
+      "stage": "DIGRAPHS",
+      "position": "any",
+      "relations": [
+        {
+          "code": "SH",
+          "type": "contrast"
+        }
+      ]
+    },
+    {
+      "code": "TH",
+      "pattern": "th",
+      "type": "consonant_digraph",
+      "level": "KG3",
+      "difficulty": 4,
+      "explanation": "t and h together make two different sounds: th in thin (air only) and th in this (with a buzz).",
+      "childExplanation": "t and h together make two different sounds: th in thin (air only) and th in this (with a buzz).",
+      "masteryThreshold": 85,
+      "sortOrder": 29,
+      "sounds": [
+        {
+          "code": "TH_VOICELESS",
+          "ipa": "/θ/",
+          "label": "th as in thumb",
+          "sayAs": "th, as in thumb",
+          "primary": true,
+          "phonemes": [
+            "TH"
+          ]
+        },
+        {
+          "code": "TH_VOICED",
+          "ipa": "/ð/",
+          "label": "th as in this",
+          "sayAs": "th, as in this",
+          "primary": false,
+          "phonemes": [
+            "DH"
+          ]
+        }
+      ],
+      "stage": "DIGRAPHS",
+      "position": "any",
+      "relations": [
+        {
+          "code": "LETTER_T",
+          "type": "contrast"
+        },
+        {
+          "code": "SH",
+          "type": "related"
+        }
+      ]
+    },
+    {
+      "code": "PH",
+      "pattern": "ph",
+      "type": "consonant_digraph",
+      "level": "KG3",
+      "difficulty": 5,
+      "explanation": "p and h together sound like f, as in phone.",
+      "childExplanation": "p and h together sound like f, as in phone.",
+      "masteryThreshold": 85,
+      "sortOrder": 30,
+      "sounds": [
+        {
+          "code": "PH",
+          "ipa": "/f/",
+          "label": "ph as in phone",
+          "sayAs": "fff",
+          "primary": true,
+          "phonemes": [
+            "F"
+          ]
+        }
+      ],
+      "stage": "DIGRAPHS",
+      "position": "any",
+      "relations": [
+        {
+          "code": "LETTER_F",
+          "type": "same_sound"
+        }
+      ]
+    },
+    {
+      "code": "WH",
+      "pattern": "wh",
+      "type": "consonant_digraph",
+      "level": "KG3",
+      "difficulty": 4,
+      "explanation": "w and h together sound like w, as in whale.",
+      "childExplanation": "w and h together sound like w, as in whale.",
+      "masteryThreshold": 85,
+      "sortOrder": 31,
+      "sounds": [
+        {
+          "code": "WH",
+          "ipa": "/w/",
+          "label": "wh as in whale",
+          "sayAs": "wuh",
+          "primary": true,
+          "phonemes": [
+            "W"
+          ]
+        }
+      ],
+      "stage": "DIGRAPHS",
+      "position": "initial",
+      "relations": [
+        {
+          "code": "LETTER_W",
+          "type": "same_sound"
+        }
+      ]
+    },
+    {
+      "code": "CK",
+      "pattern": "ck",
+      "type": "consonant_digraph",
+      "level": "GRADE1",
+      "difficulty": 3,
+      "explanation": "c and k together make one k sound, at the end of short words, as in duck.",
+      "childExplanation": "c and k together make one k sound, at the end of short words, as in duck.",
+      "masteryThreshold": 85,
+      "sortOrder": 32,
+      "sounds": [
+        {
+          "code": "CK",
+          "ipa": "/k/",
+          "label": "ck as in duck",
+          "sayAs": "kuh",
+          "primary": true,
+          "phonemes": [
+            "K"
+          ]
+        }
+      ],
+      "stage": "DIGRAPHS",
+      "position": "final",
+      "relations": [
+        {
+          "code": "LETTER_K",
+          "type": "same_sound"
+        },
+        {
+          "code": "LETTER_C",
+          "type": "same_sound"
+        }
+      ]
+    },
+    {
+      "code": "NG",
+      "pattern": "ng",
+      "type": "consonant_digraph",
+      "level": "GRADE1",
+      "difficulty": 4,
+      "explanation": "n and g together make the ng sound at the end of ring.",
+      "childExplanation": "n and g together make the ng sound at the end of ring.",
+      "masteryThreshold": 85,
+      "sortOrder": 33,
+      "sounds": [
+        {
+          "code": "NG",
+          "ipa": "/ŋ/",
+          "label": "ng as in ring",
+          "sayAs": "ng, as in ring",
+          "primary": true,
+          "phonemes": [
+            "NG"
+          ]
+        }
+      ],
+      "stage": "DIGRAPHS",
+      "position": "final",
+      "relations": [
+        {
+          "code": "LETTER_N",
+          "type": "contrast"
+        }
+      ]
+    },
+    {
+      "code": "EE",
+      "pattern": "ee",
+      "type": "vowel_team",
+      "level": "GRADE1",
+      "difficulty": 4,
+      "explanation": "Two e's together say",
+      "childExplanation": "Two e's together say",
+      "masteryThreshold": 85,
+      "sortOrder": 34,
+      "sounds": [
+        {
+          "code": "EE",
+          "ipa": "/iː/",
+          "label": "ee as in bee",
+          "sayAs": "ee",
+          "primary": true,
+          "phonemes": [
+            "IY"
+          ]
+        }
+      ],
+      "stage": "VOWEL_TEAMS",
+      "position": "any",
+      "relations": [
+        {
+          "code": "EA",
+          "type": "same_sound"
+        }
+      ]
+    },
+    {
+      "code": "EA",
+      "pattern": "ea",
+      "type": "vowel_team",
+      "level": "GRADE1",
+      "difficulty": 5,
+      "explanation": "EA is usually /iː/ (leaf, sea) but is /ɛ/ in a common group of words (bread, head, feather). Both are modelled.",
+      "childExplanation": "e and a together often say ee, but sometimes eh:",
+      "masteryThreshold": 85,
+      "sortOrder": 35,
+      "sounds": [
+        {
+          "code": "EA_LONG_E",
+          "ipa": "/iː/",
+          "label": "ea as in leaf",
+          "sayAs": "ee, as in leaf",
+          "primary": true,
+          "phonemes": [
+            "IY"
+          ]
+        },
+        {
+          "code": "EA_SHORT_E",
+          "ipa": "/ɛ/",
+          "label": "ea as in bread",
+          "sayAs": "eh, as in bread",
+          "primary": false,
+          "phonemes": [
+            "EH"
+          ]
+        }
+      ],
+      "stage": "VOWEL_TEAMS",
+      "position": "any",
+      "relations": [
+        {
+          "code": "EE",
+          "type": "same_sound"
+        }
+      ]
+    },
+    {
+      "code": "AI",
+      "pattern": "ai",
+      "type": "vowel_team",
+      "level": "GRADE1",
+      "difficulty": 5,
+      "explanation": "a and i together say",
+      "childExplanation": "a and i together say",
+      "masteryThreshold": 85,
+      "sortOrder": 36,
+      "sounds": [
+        {
+          "code": "AI",
+          "ipa": "/eɪ/",
+          "label": "ai as in rain",
+          "sayAs": "ay, as in rain",
+          "primary": true,
+          "phonemes": [
+            "EY"
+          ]
+        }
+      ],
+      "stage": "VOWEL_TEAMS",
+      "position": "any",
+      "relations": [
+        {
+          "code": "AY",
+          "type": "same_sound"
+        },
+        {
+          "code": "A_E",
+          "type": "same_sound"
+        }
+      ]
+    },
+    {
+      "code": "AY",
+      "pattern": "ay",
+      "type": "vowel_team",
+      "level": "GRADE1",
+      "difficulty": 5,
+      "explanation": "a and y together say",
+      "childExplanation": "a and y together say",
+      "masteryThreshold": 85,
+      "sortOrder": 37,
+      "sounds": [
+        {
+          "code": "AY",
+          "ipa": "/eɪ/",
+          "label": "ay as in play",
+          "sayAs": "ay, as in play",
+          "primary": true,
+          "phonemes": [
+            "EY"
+          ]
+        }
+      ],
+      "stage": "VOWEL_TEAMS",
+      "position": "final",
+      "relations": [
+        {
+          "code": "AI",
+          "type": "same_sound"
+        }
+      ]
+    },
+    {
+      "code": "OA",
+      "pattern": "oa",
+      "type": "vowel_team",
+      "level": "GRADE1",
+      "difficulty": 5,
+      "explanation": "o and a together say",
+      "childExplanation": "o and a together say",
+      "masteryThreshold": 85,
+      "sortOrder": 38,
+      "sounds": [
+        {
+          "code": "OA",
+          "ipa": "/oʊ/",
+          "label": "oa as in boat",
+          "sayAs": "oh, as in boat",
+          "primary": true,
+          "phonemes": [
+            "OW"
+          ]
+        }
+      ],
+      "stage": "VOWEL_TEAMS",
+      "position": "any",
+      "relations": [
+        {
+          "code": "OW",
+          "type": "same_sound"
+        },
+        {
+          "code": "O_E",
+          "type": "same_sound"
+        }
+      ]
+    },
+    {
+      "code": "OW",
+      "pattern": "ow",
+      "type": "vowel_team",
+      "level": "GRADE1",
+      "difficulty": 6,
+      "explanation": "OW is /oʊ/ in snow, bow (ribbon), window and /aʊ/ in cow, owl, crown. Both are modelled.",
+      "childExplanation": "o and w can say oh or ow:",
+      "masteryThreshold": 85,
+      "sortOrder": 39,
+      "sounds": [
+        {
+          "code": "OW_LONG_O",
+          "ipa": "/oʊ/",
+          "label": "ow as in snow",
+          "sayAs": "oh, as in snow",
+          "primary": true,
+          "phonemes": [
+            "OW"
+          ]
+        },
+        {
+          "code": "OW_OU",
+          "ipa": "/aʊ/",
+          "label": "ow as in cow",
+          "sayAs": "ow, as in cow",
+          "primary": false,
+          "phonemes": [
+            "AW"
+          ]
+        }
+      ],
+      "stage": "VOWEL_TEAMS",
+      "position": "any",
+      "relations": [
+        {
+          "code": "OU",
+          "type": "same_sound"
+        },
+        {
+          "code": "OA",
+          "type": "same_sound"
+        }
+      ]
+    },
+    {
+      "code": "OO",
+      "pattern": "oo",
+      "type": "vowel_team",
+      "level": "GRADE1",
+      "difficulty": 6,
+      "explanation": "Two o's can say oo as in moon, or oo as in book:",
+      "childExplanation": "Two o's can say oo as in moon, or oo as in book:",
+      "masteryThreshold": 85,
+      "sortOrder": 40,
+      "sounds": [
+        {
+          "code": "OO_LONG",
+          "ipa": "/uː/",
+          "label": "oo as in moon",
+          "sayAs": "oo, as in moon",
+          "primary": true,
+          "phonemes": [
+            "UW"
+          ]
+        },
+        {
+          "code": "OO_SHORT",
+          "ipa": "/ʊ/",
+          "label": "oo as in book",
+          "sayAs": "oo, as in book",
+          "primary": false,
+          "phonemes": [
+            "UH"
+          ]
+        }
+      ],
+      "stage": "VOWEL_TEAMS",
+      "position": "any",
+      "relations": [
+        {
+          "code": "U_E",
+          "type": "related"
+        }
+      ]
+    },
+    {
+      "code": "OU",
+      "pattern": "ou",
+      "type": "vowel_team",
+      "level": "GRADE1",
+      "difficulty": 6,
+      "explanation": "o and u together say",
+      "childExplanation": "o and u together say",
+      "masteryThreshold": 85,
+      "sortOrder": 41,
+      "sounds": [
+        {
+          "code": "OU",
+          "ipa": "/aʊ/",
+          "label": "ou as in out",
+          "sayAs": "ow, as in out",
+          "primary": true,
+          "phonemes": [
+            "AW"
+          ]
+        }
+      ],
+      "stage": "VOWEL_TEAMS",
+      "position": "any",
+      "relations": [
+        {
+          "code": "OW",
+          "type": "same_sound"
+        }
+      ]
+    },
+    {
+      "code": "OI",
+      "pattern": "oi",
+      "type": "vowel_team",
+      "level": "GRADE1",
+      "difficulty": 6,
+      "explanation": "o and i together say",
+      "childExplanation": "o and i together say",
+      "masteryThreshold": 85,
+      "sortOrder": 42,
+      "sounds": [
+        {
+          "code": "OI",
+          "ipa": "/ɔɪ/",
+          "label": "oi as in coin",
+          "sayAs": "oy, as in coin",
+          "primary": true,
+          "phonemes": [
+            "OY"
+          ]
+        }
+      ],
+      "stage": "VOWEL_TEAMS",
+      "position": "any",
+      "relations": [
+        {
+          "code": "OY",
+          "type": "same_sound"
+        }
+      ]
+    },
+    {
+      "code": "OY",
+      "pattern": "oy",
+      "type": "vowel_team",
+      "level": "GRADE1",
+      "difficulty": 6,
+      "explanation": "o and y together say",
+      "childExplanation": "o and y together say",
+      "masteryThreshold": 85,
+      "sortOrder": 43,
+      "sounds": [
+        {
+          "code": "OY",
+          "ipa": "/ɔɪ/",
+          "label": "oy as in boy",
+          "sayAs": "oy, as in boy",
+          "primary": true,
+          "phonemes": [
+            "OY"
+          ]
+        }
+      ],
+      "stage": "VOWEL_TEAMS",
+      "position": "final",
+      "relations": [
+        {
+          "code": "OI",
+          "type": "same_sound"
+        }
+      ]
+    },
+    {
+      "code": "AR",
+      "pattern": "ar",
+      "type": "r_controlled",
+      "level": "GRADE1",
+      "difficulty": 6,
+      "explanation": "When r comes after a, they say",
+      "childExplanation": "When r comes after a, they say",
+      "masteryThreshold": 85,
+      "sortOrder": 44,
+      "sounds": [
+        {
+          "code": "AR",
+          "ipa": "/ɑɹ/",
+          "label": "ar as in car",
+          "sayAs": "ar, as in car",
+          "primary": true,
+          "phonemes": [
+            "AA",
+            "R"
+          ]
+        }
+      ],
+      "stage": "R_CONTROLLED",
+      "position": "any",
+      "relations": [
+        {
+          "code": "OR",
+          "type": "contrast"
+        }
+      ]
+    },
+    {
+      "code": "ER",
+      "pattern": "er",
+      "type": "r_controlled",
+      "level": "GRADE1",
+      "difficulty": 6,
+      "explanation": "e and r together say",
+      "childExplanation": "e and r together say",
+      "masteryThreshold": 85,
+      "sortOrder": 45,
+      "sounds": [
+        {
+          "code": "ER",
+          "ipa": "/ɝ/",
+          "label": "er as in her",
+          "sayAs": "er, as in her",
+          "primary": true,
+          "phonemes": [
+            "ER"
+          ]
+        }
+      ],
+      "stage": "R_CONTROLLED",
+      "position": "any",
+      "relations": [
+        {
+          "code": "IR",
+          "type": "same_sound"
+        },
+        {
+          "code": "UR",
+          "type": "same_sound"
+        }
+      ]
+    },
+    {
+      "code": "IR",
+      "pattern": "ir",
+      "type": "r_controlled",
+      "level": "GRADE1",
+      "difficulty": 6,
+      "explanation": "i and r together say",
+      "childExplanation": "i and r together say",
+      "masteryThreshold": 85,
+      "sortOrder": 46,
+      "sounds": [
+        {
+          "code": "IR",
+          "ipa": "/ɝ/",
+          "label": "ir as in bird",
+          "sayAs": "er, as in bird",
+          "primary": true,
+          "phonemes": [
+            "ER"
+          ]
+        }
+      ],
+      "stage": "R_CONTROLLED",
+      "position": "any",
+      "relations": [
+        {
+          "code": "ER",
+          "type": "same_sound"
+        },
+        {
+          "code": "UR",
+          "type": "same_sound"
+        }
+      ]
+    },
+    {
+      "code": "OR",
+      "pattern": "or",
+      "type": "r_controlled",
+      "level": "GRADE1",
+      "difficulty": 6,
+      "explanation": "o and r together say",
+      "childExplanation": "o and r together say",
+      "masteryThreshold": 85,
+      "sortOrder": 47,
+      "sounds": [
+        {
+          "code": "OR",
+          "ipa": "/ɔɹ/",
+          "label": "or as in fork",
+          "sayAs": "or, as in fork",
+          "primary": true,
+          "phonemes": [
+            "AO",
+            "R"
+          ]
+        }
+      ],
+      "stage": "R_CONTROLLED",
+      "position": "any",
+      "relations": [
+        {
+          "code": "AR",
+          "type": "contrast"
+        }
+      ]
+    },
+    {
+      "code": "UR",
+      "pattern": "ur",
+      "type": "r_controlled",
+      "level": "GRADE1",
+      "difficulty": 6,
+      "explanation": "u and r together say",
+      "childExplanation": "u and r together say",
+      "masteryThreshold": 85,
+      "sortOrder": 48,
+      "sounds": [
+        {
+          "code": "UR",
+          "ipa": "/ɝ/",
+          "label": "ur as in nurse",
+          "sayAs": "er, as in nurse",
+          "primary": true,
+          "phonemes": [
+            "ER"
+          ]
+        }
+      ],
+      "stage": "R_CONTROLLED",
+      "position": "any",
+      "relations": [
+        {
+          "code": "ER",
+          "type": "same_sound"
+        },
+        {
+          "code": "IR",
+          "type": "same_sound"
+        }
+      ]
+    },
+    {
+      "code": "ING",
+      "pattern": "ing",
+      "type": "word_ending",
+      "level": "GRADE1",
+      "difficulty": 6,
+      "explanation": "At the end of a word, i n g says",
+      "childExplanation": "At the end of a word, i n g says",
+      "masteryThreshold": 85,
+      "sortOrder": 49,
+      "sounds": [
+        {
+          "code": "ING",
+          "ipa": "/ɪŋ/",
+          "label": "ing as in jumping",
+          "sayAs": "ing, as in jumping",
+          "primary": true,
+          "phonemes": [
+            "IH",
+            "NG"
+          ]
+        }
+      ],
+      "stage": "WORD_ENDINGS",
+      "position": "final",
+      "relations": [
+        {
+          "code": "NG",
+          "type": "prerequisite"
+        }
+      ]
+    },
+    {
+      "code": "ED",
+      "pattern": "ed",
+      "type": "word_ending",
+      "level": "GRADE1",
+      "difficulty": 7,
+      "explanation": "-ED has three pronunciations: /t/ after voiceless sounds (jumped), /d/ after voiced sounds (played), /ɪd/ after t or d (painted). Modelled separately.",
+      "childExplanation": "The ending e d can say t, d, or id:",
+      "masteryThreshold": 85,
+      "sortOrder": 50,
+      "sounds": [
+        {
+          "code": "ED_T",
+          "ipa": "/t/",
+          "label": "ed as in jumped",
+          "sayAs": "t, as in jumped",
+          "primary": true,
+          "phonemes": [
+            "T"
+          ]
+        },
+        {
+          "code": "ED_D",
+          "ipa": "/d/",
+          "label": "ed as in played",
+          "sayAs": "d, as in played",
+          "primary": false,
+          "phonemes": [
+            "D"
+          ]
+        },
+        {
+          "code": "ED_ID",
+          "ipa": "/ɪd/",
+          "label": "ed as in painted",
+          "sayAs": "id, as in painted",
+          "primary": false,
+          "phonemes": [
+            "IH",
+            "D"
+          ]
+        }
+      ],
+      "stage": "WORD_ENDINGS",
+      "position": "final",
+      "relations": [
+        {
+          "code": "ING",
+          "type": "related"
+        }
+      ]
+    },
+    {
+      "code": "ENDING_S",
+      "pattern": "s",
+      "type": "word_ending",
+      "level": "GRADE1",
+      "difficulty": 6,
+      "explanation": "An s at the end can say s or z:",
+      "childExplanation": "An s at the end can say s or z:",
+      "masteryThreshold": 85,
+      "sortOrder": 51,
+      "sounds": [
+        {
+          "code": "ENDING_S_S",
+          "ipa": "/s/",
+          "label": "s as in cats",
+          "sayAs": "sss, as in cats",
+          "primary": true,
+          "phonemes": [
+            "S"
+          ]
+        },
+        {
+          "code": "ENDING_S_Z",
+          "ipa": "/z/",
+          "label": "s as in dogs",
+          "sayAs": "zzz, as in dogs",
+          "primary": false,
+          "phonemes": [
+            "Z"
+          ]
+        }
+      ],
+      "stage": "WORD_ENDINGS",
+      "position": "final",
+      "relations": [
+        {
+          "code": "ES",
+          "type": "related"
+        }
+      ]
+    },
+    {
+      "code": "ES",
+      "pattern": "es",
+      "type": "word_ending",
+      "level": "GRADE1",
+      "difficulty": 6,
+      "explanation": "The ending e s says",
+      "childExplanation": "The ending e s says",
+      "masteryThreshold": 85,
+      "sortOrder": 52,
+      "sounds": [
+        {
+          "code": "ES",
+          "ipa": "/ɪz/",
+          "label": "es as in boxes",
+          "sayAs": "iz, as in boxes",
+          "primary": true,
+          "phonemes": [
+            "IH",
+            "Z"
+          ]
+        }
+      ],
+      "stage": "WORD_ENDINGS",
+      "position": "final",
+      "relations": [
+        {
+          "code": "ENDING_S",
+          "type": "related"
+        }
+      ]
+    },
+    {
+      "code": "TION",
+      "pattern": "tion",
+      "type": "suffix",
+      "level": "GRADE2",
+      "difficulty": 8,
+      "explanation": "t i o n at the end says",
+      "childExplanation": "t i o n at the end says",
+      "masteryThreshold": 85,
+      "sortOrder": 53,
+      "sounds": [
+        {
+          "code": "TION",
+          "ipa": "/ʃən/",
+          "label": "tion as in station",
+          "sayAs": "shun, as in station",
+          "primary": true,
+          "phonemes": [
+            "SH",
+            "AH",
+            "N"
+          ]
+        }
+      ],
+      "stage": "ADVANCED",
+      "position": "final",
+      "relations": [
+        {
+          "code": "SION",
+          "type": "same_sound"
+        },
+        {
+          "code": "SH",
+          "type": "related"
+        }
+      ]
+    },
+    {
+      "code": "SION",
+      "pattern": "sion",
+      "type": "suffix",
+      "level": "GRADE2",
+      "difficulty": 8,
+      "explanation": "s i o n can say zhun or shun:",
+      "childExplanation": "s i o n can say zhun or shun:",
+      "masteryThreshold": 85,
+      "sortOrder": 54,
+      "sounds": [
+        {
+          "code": "SION_ZHUN",
+          "ipa": "/ʒən/",
+          "label": "sion as in television",
+          "sayAs": "zhun, as in television",
+          "primary": true,
+          "phonemes": [
+            "ZH",
+            "AH",
+            "N"
+          ]
+        },
+        {
+          "code": "SION_SHUN",
+          "ipa": "/ʃən/",
+          "label": "sion as in mansion",
+          "sayAs": "shun, as in mansion",
+          "primary": false,
+          "phonemes": [
+            "SH",
+            "AH",
+            "N"
+          ]
+        }
+      ],
+      "stage": "ADVANCED",
+      "position": "final",
+      "relations": [
+        {
+          "code": "TION",
+          "type": "same_sound"
+        }
+      ]
+    },
+    {
+      "code": "MENT",
+      "pattern": "ment",
+      "type": "suffix",
+      "level": "GRADE2",
+      "difficulty": 7,
+      "explanation": "m e n t at the end says",
+      "childExplanation": "m e n t at the end says",
+      "masteryThreshold": 85,
+      "sortOrder": 55,
+      "sounds": [
+        {
+          "code": "MENT",
+          "ipa": "/mənt/",
+          "label": "ment as in payment",
+          "sayAs": "ment, as in payment",
+          "primary": true,
+          "phonemes": [
+            "M",
+            "AH",
+            "N",
+            "T"
+          ]
+        }
+      ],
+      "stage": "ADVANCED",
+      "position": "final",
+      "relations": []
+    },
+    {
+      "code": "NESS",
+      "pattern": "ness",
+      "type": "suffix",
+      "level": "GRADE2",
+      "difficulty": 7,
+      "explanation": "n e s s at the end says",
+      "childExplanation": "n e s s at the end says",
+      "masteryThreshold": 85,
+      "sortOrder": 56,
+      "sounds": [
+        {
+          "code": "NESS",
+          "ipa": "/nəs/",
+          "label": "ness as in kindness",
+          "sayAs": "ness, as in kindness",
+          "primary": true,
+          "phonemes": [
+            "N",
+            "AH",
+            "S"
+          ]
+        }
+      ],
+      "stage": "ADVANCED",
+      "position": "final",
+      "relations": []
+    },
+    {
+      "code": "FUL",
+      "pattern": "ful",
+      "type": "suffix",
+      "level": "GRADE2",
+      "difficulty": 7,
+      "explanation": "f u l at the end means full of, and says",
+      "childExplanation": "f u l at the end means full of, and says",
+      "masteryThreshold": 85,
+      "sortOrder": 57,
+      "sounds": [
+        {
+          "code": "FUL",
+          "ipa": "/fəl/",
+          "label": "ful as in helpful",
+          "sayAs": "ful, as in helpful",
+          "primary": true,
+          "phonemes": [
+            "F",
+            "AH",
+            "L"
+          ]
+        }
+      ],
+      "stage": "ADVANCED",
+      "position": "final",
+      "relations": []
+    },
+    {
+      "code": "LESS",
+      "pattern": "less",
+      "type": "suffix",
+      "level": "GRADE2",
+      "difficulty": 7,
+      "explanation": "l e s s at the end means without, and says",
+      "childExplanation": "l e s s at the end means without, and says",
+      "masteryThreshold": 85,
+      "sortOrder": 58,
+      "sounds": [
+        {
+          "code": "LESS",
+          "ipa": "/ləs/",
+          "label": "less as in helpless",
+          "sayAs": "less, as in helpless",
+          "primary": true,
+          "phonemes": [
+            "L",
+            "AH",
+            "S"
+          ]
+        }
+      ],
+      "stage": "ADVANCED",
+      "position": "final",
+      "relations": []
+    },
+    {
+      "code": "BL",
+      "pattern": "bl",
+      "type": "consonant_blend",
+      "level": "GRADE1",
+      "difficulty": 4,
+      "explanation": "Two letters, two sounds said quickly together: b and l: both sounds, as in block.",
+      "childExplanation": "Two letters, two sounds said quickly together: b and l: both sounds, as in block.",
+      "masteryThreshold": 85,
+      "sortOrder": 59,
+      "stage": "CONSONANT_BLENDS",
+      "position": "any",
+      "relations": [],
+      "sounds": [
+        {
+          "code": "BL",
+          "ipa": "/bl/",
+          "label": "bl as in block",
+          "sayAs": "bl, as in block",
+          "primary": true,
+          "phonemes": [
+            "B",
+            "L"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "CL",
+      "pattern": "cl",
+      "type": "consonant_blend",
+      "level": "GRADE1",
+      "difficulty": 4,
+      "explanation": "Two letters, two sounds said quickly together: c and l: both sounds, as in clap.",
+      "childExplanation": "Two letters, two sounds said quickly together: c and l: both sounds, as in clap.",
+      "masteryThreshold": 85,
+      "sortOrder": 60,
+      "stage": "CONSONANT_BLENDS",
+      "position": "any",
+      "relations": [],
+      "sounds": [
+        {
+          "code": "CL",
+          "ipa": "/kl/",
+          "label": "cl as in clap",
+          "sayAs": "cl, as in clap",
+          "primary": true,
+          "phonemes": [
+            "K",
+            "L"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "FL",
+      "pattern": "fl",
+      "type": "consonant_blend",
+      "level": "GRADE1",
+      "difficulty": 4,
+      "explanation": "Two letters, two sounds said quickly together: f and l: both sounds, as in flag.",
+      "childExplanation": "Two letters, two sounds said quickly together: f and l: both sounds, as in flag.",
+      "masteryThreshold": 85,
+      "sortOrder": 61,
+      "stage": "CONSONANT_BLENDS",
+      "position": "any",
+      "relations": [],
+      "sounds": [
+        {
+          "code": "FL",
+          "ipa": "/fl/",
+          "label": "fl as in flag",
+          "sayAs": "fl, as in flag",
+          "primary": true,
+          "phonemes": [
+            "F",
+            "L"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "FR",
+      "pattern": "fr",
+      "type": "consonant_blend",
+      "level": "GRADE1",
+      "difficulty": 4,
+      "explanation": "Two letters, two sounds said quickly together: f and r: both sounds, as in frog.",
+      "childExplanation": "Two letters, two sounds said quickly together: f and r: both sounds, as in frog.",
+      "masteryThreshold": 85,
+      "sortOrder": 62,
+      "stage": "CONSONANT_BLENDS",
+      "position": "any",
+      "relations": [],
+      "sounds": [
+        {
+          "code": "FR",
+          "ipa": "/fɹ/",
+          "label": "fr as in frog",
+          "sayAs": "fr, as in frog",
+          "primary": true,
+          "phonemes": [
+            "F",
+            "R"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "GR",
+      "pattern": "gr",
+      "type": "consonant_blend",
+      "level": "GRADE1",
+      "difficulty": 4,
+      "explanation": "Two letters, two sounds said quickly together: g and r: both sounds, as in grin.",
+      "childExplanation": "Two letters, two sounds said quickly together: g and r: both sounds, as in grin.",
+      "masteryThreshold": 85,
+      "sortOrder": 63,
+      "stage": "CONSONANT_BLENDS",
+      "position": "any",
+      "relations": [],
+      "sounds": [
+        {
+          "code": "GR",
+          "ipa": "/ɡɹ/",
+          "label": "gr as in grin",
+          "sayAs": "gr, as in grin",
+          "primary": true,
+          "phonemes": [
+            "G",
+            "R"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "TR",
+      "pattern": "tr",
+      "type": "consonant_blend",
+      "level": "GRADE1",
+      "difficulty": 4,
+      "explanation": "Two letters, two sounds said quickly together: t and r: both sounds, as in tree.",
+      "childExplanation": "Two letters, two sounds said quickly together: t and r: both sounds, as in tree.",
+      "masteryThreshold": 85,
+      "sortOrder": 64,
+      "stage": "CONSONANT_BLENDS",
+      "position": "any",
+      "relations": [],
+      "sounds": [
+        {
+          "code": "TR",
+          "ipa": "/tɹ/",
+          "label": "tr as in tree",
+          "sayAs": "tr, as in tree",
+          "primary": true,
+          "phonemes": [
+            "T",
+            "R"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "ST",
+      "pattern": "st",
+      "type": "consonant_blend",
+      "level": "GRADE1",
+      "difficulty": 4,
+      "explanation": "Two letters, two sounds said quickly together: s and t: both sounds, as in star.",
+      "childExplanation": "Two letters, two sounds said quickly together: s and t: both sounds, as in star.",
+      "masteryThreshold": 85,
+      "sortOrder": 65,
+      "stage": "CONSONANT_BLENDS",
+      "position": "any",
+      "relations": [],
+      "sounds": [
+        {
+          "code": "ST",
+          "ipa": "/st/",
+          "label": "st as in star",
+          "sayAs": "st, as in star",
+          "primary": true,
+          "phonemes": [
+            "S",
+            "T"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "SN",
+      "pattern": "sn",
+      "type": "consonant_blend",
+      "level": "GRADE1",
+      "difficulty": 4,
+      "explanation": "Two letters, two sounds said quickly together: s and n: both sounds, as in snail.",
+      "childExplanation": "Two letters, two sounds said quickly together: s and n: both sounds, as in snail.",
+      "masteryThreshold": 85,
+      "sortOrder": 66,
+      "stage": "CONSONANT_BLENDS",
+      "position": "any",
+      "relations": [],
+      "sounds": [
+        {
+          "code": "SN",
+          "ipa": "/sn/",
+          "label": "sn as in snail",
+          "sayAs": "sn, as in snail",
+          "primary": true,
+          "phonemes": [
+            "S",
+            "N"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "A_E",
+      "pattern": "a_e",
+      "type": "silent_e",
+      "level": "KG3",
+      "difficulty": 4,
+      "explanation": "Magic e at the end makes a say its name: cake.",
+      "childExplanation": "Magic e at the end makes a say its name: cake.",
+      "masteryThreshold": 85,
+      "sortOrder": 67,
+      "stage": "LONG_VOWELS",
+      "position": "any",
+      "relations": [
+        {
+          "code": "LETTER_A",
+          "type": "prerequisite"
+        },
+        {
+          "code": "AI",
+          "type": "same_sound"
+        }
+      ],
+      "sounds": [
+        {
+          "code": "A_E",
+          "ipa": "/eɪ/",
+          "label": "a_e as in cake",
+          "sayAs": "ay, as in cake",
+          "primary": true,
+          "phonemes": [
+            "EY"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "I_E",
+      "pattern": "i_e",
+      "type": "silent_e",
+      "level": "KG3",
+      "difficulty": 4,
+      "explanation": "Magic e at the end makes i say its name: kite.",
+      "childExplanation": "Magic e at the end makes i say its name: kite.",
+      "masteryThreshold": 85,
+      "sortOrder": 68,
+      "stage": "LONG_VOWELS",
+      "position": "any",
+      "relations": [
+        {
+          "code": "LETTER_I",
+          "type": "prerequisite"
+        }
+      ],
+      "sounds": [
+        {
+          "code": "I_E",
+          "ipa": "/aɪ/",
+          "label": "i_e as in kite",
+          "sayAs": "eye, as in kite",
+          "primary": true,
+          "phonemes": [
+            "AY"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "O_E",
+      "pattern": "o_e",
+      "type": "silent_e",
+      "level": "KG3",
+      "difficulty": 4,
+      "explanation": "Magic e at the end makes o say its name: bone.",
+      "childExplanation": "Magic e at the end makes o say its name: bone.",
+      "masteryThreshold": 85,
+      "sortOrder": 69,
+      "stage": "LONG_VOWELS",
+      "position": "any",
+      "relations": [
+        {
+          "code": "LETTER_O",
+          "type": "prerequisite"
+        },
+        {
+          "code": "OA",
+          "type": "same_sound"
+        }
+      ],
+      "sounds": [
+        {
+          "code": "O_E",
+          "ipa": "/oʊ/",
+          "label": "o_e as in bone",
+          "sayAs": "oh, as in bone",
+          "primary": true,
+          "phonemes": [
+            "OW"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "U_E",
+      "pattern": "u_e",
+      "type": "silent_e",
+      "level": "KG3",
+      "difficulty": 5,
+      "explanation": "Magic e at the end makes u say its name: cube.",
+      "childExplanation": "Magic e at the end makes u say its name: cube.",
+      "masteryThreshold": 85,
+      "sortOrder": 70,
+      "stage": "LONG_VOWELS",
+      "position": "any",
+      "relations": [
+        {
+          "code": "LETTER_U",
+          "type": "prerequisite"
+        }
+      ],
+      "sounds": [
+        {
+          "code": "U_E",
+          "ipa": "/juː/",
+          "label": "u_e as in cube",
+          "sayAs": "you, as in cube",
+          "primary": true,
+          "phonemes": [
+            "Y",
+            "UW"
+          ]
+        }
+      ]
+    },
+    {
+      "code": "AIR",
+      "pattern": "air",
+      "type": "r_controlled",
+      "level": "GRADE1",
+      "difficulty": 6,
+      "explanation": "a, i and r together say air, as in chair.",
+      "childExplanation": "a, i and r together say air, as in chair.",
+      "masteryThreshold": 85,
+      "sortOrder": 71,
+      "stage": "R_CONTROLLED",
+      "position": "any",
+      "relations": [
+        {
+          "code": "AR",
+          "type": "contrast"
+        }
+      ],
+      "sounds": [
+        {
+          "code": "AIR",
+          "ipa": "/ɛɹ/",
+          "label": "air as in chair",
+          "sayAs": "air, as in chair",
+          "primary": true,
+          "phonemes": [
+            "EH",
+            "R"
+          ]
+        }
+      ]
     }
-   ]
-  }
- ]
+  ],
+  "phonemes": [
+    {
+      "code": "B",
+      "ipa": "/b/",
+      "label": "b",
+      "sayAs": "buh",
+      "kind": "consonant",
+      "voiced": true,
+      "example": "bat"
+    },
+    {
+      "code": "CH",
+      "ipa": "/tʃ/",
+      "label": "ch",
+      "sayAs": "chuh",
+      "kind": "consonant",
+      "voiced": false,
+      "example": "chip"
+    },
+    {
+      "code": "D",
+      "ipa": "/d/",
+      "label": "d",
+      "sayAs": "duh",
+      "kind": "consonant",
+      "voiced": true,
+      "example": "dog"
+    },
+    {
+      "code": "DH",
+      "ipa": "/ð/",
+      "label": "th",
+      "sayAs": "th, as in this",
+      "kind": "consonant",
+      "voiced": true,
+      "example": "this"
+    },
+    {
+      "code": "F",
+      "ipa": "/f/",
+      "label": "f",
+      "sayAs": "fff",
+      "kind": "consonant",
+      "voiced": false,
+      "example": "fish"
+    },
+    {
+      "code": "G",
+      "ipa": "/ɡ/",
+      "label": "g",
+      "sayAs": "guh",
+      "kind": "consonant",
+      "voiced": true,
+      "example": "goat"
+    },
+    {
+      "code": "HH",
+      "ipa": "/h/",
+      "label": "h",
+      "sayAs": "hh",
+      "kind": "consonant",
+      "voiced": false,
+      "example": "hat"
+    },
+    {
+      "code": "JH",
+      "ipa": "/dʒ/",
+      "label": "j",
+      "sayAs": "juh",
+      "kind": "consonant",
+      "voiced": true,
+      "example": "jam"
+    },
+    {
+      "code": "K",
+      "ipa": "/k/",
+      "label": "k",
+      "sayAs": "kuh",
+      "kind": "consonant",
+      "voiced": false,
+      "example": "cat"
+    },
+    {
+      "code": "L",
+      "ipa": "/l/",
+      "label": "l",
+      "sayAs": "lll",
+      "kind": "consonant",
+      "voiced": true,
+      "example": "leg"
+    },
+    {
+      "code": "M",
+      "ipa": "/m/",
+      "label": "m",
+      "sayAs": "mmm",
+      "kind": "consonant",
+      "voiced": true,
+      "example": "man"
+    },
+    {
+      "code": "N",
+      "ipa": "/n/",
+      "label": "n",
+      "sayAs": "nnn",
+      "kind": "consonant",
+      "voiced": true,
+      "example": "net"
+    },
+    {
+      "code": "NG",
+      "ipa": "/ŋ/",
+      "label": "ng",
+      "sayAs": "ng, as in ring",
+      "kind": "consonant",
+      "voiced": true,
+      "example": "ring"
+    },
+    {
+      "code": "P",
+      "ipa": "/p/",
+      "label": "p",
+      "sayAs": "puh",
+      "kind": "consonant",
+      "voiced": false,
+      "example": "pig"
+    },
+    {
+      "code": "R",
+      "ipa": "/ɹ/",
+      "label": "r",
+      "sayAs": "rrr",
+      "kind": "consonant",
+      "voiced": true,
+      "example": "red"
+    },
+    {
+      "code": "S",
+      "ipa": "/s/",
+      "label": "s",
+      "sayAs": "sss",
+      "kind": "consonant",
+      "voiced": false,
+      "example": "sun"
+    },
+    {
+      "code": "SH",
+      "ipa": "/ʃ/",
+      "label": "sh",
+      "sayAs": "shh",
+      "kind": "consonant",
+      "voiced": false,
+      "example": "ship"
+    },
+    {
+      "code": "T",
+      "ipa": "/t/",
+      "label": "t",
+      "sayAs": "tuh",
+      "kind": "consonant",
+      "voiced": false,
+      "example": "top"
+    },
+    {
+      "code": "TH",
+      "ipa": "/θ/",
+      "label": "th",
+      "sayAs": "th, as in thin",
+      "kind": "consonant",
+      "voiced": false,
+      "example": "thin"
+    },
+    {
+      "code": "V",
+      "ipa": "/v/",
+      "label": "v",
+      "sayAs": "vvv",
+      "kind": "consonant",
+      "voiced": true,
+      "example": "van"
+    },
+    {
+      "code": "W",
+      "ipa": "/w/",
+      "label": "w",
+      "sayAs": "wuh",
+      "kind": "consonant",
+      "voiced": true,
+      "example": "web"
+    },
+    {
+      "code": "Y",
+      "ipa": "/j/",
+      "label": "y",
+      "sayAs": "yuh",
+      "kind": "consonant",
+      "voiced": true,
+      "example": "yes"
+    },
+    {
+      "code": "Z",
+      "ipa": "/z/",
+      "label": "z",
+      "sayAs": "zzz",
+      "kind": "consonant",
+      "voiced": true,
+      "example": "zip"
+    },
+    {
+      "code": "ZH",
+      "ipa": "/ʒ/",
+      "label": "zh",
+      "sayAs": "zh, as in vision",
+      "kind": "consonant",
+      "voiced": true,
+      "example": "vision"
+    },
+    {
+      "code": "AE",
+      "ipa": "/æ/",
+      "label": "a",
+      "sayAs": "aa, as in cat",
+      "kind": "vowel",
+      "voiced": true,
+      "example": "cat"
+    },
+    {
+      "code": "EH",
+      "ipa": "/ɛ/",
+      "label": "e",
+      "sayAs": "eh, as in bed",
+      "kind": "vowel",
+      "voiced": true,
+      "example": "bed"
+    },
+    {
+      "code": "IH",
+      "ipa": "/ɪ/",
+      "label": "i",
+      "sayAs": "ih, as in pig",
+      "kind": "vowel",
+      "voiced": true,
+      "example": "pig"
+    },
+    {
+      "code": "AA",
+      "ipa": "/ɑ/",
+      "label": "o",
+      "sayAs": "ah, as in hot",
+      "kind": "vowel",
+      "voiced": true,
+      "example": "hot"
+    },
+    {
+      "code": "AH",
+      "ipa": "/ʌ/",
+      "label": "u",
+      "sayAs": "uh, as in sun",
+      "kind": "vowel",
+      "voiced": true,
+      "example": "sun"
+    },
+    {
+      "code": "UH",
+      "ipa": "/ʊ/",
+      "label": "oo",
+      "sayAs": "oo, as in book",
+      "kind": "vowel",
+      "voiced": true,
+      "example": "book"
+    },
+    {
+      "code": "EY",
+      "ipa": "/eɪ/",
+      "label": "ay",
+      "sayAs": "ay, as in rain",
+      "kind": "vowel",
+      "voiced": true,
+      "example": "rain"
+    },
+    {
+      "code": "IY",
+      "ipa": "/iː/",
+      "label": "ee",
+      "sayAs": "ee, as in feet",
+      "kind": "vowel",
+      "voiced": true,
+      "example": "feet"
+    },
+    {
+      "code": "AY",
+      "ipa": "/aɪ/",
+      "label": "igh",
+      "sayAs": "eye, as in kite",
+      "kind": "vowel",
+      "voiced": true,
+      "example": "kite"
+    },
+    {
+      "code": "OW",
+      "ipa": "/oʊ/",
+      "label": "oa",
+      "sayAs": "oh, as in boat",
+      "kind": "vowel",
+      "voiced": true,
+      "example": "boat"
+    },
+    {
+      "code": "UW",
+      "ipa": "/uː/",
+      "label": "oo",
+      "sayAs": "oo, as in moon",
+      "kind": "vowel",
+      "voiced": true,
+      "example": "moon"
+    },
+    {
+      "code": "AW",
+      "ipa": "/aʊ/",
+      "label": "ow",
+      "sayAs": "ow, as in cow",
+      "kind": "vowel",
+      "voiced": true,
+      "example": "cow"
+    },
+    {
+      "code": "OY",
+      "ipa": "/ɔɪ/",
+      "label": "oi",
+      "sayAs": "oy, as in coin",
+      "kind": "vowel",
+      "voiced": true,
+      "example": "coin"
+    },
+    {
+      "code": "AO",
+      "ipa": "/ɔ/",
+      "label": "aw",
+      "sayAs": "aw, as in saw",
+      "kind": "vowel",
+      "voiced": true,
+      "example": "fork"
+    },
+    {
+      "code": "ER",
+      "ipa": "/ɝ/",
+      "label": "er",
+      "sayAs": "er, as in her",
+      "kind": "r_colored_vowel",
+      "voiced": true,
+      "example": "bird"
+    }
+  ],
+  "stages": [
+    {
+      "code": "LETTERS",
+      "name": "Letters",
+      "childName": "Letters",
+      "description": "Letter shapes, uppercase and lowercase, and letter names.",
+      "emoji": "🔤"
+    },
+    {
+      "code": "LETTER_SOUNDS",
+      "name": "Letter sounds",
+      "childName": "Sounds",
+      "description": "The main sound each letter makes.",
+      "emoji": "🔊"
+    },
+    {
+      "code": "BEGINNING_SOUNDS",
+      "name": "Beginning sounds",
+      "childName": "First sounds",
+      "description": "Hearing the first sound in a word.",
+      "emoji": "👂"
+    },
+    {
+      "code": "ENDING_SOUNDS",
+      "name": "Ending sounds",
+      "childName": "Last sounds",
+      "description": "Hearing the last sound in a word.",
+      "emoji": "👂"
+    },
+    {
+      "code": "SHORT_VOWELS",
+      "name": "Short vowels",
+      "childName": "Short vowels",
+      "description": "a e i o u as in cat, bed, pig, hot, sun.",
+      "emoji": "🅰️"
+    },
+    {
+      "code": "CVC",
+      "name": "CVC words",
+      "childName": "CVC words",
+      "description": "Three-sound words: consonant, vowel, consonant.",
+      "emoji": "🐱"
+    },
+    {
+      "code": "BLENDING",
+      "name": "Blending and segmenting",
+      "childName": "Blend",
+      "description": "Joining sounds into words and splitting words into sounds.",
+      "emoji": "🧩"
+    },
+    {
+      "code": "DIGRAPHS",
+      "name": "Digraphs",
+      "childName": "Digraphs",
+      "description": "Two letters, one sound: sh, ch, th, ph, wh, ck, ng.",
+      "emoji": "🤝"
+    },
+    {
+      "code": "CONSONANT_BLENDS",
+      "name": "Consonant blends",
+      "childName": "Blends",
+      "description": "Two consonants, both heard: bl, fr, st, ...",
+      "emoji": "🌬️"
+    },
+    {
+      "code": "LONG_VOWELS",
+      "name": "Long vowels",
+      "childName": "Long vowels",
+      "description": "Vowels that say their name: magic e (cake, kite, bone).",
+      "emoji": "✨"
+    },
+    {
+      "code": "VOWEL_TEAMS",
+      "name": "Vowel teams",
+      "childName": "Vowel teams",
+      "description": "Two vowels, one sound: ai, ay, ee, ea, oa, ow, oo, ou, oi, oy.",
+      "emoji": "👯"
+    },
+    {
+      "code": "R_CONTROLLED",
+      "name": "R-controlled vowels",
+      "childName": "Bossy R",
+      "description": "ar, er, ir, or, ur, air.",
+      "emoji": "🦖"
+    },
+    {
+      "code": "WORD_ENDINGS",
+      "name": "Word endings",
+      "childName": "Endings",
+      "description": "-ing, -ed, -s, -es.",
+      "emoji": "🔚"
+    },
+    {
+      "code": "ADVANCED",
+      "name": "Advanced patterns",
+      "childName": "Big words",
+      "description": "-tion, -sion, -ment, -ness, -ful, -less and longer words.",
+      "emoji": "🚀"
+    }
+  ]
 }

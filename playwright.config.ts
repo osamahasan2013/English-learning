@@ -19,7 +19,21 @@ export default defineConfig({
     trace: "retain-on-failure",
     ...(executablePath ? { launchOptions: { executablePath } } : {}),
   },
-  projects: [{ name: "tablet", use: { ...devices["iPad (gen 7) landscape"], browserName: "chromium" } }],
+  // Every spec runs on a tablet (the main target); the child vertical slices also run on
+  // a phone and a desktop.
+  projects: [
+    { name: "tablet", use: { ...devices["iPad (gen 7) landscape"], browserName: "chromium" } },
+    {
+      name: "mobile",
+      testMatch: /(phonics|vertical-slice)\.spec\.ts/,
+      use: { ...devices["Pixel 7"], browserName: "chromium" },
+    },
+    {
+      name: "desktop",
+      testMatch: /(phonics|vertical-slice)\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
+    },
+  ],
   webServer: {
     command: process.env.E2E_PROD
       ? "npm run start -- --hostname 127.0.0.1 --port 3000"

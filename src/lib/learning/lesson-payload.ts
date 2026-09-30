@@ -70,6 +70,10 @@ export type LessonPayload = {
     subjectName: string;
     levelName: string;
   };
+  // Set when this payload is an assessment (a skill check such as the Phonics Check):
+  // answers are recorded against an assessment sitting instead of a lesson run, with one
+  // try each. `lesson` then describes the assessment.
+  assessment?: { id: string; code: string; areas: { stage: number; label: string }[] };
   steps: LessonStep[];
   feedback: FeedbackMessage[];
   rules: { player: PlayerRules; scoring: ScoringRules };

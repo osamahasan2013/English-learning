@@ -338,6 +338,24 @@
       "code": "TRACING",
       "name": "Tracing",
       "isScored": true
+    },
+    {
+      "code": "BLEND_SOUNDS",
+      "name": "Blend sounds",
+      "description": "Tap each sound, blend them, choose the word.",
+      "isScored": true
+    },
+    {
+      "code": "SEGMENT_WORD",
+      "name": "Segment a word",
+      "description": "Count the sounds in a word and pick them in order.",
+      "isScored": true
+    },
+    {
+      "code": "FIND_PATTERN",
+      "name": "Find the pattern",
+      "description": "Tap the letters that make a sound in a word.",
+      "isScored": true
     }
   ],
   "wordCategories": [

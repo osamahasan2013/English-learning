@@ -1,343 +1,630 @@
 {
- "assessments": [
-  {
-   "code": "find-my-level",
-   "title": "Find My Level",
-   "type": "placement",
-   "description": "A short, friendly check that goes from letters to reading and suggests a starting level. It is a guide, not a test score.",
-   "config": {
-    "startLevelCode": "KG1",
-    "stages": [
-     {
-      "stage": 1,
-      "label": "Letters",
-      "passPercent": 80,
-      "levelOnPass": "KG1"
-     },
-     {
-      "stage": 2,
-      "label": "Sounds",
-      "passPercent": 80,
-      "levelOnPass": "KG2"
-     },
-     {
-      "stage": 3,
-      "label": "CVC words",
-      "passPercent": 75,
-      "levelOnPass": "KG2"
-     },
-     {
-      "stage": 4,
-      "label": "Blending",
-      "passPercent": 75,
-      "levelOnPass": "KG3"
-     },
-     {
-      "stage": 5,
-      "label": "Digraphs",
-      "passPercent": 75,
-      "levelOnPass": "KG3"
-     },
-     {
-      "stage": 6,
-      "label": "Sight words",
-      "passPercent": 75,
-      "levelOnPass": "GRADE1"
-     },
-     {
-      "stage": 7,
-      "label": "Sentences",
-      "passPercent": 75,
-      "levelOnPass": "GRADE1"
-     },
-     {
-      "stage": 8,
-      "label": "Reading",
-      "passPercent": 70,
-      "levelOnPass": "GRADE2"
-     }
-    ]
-   },
-   "stages": [
+  "assessments": [
     {
-     "stage": 1,
-     "label": "Letters",
-     "skill": "kg1-letter-b",
-     "questions": [
-      {
-       "template": "find_letter",
-       "pattern": "LETTER_B",
-       "distractors": [
-        "d",
-        "p"
-       ],
-       "skill": "kg1-letter-b"
-      },
-      {
-       "template": "find_letter",
-       "pattern": "LETTER_M",
-       "distractors": [
-        "n",
-        "w"
-       ],
-       "skill": "kg1-letter-m"
-      },
-      {
-       "template": "find_letter",
-       "pattern": "LETTER_S",
-       "distractors": [
-        "z",
-        "c"
-       ],
-       "case": "upper",
-       "skill": "kg1-letter-s"
-      }
-     ]
-    },
-    {
-     "stage": 2,
-     "label": "Sounds",
-     "skill": "kg1-letter-t",
-     "questions": [
-      {
-       "template": "pick_starting_sound",
-       "pattern": "LETTER_T",
-       "word": "tiger",
-       "distractors": [
-        "lion",
-        "bear"
-       ],
-       "skill": "kg1-letter-t"
-      },
-      {
-       "template": "pick_starting_sound",
-       "pattern": "LETTER_C",
-       "word": "cup",
-       "distractors": [
-        "sun",
-        "hat"
-       ],
-       "skill": "kg1-letter-c"
-      },
-      {
-       "template": "pick_starting_sound",
-       "pattern": "LETTER_A",
-       "word": "ant",
-       "distractors": [
-        "egg",
-        "pig"
-       ],
-       "skill": "kg1-letter-a"
-      }
-     ]
-    },
-    {
-     "stage": 3,
-     "label": "CVC words",
-     "skill": "kg2-short-a",
-     "questions": [
-      {
-       "template": "listen_pick_word",
-       "word": "hat",
-       "distractors": [
-        "hen",
-        "bat"
-       ]
-      },
-      {
-       "template": "listen_pick_word",
-       "word": "pig",
-       "distractors": [
-        "pin",
-        "big"
-       ],
-       "skill": "kg2-short-i"
-      },
-      {
-       "template": "missing_pattern",
-       "word": "bug",
-       "missing": "u",
-       "choices": [
-        "a",
-        "i"
-       ],
-       "skill": "kg2-short-o-u-e"
-      }
-     ]
-    },
-    {
-     "stage": 4,
-     "label": "Blending",
-     "skill": "kg2-short-a",
-     "questions": [
-      {
-       "template": "build_word",
-       "word": "map",
-       "extra": [
-        "o"
-       ]
-      },
-      {
-       "template": "build_word",
-       "word": "sit",
-       "extra": [
-        "e"
-       ],
-       "skill": "kg2-short-i"
-      }
-     ]
-    },
-    {
-     "stage": 5,
-     "label": "Digraphs",
-     "skill": "kg3-digraph-sh",
-     "questions": [
-      {
-       "template": "missing_pattern",
-       "word": "ship",
-       "missing": "sh",
-       "choices": [
-        "ch",
-        "th"
-       ]
-      },
-      {
-       "template": "missing_pattern",
-       "word": "chick",
-       "missing": "ch",
-       "choices": [
-        "sh",
-        "th"
-       ],
-       "skill": "kg3-digraph-ch"
-      },
-      {
-       "template": "pick_word_with_pattern",
-       "pattern": "TH",
-       "word": "bath",
-       "distractors": [
-        "bat",
-        "bag"
-       ],
-       "skill": "kg3-digraph-th"
-      }
-     ]
-    },
-    {
-     "stage": 6,
-     "label": "Sight words",
-     "skill": "kg3-tricky-words-1",
-     "questions": [
-      {
-       "template": "listen_pick_word",
-       "word": "said",
-       "distractors": [
-        "see",
-        "sit"
-       ]
-      },
-      {
-       "template": "listen_pick_word",
-       "word": "they",
-       "distractors": [
-        "the",
-        "that"
-       ]
-      },
-      {
-       "template": "listen_pick_word",
-       "word": "like",
-       "distractors": [
-        "look",
-        "see"
-       ],
-       "skill": "kg2-sight-words-1"
-      }
-     ]
-    },
-    {
-     "stage": 7,
-     "label": "Sentences",
-     "skill": "kg2-sentence-order",
-     "questions": [
-      {
-       "template": "order_sentence",
-       "sentence": "The cat is big.",
-       "emoji": "🐱"
-      },
-      {
-       "template": "order_sentence",
-       "sentence": "I have three teeth.",
-       "emoji": "🦷"
-      }
-     ]
-    },
-    {
-     "stage": 8,
-     "label": "Reading",
-     "skill": "g1-vowel-team-oa",
-     "questions": [
-      {
-       "type": "MULTIPLE_CHOICE",
-       "prompt": "Where is the goat?",
-       "promptSpeech": "Read: The goat is on the boat. Where is the goat?",
-       "content": {
-        "display": "The goat is on the boat.",
-        "options": [
-         {
-          "id": "boat",
-          "text": "on the boat",
-          "emoji": "⛵"
-         },
-         {
-          "id": "tree",
-          "text": "in the tree",
-          "emoji": "🌳"
-         },
-         {
-          "id": "car",
-          "text": "in the car",
-          "emoji": "🚗"
-         }
+      "code": "find-my-level",
+      "title": "Find My Level",
+      "type": "placement",
+      "description": "A short, friendly check that goes from letters to reading and suggests a starting level. It is a guide, not a test score.",
+      "config": {
+        "startLevelCode": "KG1",
+        "stages": [
+          {
+            "stage": 1,
+            "label": "Letters",
+            "passPercent": 80,
+            "levelOnPass": "KG1"
+          },
+          {
+            "stage": 2,
+            "label": "Sounds",
+            "passPercent": 80,
+            "levelOnPass": "KG2"
+          },
+          {
+            "stage": 3,
+            "label": "CVC words",
+            "passPercent": 75,
+            "levelOnPass": "KG2"
+          },
+          {
+            "stage": 4,
+            "label": "Blending",
+            "passPercent": 75,
+            "levelOnPass": "KG3"
+          },
+          {
+            "stage": 5,
+            "label": "Digraphs",
+            "passPercent": 75,
+            "levelOnPass": "KG3"
+          },
+          {
+            "stage": 6,
+            "label": "Sight words",
+            "passPercent": 75,
+            "levelOnPass": "GRADE1"
+          },
+          {
+            "stage": 7,
+            "label": "Sentences",
+            "passPercent": 75,
+            "levelOnPass": "GRADE1"
+          },
+          {
+            "stage": 8,
+            "label": "Reading",
+            "passPercent": 70,
+            "levelOnPass": "GRADE2"
+          }
         ]
-       },
-       "answer": {
-        "accepted": [
-         "boat"
-        ]
-       }
       },
-      {
-       "type": "MULTIPLE_CHOICE",
-       "prompt": "Why did the snail not hide?",
-       "promptSpeech": "Read: The snail likes the rain. Why did the snail not hide?",
-       "skill": "g1-vowel-team-ai-ay",
-       "content": {
-        "display": "The goat ran into the barn. But the snail did not hide. The snail likes the rain.",
-        "options": [
-         {
-          "id": "likes-rain",
-          "text": "It likes the rain."
-         },
-         {
-          "id": "is-fast",
-          "text": "It is fast."
-         },
-         {
-          "id": "is-asleep",
-          "text": "It is asleep."
-         }
-        ]
-       },
-       "answer": {
-        "accepted": [
-         "likes-rain"
-        ]
-       }
-      }
-     ]
+      "stages": [
+        {
+          "stage": 1,
+          "label": "Letters",
+          "skill": "kg1-letter-b",
+          "questions": [
+            {
+              "template": "find_letter",
+              "pattern": "LETTER_B",
+              "distractors": [
+                "d",
+                "p"
+              ],
+              "skill": "kg1-letter-b"
+            },
+            {
+              "template": "find_letter",
+              "pattern": "LETTER_M",
+              "distractors": [
+                "n",
+                "w"
+              ],
+              "skill": "kg1-letter-m"
+            },
+            {
+              "template": "find_letter",
+              "pattern": "LETTER_S",
+              "distractors": [
+                "z",
+                "c"
+              ],
+              "case": "upper",
+              "skill": "kg1-letter-s"
+            }
+          ]
+        },
+        {
+          "stage": 2,
+          "label": "Sounds",
+          "skill": "kg1-letter-t",
+          "questions": [
+            {
+              "template": "pick_starting_sound",
+              "pattern": "LETTER_T",
+              "word": "tiger",
+              "distractors": [
+                "lion",
+                "bear"
+              ],
+              "skill": "kg1-letter-t"
+            },
+            {
+              "template": "pick_starting_sound",
+              "pattern": "LETTER_C",
+              "word": "cup",
+              "distractors": [
+                "sun",
+                "hat"
+              ],
+              "skill": "kg1-letter-c"
+            },
+            {
+              "template": "pick_starting_sound",
+              "pattern": "LETTER_A",
+              "word": "ant",
+              "distractors": [
+                "egg",
+                "pig"
+              ],
+              "skill": "kg1-letter-a"
+            }
+          ]
+        },
+        {
+          "stage": 3,
+          "label": "CVC words",
+          "skill": "kg2-short-a",
+          "questions": [
+            {
+              "template": "listen_pick_word",
+              "word": "hat",
+              "distractors": [
+                "hen",
+                "bat"
+              ]
+            },
+            {
+              "template": "listen_pick_word",
+              "word": "pig",
+              "distractors": [
+                "pin",
+                "big"
+              ],
+              "skill": "kg2-short-i"
+            },
+            {
+              "template": "missing_pattern",
+              "word": "bug",
+              "missing": "u",
+              "choices": [
+                "a",
+                "i"
+              ],
+              "skill": "kg2-short-o-u-e"
+            }
+          ]
+        },
+        {
+          "stage": 4,
+          "label": "Blending",
+          "skill": "kg2-short-a",
+          "questions": [
+            {
+              "template": "build_word",
+              "word": "map",
+              "extra": [
+                "o"
+              ]
+            },
+            {
+              "template": "build_word",
+              "word": "sit",
+              "extra": [
+                "e"
+              ],
+              "skill": "kg2-short-i"
+            }
+          ]
+        },
+        {
+          "stage": 5,
+          "label": "Digraphs",
+          "skill": "kg3-digraph-sh",
+          "questions": [
+            {
+              "template": "missing_pattern",
+              "word": "ship",
+              "missing": "sh",
+              "choices": [
+                "ch",
+                "th"
+              ]
+            },
+            {
+              "template": "missing_pattern",
+              "word": "chick",
+              "missing": "ch",
+              "choices": [
+                "sh",
+                "th"
+              ],
+              "skill": "kg3-digraph-ch"
+            },
+            {
+              "template": "pick_word_with_pattern",
+              "pattern": "TH",
+              "word": "bath",
+              "distractors": [
+                "bat",
+                "bag"
+              ],
+              "skill": "kg3-digraph-th"
+            }
+          ]
+        },
+        {
+          "stage": 6,
+          "label": "Sight words",
+          "skill": "kg3-tricky-words-1",
+          "questions": [
+            {
+              "template": "listen_pick_word",
+              "word": "said",
+              "distractors": [
+                "see",
+                "sit"
+              ]
+            },
+            {
+              "template": "listen_pick_word",
+              "word": "they",
+              "distractors": [
+                "the",
+                "that"
+              ]
+            },
+            {
+              "template": "listen_pick_word",
+              "word": "like",
+              "distractors": [
+                "look",
+                "see"
+              ],
+              "skill": "kg2-sight-words-1"
+            }
+          ]
+        },
+        {
+          "stage": 7,
+          "label": "Sentences",
+          "skill": "kg2-sentence-order",
+          "questions": [
+            {
+              "template": "order_sentence",
+              "sentence": "The cat is big.",
+              "emoji": "🐱"
+            },
+            {
+              "template": "order_sentence",
+              "sentence": "I have three teeth.",
+              "emoji": "🦷"
+            }
+          ]
+        },
+        {
+          "stage": 8,
+          "label": "Reading",
+          "skill": "g1-vowel-team-oa",
+          "questions": [
+            {
+              "type": "MULTIPLE_CHOICE",
+              "prompt": "Where is the goat?",
+              "promptSpeech": "Read: The goat is on the boat. Where is the goat?",
+              "content": {
+                "display": "The goat is on the boat.",
+                "options": [
+                  {
+                    "id": "boat",
+                    "text": "on the boat",
+                    "emoji": "⛵"
+                  },
+                  {
+                    "id": "tree",
+                    "text": "in the tree",
+                    "emoji": "🌳"
+                  },
+                  {
+                    "id": "car",
+                    "text": "in the car",
+                    "emoji": "🚗"
+                  }
+                ]
+              },
+              "answer": {
+                "accepted": [
+                  "boat"
+                ]
+              }
+            },
+            {
+              "type": "MULTIPLE_CHOICE",
+              "prompt": "Why did the snail not hide?",
+              "promptSpeech": "Read: The snail likes the rain. Why did the snail not hide?",
+              "skill": "g1-vowel-team-ai-ay",
+              "content": {
+                "display": "The goat ran into the barn. But the snail did not hide. The snail likes the rain.",
+                "options": [
+                  {
+                    "id": "likes-rain",
+                    "text": "It likes the rain."
+                  },
+                  {
+                    "id": "is-fast",
+                    "text": "It is fast."
+                  },
+                  {
+                    "id": "is-asleep",
+                    "text": "It is asleep."
+                  }
+                ]
+              },
+              "answer": {
+                "accepted": [
+                  "likes-rain"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "phonics-check",
+      "title": "Phonics Check",
+      "description": "A short check of letters, sounds, blending, segmenting, digraphs, patterns, reading and spelling. One try per question; the parent sees a score for each area.",
+      "type": "skill_check",
+      "config": {
+        "report": "phonics",
+        "childTitle": "Sound Check",
+        "emoji": "🎯",
+        "areaPassPercent": 75
+      },
+      "status": "published",
+      "stages": [
+        {
+          "stage": 1,
+          "label": "Letter recognition",
+          "skill": "kg1-letter-names",
+          "questions": [
+            {
+              "template": "find_letter",
+              "pattern": "LETTER_D",
+              "distractors": [
+                "b",
+                "p"
+              ],
+              "skill": "kg1-letter-d"
+            },
+            {
+              "template": "match_upper_lower",
+              "patterns": [
+                "LETTER_A",
+                "LETTER_G",
+                "LETTER_R"
+              ],
+              "skill": "kg1-upper-lower"
+            }
+          ]
+        },
+        {
+          "stage": 2,
+          "label": "Letter sounds",
+          "skill": "kg1-letter-m",
+          "questions": [
+            {
+              "template": "letter_for_sound",
+              "pattern": "LETTER_M",
+              "distractors": [
+                "LETTER_N",
+                "LETTER_W"
+              ]
+            },
+            {
+              "template": "letter_for_sound",
+              "pattern": "LETTER_F",
+              "distractors": [
+                "LETTER_V",
+                "LETTER_T"
+              ],
+              "skill": "kg1-letter-f"
+            }
+          ]
+        },
+        {
+          "stage": 3,
+          "label": "Beginning sounds",
+          "skill": "kg1-beginning-sounds",
+          "questions": [
+            {
+              "template": "sound_at_position",
+              "word": "sun",
+              "position": "beginning",
+              "choices": [
+                "m",
+                "t"
+              ]
+            },
+            {
+              "template": "sound_at_position",
+              "word": "bed",
+              "position": "beginning",
+              "choices": [
+                "d",
+                "p"
+              ]
+            }
+          ]
+        },
+        {
+          "stage": 4,
+          "label": "Ending sounds",
+          "skill": "kg2-ending-sounds",
+          "questions": [
+            {
+              "template": "sound_at_position",
+              "word": "cat",
+              "position": "end",
+              "choices": [
+                "p",
+                "n"
+              ]
+            },
+            {
+              "template": "sound_at_position",
+              "word": "dog",
+              "position": "end",
+              "choices": [
+                "b",
+                "t"
+              ]
+            }
+          ]
+        },
+        {
+          "stage": 5,
+          "label": "Short vowels",
+          "skill": "kg2-short-a",
+          "questions": [
+            {
+              "template": "sound_at_position",
+              "word": "hat",
+              "position": "middle",
+              "choices": [
+                "i",
+                "o"
+              ]
+            },
+            {
+              "template": "sound_at_position",
+              "word": "pig",
+              "position": "middle",
+              "choices": [
+                "a",
+                "e"
+              ],
+              "skill": "kg2-short-i"
+            }
+          ]
+        },
+        {
+          "stage": 6,
+          "label": "CVC words",
+          "skill": "kg2-short-u",
+          "questions": [
+            {
+              "template": "read_word",
+              "word": "sun",
+              "distractors": [
+                "bus",
+                "cup"
+              ]
+            },
+            {
+              "template": "read_word",
+              "word": "hen",
+              "distractors": [
+                "pen",
+                "hat"
+              ],
+              "skill": "kg2-short-e"
+            }
+          ]
+        },
+        {
+          "stage": 7,
+          "label": "Blending",
+          "skill": "kg2-short-o",
+          "questions": [
+            {
+              "template": "blend_word",
+              "word": "mop",
+              "distractors": [
+                "map",
+                "pot"
+              ]
+            },
+            {
+              "template": "blend_word",
+              "word": "fan",
+              "distractors": [
+                "bin",
+                "fox"
+              ],
+              "skill": "kg2-short-a"
+            }
+          ]
+        },
+        {
+          "stage": 8,
+          "label": "Segmenting",
+          "skill": "kg2-segmenting",
+          "questions": [
+            {
+              "template": "segment_word",
+              "word": "map"
+            },
+            {
+              "template": "segment_word",
+              "word": "fish"
+            }
+          ]
+        },
+        {
+          "stage": 9,
+          "label": "Digraphs",
+          "skill": "kg3-digraph-sh",
+          "questions": [
+            {
+              "template": "find_pattern",
+              "pattern": "SH",
+              "word": "fish"
+            },
+            {
+              "template": "find_pattern",
+              "pattern": "CH",
+              "word": "chin",
+              "skill": "kg3-digraph-ch"
+            }
+          ]
+        },
+        {
+          "stage": 10,
+          "label": "Patterns",
+          "skill": "g1-vowel-team-ee",
+          "questions": [
+            {
+              "template": "pick_word_with_pattern",
+              "pattern": "EE",
+              "word": "tree",
+              "distractors": [
+                "ten",
+                "tub"
+              ]
+            },
+            {
+              "template": "pick_word_with_pattern",
+              "pattern": "AR",
+              "word": "car",
+              "distractors": [
+                "cat",
+                "cup"
+              ],
+              "skill": "g1-r-ar"
+            }
+          ]
+        },
+        {
+          "stage": 11,
+          "label": "Word reading",
+          "skill": "g1-vowel-team-oa",
+          "questions": [
+            {
+              "template": "read_word",
+              "word": "boat",
+              "distractors": [
+                "bat",
+                "goat"
+              ]
+            },
+            {
+              "template": "read_word",
+              "word": "rain",
+              "distractors": [
+                "ring",
+                "train"
+              ],
+              "skill": "g1-vowel-team-ai-ay"
+            }
+          ]
+        },
+        {
+          "stage": 12,
+          "label": "Spelling",
+          "skill": "kg2-short-e",
+          "questions": [
+            {
+              "template": "spell_word",
+              "word": "hen"
+            },
+            {
+              "template": "spell_word",
+              "word": "ship",
+              "skill": "kg3-digraph-sh"
+            }
+          ]
+        }
+      ]
     }
-   ]
-  }
- ]
+  ]
 }

@@ -3,12 +3,15 @@
 import type { ComponentType } from "react";
 import type { RendererProps } from "./types";
 import type { RENDERABLE_QUESTION_TYPES } from "./supported-types";
+import { BlendSoundsRenderer } from "./renderers/blend-sounds";
 import { ChoiceRenderer } from "./renderers/choice";
 import { DragDropRenderer } from "./renderers/drag-drop";
+import { FindPatternRenderer } from "./renderers/find-pattern";
 import { IntroRenderer } from "./renderers/intro";
 import { MatchRenderer } from "./renderers/match";
 import { MissingLetterRenderer } from "./renderers/missing-letter";
 import { ReadingRenderer } from "./renderers/reading";
+import { SegmentWordRenderer } from "./renderers/segment-word";
 import { SentenceBuilderRenderer } from "./renderers/sentence-builder";
 import { SortRenderer } from "./renderers/sort";
 import { SpellingRenderer } from "./renderers/spelling";
@@ -38,4 +41,7 @@ export const ACTIVITY_RENDERERS: Record<(typeof RENDERABLE_QUESTION_TYPES)[numbe
   READING: ReadingRenderer,
   WRITING: WritingRenderer,
   TRACING: TracingRenderer,
+  BLEND_SOUNDS: BlendSoundsRenderer,
+  SEGMENT_WORD: SegmentWordRenderer,
+  FIND_PATTERN: FindPatternRenderer,
 };

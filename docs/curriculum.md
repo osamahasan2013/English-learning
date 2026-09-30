@@ -28,21 +28,27 @@ and **Assessment** (short check-ups). A unit belongs to one level and one subjec
 
 Original, age-appropriate content covering KG1–Grade 2:
 
-- 58 phonics patterns (26 letters, 7 digraphs, 10 vowel teams, 5 r-controlled, 10
-  endings/suffixes) with 76 modelled sounds.
-- 193 words, 25 sight words, 21 sentences, 4 original stories.
-- 33 lessons / 150 activities / 309 lesson questions across 14 units, plus the "Find My Level"
-  placement assessment (8 stages; the UI is a later milestone). Every activity type is
-  used: multiple choice, listen and choose, picture match, missing letter, word builder,
-  sentence builder, spelling, drag and drop, match, sort, reading, writing and tracing.
+- 39 phonemes and a 14-stage phonics progression: Letters → Letter sounds → Beginning
+  sounds → Ending sounds → Short vowels → CVC → Blending and segmenting → Digraphs →
+  Consonant blends → Long vowels (magic e) → Vowel teams → R-controlled → Word endings →
+  Advanced patterns.
+- 71 phonics patterns with 89 modelled sounds: 26 letters (upper and lower case, American
+  letter name, main sound), 7 digraphs (ch, sh, th, ph, wh, ck, ng), 8 consonant blends,
+  4 magic-e patterns, 10 vowel teams (ai, ay, ee, ea, oa, ow, oo, ou, oi, oy), 6
+  r-controlled (ar, er, ir, or, ur, air), 4 endings (ing, ed, s, es) and 6 suffixes (tion,
+  sion, ment, ness, ful, less); 45 pattern relations (prerequisite, contrast, same sound).
+- 305 words, each split into graphemes and phonemes (1,045 segments; 143 CVC words, 286
+  decodable), 25 sight words, 21 sentences, 4 original stories.
+- 75 lessons / 533 activities / 706 lesson questions across 20 units, the "Find My Level"
+  placement (8 stages) and the **Phonics Check** (12 areas, 24 questions).
 
-| Level   | Engine seed lessons (Phase 3)                                                                                                     |
-| ------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| KG1     | Letter recognition and sounds (a, b, c, m, s, t); **Trace letters** (tracing + matching big and small letters)                    |
-| KG2     | CVC blending (short a, i, o/u/e); **Word games** (match, sort, drag and drop); **Quick check** (assessment; lesson prerequisites) |
-| KG3     | Digraph introductions (sh, ch, th, wh/ck/ng); **sh or ch?** (sort + match; requires the sh lesson)                                |
-| Grade 1 | Vowel teams; **Read and match** (word reading: match, a short story with questions, writing words)                                |
-| Grade 2 | R-controlled vowels and endings; **Story time** (sentence reading: story, drag and drop, finishing a sentence, sentence building) |
+| Level   | Phonics (Phase 4)                                                                                                                                           | Other units                                        |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| KG1     | One lesson per letter a–z (name, sound, beginning sound, picture sort, find the letter); upper/lower case, letter names, beginning sounds                   | Trace letters                                      |
+| KG2     | Short a, i, o, u, e CVC lessons (blend, segment, middle sound, build, read, spell); segmenting; ending sounds; word families                                | Word games, sight words, sentence order, CVC check |
+| KG3     | Digraphs sh, ch (+ sh/ch sort), th (two sounds), ph, wh; magic e with a, i, o                                                                               | Tricky words                                       |
+| Grade 1 | ck, ng; consonant blends; vowel teams ee, ea (two sounds), ai/ay, oa, ow (two sounds), oo (two sounds), ou, oi/oy; ar, or, er/ir/ur, air; -ing, -ed, -s/-es | Read and match                                     |
+| Grade 2 | -tion/-sion, suffixes (-ment, -ness, -ful, -less), multisyllable words                                                                                      | Story time                                         |
 
 **Multiple pronunciations are modelled explicitly**, never flattened into one rule: TH
 (thumb/this), EA (leaf/bread), OW (snow/cow), OO (moon/book), -ED (jumped/played/painted),
@@ -57,7 +63,7 @@ Files in `content/`:
 | File                                                 | Contains                                                                          |
 | ---------------------------------------------------- | --------------------------------------------------------------------------------- |
 | `reference.json`                                     | levels, subjects, skill dimensions, activity types, word categories, achievements |
-| `phonics.json`                                       | patterns and their sounds                                                         |
+| `phonics.json`                                       | phonemes, phonics stages, patterns with their sounds (as phonemes) and relations  |
 | `words/*.csv`                                        | the word bank (same format as bulk imports, below)                                |
 | `sight-words.json`, `sentences.json`, `stories.json` | lists by level                                                                    |
 | `curriculum/*.json`                                  | one file per level: units → skills → lessons → activities → questions             |
@@ -66,25 +72,57 @@ Files in `content/`:
 Run `npm run content:import -- --dry-run` to validate, then `npm run content:import`.
 `npm test` also validates every shipped file without a database.
 
+**Validation and review.** Errors stop an item from being imported: an empty or duplicate
+pattern, an unknown level, stage or phoneme, a letter without its upper case or name, a
+sound without phonemes, a relation to an unknown pattern, a lesson whose example word does
+not really use the lesson's pattern (the word's split must contain it — "ship" for SH, not
+"mishap"), a missing word. Doubtful content is imported but flagged for review in
+`content_flags` (shown on `/admin/phonics`): a split the importer is unsure about (e.g. a
+word containing "ar" that is not linked to AR, like "careless"), duplicate pattern text.
+
+### Phonics lesson blueprints
+
+A lesson can be written as one `blueprint` instead of a list of activities; the importer
+expands it (`src/lib/content/lesson-blueprints.ts`), so every pattern gets the same
+teaching structure and a fix to the structure fixes every lesson:
+
+| Blueprint         | Structure                                                                                                                                                             | Parameters                                                                                                 |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `letter_sound`    | meet the letter (name + sound) → big and small → which letter makes this sound? → first (or last) sound → find the letter → missing letter → quick check              | `pattern`, `letter`, `words[3]`, `distractors`, `distractorLetters`, `distractorWords`, `soundPosition`    |
+| `cvc_blending`    | hear → blend it (tap sounds, slow blend, choose the word) → count the sounds → middle sound → build → read → spell                                                    | `pattern`, `vowel`, `words[5]`, `distractorWords`, `otherVowels`                                           |
+| `phonics_pattern` | Hear it → See it (find the letters) → Practise → Sort (pattern vs contrast) → [Two sounds] → Read → Spell (missing letters) → Write → Use it (sentence) → Quick check | `pattern`, `grapheme`, `words[6+]`, `contrast{pattern, grapheme, words}`, `sentence`, `soundSort`, `split` |
+
 ### Question templates
 
 Questions can be written in full (`type`, `content`, `answer`) or as templates the importer
 expands from the word bank, so pictures, meanings and sounds come from one place:
 
-| Template                 | Produces                                              | Parameters                                                     |
-| ------------------------ | ----------------------------------------------------- | -------------------------------------------------------------- |
-| `pattern_intro`          | INTRO card for a pattern with its sounds and examples | `pattern`, `examples`, optional `body`, `speech`               |
-| `word_intro`             | INTRO card for a word                                 | `word`, optional `body`                                        |
-| `listen_pick_picture`    | Hear a word, tap its picture                          | `word`, `distractors`                                          |
-| `listen_pick_word`       | Hear a word, tap it written                           | `word`, `distractors`                                          |
-| `pick_starting_sound`    | Which picture starts with this sound?                 | `pattern`, `word`, `distractors`                               |
-| `find_letter`            | Find a letter among look-alikes                       | `pattern`, `distractors`, `case`                               |
-| `pick_word_with_pattern` | Which word has this pattern/sound?                    | `pattern`, `word`, `distractors`, optional `sound`, `pictures` |
-| `pick_pattern_sound`     | Which sound does the pattern make in this word?       | `pattern`, `word`                                              |
-| `missing_pattern`        | Fill the gap                                          | `word`, `missing`, `choices`                                   |
-| `build_word`             | Build from sound tiles (blending)                     | `word`, optional `chunks`, `extra`, `demonstrate`              |
-| `order_sentence`         | Put words in order                                    | `sentence`, optional `emoji`                                   |
-| `spell_word`             | Type the word you hear                                | `word`                                                         |
+| Template                 | Produces                                                     | Parameters                                                     |
+| ------------------------ | ------------------------------------------------------------ | -------------------------------------------------------------- |
+| `pattern_intro`          | INTRO card for a pattern with its sounds and examples        | `pattern`, `examples`, optional `body`, `speech`               |
+| `word_intro`             | INTRO card for a word                                        | `word`, optional `body`                                        |
+| `listen_pick_picture`    | Hear a word, tap its picture                                 | `word`, `distractors`                                          |
+| `listen_pick_word`       | Hear a word, tap it written                                  | `word`, `distractors`                                          |
+| `pick_starting_sound`    | Which picture starts with this sound?                        | `pattern`, `word`, `distractors`                               |
+| `find_letter`            | Find a letter among look-alikes                              | `pattern`, `distractors`, `case`                               |
+| `pick_word_with_pattern` | Which word has this pattern/sound?                           | `pattern`, `word`, `distractors`, optional `sound`, `pictures` |
+| `pick_pattern_sound`     | Which sound does the pattern make in this word?              | `pattern`, `word`                                              |
+| `missing_pattern`        | Fill the gap                                                 | `word`, `missing`, `choices`                                   |
+| `build_word`             | Build from sound tiles (blending)                            | `word`, optional `chunks`, `extra`, `demonstrate`              |
+| `order_sentence`         | Put words in order                                           | `sentence`, optional `emoji`                                   |
+| `spell_word`             | Type the word you hear                                       | `word`                                                         |
+| `letter_intro`           | Letter card: upper/lower case, NAME and SOUND buttons        | `pattern`, `examples`                                          |
+| `match_upper_lower`      | Match big and small letters                                  | `patterns`                                                     |
+| `letter_for_sound`       | Hear a sound, tap the letter(s) that make it                 | `pattern`, `distractors` (pattern codes)                       |
+| `sound_at_position`      | Beginning / middle / end sound of a word                     | `word`, `position`, `choices`                                  |
+| `blend_word`             | BLEND_SOUNDS from the word's grapheme split                  | `word`, `distractors`, optional `pattern`, `pictures`          |
+| `segment_word`           | SEGMENT_WORD: count the sounds, tap the phonemes             | `word`, optional `extraSounds`, `pattern`                      |
+| `find_pattern`           | FIND_PATTERN: tap the letters that make the sound            | `pattern`, `word`                                              |
+| `read_word`              | Read a written word (no audio), tap its picture              | `word`, `distractors`, optional `pattern`                      |
+| `sort_by_pattern`        | Sort words into pattern groups (sh / ch)                     | `groups[{pattern, words}]`                                     |
+| `sort_by_sound`          | Sort words by which sound a pattern makes (EA: leaf / bread) | `pattern`, `words`                                             |
+| `match_pattern_word`     | Match patterns to words                                      | `pairs`                                                        |
+| `match_sound_letter`     | Match sounds to letters                                      | `patterns`                                                     |
 
 Question/activity codes default to `<lesson>-a<n>-q<n>`; give explicit `code`s if you
 reorder questions and want history to stay attached to the same question.
@@ -95,7 +133,10 @@ Required columns: `word, level, category, difficulty, phonics_pattern, definitio
 example_sentence, sight_word`. Optional: `emoji, part_of_speech, child_definition,
 syllables, pronunciation, irregular, spelling_note, plural, tags, related, sense, status`.
 `phonics_pattern` is `CODE[:SOUND][*]` separated by `;` (e.g. `TH:TH_VOICED*;EE`; `*` =
-featured example). Lists (`tags`, `related`) use `;`.
+featured example). Lists (`tags`, `related`) use `;`. Optional `segments` overrides the
+automatic grapheme split, one token per grapheme: `g` (its pattern and linked sound),
+`g=SOUND_CODE`, `g=` (silent) or `g=[PHONEMES]` — e.g. `sh oe=[UW]` for "shoe",
+`qu=Q ee n` for "queen".
 
 ```
 npm run content:import -- --words path/to/words.csv [--dry-run]
@@ -165,6 +206,18 @@ first-try percentage; stars: ≥ 90% → 3, ≥ 70% → 2, otherwise 1 for finis
 Points: 10 per first-try correct answer + 5 per star; 20 per badge. Badges are data
 (`achievements.criteria`: lessons completed, stars, streak days, words learned).
 "Words learned" = answered correctly on the first try at least twice.
+
+## Phonics Check
+
+A skill check (`assessments.code = phonics-check`, type `skill_check`) with twelve areas —
+letter recognition, letter sounds, beginning sounds, ending sounds, short vowels, CVC
+words, blending, segmenting, digraphs, patterns, word reading, spelling — two questions
+each, every question attached to the skill it measures. The child takes it from Phonics →
+Practice ("Sound Check") in the ordinary player with one try per question. The server
+scores the stored first tries per area (secure at ≥ `areaPassPercent`, default 75%) and
+per skill (`src/lib/learning/assessment-scoring.ts`); the answers also count toward skill
+mastery like any other answers. The child sees stars; the parent sees the overall and
+per-area percentages on the dashboard. Retaking it adds a new result.
 
 ## Placement ("Find My Level")
 

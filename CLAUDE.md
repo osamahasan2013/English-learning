@@ -43,6 +43,11 @@ globals, `proxy.ts` instead of `middleware.ts`).
    colour alone.
 7. **Audio only through `src/lib/audio`** — never call `speechSynthesis` from components.
 8. **Keep V1 simple**: rule-based mastery and review, browser TTS, Postgres-derived analytics.
+9. **Phonics is graphemes + phonemes.** Sounds are ARPAbet phoneme codes (`phonemes`);
+   words carry their grapheme split (`word_segments`, from `src/lib/learning/phonics.ts` or
+   the CSV `segments` column). Sound activities are built from the split, never from
+   letter counts. Letter NAME and letter SOUND are separate fields. Phonics uses the
+   ordinary skill mastery, progress and assessment tables — no parallel system.
 
 ## Folder structure
 
@@ -57,8 +62,9 @@ src/features/            activity renderers + registry, lesson player
 src/components/          ui/ primitives (Button, Card, Field, Alert, EmptyState, Spinner, ProgressBar),
                          layout/ (AppShell, NavLink, setup screen, sync, offline, SW), parent/, child/
 public/offline.html      static offline fallback served by the service worker
-src/lib/learning/        pure domain logic: evaluate, mastery, scoring, daily plan, placement…
-src/lib/content/         content schemas, CSV, templates, importer
+src/lib/learning/        pure domain logic: evaluate, mastery, scoring, daily plan, placement,
+                         phonics (word split), phonics-progress (stars), assessment-scoring…
+src/lib/content/         content schemas, CSV, templates, lesson blueprints, phonics validation, importer
 src/lib/offline/         Dexie DB, outbox, sync protocol, lesson cache
 src/lib/server/          server-only loaders, progress writer, rate limit
 src/lib/supabase/        clients (browser, server, admin/service role) + generated types

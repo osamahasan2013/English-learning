@@ -111,6 +111,7 @@ function LessonRun({
   onRestart: (preview: boolean) => void;
 }) {
   const saveKey = `${childId}:${payload.lesson.id}`;
+  const assessment = payload.assessment ?? null;
   const previewLimit = readiness && !readiness.ready ? readiness.previewSteps : null;
   const allSteps = payload.steps;
 
@@ -137,7 +138,7 @@ function LessonRun({
   const [checking, setChecking] = useState(false);
   const shownAt = useRef(0);
   const runRecorded = useRef(false);
-  const { speak: play } = useAudio();
+  const { speak: play, supported: audioSupported } = useAudio();
 
   const speak = useCallback((text: string, speed: AudioSpeed = "normal") => play({ text, speed }), [play]);
   const step: LessonStep | undefined = steps[state.index];
@@ -191,18 +192,32 @@ function LessonRun({
   }, [step, view.phase, reveals]);
 
   // Lesson finished: record the run once (the server scores it from the answers). A
-  // preview is not a completed lesson, so it records answers but no run.
+  // preview is not a completed lesson, so it records answers but no run. An assessment
+  // records its sitting instead, which the server scores per area.
   useEffect(() => {
     if (state.screen !== "summary" || runRecorded.current || preview) return;
     runRecorded.current = true;
-    void recordEvent(childId, {
-      kind: "lesson_run",
-      id: runId,
-      lessonId: payload.lesson.id,
-      sessionId: sessionId(),
-      startedAt,
-      completedAt: new Date().toISOString(),
-    }).then(() => notifyQueued());
+    const completedAt = new Date().toISOString();
+    void recordEvent(
+      childId,
+      assessment
+        ? {
+            kind: "assessment_run",
+            id: runId,
+            assessmentId: assessment.id,
+            sessionId: sessionId(),
+            startedAt,
+            completedAt,
+          }
+        : {
+            kind: "lesson_run",
+            id: runId,
+            lessonId: payload.lesson.id,
+            sessionId: sessionId(),
+            startedAt,
+            completedAt,
+          },
+    ).then(() => notifyQueued());
     // eslint-disable-next-line react-hooks/exhaustive-deps -- once per finished run
   }, [state.screen]);
 
@@ -216,7 +231,9 @@ function LessonRun({
       kind: "attempt",
       id: newId(),
       questionId: step.questionId,
-      lessonRunId: runId,
+      lessonRunId: assessment ? null : runId,
+      assessmentId: assessment?.id ?? null,
+      assessmentAttemptId: assessment ? runId : null,
       sessionId: sessionId(),
       attemptNumber,
       response,
@@ -318,6 +335,11 @@ function LessonRun({
         </span>
       </div>
 
+      {!audioSupported ? (
+        <p role="note" className="bg-surface-muted rounded-2xl px-4 py-2 text-center text-lg font-semibold">
+          <span aria-hidden>🔇 </span>No sound on this device. Read the words, or ask a grown-up to read them.
+        </p>
+      ) : null}
       {preview ? (
         <p className="bg-accent-soft text-accent rounded-2xl px-4 py-2 text-center text-lg font-bold">
           <span aria-hidden>👀 </span>Sneak peek

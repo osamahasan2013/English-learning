@@ -145,7 +145,8 @@ export async function revealAnswer(question: ClientQuestion, key: AnswerKey): Pr
     case "MULTIPLE_CHOICE":
     case "LISTEN_AND_CHOOSE":
     case "PICTURE_MATCH":
-    case "READING": {
+    case "READING":
+    case "BLEND_SOUNDS": {
       for (const option of question.content.options) {
         if (await matches(canonicalValue(question.type, { value: option.id })!)) {
           return { text: option.text ?? option.speech ?? option.id, optionId: option.id };
@@ -174,6 +175,34 @@ export async function revealAnswer(question: ClientQuestion, key: AnswerKey): Pr
         }
       }
       return null;
+    }
+    case "FIND_PATTERN": {
+      const word = question.content.word;
+      for (let start = 0; start < word.length; start++) {
+        for (let end = start; end < word.length; end++) {
+          const span = `${start}-${end}`;
+          if (await matches(canonicalValue(question.type, { value: span })!))
+            return { text: word.slice(start, end + 1), value: span };
+        }
+      }
+      return null;
+    }
+    case "SEGMENT_WORD": {
+      if (key.mode !== "sequence") return null;
+      const sequence: string[] = [];
+      for (let i = 0; i < key.positions.length; i++) {
+        let found: string | undefined;
+        for (const sound of question.content.sounds) {
+          if ((await digest(key.salt, canonicalPosition(i, sound.id))) === key.positions[i]) {
+            found = sound.id;
+            break;
+          }
+        }
+        if (found === undefined) return null;
+        sequence.push(found);
+      }
+      const labels = sequence.map((id) => question.content.sounds.find((s) => s.id === id)!.label);
+      return { text: `${sequence.length} sounds: ${labels.map((l) => `/${l}/`).join(" ")}`, sequence };
     }
     case "SENTENCE_BUILDER":
     case "DRAG_DROP": {

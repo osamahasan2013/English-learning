@@ -13,6 +13,9 @@ import type {
 } from "@/lib/content/content-schemas";
 import { normalizeWord } from "@/lib/content/csv";
 import { parseActivityConfig } from "@/lib/content/activity-config";
+import { BlueprintError, expandBlueprint } from "@/lib/content/lesson-blueprints";
+import { validatePhonicsFile, type ValidationIssue } from "@/lib/content/phonics-validation";
+import { decomposeWord, segmentsUsePattern, type PatternInfo, type PhonemeInfo } from "@/lib/learning/phonics";
 import { parseQuestion } from "@/lib/content/question-schemas";
 import { mergeLearningRules } from "@/lib/learning/rules";
 import {
@@ -60,7 +63,15 @@ type Db = SupabaseClient;
 
 const BATCH_SIZE = 500;
 // Tables whose primary key is their code (no uuid id column).
-const CODE_KEYED_TABLES = new Set(["skill_dimensions", "activity_types", "learning_rules"]);
+const CODE_KEYED_TABLES = new Set([
+  "skill_dimensions",
+  "activity_types",
+  "learning_rules",
+  "phonemes",
+  "phonics_stages",
+]);
+
+type Flag = { entity: string; entity_key: string; rule: string; severity: "warning" | "error"; message: string };
 const PAGE_SIZE = 1000;
 
 function emptyReport(): EntityReport {
@@ -110,6 +121,13 @@ export class ContentImporter {
   private readonly ids = new Map<string, Map<string, string>>();
   private wordBank = new Map<string, TemplateWord>();
   private patternBank = new Map<string, TemplatePattern>();
+  // Full pattern and phoneme data for word decomposition (src/lib/learning/phonics.ts).
+  private phonicsPatterns: PatternInfo[] | null = null;
+  private phonemeInfo: Map<string, PhonemeInfo> | null = null;
+  // Questionable content found on this run, for admin review (content_flags), and the
+  // entity kinds whose flags this run replaces.
+  private flags: Flag[] = [];
+  private flagScopes = new Set<string>();
 
   constructor(
     private readonly db: Db,
@@ -361,11 +379,70 @@ export class ContentImporter {
     );
   }
 
+  private flag(issue: ValidationIssue | Flag, severity: "warning" | "error" = "warning") {
+    const f: Flag =
+      "entity_key" in issue
+        ? issue
+        : { entity: issue.entity, entity_key: issue.key, rule: issue.rule, severity, message: issue.message };
+    this.flags.push({ ...f, message: f.message.slice(0, 400), entity_key: f.entity_key.slice(0, 160) });
+  }
+
   async importPhonics(file: PhonicsFile) {
     await this.loadIds("levels", ["code"]);
+    this.flagScopes.add("phonics_pattern");
     const report = this.entity("phonics patterns");
+    const validation = validatePhonicsFile(file, new Set(this.idMap("levels").keys()));
+    const rejected = new Set(validation.errors.map((e) => e.key));
+    for (const e of validation.errors) {
+      report.invalid++;
+      report.errors.push(`pattern ${e.key}: ${e.message}`);
+    }
+    for (const w of validation.warnings) this.flag(w);
+
+    await this.sync(
+      "phonemes",
+      "phonemes",
+      ["code"],
+      file.phonemes.map((ph, i) => ({
+        code: ph.code,
+        ipa: ph.ipa,
+        label: ph.label,
+        say_as: ph.sayAs,
+        kind: ph.kind,
+        voiced: ph.voiced,
+        example_word: ph.example,
+        description: ph.description,
+        sort_order: i,
+      })),
+    );
+    await this.sync(
+      "phonics_stages",
+      "phonics stages",
+      ["code"],
+      file.stages.map((st, i) => ({
+        code: st.code,
+        name: st.name,
+        child_name: st.childName,
+        description: st.description,
+        emoji: st.emoji,
+        sort_order: i,
+      })),
+    );
+    const audioRows = file.patterns
+      .filter((p) => p.audio)
+      .map((p) => ({
+        storage_path: p.audio,
+        kind: "phonics",
+        tts_text: p.sounds.find((s) => s.primary)?.sayAs ?? p.pattern,
+        status: "published",
+      }));
+    const audioIds = audioRows.length
+      ? await this.sync("audio_assets", "audio assets", ["storage_path"], audioRows)
+      : new Map<string, string>();
+
+    const patterns = file.patterns.filter((p) => !rejected.has(p.code));
     const rows: Row[] = [];
-    for (const p of file.patterns) {
+    for (const p of patterns) {
       try {
         rows.push({
           code: p.code,
@@ -377,6 +454,12 @@ export class ContentImporter {
           child_explanation: p.childExplanation,
           mastery_threshold: p.masteryThreshold,
           sort_order: p.sortOrder,
+          stage_code: p.stage ?? null,
+          position: p.position,
+          uppercase: p.uppercase ?? null,
+          letter_name: p.letterName,
+          letter_name_say_as: p.letterNameSayAs,
+          audio_asset_id: p.audio ? (audioIds.get(p.audio) ?? null) : null,
           status: p.status,
         });
       } catch (error) {
@@ -385,7 +468,7 @@ export class ContentImporter {
       }
     }
     const patternIds = await this.sync("phonics_patterns", "phonics patterns", ["code"], rows);
-    const soundRows = file.patterns
+    const soundRows = patterns
       .filter((p) => patternIds.has(p.code))
       .flatMap((p) =>
         p.sounds.map((s, i) => ({
@@ -396,6 +479,7 @@ export class ContentImporter {
           say_as: s.sayAs,
           is_primary: s.primary,
           sort_order: i,
+          phonemes: s.phonemes,
         })),
       );
     // The one-primary-per-pattern index would reject swapping which sound is primary in
@@ -408,7 +492,7 @@ export class ContentImporter {
           ])
         ).map((r) => [r.pattern_id, r.code]),
       );
-      const changing = file.patterns
+      const changing = patterns
         .map((p) => ({ id: patternIds.get(p.code), primary: p.sounds.find((x) => x.primary)?.code }))
         .filter((p) => p.id && currentPrimary.has(p.id) && currentPrimary.get(p.id) !== p.primary)
         .map((p) => p.id!);
@@ -416,15 +500,101 @@ export class ContentImporter {
         await this.db.from("phonics_pattern_sounds").update({ is_primary: false }).in("pattern_id", changing);
     }
     await this.sync("phonics_pattern_sounds", "phonics sounds", ["pattern_id", "code"], soundRows);
-    for (const p of file.patterns) {
+
+    const relationRows = patterns.flatMap((p) =>
+      p.relations
+        .filter((r) => patternIds.has(r.code))
+        .map((r) => ({
+          pattern_id: patternIds.get(p.code),
+          related_pattern_id: patternIds.get(r.code),
+          relation_type: r.type,
+        })),
+    );
+    await this.syncLinks(
+      "phonics_pattern_relations",
+      "pattern_id",
+      patterns.map((p) => patternIds.get(p.code)!).filter(Boolean),
+      relationRows,
+      ["pattern_id", "related_pattern_id", "relation_type"],
+    );
+
+    this.phonemeInfo = new Map(
+      file.phonemes.map((ph) => [
+        ph.code,
+        { code: ph.code, ipa: ph.ipa, label: ph.label, sayAs: ph.sayAs, kind: ph.kind, voiced: ph.voiced },
+      ]),
+    );
+    this.phonicsPatterns = patterns.map((p) => ({
+      code: p.code,
+      pattern: p.pattern,
+      type: p.type,
+      position: p.position,
+      sounds: p.sounds.map((s) => ({
+        code: s.code,
+        label: s.label,
+        sayAs: s.sayAs,
+        phonemes: s.phonemes,
+        primary: s.primary,
+      })),
+    }));
+    for (const p of patterns) {
       this.patternBank.set(p.code, {
         code: p.code,
         pattern: p.pattern,
         type: p.type,
         childExplanation: p.childExplanation,
-        sounds: p.sounds.map((s) => ({ code: s.code, label: s.label, sayAs: s.sayAs, primary: s.primary })),
+        uppercase: p.uppercase ?? null,
+        letterName: p.letterName,
+        letterNameSayAs: p.letterNameSayAs,
+        sounds: p.sounds.map((s) => ({
+          code: s.code,
+          label: s.label,
+          sayAs: s.sayAs,
+          primary: s.primary,
+          phonemes: s.phonemes,
+        })),
       });
     }
+  }
+
+  // Patterns (with pronunciations and phonemes) and the phoneme inventory, from this run
+  // or from the database, for word decomposition.
+  private async ensurePhonicsData() {
+    if (this.phonicsPatterns && this.phonemeInfo) return;
+    const [phonemes, patterns, sounds] = await Promise.all([
+      fetchAll(this.db, "phonemes", "code,ipa,label,say_as,kind,voiced"),
+      fetchAll(this.db, "phonics_patterns", "id,code,pattern,pattern_type,position"),
+      fetchAll(this.db, "phonics_pattern_sounds", "pattern_id,code,label,say_as,is_primary,sort_order,phonemes"),
+    ]);
+    this.phonemeInfo = new Map(
+      phonemes.map((ph) => [
+        String(ph.code),
+        {
+          code: String(ph.code),
+          ipa: String(ph.ipa),
+          label: String(ph.label),
+          sayAs: String(ph.say_as),
+          kind: ph.kind as PhonemeInfo["kind"],
+          voiced: Boolean(ph.voiced),
+        },
+      ]),
+    );
+    this.phonicsPatterns = patterns.map((p) => ({
+      code: String(p.code),
+      pattern: String(p.pattern),
+      type: String(p.pattern_type),
+      position: p.position as PatternInfo["position"],
+      sounds: sounds
+        .filter((s) => s.pattern_id === p.id)
+        .sort((a, b) => Number(a.sort_order) - Number(b.sort_order))
+        .map((s) => ({
+          code: String(s.code),
+          label: String(s.label),
+          sayAs: String(s.say_as),
+          phonemes: (s.phonemes as string[]) ?? [],
+          primary: Boolean(s.is_primary),
+        })),
+    }));
   }
 
   async importWords(words: WordInput[]) {
@@ -433,11 +603,33 @@ export class ContentImporter {
       this.loadIds("word_categories", ["code"]),
       this.loadIds("phonics_patterns", ["code"]),
     ]);
+    await this.ensurePhonicsData();
+    this.flagScopes.add("word");
     const report = this.entity("words");
     const rows: Row[] = [];
     const valid: WordInput[] = [];
+    const splits = new Map<string, ReturnType<typeof decomposeWord>>();
     for (const w of words) {
       try {
+        // Grapheme split and phonemes (ship = sh·i·p = SH IH P). Anything doubtful is
+        // flagged for review, never silently "fixed".
+        const split = decomposeWord({
+          word: w.word,
+          patterns: this.phonicsPatterns!,
+          links: w.patterns,
+          phonemes: this.phonemeInfo!,
+          irregular: w.irregular,
+          authored: w.segments,
+        });
+        splits.set(normalizeWord(w.word), split);
+        if (split.issues.length > 0 && !w.irregular)
+          this.flag({
+            entity: "word",
+            entity_key: w.word,
+            rule: "decomposition",
+            severity: "warning",
+            message: split.issues.join("; "),
+          });
         const row = {
           word: w.word,
           normalized_word: normalizeWord(w.word),
@@ -457,6 +649,9 @@ export class ContentImporter {
           plural: w.plural,
           tags: w.tags,
           emoji: w.emoji,
+          phonics_shape: split.shape,
+          decodable: split.decodable,
+          segments_source: w.segments ? "authored" : "auto",
           status: w.status,
         };
         for (const p of w.patterns) this.lookup("phonics_patterns", p.code, "phonics pattern");
@@ -496,6 +691,31 @@ export class ContentImporter {
       ["word_id", "pattern_id"],
     );
 
+    // Grapheme segments, replaced per word.
+    const segmentRows: Row[] = [];
+    for (const w of valid) {
+      const split = splits.get(normalizeWord(w.word));
+      if (!split) continue;
+      split.segments.forEach((seg, position) => {
+        const patternId = seg.patternCode ? this.idMap("phonics_patterns").get(seg.patternCode) : undefined;
+        segmentRows.push({
+          word_id: idOf(w),
+          position,
+          grapheme: seg.grapheme,
+          pattern_id: patternId ?? null,
+          sound_id: patternId ? (soundId(patternId, seg.soundCode ?? undefined) ?? null) : null,
+          phonemes: seg.phonemes,
+        });
+      });
+    }
+    await this.syncLinks(
+      "word_segments",
+      "word_id",
+      valid.map((w) => idOf(w)!).filter(Boolean),
+      segmentRows.filter((r) => r.word_id),
+      ["word_id", "position"],
+    );
+
     // Related words, once every word exists.
     const relations: Row[] = [];
     for (const w of valid) {
@@ -520,22 +740,34 @@ export class ContentImporter {
         emoji: w.emoji,
         childDefinition: w.childDefinition,
         patterns: w.patterns.map((p) => ({ code: p.code, sound: p.sound })),
+        segments: (splits.get(normalizeWord(w.word))?.segments ?? []).map((seg) => ({
+          grapheme: seg.grapheme,
+          patternCode: seg.patternCode,
+          sayAs: seg.sayAs || this.phonemeSpeech(seg.phonemes),
+          phonemes: seg.phonemes,
+        })),
       });
     }
+  }
+
+  private phonemeSpeech(phonemes: string[]) {
+    return phonemes.map((c) => this.phonemeInfo?.get(c)?.sayAs ?? c.toLowerCase()).join(" ");
   }
 
   // Loads the word bank and patterns from the database, for imports that only contain
   // curriculum files (templates still need them).
   async loadBanksFromDatabase() {
+    await this.ensurePhonicsData();
     if (this.wordBank.size === 0) {
-      const [words, links, patterns, sounds] = await Promise.all([
+      const [words, links, patterns, sounds, segments] = await Promise.all([
         fetchAll(this.db, "words", "id,word,emoji,child_definition,sense"),
         fetchAll(this.db, "word_phonics_patterns", "word_id,pattern_id,sound_id"),
         fetchAll(this.db, "phonics_patterns", "id,code"),
-        fetchAll(this.db, "phonics_pattern_sounds", "id,code"),
+        fetchAll(this.db, "phonics_pattern_sounds", "id,code,say_as"),
+        fetchAll(this.db, "word_segments", "word_id,position,grapheme,pattern_id,sound_id,phonemes"),
       ]);
       const patternCode = new Map(patterns.map((p) => [p.id, String(p.code)]));
-      const soundCode = new Map(sounds.map((s) => [s.id, String(s.code)]));
+      const soundById = new Map(sounds.map((s) => [s.id, s]));
       for (const w of words.filter((w) => w.sense === 1)) {
         this.wordBank.set(normalizeWord(String(w.word)), {
           word: String(w.word),
@@ -545,15 +777,32 @@ export class ContentImporter {
             .filter((l) => l.word_id === w.id)
             .map((l) => ({
               code: patternCode.get(l.pattern_id) ?? "",
-              sound: l.sound_id ? soundCode.get(l.sound_id) : undefined,
+              sound: l.sound_id ? (soundById.get(l.sound_id)?.code as string | undefined) : undefined,
             })),
+          segments: segments
+            .filter((seg) => seg.word_id === w.id)
+            .sort((a, b) => Number(a.position) - Number(b.position))
+            .map((seg) => {
+              const phonemes = (seg.phonemes as string[]) ?? [];
+              const sound = seg.sound_id ? soundById.get(seg.sound_id) : undefined;
+              return {
+                grapheme: String(seg.grapheme),
+                patternCode: seg.pattern_id ? (patternCode.get(seg.pattern_id) ?? null) : null,
+                sayAs: phonemes.length === 0 ? "" : sound ? String(sound.say_as) : this.phonemeSpeech(phonemes),
+                phonemes,
+              };
+            }),
         });
       }
     }
     if (this.patternBank.size === 0) {
       const [patterns, sounds] = await Promise.all([
-        fetchAll(this.db, "phonics_patterns", "id,code,pattern,pattern_type,child_explanation"),
-        fetchAll(this.db, "phonics_pattern_sounds", "pattern_id,code,label,say_as,is_primary,sort_order"),
+        fetchAll(
+          this.db,
+          "phonics_patterns",
+          "id,code,pattern,pattern_type,child_explanation,uppercase,letter_name,letter_name_say_as",
+        ),
+        fetchAll(this.db, "phonics_pattern_sounds", "pattern_id,code,label,say_as,is_primary,sort_order,phonemes"),
       ]);
       for (const p of patterns) {
         this.patternBank.set(String(p.code), {
@@ -561,6 +810,9 @@ export class ContentImporter {
           pattern: String(p.pattern),
           type: String(p.pattern_type),
           childExplanation: String(p.child_explanation),
+          uppercase: (p.uppercase as string | null) ?? null,
+          letterName: String(p.letter_name ?? ""),
+          letterNameSayAs: String(p.letter_name_say_as ?? ""),
           sounds: sounds
             .filter((s) => s.pattern_id === p.id)
             .sort((a, b) => Number(a.sort_order) - Number(b.sort_order))
@@ -569,6 +821,7 @@ export class ContentImporter {
               label: String(s.label),
               sayAs: String(s.say_as),
               primary: Boolean(s.is_primary),
+              phonemes: (s.phonemes as string[]) ?? [],
             })),
         });
       }
@@ -720,6 +973,10 @@ export class ContentImporter {
           seed: code,
           word: (text) => this.wordBank.get(normalizeWord(text)),
           pattern: (patternCode) => this.patternBank.get(patternCode),
+          phoneme: (phonemeCode) => {
+            const p = this.phonemeInfo?.get(phonemeCode);
+            return p && { code: p.code, label: p.label, sayAs: p.sayAs, kind: p.kind };
+          },
         };
         expanded = expandTemplate(template, params as Record<string, unknown>, ctx);
       } else {
@@ -728,6 +985,22 @@ export class ContentImporter {
       }
       const parsed = parseQuestion(expanded.type, expanded.content, expanded.answer);
       if (!parsed.ok) throw new Error(parsed.error);
+      // A word in a pattern's question must really use that pattern (its sound), not just
+      // contain the letters: "ship" for SH, not "mishap".
+      if (expanded.pattern && expanded.word) {
+        const w = this.wordBank.get(normalizeWord(expanded.word));
+        const patternCode = expanded.pattern.toUpperCase();
+        const pattern = this.patternBank.get(patternCode);
+        const types = new Map([...this.patternBank.values()].map((p) => [p.code, { type: p.type }]));
+        if (w?.segments?.length && pattern && !segmentsUsePattern(w.segments, pattern, types))
+          this.flag({
+            entity: "question",
+            entity_key: code,
+            rule: "word_not_using_pattern",
+            severity: "warning",
+            message: `"${w.word}" is used for ${patternCode} but its split does not use ${patternCode}`,
+          });
+      }
       return {
         code,
         activity_id: activityId,
@@ -765,9 +1038,37 @@ export class ContentImporter {
       this.loadIds("stories", ["code"]),
       this.loadIds("skills", ["code"]),
       this.loadIds("lessons", ["code"]),
+      this.loadIds("phonics_stages", ["code"]),
     ]);
     await this.loadBanksFromDatabase();
+    this.flagScopes.add("question");
     const levelId = this.lookup("levels", file.level, "level");
+
+    // Lessons written as a blueprint become ordinary activities here, before anything else
+    // sees them (src/lib/content/lesson-blueprints.ts).
+    for (const unit of file.units) {
+      for (const skill of unit.skills) {
+        skill.lessons = skill.lessons.filter((lesson) => {
+          if (!lesson.blueprint) return true;
+          try {
+            lesson.activities = expandBlueprint(lesson.blueprint).map((a) => ({
+              ...a,
+              config: {},
+              status: lesson.status,
+              questions: a.questions.map((q) => ({ difficulty: 1, explanation: "", ...q })),
+            }));
+            return true;
+          } catch (error) {
+            const report = this.entity("lessons");
+            report.invalid++;
+            report.errors.push(
+              `lesson ${lesson.code}: ${error instanceof BlueprintError ? error.message : String(error)}`,
+            );
+            return false;
+          }
+        });
+      }
+    }
 
     const unitIds = await this.sync(
       "units",
@@ -804,6 +1105,9 @@ export class ContentImporter {
         importance: skill.importance,
         difficulty: skill.difficulty,
         is_active: skill.active,
+        phonics_stage_code: skill.phonicsStage
+          ? (this.lookup("phonics_stages", skill.phonicsStage, "phonics stage"), skill.phonicsStage)
+          : null,
         sort_order: order,
         status: skill.status,
       })),
@@ -1024,6 +1328,21 @@ export class ContentImporter {
     ]);
   }
 
+  // Replaces the review flags of every kind of content this run checked.
+  async writeFlags() {
+    const report = this.entity("review flags");
+    const unique = new Map(this.flags.map((f) => [`${f.entity}|${f.entity_key}|${f.rule}`, f]));
+    report.added = unique.size;
+    if (this.options.dryRun || this.flagScopes.size === 0) return;
+    const { error } = await this.db.from("content_flags").delete().in("entity", [...this.flagScopes]);
+    if (error) throw new Error(`clearing content_flags: ${error.message}`);
+    const rows = [...unique.values()];
+    for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+      const { error: insertError } = await this.db.from("content_flags").insert(rows.slice(i, i + BATCH_SIZE));
+      if (insertError) throw new Error(`writing content_flags: ${insertError.message}`);
+    }
+  }
+
   async importBundle(bundle: ImportBundle) {
     if (bundle.reference) await this.importReference(bundle.reference);
     if (bundle.phonics) await this.importPhonics(bundle.phonics);
@@ -1033,6 +1352,7 @@ export class ContentImporter {
     if (bundle.stories) await this.importStories(bundle.stories);
     for (const file of bundle.curriculum ?? []) await this.importCurriculum(file);
     if (bundle.assessments) await this.importAssessments(bundle.assessments);
+    await this.writeFlags();
     return this.report;
   }
 }

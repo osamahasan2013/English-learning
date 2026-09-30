@@ -50,6 +50,7 @@ export type AttemptRowResult =
         lesson_id: string | null;
         word_id: string | null;
         lesson_run_id: string | null;
+        assessment_attempt_id: string | null;
         learning_session_id: string | null;
         attempt_number: number;
         response: AttemptEvent["response"];
@@ -95,7 +96,8 @@ export function buildAttemptRow(
       activity_id: question.activity_id,
       lesson_id: question.lesson_id,
       word_id: question.word_id,
-      lesson_run_id: event.lessonRunId,
+      lesson_run_id: event.assessmentAttemptId ? null : event.lessonRunId,
+      assessment_attempt_id: event.assessmentAttemptId ?? null,
       learning_session_id: event.sessionId ?? null,
       attempt_number: event.attemptNumber,
       response: response.data,

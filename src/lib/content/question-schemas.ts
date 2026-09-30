@@ -34,6 +34,18 @@ export const introContentSchema = z.object({
     )
     .max(8)
     .default([]),
+  // Letters only: the letter's NAME and its SOUND, shown and played as two different
+  // things ("bee" is the name; /b/ "buh" is the sound).
+  letter: z
+    .object({
+      upper: z.string().trim().min(1).max(2),
+      lower: z.string().trim().min(1).max(2),
+      name: text(20),
+      nameSpeech: text(40),
+      soundLabel: text(8),
+      soundSpeech: text(40),
+    })
+    .optional(),
 });
 
 export const choiceContentSchema = z.object({
@@ -132,6 +144,42 @@ export const tracingContentSchema = z.object({
   speech: z.string().trim().max(60).optional(),
 });
 
+// A sound unit a child can tap to hear (a grapheme segment, or a phoneme).
+const soundUnitSchema = z.object({
+  grapheme: text(6),
+  sayAs: z.string().trim().max(40),
+});
+
+// Blending: tap each sound, blend them (slow or normal), then choose the word they make.
+// The word itself is only spoken after answering.
+export const blendSoundsContentSchema = z.object({
+  emoji: z.string().max(16).optional(),
+  units: z.array(soundUnitSchema).min(1).max(8),
+  options: z.array(choiceOptionSchema).min(2).max(4),
+});
+
+// Segmenting: hear a word, say how many sounds it has, then pick those sounds in order.
+// Sound cards are phonemes (shown as /sh/), never the word's letters.
+export const segmentWordContentSchema = z.object({
+  word: text(40),
+  emoji: z.string().max(16).optional(),
+  speech: text(60),
+  sounds: z
+    .array(z.object({ id: itemId, label: text(8), sayAs: text(40) }))
+    .min(2)
+    .max(10),
+  maxCount: z.number().int().min(2).max(8),
+});
+
+// Find the pattern (e.g. the digraph) in a written word by tapping its letters.
+export const findPatternContentSchema = z.object({
+  word: z.string().trim().regex(/^[a-z']{2,20}$/),
+  emoji: z.string().max(16).optional(),
+  speech: z.string().trim().max(60).optional(),
+  // What to look for, as shown to the child ("sh").
+  target: text(8),
+});
+
 export const acceptedAnswerSchema = z.object({
   accepted: z.array(text(120)).min(1).max(10),
 });
@@ -209,6 +257,22 @@ export const questionTypeSchemas = {
   READING: { content: readingContentSchema, answer: acceptedAnswerSchema, response: valueResponseSchema },
   WRITING: { content: writingContentSchema, answer: acceptedAnswerSchema, response: valueResponseSchema },
   TRACING: { content: tracingContentSchema, answer: coverageAnswerSchema, response: coverageResponseSchema },
+  BLEND_SOUNDS: {
+    content: blendSoundsContentSchema,
+    answer: acceptedAnswerSchema,
+    response: valueResponseSchema,
+  },
+  SEGMENT_WORD: {
+    content: segmentWordContentSchema,
+    answer: sequenceAnswerSchema,
+    response: sequenceResponseSchema,
+  },
+  // The answer is the letters' span in the word: "start-end" (0-based, inclusive).
+  FIND_PATTERN: {
+    content: findPatternContentSchema,
+    answer: acceptedAnswerSchema,
+    response: valueResponseSchema,
+  },
 } as const;
 
 export type SupportedQuestionType = keyof typeof questionTypeSchemas;
@@ -229,6 +293,9 @@ export type DragDropContent = z.infer<typeof dragDropContentSchema>;
 export type ReadingContent = z.infer<typeof readingContentSchema>;
 export type WritingContent = z.infer<typeof writingContentSchema>;
 export type TracingContent = z.infer<typeof tracingContentSchema>;
+export type BlendSoundsContent = z.infer<typeof blendSoundsContentSchema>;
+export type SegmentWordContent = z.infer<typeof segmentWordContentSchema>;
+export type FindPatternContent = z.infer<typeof findPatternContentSchema>;
 export type AcceptedAnswer = z.infer<typeof acceptedAnswerSchema>;
 export type SequenceAnswer = z.infer<typeof sequenceAnswerSchema>;
 export type PairsAnswer = z.infer<typeof pairsAnswerSchema>;
@@ -251,7 +318,10 @@ export type ParsedQuestion =
   | { type: "DRAG_DROP"; content: DragDropContent; answer: SequenceAnswer }
   | { type: "READING"; content: ReadingContent; answer: AcceptedAnswer }
   | { type: "WRITING"; content: WritingContent; answer: AcceptedAnswer }
-  | { type: "TRACING"; content: TracingContent; answer: CoverageAnswer };
+  | { type: "TRACING"; content: TracingContent; answer: CoverageAnswer }
+  | { type: "BLEND_SOUNDS"; content: BlendSoundsContent; answer: AcceptedAnswer }
+  | { type: "SEGMENT_WORD"; content: SegmentWordContent; answer: SequenceAnswer }
+  | { type: "FIND_PATTERN"; content: FindPatternContent; answer: AcceptedAnswer };
 
 export type ParseQuestionResult = { ok: true; question: ParsedQuestion } | { ok: false; error: string };
 
@@ -283,7 +353,8 @@ function checkCrossFields(q: ParsedQuestion): string | null {
     case "MULTIPLE_CHOICE":
     case "LISTEN_AND_CHOOSE":
     case "PICTURE_MATCH":
-    case "READING": {
+    case "READING":
+    case "BLEND_SOUNDS": {
       const ids = new Set(q.content.options.map((o) => o.id));
       if (ids.size !== q.content.options.length) return "option ids must be unique";
       if (!q.answer.accepted.every((id) => ids.has(id))) return "answer must reference an option id";
@@ -333,6 +404,26 @@ function checkCrossFields(q: ParsedQuestion): string | null {
       for (const seq of q.answer.acceptedSequences) {
         if (seq.length !== blanks) return "each accepted sequence needs one word per blank";
         if (!seq.every((w) => bank.includes(w.toLowerCase()))) return "answers must come from the word bank";
+      }
+      return null;
+    }
+    case "SEGMENT_WORD": {
+      const ids = new Set(q.content.sounds.map((x) => x.id));
+      if (ids.size !== q.content.sounds.length) return "sound ids must be unique";
+      for (const seq of q.answer.acceptedSequences) {
+        if (seq.length > q.content.maxCount) return "the answer has more sounds than maxCount";
+        if (!seq.every((id) => ids.has(id))) return "answers must use the listed sounds";
+      }
+      return null;
+    }
+    case "FIND_PATTERN": {
+      for (const span of q.answer.accepted) {
+        const m = span.match(/^(\d+)-(\d+)$/);
+        if (!m) return `"${span}" is not a start-end span`;
+        const [start, end] = [Number(m[1]), Number(m[2])];
+        if (start > end || end >= q.content.word.length) return `span ${span} is outside "${q.content.word}"`;
+        if (q.content.word.slice(start, end + 1) !== q.content.target.toLowerCase())
+          return `span ${span} of "${q.content.word}" is not "${q.content.target}"`;
       }
       return null;
     }

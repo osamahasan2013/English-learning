@@ -2,170 +2,345 @@
   "level": "GRADE1",
   "units": [
     {
-      "code": "g1-vowel-teams",
+      "code": "g1-digraph-mastery",
       "subject": "PHONICS",
-      "title": "Vowel Teams",
-      "emoji": "🤝",
-      "description": "Two vowels working together: ee, ea, ai, ay, oa, ow.",
+      "title": "More Digraphs",
+      "emoji": "🦆",
+      "description": "ck and ng at the ends of words.",
       "skills": [
         {
-          "code": "g1-vowel-team-ee",
+          "code": "g1-digraph-ck",
           "dimension": "PHONICS",
-          "title": "EE",
-          "childTitle": "ee",
-          "pattern": "EE",
-          "importance": 5,
+          "title": "CK",
+          "childTitle": "ck",
+          "description": "Reads and spells words with ck.",
+          "difficulty": 3,
+          "importance": 4,
+          "phonicsStage": "DIGRAPHS",
           "prerequisites": [
             "kg3-digraph-sh"
           ],
+          "pattern": "CK",
           "lessons": [
             {
-              "code": "g1-ee-1",
-              "title": "The ee team",
-              "childTitle": "ee",
-              "emoji": "🐝",
-              "minutes": 8,
+              "code": "g1-ck-1",
+              "title": "The ck sound",
+              "childTitle": "ck",
+              "description": "Hear, see, read and spell ck.",
+              "emoji": "🦆",
+              "minutes": 7,
+              "difficulty": 3,
+              "introSpeech": "Let's learn ck!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "CK",
+                "grapheme": "ck",
+                "words": [
+                  "duck",
+                  "sock",
+                  "clock",
+                  "rock",
+                  "truck",
+                  "chick"
+                ],
+                "contrast": {
+                  "pattern": "LETTER_K",
+                  "grapheme": "k",
+                  "words": [
+                    "kite",
+                    "king",
+                    "kitten"
+                  ]
+                },
+                "sentence": "The duck sat on a rock."
+              }
+            }
+          ]
+        },
+        {
+          "code": "g1-digraph-ng",
+          "dimension": "PHONICS",
+          "title": "NG",
+          "childTitle": "ng",
+          "description": "Reads and spells words with ng.",
+          "difficulty": 3,
+          "importance": 4,
+          "phonicsStage": "DIGRAPHS",
+          "prerequisites": [
+            "g1-digraph-ck"
+          ],
+          "pattern": "NG",
+          "lessons": [
+            {
+              "code": "g1-ng-1",
+              "title": "The ng sound",
+              "childTitle": "ng",
+              "description": "Hear, see, read and spell ng.",
+              "emoji": "💍",
+              "minutes": 7,
+              "difficulty": 3,
+              "introSpeech": "Let's learn ng!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "NG",
+                "grapheme": "ng",
+                "words": [
+                  "ring",
+                  "king",
+                  "sing",
+                  "wing",
+                  "song",
+                  "swing"
+                ],
+                "contrast": {
+                  "pattern": "LETTER_N",
+                  "grapheme": "n",
+                  "words": [
+                    "net",
+                    "nut",
+                    "nose"
+                  ]
+                },
+                "sentence": "The king can sing a song."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "g1-blends",
+      "subject": "PHONICS",
+      "title": "Consonant Blends",
+      "emoji": "🌬️",
+      "description": "Two consonants side by side, both heard.",
+      "skills": [
+        {
+          "code": "g1-blends",
+          "dimension": "BLENDING",
+          "title": "Consonant blends",
+          "childTitle": "Blends",
+          "description": "Reads words that start with two consonant sounds (fr, fl, st, ...).",
+          "difficulty": 4,
+          "importance": 3,
+          "phonicsStage": "CONSONANT_BLENDS",
+          "prerequisites": [
+            "kg2-segmenting"
+          ],
+          "lessons": [
+            {
+              "code": "g1-blends-1",
+              "title": "Blends",
+              "childTitle": "Blends",
+              "description": "Hear both sounds: f-r-og, fl-ag, st-op.",
+              "emoji": "🐸",
+              "minutes": 7,
+              "difficulty": 4,
+              "introSpeech": "In a blend you hear both sounds, quickly together.",
               "activities": [
                 {
                   "type": "INTRO",
                   "stage": "explanation",
-                  "title": "Meet ee",
-                  "instructions": "Listen and look.",
-                  "instructionsSpeech": "Listen and look.",
+                  "title": "Hear it",
+                  "instructions": "Listen: two sounds, said quickly.",
+                  "instructionsSpeech": "Listen: two sounds, said quickly.",
                   "questions": [
                     {
                       "template": "pattern_intro",
-                      "pattern": "EE",
+                      "pattern": "FR",
                       "examples": [
-                        "bee",
-                        "tree",
-                        "sheep"
+                        "frog"
+                      ]
+                    },
+                    {
+                      "template": "pattern_intro",
+                      "pattern": "ST",
+                      "examples": [
+                        "star",
+                        "stop"
                       ]
                     }
                   ]
                 },
                 {
-                  "type": "MULTIPLE_CHOICE",
+                  "type": "BLEND_SOUNDS",
                   "stage": "guided_practice",
-                  "title": "Which word?",
-                  "instructions": "Tap the word with the sound.",
-                  "instructionsSpeech": "Tap the word with the sound.",
+                  "title": "Blend it",
+                  "instructions": "Tap each sound, then blend them.",
+                  "instructionsSpeech": "Tap each sound, then blend them.",
                   "questions": [
                     {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "EE",
-                      "word": "feet",
+                      "template": "blend_word",
+                      "word": "frog",
                       "distractors": [
-                        "foot",
+                        "flag",
                         "fox"
-                      ]
+                      ],
+                      "pictures": true
                     },
                     {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "EE",
-                      "word": "seed",
+                      "template": "blend_word",
+                      "word": "clap",
                       "distractors": [
-                        "sock",
-                        "sun"
-                      ]
-                    },
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "EE",
-                      "word": "three",
-                      "distractors": [
-                        "thumb",
-                        "thin"
-                      ]
+                        "cap",
+                        "flag"
+                      ],
+                      "pictures": true
                     }
                   ]
                 },
                 {
-                  "type": "LISTEN_AND_CHOOSE",
+                  "type": "SEGMENT_WORD",
                   "stage": "guided_practice",
-                  "title": "Listen and read",
-                  "instructions": "Listen, then tap the word.",
-                  "instructionsSpeech": "Listen, then tap the word.",
+                  "title": "Count the sounds",
+                  "instructions": "How many sounds? A blend has two.",
+                  "instructionsSpeech": "How many sounds? A blend has two.",
                   "questions": [
                     {
-                      "template": "listen_pick_word",
-                      "word": "tree",
-                      "distractors": [
-                        "three",
-                        "teeth"
-                      ]
+                      "template": "segment_word",
+                      "word": "flag"
                     },
                     {
-                      "template": "listen_pick_word",
-                      "word": "sheep",
-                      "distractors": [
-                        "ship",
-                        "shell"
+                      "template": "segment_word",
+                      "word": "stop"
+                    }
+                  ]
+                },
+                {
+                  "type": "SORT",
+                  "stage": "independent_practice",
+                  "title": "Sort it",
+                  "instructions": "Which blend does each word start with?",
+                  "instructionsSpeech": "Which blend does each word start with?",
+                  "questions": [
+                    {
+                      "template": "sort_by_pattern",
+                      "groups": [
+                        {
+                          "pattern": "FL",
+                          "words": [
+                            "flag",
+                            "flute"
+                          ]
+                        },
+                        {
+                          "pattern": "FR",
+                          "words": [
+                            "frog"
+                          ]
+                        },
+                        {
+                          "pattern": "ST",
+                          "words": [
+                            "star",
+                            "stop"
+                          ]
+                        }
                       ]
                     }
                   ]
                 },
                 {
-                  "type": "MISSING_LETTER",
+                  "type": "PICTURE_MATCH",
                   "stage": "independent_practice",
-                  "title": "Missing letters",
-                  "instructions": "Which letters are missing?",
-                  "instructionsSpeech": "Which letters are missing?",
+                  "title": "Read it",
+                  "instructions": "Read the word. Tap its picture.",
+                  "instructionsSpeech": "Read the word. Tap its picture.",
                   "questions": [
                     {
-                      "template": "missing_pattern",
-                      "word": "feet",
-                      "missing": "ee",
-                      "pattern": "EE",
-                      "choices": [
-                        "oo",
-                        "oa"
+                      "template": "read_word",
+                      "word": "block",
+                      "distractors": [
+                        "clock",
+                        "truck"
                       ]
                     },
                     {
-                      "template": "missing_pattern",
-                      "word": "seed",
-                      "missing": "ee",
-                      "pattern": "EE",
-                      "choices": [
-                        "ai",
-                        "oa"
+                      "template": "read_word",
+                      "word": "grapes",
+                      "distractors": [
+                        "frog",
+                        "snack"
                       ]
                     }
                   ]
                 },
                 {
                   "type": "SPELLING",
-                  "stage": "independent_practice",
+                  "stage": "review",
                   "title": "Spell it",
-                  "instructions": "Listen, then type the word.",
-                  "instructionsSpeech": "Listen, then type the word.",
+                  "instructions": "Type the word you hear.",
+                  "instructionsSpeech": "Type the word you hear.",
                   "questions": [
                     {
                       "template": "spell_word",
-                      "word": "bee"
+                      "word": "grin"
                     },
                     {
                       "template": "spell_word",
-                      "word": "feet"
-                    }
-                  ]
-                },
-                {
-                  "type": "SENTENCE_BUILDER",
-                  "stage": "review",
-                  "title": "Make a sentence",
-                  "instructions": "Put the words in order.",
-                  "instructionsSpeech": "Put the words in order.",
-                  "questions": [
-                    {
-                      "template": "order_sentence",
-                      "sentence": "The sheep eat green grass.",
-                      "emoji": "🐑"
+                      "word": "snack"
                     }
                   ]
                 }
               ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "g1-vowel-teams",
+      "subject": "PHONICS",
+      "title": "Vowel Teams",
+      "emoji": "🤝",
+      "description": "Two vowels, one sound: ai, ay, ee, ea, oa, ow, oo, ou, oi, oy.",
+      "skills": [
+        {
+          "code": "g1-vowel-team-ee",
+          "dimension": "PHONICS",
+          "title": "EE",
+          "childTitle": "ee",
+          "description": "Reads and spells words with ee.",
+          "difficulty": 5,
+          "importance": 4,
+          "phonicsStage": "VOWEL_TEAMS",
+          "prerequisites": [
+            "kg3-digraph-sh"
+          ],
+          "pattern": "EE",
+          "lessons": [
+            {
+              "code": "g1-ee-1",
+              "title": "EE",
+              "childTitle": "ee",
+              "description": "Hear, see, read and spell ee.",
+              "emoji": "🦶",
+              "minutes": 7,
+              "difficulty": 5,
+              "introSpeech": "Let's learn ee!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "EE",
+                "grapheme": "ee",
+                "words": [
+                  "feet",
+                  "seed",
+                  "sheep",
+                  "teeth",
+                  "tree",
+                  "wheel"
+                ],
+                "contrast": {
+                  "pattern": "EA",
+                  "grapheme": "ea",
+                  "words": [
+                    "leaf",
+                    "sea",
+                    "peach"
+                  ]
+                },
+                "sentence": "Three sheep sleep under a tree."
+              }
             }
           ]
         },
@@ -174,191 +349,53 @@
           "dimension": "PHONICS",
           "title": "EA (two sounds)",
           "childTitle": "ea",
-          "pattern": "EA",
+          "description": "Reads and spells words with ea.",
+          "difficulty": 5,
           "importance": 4,
+          "phonicsStage": "VOWEL_TEAMS",
           "prerequisites": [
             "g1-vowel-team-ee"
           ],
+          "pattern": "EA",
           "lessons": [
             {
               "code": "g1-ea-1",
-              "title": "The ea team",
+              "title": "EA (two sounds)",
               "childTitle": "ea",
+              "description": "Hear, see, read and spell ea.",
               "emoji": "🍃",
-              "minutes": 8,
-              "activities": [
-                {
-                  "type": "INTRO",
-                  "stage": "explanation",
-                  "title": "Meet ea",
-                  "instructions": "Listen and look.",
-                  "instructionsSpeech": "Listen and look.",
-                  "questions": [
-                    {
-                      "template": "pattern_intro",
-                      "pattern": "EA",
-                      "examples": [
-                        "leaf",
-                        "sea",
-                        "peach"
-                      ]
-                    }
+              "minutes": 7,
+              "difficulty": 5,
+              "introSpeech": "Let's learn ea!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "EA",
+                "grapheme": "ea",
+                "words": [
+                  "leaf",
+                  "sea",
+                  "peach",
+                  "tea",
+                  "wheat",
+                  "bread"
+                ],
+                "contrast": {
+                  "pattern": "EE",
+                  "grapheme": "ee",
+                  "words": [
+                    "feet",
+                    "seed",
+                    "tree"
                   ]
                 },
-                {
-                  "type": "MULTIPLE_CHOICE",
-                  "stage": "demonstration",
-                  "title": "Which sound?",
-                  "instructions": "ea can make two sounds. Which one do you hear?",
-                  "instructionsSpeech": "ea can make two sounds. Which one do you hear?",
-                  "questions": [
-                    {
-                      "template": "pick_pattern_sound",
-                      "pattern": "EA",
-                      "word": "leaf"
-                    },
-                    {
-                      "template": "pick_pattern_sound",
-                      "pattern": "EA",
-                      "word": "bread"
-                    },
-                    {
-                      "template": "pick_pattern_sound",
-                      "pattern": "EA",
-                      "word": "sea"
-                    },
-                    {
-                      "template": "pick_pattern_sound",
-                      "pattern": "EA",
-                      "word": "head"
-                    }
-                  ]
-                },
-                {
-                  "type": "MULTIPLE_CHOICE",
-                  "stage": "guided_practice",
-                  "title": "Which word?",
-                  "instructions": "Tap the word with the sound.",
-                  "instructionsSpeech": "Tap the word with the sound.",
-                  "questions": [
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "EA",
-                      "word": "leaf",
-                      "distractors": [
-                        "log",
-                        "lip"
-                      ],
-                      "sound": "EA_LONG_E"
-                    },
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "EA",
-                      "word": "bread",
-                      "distractors": [
-                        "bed",
-                        "bag"
-                      ],
-                      "sound": "EA_SHORT_E"
-                    },
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "EA",
-                      "word": "peach",
-                      "distractors": [
-                        "pig",
-                        "pot"
-                      ],
-                      "sound": "EA_LONG_E"
-                    }
-                  ]
-                },
-                {
-                  "type": "LISTEN_AND_CHOOSE",
-                  "stage": "guided_practice",
-                  "title": "Listen and read",
-                  "instructions": "Listen, then tap the word.",
-                  "instructionsSpeech": "Listen, then tap the word.",
-                  "questions": [
-                    {
-                      "template": "listen_pick_word",
-                      "word": "sea",
-                      "distractors": [
-                        "see",
-                        "sun"
-                      ]
-                    },
-                    {
-                      "template": "listen_pick_word",
-                      "word": "head",
-                      "distractors": [
-                        "hen",
-                        "hat"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "MISSING_LETTER",
-                  "stage": "independent_practice",
-                  "title": "Missing letters",
-                  "instructions": "Which letters are missing?",
-                  "instructionsSpeech": "Which letters are missing?",
-                  "questions": [
-                    {
-                      "template": "missing_pattern",
-                      "word": "leaf",
-                      "missing": "ea",
-                      "pattern": "EA",
-                      "choices": [
-                        "ee",
-                        "oa"
-                      ]
-                    },
-                    {
-                      "template": "missing_pattern",
-                      "word": "bread",
-                      "missing": "ea",
-                      "pattern": "EA",
-                      "choices": [
-                        "ai",
-                        "oo"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "SPELLING",
-                  "stage": "independent_practice",
-                  "title": "Spell it",
-                  "instructions": "Listen, then type the word.",
-                  "instructionsSpeech": "Listen, then type the word.",
-                  "questions": [
-                    {
-                      "template": "spell_word",
-                      "word": "sea"
-                    },
-                    {
-                      "template": "spell_word",
-                      "word": "leaf"
-                    }
-                  ]
-                },
-                {
-                  "type": "SENTENCE_BUILDER",
-                  "stage": "review",
-                  "title": "Make a sentence",
-                  "instructions": "Put the words in order.",
-                  "instructionsSpeech": "Put the words in order.",
-                  "questions": [
-                    {
-                      "template": "order_sentence",
-                      "sentence": "A leaf fell into the sea.",
-                      "emoji": "🍃"
-                    }
-                  ]
-                }
-              ]
+                "sentence": "I had tea and a peach by the sea.",
+                "soundSort": [
+                  "leaf",
+                  "sea",
+                  "bread",
+                  "head"
+                ]
+              }
             }
           ]
         },
@@ -367,167 +404,48 @@
           "dimension": "PHONICS",
           "title": "AI and AY",
           "childTitle": "ai ay",
-          "pattern": "AI",
+          "description": "Reads and spells words with ai.",
+          "difficulty": 5,
           "importance": 4,
+          "phonicsStage": "VOWEL_TEAMS",
           "prerequisites": [
             "g1-vowel-team-ee"
           ],
+          "pattern": "AI",
           "lessons": [
             {
               "code": "g1-ai-ay-1",
-              "title": "The ai team",
-              "childTitle": "ai",
-              "emoji": "🐌",
-              "minutes": 8,
-              "activities": [
-                {
-                  "type": "INTRO",
-                  "stage": "explanation",
-                  "title": "Meet ai",
-                  "instructions": "Listen and look.",
-                  "instructionsSpeech": "Listen and look.",
-                  "questions": [
-                    {
-                      "template": "pattern_intro",
-                      "pattern": "AI",
-                      "examples": [
-                        "rain",
-                        "snail",
-                        "train"
-                      ]
-                    }
+              "title": "AI and AY",
+              "childTitle": "ai ay",
+              "description": "Hear, see, read and spell ai ay.",
+              "emoji": "🌧️",
+              "minutes": 7,
+              "difficulty": 5,
+              "introSpeech": "Let's learn ai ay!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "AI",
+                "grapheme": "ai",
+                "words": [
+                  "rain",
+                  "snail",
+                  "train",
+                  "mail",
+                  "paint",
+                  "rained"
+                ],
+                "contrast": {
+                  "pattern": "AY",
+                  "grapheme": "ay",
+                  "words": [
+                    "play",
+                    "day",
+                    "hay",
+                    "crayon"
                   ]
                 },
-                {
-                  "type": "MULTIPLE_CHOICE",
-                  "stage": "guided_practice",
-                  "title": "Which word?",
-                  "instructions": "Tap the word with the sound.",
-                  "instructionsSpeech": "Tap the word with the sound.",
-                  "questions": [
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "AI",
-                      "word": "rain",
-                      "distractors": [
-                        "ring",
-                        "run"
-                      ]
-                    },
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "AI",
-                      "word": "mail",
-                      "distractors": [
-                        "milk",
-                        "map"
-                      ]
-                    },
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "AI",
-                      "word": "paint",
-                      "distractors": [
-                        "pen",
-                        "pin"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "LISTEN_AND_CHOOSE",
-                  "stage": "guided_practice",
-                  "title": "Listen and read",
-                  "instructions": "Listen, then tap the word.",
-                  "instructionsSpeech": "Listen, then tap the word.",
-                  "questions": [
-                    {
-                      "template": "listen_pick_word",
-                      "word": "snail",
-                      "distractors": [
-                        "snake",
-                        "sock"
-                      ]
-                    },
-                    {
-                      "template": "listen_pick_word",
-                      "word": "play",
-                      "distractors": [
-                        "pig",
-                        "pen"
-                      ]
-                    },
-                    {
-                      "template": "listen_pick_word",
-                      "word": "day",
-                      "distractors": [
-                        "dog",
-                        "duck"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "MISSING_LETTER",
-                  "stage": "independent_practice",
-                  "title": "Missing letters",
-                  "instructions": "Which letters are missing?",
-                  "instructionsSpeech": "Which letters are missing?",
-                  "questions": [
-                    {
-                      "template": "missing_pattern",
-                      "word": "rain",
-                      "missing": "ai",
-                      "pattern": "AI",
-                      "choices": [
-                        "ee",
-                        "oa"
-                      ]
-                    },
-                    {
-                      "template": "missing_pattern",
-                      "word": "train",
-                      "missing": "ai",
-                      "pattern": "AI",
-                      "choices": [
-                        "oo",
-                        "ea"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "SPELLING",
-                  "stage": "independent_practice",
-                  "title": "Spell it",
-                  "instructions": "Listen, then type the word.",
-                  "instructionsSpeech": "Listen, then type the word.",
-                  "questions": [
-                    {
-                      "template": "spell_word",
-                      "word": "rain"
-                    },
-                    {
-                      "template": "spell_word",
-                      "word": "day"
-                    }
-                  ]
-                },
-                {
-                  "type": "SENTENCE_BUILDER",
-                  "stage": "review",
-                  "title": "Make a sentence",
-                  "instructions": "Put the words in order.",
-                  "instructionsSpeech": "Put the words in order.",
-                  "questions": [
-                    {
-                      "template": "order_sentence",
-                      "sentence": "The snail is in the rain.",
-                      "emoji": "🐌"
-                    }
-                  ]
-                }
-              ]
+                "sentence": "The snail is in the rain."
+              }
             }
           ]
         },
@@ -536,159 +454,47 @@
           "dimension": "PHONICS",
           "title": "OA",
           "childTitle": "oa",
-          "pattern": "OA",
+          "description": "Reads and spells words with oa.",
+          "difficulty": 5,
           "importance": 4,
+          "phonicsStage": "VOWEL_TEAMS",
           "prerequisites": [
             "g1-vowel-team-ee"
           ],
+          "pattern": "OA",
           "lessons": [
             {
               "code": "g1-oa-1",
-              "title": "The oa team",
+              "title": "OA",
               "childTitle": "oa",
+              "description": "Hear, see, read and spell oa.",
               "emoji": "⛵",
-              "minutes": 8,
-              "activities": [
-                {
-                  "type": "INTRO",
-                  "stage": "explanation",
-                  "title": "Meet oa",
-                  "instructions": "Listen and look.",
-                  "instructionsSpeech": "Listen and look.",
-                  "questions": [
-                    {
-                      "template": "pattern_intro",
-                      "pattern": "OA",
-                      "examples": [
-                        "boat",
-                        "goat",
-                        "coat"
-                      ]
-                    }
+              "minutes": 7,
+              "difficulty": 5,
+              "introSpeech": "Let's learn oa!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "OA",
+                "grapheme": "oa",
+                "words": [
+                  "boat",
+                  "coat",
+                  "road",
+                  "soap",
+                  "goat",
+                  "toast"
+                ],
+                "contrast": {
+                  "pattern": "OW",
+                  "grapheme": "ow",
+                  "words": [
+                    "snow",
+                    "bow",
+                    "window"
                   ]
                 },
-                {
-                  "type": "MULTIPLE_CHOICE",
-                  "stage": "guided_practice",
-                  "title": "Which word?",
-                  "instructions": "Tap the word with the sound.",
-                  "instructionsSpeech": "Tap the word with the sound.",
-                  "questions": [
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "OA",
-                      "word": "boat",
-                      "distractors": [
-                        "bat",
-                        "bed"
-                      ]
-                    },
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "OA",
-                      "word": "soap",
-                      "distractors": [
-                        "sun",
-                        "sock"
-                      ]
-                    },
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "OA",
-                      "word": "road",
-                      "distractors": [
-                        "red",
-                        "rat"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "LISTEN_AND_CHOOSE",
-                  "stage": "guided_practice",
-                  "title": "Listen and read",
-                  "instructions": "Listen, then tap the word.",
-                  "instructionsSpeech": "Listen, then tap the word.",
-                  "questions": [
-                    {
-                      "template": "listen_pick_word",
-                      "word": "goat",
-                      "distractors": [
-                        "coat",
-                        "girl"
-                      ]
-                    },
-                    {
-                      "template": "listen_pick_word",
-                      "word": "coat",
-                      "distractors": [
-                        "cat",
-                        "cup"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "MISSING_LETTER",
-                  "stage": "independent_practice",
-                  "title": "Missing letters",
-                  "instructions": "Which letters are missing?",
-                  "instructionsSpeech": "Which letters are missing?",
-                  "questions": [
-                    {
-                      "template": "missing_pattern",
-                      "word": "boat",
-                      "missing": "oa",
-                      "pattern": "OA",
-                      "choices": [
-                        "ee",
-                        "ai"
-                      ]
-                    },
-                    {
-                      "template": "missing_pattern",
-                      "word": "soap",
-                      "missing": "oa",
-                      "pattern": "OA",
-                      "choices": [
-                        "oo",
-                        "ea"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "SPELLING",
-                  "stage": "independent_practice",
-                  "title": "Spell it",
-                  "instructions": "Listen, then type the word.",
-                  "instructionsSpeech": "Listen, then type the word.",
-                  "questions": [
-                    {
-                      "template": "spell_word",
-                      "word": "boat"
-                    },
-                    {
-                      "template": "spell_word",
-                      "word": "coat"
-                    }
-                  ]
-                },
-                {
-                  "type": "SENTENCE_BUILDER",
-                  "stage": "review",
-                  "title": "Make a sentence",
-                  "instructions": "Put the words in order.",
-                  "instructionsSpeech": "Put the words in order.",
-                  "questions": [
-                    {
-                      "template": "order_sentence",
-                      "sentence": "The goat is on the boat.",
-                      "emoji": "⛵"
-                    }
-                  ]
-                }
-              ]
+                "sentence": "The goat is in the boat."
+              }
             }
           ]
         },
@@ -697,126 +503,443 @@
           "dimension": "PHONICS",
           "title": "OW (two sounds)",
           "childTitle": "ow",
-          "pattern": "OW",
-          "importance": 3,
+          "description": "Reads and spells words with ow.",
+          "difficulty": 6,
+          "importance": 4,
+          "phonicsStage": "VOWEL_TEAMS",
           "prerequisites": [
             "g1-vowel-team-oa"
           ],
+          "pattern": "OW",
           "lessons": [
             {
               "code": "g1-ow-1",
-              "title": "The ow team",
+              "title": "OW (two sounds)",
               "childTitle": "ow",
+              "description": "Hear, see, read and spell ow.",
               "emoji": "❄️",
-              "minutes": 8,
+              "minutes": 7,
+              "difficulty": 6,
+              "introSpeech": "Let's learn ow!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "OW",
+                "grapheme": "ow",
+                "words": [
+                  "snow",
+                  "bow",
+                  "window",
+                  "cow",
+                  "owl",
+                  "crown"
+                ],
+                "contrast": {
+                  "pattern": "OA",
+                  "grapheme": "oa",
+                  "words": [
+                    "boat",
+                    "coat",
+                    "goat"
+                  ]
+                },
+                "sentence": "The cow is in the snow.",
+                "soundSort": [
+                  "snow",
+                  "bow",
+                  "cow",
+                  "owl",
+                  "crown"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "g1-vowel-team-oo",
+          "dimension": "PHONICS",
+          "title": "OO (two sounds)",
+          "childTitle": "oo",
+          "description": "Reads and spells words with oo.",
+          "difficulty": 6,
+          "importance": 4,
+          "phonicsStage": "VOWEL_TEAMS",
+          "prerequisites": [
+            "g1-vowel-team-ee"
+          ],
+          "pattern": "OO",
+          "lessons": [
+            {
+              "code": "g1-oo-1",
+              "title": "OO (two sounds)",
+              "childTitle": "oo",
+              "description": "Hear, see, read and spell oo.",
+              "emoji": "🌙",
+              "minutes": 7,
+              "difficulty": 6,
+              "introSpeech": "Let's learn oo!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "OO",
+                "grapheme": "oo",
+                "words": [
+                  "moon",
+                  "spoon",
+                  "boot",
+                  "book",
+                  "foot",
+                  "zoo"
+                ],
+                "contrast": {
+                  "pattern": "LETTER_O",
+                  "grapheme": "o",
+                  "words": [
+                    "dog",
+                    "pot",
+                    "box"
+                  ]
+                },
+                "sentence": "I read a book at the zoo.",
+                "soundSort": [
+                  "moon",
+                  "spoon",
+                  "book",
+                  "foot",
+                  "cook"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "g1-vowel-team-ou",
+          "dimension": "PHONICS",
+          "title": "OU",
+          "childTitle": "ou",
+          "description": "Reads and spells words with ou.",
+          "difficulty": 6,
+          "importance": 4,
+          "phonicsStage": "VOWEL_TEAMS",
+          "prerequisites": [
+            "g1-vowel-team-ow"
+          ],
+          "pattern": "OU",
+          "lessons": [
+            {
+              "code": "g1-ou-1",
+              "title": "OU",
+              "childTitle": "ou",
+              "description": "Hear, see, read and spell ou.",
+              "emoji": "🏠",
+              "minutes": 7,
+              "difficulty": 6,
+              "introSpeech": "Let's learn ou!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "OU",
+                "grapheme": "ou",
+                "words": [
+                  "house",
+                  "cloud",
+                  "mouse",
+                  "mouth",
+                  "shout",
+                  "couch"
+                ],
+                "contrast": {
+                  "pattern": "OW",
+                  "grapheme": "ow",
+                  "words": [
+                    "cow",
+                    "owl",
+                    "crown"
+                  ]
+                },
+                "sentence": "The mouse is in the house."
+              }
+            }
+          ]
+        },
+        {
+          "code": "g1-vowel-team-oi-oy",
+          "dimension": "PHONICS",
+          "title": "OI and OY",
+          "childTitle": "oi oy",
+          "description": "Reads and spells words with oi.",
+          "difficulty": 6,
+          "importance": 4,
+          "phonicsStage": "VOWEL_TEAMS",
+          "prerequisites": [
+            "g1-vowel-team-ee"
+          ],
+          "pattern": "OI",
+          "lessons": [
+            {
+              "code": "g1-oi-oy-1",
+              "title": "OI and OY",
+              "childTitle": "oi oy",
+              "description": "Hear, see, read and spell oi oy.",
+              "emoji": "🪙",
+              "minutes": 7,
+              "difficulty": 6,
+              "introSpeech": "Let's learn oi oy!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "OI",
+                "grapheme": "oi",
+                "words": [
+                  "coin",
+                  "oil",
+                  "point",
+                  "soil",
+                  "boil",
+                  "noise"
+                ],
+                "contrast": {
+                  "pattern": "OY",
+                  "grapheme": "oy",
+                  "words": [
+                    "boy",
+                    "toy",
+                    "joy"
+                  ]
+                },
+                "sentence": "The boy has a coin and a toy."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "g1-r-controlled",
+      "subject": "PHONICS",
+      "title": "Bossy R",
+      "emoji": "🦖",
+      "description": "r changes the vowel before it: ar, or, er, ir, ur, air.",
+      "skills": [
+        {
+          "code": "g1-r-ar",
+          "dimension": "PHONICS",
+          "title": "AR",
+          "childTitle": "ar",
+          "description": "Reads and spells words with ar.",
+          "difficulty": 6,
+          "importance": 4,
+          "phonicsStage": "R_CONTROLLED",
+          "prerequisites": [
+            "g1-vowel-team-ee"
+          ],
+          "pattern": "AR",
+          "lessons": [
+            {
+              "code": "g1-ar-1",
+              "title": "AR",
+              "childTitle": "ar",
+              "description": "Hear, see, read and spell ar.",
+              "emoji": "⭐",
+              "minutes": 7,
+              "difficulty": 6,
+              "introSpeech": "Let's learn ar!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "AR",
+                "grapheme": "ar",
+                "words": [
+                  "car",
+                  "star",
+                  "farm",
+                  "jar",
+                  "arm",
+                  "shark"
+                ],
+                "contrast": {
+                  "pattern": "OR",
+                  "grapheme": "or",
+                  "words": [
+                    "fork",
+                    "corn",
+                    "horse"
+                  ]
+                },
+                "sentence": "The car is on the farm."
+              }
+            }
+          ]
+        },
+        {
+          "code": "g1-r-or",
+          "dimension": "PHONICS",
+          "title": "OR",
+          "childTitle": "or",
+          "description": "Reads and spells words with or.",
+          "difficulty": 6,
+          "importance": 4,
+          "phonicsStage": "R_CONTROLLED",
+          "prerequisites": [
+            "g1-r-ar"
+          ],
+          "pattern": "OR",
+          "lessons": [
+            {
+              "code": "g1-or-1",
+              "title": "OR",
+              "childTitle": "or",
+              "description": "Hear, see, read and spell or.",
+              "emoji": "🍴",
+              "minutes": 7,
+              "difficulty": 6,
+              "introSpeech": "Let's learn or!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "OR",
+                "grapheme": "or",
+                "words": [
+                  "fork",
+                  "horse",
+                  "corn",
+                  "storm",
+                  "horn",
+                  "torch"
+                ],
+                "contrast": {
+                  "pattern": "AR",
+                  "grapheme": "ar",
+                  "words": [
+                    "car",
+                    "jar",
+                    "arm"
+                  ]
+                },
+                "sentence": "The horse ate the corn."
+              }
+            }
+          ]
+        },
+        {
+          "code": "g1-r-er-ir-ur",
+          "dimension": "PHONICS",
+          "title": "ER, IR and UR",
+          "childTitle": "er ir ur",
+          "description": "Knows that er, ir and ur make the same sound.",
+          "difficulty": 6,
+          "importance": 3,
+          "phonicsStage": "R_CONTROLLED",
+          "prerequisites": [
+            "g1-r-ar"
+          ],
+          "pattern": "IR",
+          "lessons": [
+            {
+              "code": "g1-er-ir-ur-1",
+              "title": "ER, IR and UR",
+              "childTitle": "er ir ur",
+              "description": "Three spellings, one sound: her, bird, nurse.",
+              "emoji": "🐦",
+              "minutes": 7,
+              "difficulty": 6,
+              "introSpeech": "er, ir and ur all say er!",
               "activities": [
                 {
                   "type": "INTRO",
                   "stage": "explanation",
-                  "title": "Meet ow",
-                  "instructions": "Listen and look.",
-                  "instructionsSpeech": "Listen and look.",
+                  "title": "Hear it",
+                  "instructions": "Three spellings, one sound.",
+                  "instructionsSpeech": "Three spellings, one sound.",
                   "questions": [
                     {
                       "template": "pattern_intro",
-                      "pattern": "OW",
+                      "pattern": "IR",
                       "examples": [
-                        "snow",
-                        "window",
-                        "cow"
+                        "bird",
+                        "girl",
+                        "first"
+                      ]
+                    },
+                    {
+                      "template": "pattern_intro",
+                      "pattern": "UR",
+                      "examples": [
+                        "nurse",
+                        "purse",
+                        "surf"
                       ]
                     }
                   ]
                 },
                 {
-                  "type": "MULTIPLE_CHOICE",
+                  "type": "FIND_PATTERN",
                   "stage": "demonstration",
-                  "title": "Which sound?",
-                  "instructions": "ow can make two sounds. Which one do you hear?",
-                  "instructionsSpeech": "ow can make two sounds. Which one do you hear?",
+                  "title": "See it",
+                  "instructions": "Find the letters that say er.",
+                  "instructionsSpeech": "Find the letters that say er.",
                   "questions": [
                     {
-                      "template": "pick_pattern_sound",
-                      "pattern": "OW",
-                      "word": "snow"
+                      "template": "find_pattern",
+                      "pattern": "IR",
+                      "word": "bird"
                     },
                     {
-                      "template": "pick_pattern_sound",
-                      "pattern": "OW",
-                      "word": "cow"
+                      "template": "find_pattern",
+                      "pattern": "UR",
+                      "word": "nurse"
                     },
                     {
-                      "template": "pick_pattern_sound",
-                      "pattern": "OW",
-                      "word": "owl"
-                    },
-                    {
-                      "template": "pick_pattern_sound",
-                      "pattern": "OW",
-                      "word": "bow"
+                      "template": "find_pattern",
+                      "pattern": "ER",
+                      "word": "fern"
                     }
                   ]
                 },
                 {
-                  "type": "MULTIPLE_CHOICE",
+                  "type": "SORT",
                   "stage": "guided_practice",
-                  "title": "Which word?",
-                  "instructions": "Tap the word with the sound.",
-                  "instructionsSpeech": "Tap the word with the sound.",
+                  "title": "Sort it",
+                  "instructions": "Which spelling does each word use?",
+                  "instructionsSpeech": "Which spelling does each word use?",
                   "questions": [
                     {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "OW",
-                      "word": "snow",
-                      "distractors": [
-                        "sun",
-                        "sock"
-                      ],
-                      "sound": "OW_LONG_O"
-                    },
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "OW",
-                      "word": "cow",
-                      "distractors": [
-                        "cat",
-                        "cup"
-                      ],
-                      "sound": "OW_OU"
-                    },
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "OW",
-                      "word": "owl",
-                      "distractors": [
-                        "egg",
-                        "ant"
-                      ],
-                      "sound": "OW_OU"
-                    }
-                  ]
-                },
-                {
-                  "type": "LISTEN_AND_CHOOSE",
-                  "stage": "guided_practice",
-                  "title": "Listen and read",
-                  "instructions": "Listen, then tap the word.",
-                  "instructionsSpeech": "Listen, then tap the word.",
-                  "questions": [
-                    {
-                      "template": "listen_pick_word",
-                      "word": "crown",
-                      "distractors": [
-                        "clown",
-                        "coat"
+                      "template": "sort_by_pattern",
+                      "groups": [
+                        {
+                          "pattern": "ER",
+                          "words": [
+                            "fern",
+                            "her"
+                          ]
+                        },
+                        {
+                          "pattern": "IR",
+                          "words": [
+                            "bird",
+                            "girl",
+                            "skirt"
+                          ]
+                        },
+                        {
+                          "pattern": "UR",
+                          "words": [
+                            "nurse",
+                            "purse",
+                            "surf"
+                          ]
+                        }
                       ]
-                    },
+                    }
+                  ]
+                },
+                {
+                  "type": "PICTURE_MATCH",
+                  "stage": "independent_practice",
+                  "title": "Read it",
+                  "instructions": "Read the word. Tap its picture.",
+                  "instructionsSpeech": "Read the word. Tap its picture.",
+                  "questions": [
                     {
-                      "template": "listen_pick_word",
-                      "word": "bow",
+                      "template": "read_word",
+                      "word": "shirt",
                       "distractors": [
-                        "boy",
-                        "book"
+                        "skirt",
+                        "purse"
                       ]
                     }
                   ]
@@ -824,60 +947,338 @@
                 {
                   "type": "MISSING_LETTER",
                   "stage": "independent_practice",
-                  "title": "Missing letters",
+                  "title": "Spell it",
                   "instructions": "Which letters are missing?",
                   "instructionsSpeech": "Which letters are missing?",
                   "questions": [
                     {
                       "template": "missing_pattern",
-                      "word": "snow",
-                      "missing": "ow",
-                      "pattern": "OW",
+                      "word": "girl",
+                      "missing": "ir",
+                      "pattern": "IR",
                       "choices": [
-                        "oa",
-                        "ee"
+                        "ur",
+                        "er"
                       ]
                     },
                     {
                       "template": "missing_pattern",
-                      "word": "crown",
-                      "missing": "ow",
-                      "pattern": "OW",
+                      "word": "nurse",
+                      "missing": "ur",
+                      "pattern": "UR",
                       "choices": [
-                        "ou",
-                        "ai"
+                        "ir",
+                        "er"
                       ]
                     }
                   ]
                 },
                 {
                   "type": "SPELLING",
-                  "stage": "independent_practice",
-                  "title": "Spell it",
-                  "instructions": "Listen, then type the word.",
-                  "instructionsSpeech": "Listen, then type the word.",
+                  "stage": "review",
+                  "title": "Write it",
+                  "instructions": "Type the word you hear.",
+                  "instructionsSpeech": "Type the word you hear.",
                   "questions": [
                     {
                       "template": "spell_word",
-                      "word": "cow"
+                      "word": "bird"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "g1-r-air",
+          "dimension": "PHONICS",
+          "title": "AIR",
+          "childTitle": "air",
+          "description": "Reads and spells words with air.",
+          "difficulty": 6,
+          "importance": 4,
+          "phonicsStage": "R_CONTROLLED",
+          "prerequisites": [
+            "g1-r-ar"
+          ],
+          "pattern": "AIR",
+          "lessons": [
+            {
+              "code": "g1-air-1",
+              "title": "AIR",
+              "childTitle": "air",
+              "description": "Hear, see, read and spell air.",
+              "emoji": "🪑",
+              "minutes": 7,
+              "difficulty": 6,
+              "introSpeech": "Let's learn air!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "AIR",
+                "grapheme": "air",
+                "words": [
+                  "chair",
+                  "hair",
+                  "stairs",
+                  "fair",
+                  "pair",
+                  "air"
+                ],
+                "contrast": {
+                  "pattern": "AR",
+                  "grapheme": "ar",
+                  "words": [
+                    "car",
+                    "star",
+                    "jar"
+                  ]
+                },
+                "sentence": "Brush your hair on the stairs."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "g1-word-endings",
+      "subject": "PHONICS",
+      "title": "Word Endings",
+      "emoji": "🔚",
+      "description": "-ing, -ed (three sounds), -s and -es.",
+      "skills": [
+        {
+          "code": "g1-ending-ing",
+          "dimension": "PHONICS",
+          "title": "Ending -ING",
+          "childTitle": "ing",
+          "description": "Reads and spells words with ing.",
+          "difficulty": 6,
+          "importance": 4,
+          "phonicsStage": "WORD_ENDINGS",
+          "prerequisites": [
+            "g1-digraph-ng"
+          ],
+          "pattern": "ING",
+          "lessons": [
+            {
+              "code": "g1-ing-1",
+              "title": "-ING",
+              "childTitle": "ing",
+              "description": "Hear, see, read and spell ing.",
+              "emoji": "🤸",
+              "minutes": 7,
+              "difficulty": 6,
+              "introSpeech": "Let's learn ing!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "ING",
+                "grapheme": "ing",
+                "words": [
+                  "jumping",
+                  "singing",
+                  "fishing",
+                  "sleeping",
+                  "swimming",
+                  "kicking"
+                ],
+                "contrast": {
+                  "pattern": "ED",
+                  "grapheme": "ed",
+                  "words": [
+                    "jumped",
+                    "helped",
+                    "played"
+                  ]
+                },
+                "sentence": "The boy is swimming and kicking."
+              }
+            }
+          ]
+        },
+        {
+          "code": "g1-ending-ed",
+          "dimension": "PHONICS",
+          "title": "Ending -ED (three sounds)",
+          "childTitle": "ed",
+          "description": "Reads and spells words with ed.",
+          "difficulty": 7,
+          "importance": 4,
+          "phonicsStage": "WORD_ENDINGS",
+          "prerequisites": [
+            "g1-ending-ing"
+          ],
+          "pattern": "ED",
+          "lessons": [
+            {
+              "code": "g1-ed-1",
+              "title": "-ED (three sounds)",
+              "childTitle": "ed",
+              "description": "Hear, see, read and spell ed.",
+              "emoji": "🎨",
+              "minutes": 7,
+              "difficulty": 7,
+              "introSpeech": "Let's learn ed!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "ED",
+                "grapheme": "ed",
+                "words": [
+                  "jumped",
+                  "played",
+                  "painted",
+                  "helped",
+                  "rained",
+                  "landed"
+                ],
+                "contrast": {
+                  "pattern": "ING",
+                  "grapheme": "ing",
+                  "words": [
+                    "jumping",
+                    "singing",
+                    "fishing"
+                  ]
+                },
+                "sentence": "It rained, so we painted.",
+                "soundSort": [
+                  "jumped",
+                  "helped",
+                  "played",
+                  "rained",
+                  "painted",
+                  "landed"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "g1-ending-s-es",
+          "dimension": "PHONICS",
+          "title": "-S and -ES",
+          "childTitle": "s es",
+          "description": "Adds -s or -es to show more than one.",
+          "difficulty": 6,
+          "importance": 3,
+          "phonicsStage": "WORD_ENDINGS",
+          "prerequisites": [
+            "g1-ending-ing"
+          ],
+          "pattern": "ES",
+          "lessons": [
+            {
+              "code": "g1-s-es-1",
+              "title": "-S and -ES",
+              "childTitle": "s es",
+              "description": "More than one: cats, dogs, boxes, dishes.",
+              "emoji": "🐱",
+              "minutes": 6,
+              "difficulty": 6,
+              "introSpeech": "Add s, or es, to mean more than one!",
+              "activities": [
+                {
+                  "type": "INTRO",
+                  "stage": "explanation",
+                  "title": "Hear it",
+                  "instructions": "Listen to the ending.",
+                  "instructionsSpeech": "Listen to the ending.",
+                  "questions": [
+                    {
+                      "template": "pattern_intro",
+                      "pattern": "ENDING_S",
+                      "examples": [
+                        "cats",
+                        "dogs"
+                      ]
                     },
                     {
-                      "template": "spell_word",
-                      "word": "snow"
+                      "template": "pattern_intro",
+                      "pattern": "ES",
+                      "examples": [
+                        "boxes",
+                        "dishes"
+                      ]
                     }
                   ]
                 },
                 {
-                  "type": "SENTENCE_BUILDER",
-                  "stage": "review",
-                  "title": "Make a sentence",
-                  "instructions": "Put the words in order.",
-                  "instructionsSpeech": "Put the words in order.",
+                  "type": "SORT",
+                  "stage": "guided_practice",
+                  "title": "Sort it",
+                  "instructions": "-s or -es?",
+                  "instructionsSpeech": "-s or -es?",
                   "questions": [
                     {
-                      "template": "order_sentence",
-                      "sentence": "The cow saw snow for the first time.",
-                      "emoji": "🐄"
+                      "template": "sort_by_pattern",
+                      "groups": [
+                        {
+                          "pattern": "ENDING_S",
+                          "words": [
+                            "cats",
+                            "dogs",
+                            "grapes"
+                          ]
+                        },
+                        {
+                          "pattern": "ES",
+                          "words": [
+                            "boxes",
+                            "dishes",
+                            "foxes"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "SORT",
+                  "stage": "guided_practice",
+                  "title": "Two sounds",
+                  "instructions": "Does the s say s, or z?",
+                  "instructionsSpeech": "Does the s say s, or z?",
+                  "questions": [
+                    {
+                      "template": "sort_by_sound",
+                      "pattern": "ENDING_S",
+                      "words": [
+                        "cats",
+                        "grapes",
+                        "dogs",
+                        "stairs"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "PICTURE_MATCH",
+                  "stage": "independent_practice",
+                  "title": "Read it",
+                  "instructions": "Read the word. Tap its picture.",
+                  "instructionsSpeech": "Read the word. Tap its picture.",
+                  "questions": [
+                    {
+                      "template": "read_word",
+                      "word": "buses",
+                      "distractors": [
+                        "foxes",
+                        "dishes"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "SPELLING",
+                  "stage": "review",
+                  "title": "Spell it",
+                  "instructions": "Type the word you hear.",
+                  "instructionsSpeech": "Type the word you hear.",
+                  "questions": [
+                    {
+                      "template": "spell_word",
+                      "word": "foxes"
                     }
                   ]
                 }

@@ -12,6 +12,7 @@ export function IntroRenderer({ step, speak }: RendererProps<QuestionOf<"INTRO">
       <p className="text-primary text-8xl font-extrabold tracking-wide sm:text-9xl" lang="en">
         {content.display ?? content.heading}
       </p>
+      {content.letter ? <LetterNameAndSound letter={content.letter} speak={speak} /> : null}
       {content.body ? <p className="max-w-2xl text-2xl font-semibold">{content.body}</p> : null}
       <AudioControls text={content.speech || content.body || content.heading} speak={speak} />
 
@@ -61,6 +62,40 @@ export function IntroRenderer({ step, speak }: RendererProps<QuestionOf<"INTRO">
           })}
         </ul>
       ) : null}
+    </div>
+  );
+}
+
+// A letter's name and its sound are two different things: two labelled buttons.
+function LetterNameAndSound({
+  letter,
+  speak,
+}: {
+  letter: NonNullable<QuestionOf<"INTRO">["content"]["letter"]>;
+  speak: RendererProps["speak"];
+}) {
+  return (
+    <div className="grid w-full max-w-xl grid-cols-2 gap-3">
+      <button
+        type="button"
+        onClick={() => void speak(letter.nameSpeech)}
+        className="bg-surface flex min-h-24 flex-col items-center justify-center rounded-3xl p-3 shadow-sm"
+      >
+        <span className="text-muted text-lg font-bold">
+          <span aria-hidden>📛 </span>Its name
+        </span>
+        <span className="text-3xl font-extrabold">{letter.name}</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => void speak(letter.soundSpeech, "slow")}
+        className="bg-accent-soft text-accent flex min-h-24 flex-col items-center justify-center rounded-3xl p-3 shadow-sm"
+      >
+        <span className="text-lg font-bold">
+          <span aria-hidden>🔊 </span>Its sound
+        </span>
+        <span className="text-3xl font-extrabold">/{letter.soundLabel}/</span>
+      </button>
     </div>
   );
 }

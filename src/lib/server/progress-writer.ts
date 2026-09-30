@@ -1,6 +1,11 @@
 import "server-only";
 
 import { isAchievementEarned } from "@/lib/learning/achievements";
+import {
+  scoreSkillCheck,
+  skillCheckConfigSchema,
+  type AssessmentItemFact,
+} from "@/lib/learning/assessment-scoring";
 import { currentStreak } from "@/lib/learning/analytics";
 import { computeMastery } from "@/lib/learning/mastery";
 import {
@@ -28,6 +33,7 @@ import type { LearningRules } from "@/lib/learning/rules";
 import { scoreLesson } from "@/lib/learning/scoring";
 import type { MasteryStatus } from "@/lib/learning/mastery";
 import type {
+  AssessmentRunEvent,
   AttemptEvent,
   LessonRunEvent,
   SyncEvent,
@@ -42,7 +48,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // verified that the signed-in parent owns `childId` (see app/api/sync/route.ts); this
 // module uses the service role and trusts that check.
 //
-// Order: learning sessions (so events can reference them) → attempts → lesson runs →
+// Order: learning sessions and assessment sittings (so events can reference them) →
+// attempts → lesson runs → assessment results →
 // derived caches (activity, lesson, subject and level progress; skill mastery; review
 // queue; words; session totals) → rewards and achievements. Every step is idempotent and
 // every cache is recomputed from stored history, so a retry after a partial failure — or
@@ -62,16 +69,21 @@ export async function processSyncBatch(
   const results = new Map<string, SyncResult>();
 
   const sessionEvents = await attachSessions(db, childId, events, now);
-  const attempts = sessionEvents.filter((e): e is AttemptEvent => e.kind === "attempt");
-  const runs = sessionEvents.filter((e): e is LessonRunEvent => e.kind === "lesson_run");
+  const usable = await attachAssessmentAttempts(db, childId, sessionEvents, now, results);
+  const attempts = usable.filter((e): e is AttemptEvent => e.kind === "attempt");
+  const runs = usable.filter((e): e is LessonRunEvent => e.kind === "lesson_run");
+  const sittings = usable.filter((e): e is AssessmentRunEvent => e.kind === "assessment_run");
 
   const stored = await storeAttempts(db, childId, attempts, now, results, rules);
   const newRuns = await storeLessonRuns(db, childId, runs, now, results, rules);
+  const assessed = await storeAssessmentResults(db, childId, sittings, now, results, rules);
+  for (const id of assessed.sessionIds) newRuns.sessionIds.add(id);
 
   const lessonIds = new Set([...stored.lessonIds, ...newRuns.lessonIds]);
   if (lessonIds.size > 0) await recomputeLessonTree(db, childId, [...lessonIds]);
   if (stored.newSkillIds.size > 0)
     await recomputeSkillMastery(db, childId, [...stored.newSkillIds], now, rules);
+  if (assessed.skillIds.size > 0) await markAssessed(db, childId, assessed, now);
   if (stored.newWordIds.size > 0)
     await recomputeWordProgress(db, childId, [...stored.newWordIds], now, rules);
   if (lessonIds.size > 0 || stored.newSkillIds.size > 0)
@@ -79,7 +91,9 @@ export async function processSyncBatch(
   const sessionIds = new Set([...stored.sessionIds, ...newRuns.sessionIds]);
   if (sessionIds.size > 0) await recomputeSessions(db, childId, [...sessionIds]);
   const newAchievements =
-    newRuns.lessonIds.size > 0 || stored.newWordIds.size > 0 ? await awardAchievements(db, childId, now) : [];
+    newRuns.lessonIds.size > 0 || assessed.skillIds.size > 0 || stored.newWordIds.size > 0
+      ? await awardAchievements(db, childId, now)
+      : [];
 
   return {
     results: events.map(
@@ -111,7 +125,7 @@ async function attachSessions(db: Db, childId: string, events: SyncEvent[], now:
     .map((id) => {
       const times = events
         .filter((e) => e.sessionId === id)
-        .map((e) => clampTimestamp(e.kind === "attempt" ? e.attemptedAt : e.startedAt, now))
+        .map((e) => clampTimestamp("attemptedAt" in e ? e.attemptedAt : e.startedAt, now))
         .sort();
       // Totals are filled in by recomputeSessions once the events are stored.
       return {
@@ -139,6 +153,229 @@ async function attachSessions(db: Db, childId: string, events: SyncEvent[], now:
     for (const s of after ?? []) if (s.child_id !== childId) foreign.add(s.id);
   }
   return events.map((e) => (e.sessionId && foreign.has(e.sessionId) ? { ...e, sessionId: null } : e));
+}
+
+// Creates the assessment sitting (assessment_attempts) that assessment answers point to,
+// before the answers are stored. A sitting id that already belongs to another child or
+// another assessment is never shared: its events are rejected.
+async function attachAssessmentAttempts(
+  db: Db,
+  childId: string,
+  events: SyncEvent[],
+  now: Date,
+  results: Map<string, SyncResult>,
+): Promise<SyncEvent[]> {
+  const sittingOf = (e: SyncEvent) =>
+    e.kind === "assessment_run"
+      ? { id: e.id, assessmentId: e.assessmentId, at: e.startedAt }
+      : e.kind === "attempt" && e.assessmentAttemptId && e.assessmentId
+        ? { id: e.assessmentAttemptId, assessmentId: e.assessmentId, at: e.attemptedAt }
+        : null;
+  const wanted = new Map<string, { assessmentId: string; at: string }>();
+  for (const e of events) {
+    const s = sittingOf(e);
+    if (!s) continue;
+    const at = clampTimestamp(s.at, now);
+    const prev = wanted.get(s.id);
+    if (!prev || at < prev.at) wanted.set(s.id, { assessmentId: prev?.assessmentId ?? s.assessmentId, at });
+  }
+  if (wanted.size === 0) return events;
+
+  const ids = [...wanted.keys()];
+  const assessmentIds = [...new Set([...wanted.values()].map((w) => w.assessmentId))];
+  const [{ data: assessments, error }, { data: existing, error: existingError }] = await Promise.all([
+    db.from("assessments").select("id, assessment_type, status").in("id", assessmentIds),
+    db.from("assessment_attempts").select("id, child_id, assessment_id").in("id", ids),
+  ]);
+  if (error || existingError) throw error ?? existingError;
+  const published = new Map(
+    (assessments ?? []).filter((a) => a.status === "published").map((a) => [a.id, a.assessment_type]),
+  );
+  const bad = new Map<string, string>();
+  for (const [id, w] of wanted) if (!published.has(w.assessmentId)) bad.set(id, "unknown_assessment");
+  const known = new Set<string>();
+  for (const row of existing ?? []) {
+    known.add(row.id);
+    if (row.child_id !== childId || row.assessment_id !== wanted.get(row.id)?.assessmentId)
+      bad.set(row.id, "assessment_attempt_not_owned");
+  }
+  const placeholders = ids
+    .filter((id) => !known.has(id) && !bad.has(id))
+    .map((id) => {
+      const w = wanted.get(id)!;
+      return {
+        id,
+        child_id: childId,
+        assessment_id: w.assessmentId,
+        purpose: published.get(w.assessmentId) === "placement" ? "placement" : "skill_check",
+        started_at: w.at,
+      };
+    });
+  if (placeholders.length > 0) {
+    const { error: insertError } = await db
+      .from("assessment_attempts")
+      .upsert(placeholders, { onConflict: "id", ignoreDuplicates: true });
+    if (insertError) throw insertError;
+    // A concurrent request for another child could have won the insert: re-check.
+    const { data: after, error: afterError } = await db
+      .from("assessment_attempts")
+      .select("id, child_id, assessment_id")
+      .in(
+        "id",
+        placeholders.map((p) => p.id),
+      );
+    if (afterError) throw afterError;
+    for (const row of after ?? [])
+      if (row.child_id !== childId || row.assessment_id !== wanted.get(row.id)?.assessmentId)
+        bad.set(row.id, "assessment_attempt_not_owned");
+  }
+  if (bad.size > 0) logger.warn("sync.assessment_attempt_rejected", { childId, count: bad.size });
+  return events.filter((e) => {
+    const s = sittingOf(e);
+    const reason = s ? bad.get(s.id) : undefined;
+    if (reason) results.set(e.id, { id: e.id, status: "rejected", reason });
+    return !reason;
+  });
+}
+
+// Scores a finished assessment sitting from its stored first tries (never from the
+// device) and stores the result once.
+async function storeAssessmentResults(
+  db: Db,
+  childId: string,
+  sittings: AssessmentRunEvent[],
+  now: Date,
+  results: Map<string, SyncResult>,
+  rules: LearningRules,
+) {
+  const skillIds = new Set<string>();
+  const sessionIds = new Set<string>();
+  const assessedAt = new Map<string, string>();
+  if (sittings.length === 0) return { skillIds, sessionIds, assessedAt };
+
+  const { data: done, error } = await db
+    .from("assessment_results")
+    .select("assessment_attempt_id")
+    .in(
+      "assessment_attempt_id",
+      sittings.map((s) => s.id),
+    );
+  if (error) throw error;
+  const already = new Set((done ?? []).map((r) => r.assessment_attempt_id));
+
+  for (const sitting of sittings) {
+    if (already.has(sitting.id)) {
+      results.set(sitting.id, { id: sitting.id, status: "duplicate" });
+      continue;
+    }
+    const [{ data: assessment, error: assessmentError }, { data: items, error: itemsError }, tries] =
+      await Promise.all([
+        db.from("assessments").select("id, config").eq("id", sitting.assessmentId).maybeSingle(),
+        db
+          .from("assessment_items")
+          .select("question_id, stage, stage_label, sort_order, questions(skill_id, status, skills(code))")
+          .eq("assessment_id", sitting.assessmentId)
+          .order("stage")
+          .order("sort_order"),
+        db
+          .from("activity_attempts")
+          .select("question_id, is_correct")
+          .eq("child_id", childId)
+          .eq("assessment_attempt_id", sitting.id)
+          .eq("attempt_number", 1),
+      ]);
+    if (assessmentError || itemsError || tries.error) throw assessmentError ?? itemsError ?? tries.error;
+    if (!assessment) {
+      results.set(sitting.id, { id: sitting.id, status: "rejected", reason: "unknown_assessment" });
+      continue;
+    }
+    const firstTries = new Map((tries.data ?? []).map((a) => [a.question_id, a.is_correct]));
+    if (firstTries.size === 0) {
+      results.set(sitting.id, { id: sitting.id, status: "rejected", reason: "no_attempts_for_run" });
+      continue;
+    }
+    const facts: AssessmentItemFact[] = (items ?? []).flatMap((i) => {
+      const q = Array.isArray(i.questions) ? i.questions[0] : i.questions;
+      if (!q || q.status !== "published") return [];
+      const skill = Array.isArray(q.skills) ? q.skills[0] : q.skills;
+      return [
+        {
+          questionId: i.question_id,
+          stage: i.stage,
+          stageLabel: i.stage_label,
+          skillId: q.skill_id,
+          skillCode: skill?.code ?? q.skill_id,
+        },
+      ];
+    });
+    const config = skillCheckConfigSchema.safeParse(assessment.config);
+    const outcome = scoreSkillCheck(facts, firstTries, config.success ? config.data.areaPassPercent : 75);
+    const score = scoreLesson(
+      facts.map((f) => ({ isCorrect: firstTries.get(f.questionId) === true })),
+      rules.scoring,
+    );
+    const completedAt = clampTimestamp(sitting.completedAt, now);
+
+    const { error: attemptError } = await db
+      .from("assessment_attempts")
+      .update({ completed_at: completedAt })
+      .eq("id", sitting.id)
+      .eq("child_id", childId);
+    if (attemptError) throw attemptError;
+    const { error: resultError } = await db.from("assessment_results").upsert(
+      {
+        assessment_attempt_id: sitting.id,
+        child_id: childId,
+        overall_score: outcome.overallPercent,
+        dimension_scores: Object.fromEntries(
+          outcome.areas.map((a) => [
+            a.label,
+            { stage: a.stage, correct: a.correct, total: a.total, percent: a.percent, secure: a.secure },
+          ]),
+        ),
+        skill_scores: outcome.skills,
+      },
+      { onConflict: "assessment_attempt_id", ignoreDuplicates: true },
+    );
+    if (resultError) throw resultError;
+    const { error: rewardError } = await db.from("reward_events").upsert(
+      {
+        child_id: childId,
+        source_type: "assessment",
+        source_id: sitting.id,
+        points: score.points,
+        stars: score.stars,
+      },
+      { onConflict: "child_id,source_type,source_id", ignoreDuplicates: true },
+    );
+    if (rewardError) throw rewardError;
+    results.set(sitting.id, { id: sitting.id, status: "stored" });
+    for (const f of facts) {
+      skillIds.add(f.skillId);
+      if (!assessedAt.has(f.skillId) || assessedAt.get(f.skillId)! < completedAt)
+        assessedAt.set(f.skillId, completedAt);
+    }
+    if (sitting.sessionId) sessionIds.add(sitting.sessionId);
+  }
+  return { skillIds, sessionIds, assessedAt };
+}
+
+// Records when each measured skill was last assessed (after mastery was recomputed, so
+// the row exists for every skill the child answered).
+async function markAssessed(
+  db: Db,
+  childId: string,
+  assessed: { assessedAt: Map<string, string> },
+  now: Date,
+) {
+  for (const [skillId, at] of assessed.assessedAt) {
+    const { error } = await db
+      .from("skill_mastery")
+      .update({ last_assessed_at: at, updated_at: now.toISOString() })
+      .eq("child_id", childId)
+      .eq("skill_id", skillId);
+    if (error) throw error;
+  }
 }
 
 async function storeAttempts(
@@ -182,11 +419,27 @@ async function storeAttempts(
     }),
   );
 
+  // Assessment answers must be for a question of that assessment.
+  const assessmentIds = [...new Set(pending.map((a) => a.assessmentId).filter((id): id is string => !!id))];
+  const assessmentQuestions = new Set<string>();
+  if (assessmentIds.length > 0) {
+    const { data: items, error: itemsError } = await db
+      .from("assessment_items")
+      .select("assessment_id, question_id")
+      .in("assessment_id", assessmentIds);
+    if (itemsError) throw itemsError;
+    for (const i of items ?? []) assessmentQuestions.add(`${i.assessment_id}:${i.question_id}`);
+  }
+
   const rows = [];
   for (const attempt of pending) {
     const question = questions.get(attempt.questionId);
     if (!question) {
       results.set(attempt.id, { id: attempt.id, status: "rejected", reason: "unknown_question" });
+      continue;
+    }
+    if (attempt.assessmentAttemptId && !assessmentQuestions.has(`${attempt.assessmentId}:${question.id}`)) {
+      results.set(attempt.id, { id: attempt.id, status: "rejected", reason: "question_not_in_assessment" });
       continue;
     }
     const built = buildAttemptRow(question, attempt, childId, now, rules.scoring);

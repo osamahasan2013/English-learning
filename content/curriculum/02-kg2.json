@@ -4,167 +4,305 @@
     {
       "code": "kg2-cvc-words",
       "subject": "PHONICS",
-      "title": "Blending CVC Words",
+      "title": "Short Vowels and CVC Words",
       "emoji": "🔗",
-      "description": "Blend consonant–vowel–consonant words.",
+      "description": "Blend and segment consonant–vowel–consonant words.",
       "skills": [
         {
           "code": "kg2-short-a",
           "dimension": "BLENDING",
-          "title": "Blending short a words",
+          "title": "Short a: CVC words",
           "childTitle": "a words",
-          "pattern": "LETTER_A",
+          "description": "Blends and reads CVC words with short a.",
+          "difficulty": 2,
           "importance": 5,
+          "phonicsStage": "CVC",
           "prerequisites": [
             "kg1-letter-a",
             "kg1-letter-c",
             "kg1-letter-t"
           ],
+          "pattern": "LETTER_A",
           "lessons": [
             {
               "code": "kg2-short-a-1",
               "title": "Short a words",
               "childTitle": "Short a words",
+              "description": "Blend, count, build, read and spell words with short a.",
               "emoji": "🐱",
               "minutes": 6,
+              "difficulty": 2,
+              "introSpeech": "Let's blend sounds into words with a!",
+              "blueprint": {
+                "name": "cvc_blending",
+                "pattern": "LETTER_A",
+                "vowel": "a",
+                "words": [
+                  "cat",
+                  "hat",
+                  "map",
+                  "bag",
+                  "pan"
+                ],
+                "distractorWords": [
+                  "pig",
+                  "dog"
+                ],
+                "otherVowels": [
+                  "o",
+                  "i"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg2-short-i",
+          "dimension": "BLENDING",
+          "title": "Short i: CVC words",
+          "childTitle": "i words",
+          "description": "Blends and reads CVC words with short i.",
+          "difficulty": 2,
+          "importance": 5,
+          "phonicsStage": "CVC",
+          "prerequisites": [
+            "kg1-letter-i"
+          ],
+          "pattern": "LETTER_I",
+          "lessons": [
+            {
+              "code": "kg2-short-i-1",
+              "title": "Short i words",
+              "childTitle": "Short i words",
+              "description": "Blend, count, build, read and spell words with short i.",
+              "emoji": "🐷",
+              "minutes": 6,
+              "difficulty": 2,
+              "introSpeech": "Let's blend sounds into words with i!",
+              "blueprint": {
+                "name": "cvc_blending",
+                "pattern": "LETTER_I",
+                "vowel": "i",
+                "words": [
+                  "pig",
+                  "pin",
+                  "six",
+                  "lip",
+                  "zip"
+                ],
+                "distractorWords": [
+                  "cat",
+                  "bus"
+                ],
+                "otherVowels": [
+                  "a",
+                  "o"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg2-short-o",
+          "dimension": "BLENDING",
+          "title": "Short o: CVC words",
+          "childTitle": "o words",
+          "description": "Blends and reads CVC words with short o.",
+          "difficulty": 2,
+          "importance": 5,
+          "phonicsStage": "CVC",
+          "prerequisites": [
+            "kg1-letter-o"
+          ],
+          "pattern": "LETTER_O",
+          "lessons": [
+            {
+              "code": "kg2-short-o-1",
+              "title": "Short o words",
+              "childTitle": "Short o words",
+              "description": "Blend, count, build, read and spell words with short o.",
+              "emoji": "🐶",
+              "minutes": 6,
+              "difficulty": 2,
+              "introSpeech": "Let's blend sounds into words with o!",
+              "blueprint": {
+                "name": "cvc_blending",
+                "pattern": "LETTER_O",
+                "vowel": "o",
+                "words": [
+                  "dog",
+                  "pot",
+                  "box",
+                  "log",
+                  "mop"
+                ],
+                "distractorWords": [
+                  "cat",
+                  "pig"
+                ],
+                "otherVowels": [
+                  "a",
+                  "u"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg2-short-u",
+          "dimension": "BLENDING",
+          "title": "Short u: CVC words",
+          "childTitle": "u words",
+          "description": "Blends and reads CVC words with short u.",
+          "difficulty": 2,
+          "importance": 5,
+          "phonicsStage": "CVC",
+          "prerequisites": [
+            "kg1-letter-u"
+          ],
+          "pattern": "LETTER_U",
+          "lessons": [
+            {
+              "code": "kg2-short-u-1",
+              "title": "Short u words",
+              "childTitle": "Short u words",
+              "description": "Blend, count, build, read and spell words with short u.",
+              "emoji": "☀️",
+              "minutes": 6,
+              "difficulty": 2,
+              "introSpeech": "Let's blend sounds into words with u!",
+              "blueprint": {
+                "name": "cvc_blending",
+                "pattern": "LETTER_U",
+                "vowel": "u",
+                "words": [
+                  "sun",
+                  "bug",
+                  "cup",
+                  "tub",
+                  "mug"
+                ],
+                "distractorWords": [
+                  "hat",
+                  "dog"
+                ],
+                "otherVowels": [
+                  "a",
+                  "o"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg2-short-e",
+          "dimension": "BLENDING",
+          "title": "Short e: CVC words",
+          "childTitle": "e words",
+          "description": "Blends and reads CVC words with short e.",
+          "difficulty": 2,
+          "importance": 5,
+          "phonicsStage": "CVC",
+          "prerequisites": [
+            "kg1-letter-e"
+          ],
+          "pattern": "LETTER_E",
+          "lessons": [
+            {
+              "code": "kg2-short-e-1",
+              "title": "Short e words",
+              "childTitle": "Short e words",
+              "description": "Blend, count, build, read and spell words with short e.",
+              "emoji": "🛏️",
+              "minutes": 6,
+              "difficulty": 2,
+              "introSpeech": "Let's blend sounds into words with e!",
+              "blueprint": {
+                "name": "cvc_blending",
+                "pattern": "LETTER_E",
+                "vowel": "e",
+                "words": [
+                  "bed",
+                  "hen",
+                  "ten",
+                  "leg",
+                  "jet"
+                ],
+                "distractorWords": [
+                  "cat",
+                  "pig"
+                ],
+                "otherVowels": [
+                  "i",
+                  "a"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg2-segmenting",
+          "dimension": "BLENDING",
+          "title": "Segmenting words into sounds",
+          "childTitle": "Count the sounds",
+          "description": "Hears each sound in a word and counts them.",
+          "difficulty": 2,
+          "importance": 3,
+          "phonicsStage": "BLENDING",
+          "prerequisites": [
+            "kg2-short-a"
+          ],
+          "lessons": [
+            {
+              "code": "kg2-segmenting-1",
+              "title": "Count the sounds",
+              "childTitle": "Count the sounds",
+              "description": "How many sounds are in a word? Which ones?",
+              "emoji": "🔢",
+              "minutes": 5,
+              "difficulty": 2,
+              "introSpeech": "Listen closely. How many sounds do you hear?",
               "activities": [
                 {
-                  "type": "INTRO",
-                  "stage": "demonstration",
-                  "title": "Short a",
-                  "instructions": "Listen: sounds join to make a word.",
-                  "instructionsSpeech": "Listen: sounds join to make a word.",
-                  "questions": [
-                    {
-                      "template": "pattern_intro",
-                      "pattern": "LETTER_A",
-                      "examples": [
-                        "cat",
-                        "hat",
-                        "map"
-                      ],
-                      "body": "In these words, a makes its short sound."
-                    }
-                  ]
-                },
-                {
-                  "type": "WORD_BUILDER",
+                  "type": "SEGMENT_WORD",
                   "stage": "guided_practice",
-                  "title": "Build the word",
-                  "instructions": "Listen, then put the sounds in order.",
-                  "instructionsSpeech": "Listen, then put the sounds in order.",
+                  "title": "Count the sounds",
+                  "instructions": "How many sounds? Tap them in order.",
+                  "instructionsSpeech": "How many sounds? Tap them in order.",
                   "questions": [
                     {
-                      "template": "build_word",
-                      "word": "cat",
-                      "extra": [
-                        "o"
-                      ],
-                      "pattern": "LETTER_A",
-                      "demonstrate": true
+                      "template": "segment_word",
+                      "word": "cat"
                     },
                     {
-                      "template": "build_word",
-                      "word": "hat",
-                      "extra": [
-                        "i"
-                      ],
-                      "pattern": "LETTER_A",
-                      "demonstrate": false
+                      "template": "segment_word",
+                      "word": "sun"
                     },
                     {
-                      "template": "build_word",
-                      "word": "map",
-                      "extra": [
-                        "t"
-                      ],
-                      "pattern": "LETTER_A",
-                      "demonstrate": false
+                      "template": "segment_word",
+                      "word": "fish"
                     },
                     {
-                      "template": "build_word",
-                      "word": "bag",
-                      "extra": [
-                        "u"
-                      ],
-                      "pattern": "LETTER_A",
-                      "demonstrate": false
+                      "template": "segment_word",
+                      "word": "frog"
                     }
                   ]
                 },
                 {
-                  "type": "LISTEN_AND_CHOOSE",
+                  "type": "BLEND_SOUNDS",
                   "stage": "independent_practice",
-                  "title": "Read and find",
-                  "instructions": "Listen, then tap the word.",
-                  "instructionsSpeech": "Listen, then tap the word.",
+                  "title": "Blend it back",
+                  "instructions": "Blend the sounds. What word is it?",
+                  "instructionsSpeech": "Blend the sounds. What word is it?",
                   "questions": [
                     {
-                      "template": "listen_pick_word",
-                      "word": "bat",
+                      "template": "blend_word",
+                      "word": "hen",
                       "distractors": [
-                        "bag",
-                        "man"
-                      ]
-                    },
-                    {
-                      "template": "listen_pick_word",
-                      "word": "pan",
-                      "distractors": [
-                        "man",
-                        "map"
-                      ]
-                    },
-                    {
-                      "template": "listen_pick_word",
-                      "word": "rat",
-                      "distractors": [
-                        "bat",
-                        "hat"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "MISSING_LETTER",
-                  "stage": "independent_practice",
-                  "title": "Missing sound",
-                  "instructions": "Which sound is missing?",
-                  "instructionsSpeech": "Which sound is missing?",
-                  "questions": [
-                    {
-                      "template": "missing_pattern",
-                      "word": "cat",
-                      "missing": "a",
-                      "pattern": "LETTER_A",
-                      "choices": [
-                        "i",
-                        "o"
-                      ]
-                    },
-                    {
-                      "template": "missing_pattern",
-                      "word": "bag",
-                      "missing": "a",
-                      "pattern": "LETTER_A",
-                      "choices": [
-                        "e",
-                        "u"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "SENTENCE_BUILDER",
-                  "stage": "review",
-                  "title": "Make a sentence",
-                  "instructions": "Put the words in order.",
-                  "instructionsSpeech": "Put the words in order.",
-                  "questions": [
-                    {
-                      "template": "order_sentence",
-                      "sentence": "I see a cat.",
-                      "emoji": "🐱"
+                        "hat",
+                        "ten"
+                      ],
+                      "pictures": true
                     }
                   ]
                 }
@@ -173,157 +311,213 @@
           ]
         },
         {
-          "code": "kg2-short-i",
-          "dimension": "BLENDING",
-          "title": "Blending short i words",
-          "childTitle": "i words",
-          "pattern": "LETTER_I",
-          "importance": 5,
+          "code": "kg2-ending-sounds",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Ending sounds",
+          "childTitle": "Last sounds",
+          "description": "Hears the last sound in a word.",
+          "difficulty": 2,
+          "importance": 3,
+          "phonicsStage": "ENDING_SOUNDS",
+          "prerequisites": [
+            "kg1-beginning-sounds"
+          ],
           "lessons": [
             {
-              "code": "kg2-short-i-1",
-              "title": "Short i words",
-              "childTitle": "Short i words",
-              "emoji": "🐷",
-              "minutes": 6,
+              "code": "kg2-ending-sounds-1",
+              "title": "Last sounds",
+              "childTitle": "Last sounds",
+              "description": "Which sound does the word end with?",
+              "emoji": "🔚",
+              "minutes": 5,
+              "difficulty": 2,
+              "introSpeech": "Now listen to the very last sound in each word.",
               "activities": [
                 {
-                  "type": "INTRO",
-                  "stage": "demonstration",
-                  "title": "Short i",
-                  "instructions": "Listen: sounds join to make a word.",
-                  "instructionsSpeech": "Listen: sounds join to make a word.",
-                  "questions": [
-                    {
-                      "template": "pattern_intro",
-                      "pattern": "LETTER_I",
-                      "examples": [
-                        "pig",
-                        "pin",
-                        "six"
-                      ],
-                      "body": "In these words, i makes its short sound."
-                    }
-                  ]
-                },
-                {
-                  "type": "WORD_BUILDER",
-                  "stage": "guided_practice",
-                  "title": "Build the word",
-                  "instructions": "Listen, then put the sounds in order.",
-                  "instructionsSpeech": "Listen, then put the sounds in order.",
-                  "questions": [
-                    {
-                      "template": "build_word",
-                      "word": "pig",
-                      "extra": [
-                        "a"
-                      ],
-                      "pattern": "LETTER_I",
-                      "demonstrate": true
-                    },
-                    {
-                      "template": "build_word",
-                      "word": "pin",
-                      "extra": [
-                        "e"
-                      ],
-                      "pattern": "LETTER_I",
-                      "demonstrate": false
-                    },
-                    {
-                      "template": "build_word",
-                      "word": "sit",
-                      "extra": [
-                        "o"
-                      ],
-                      "pattern": "LETTER_I",
-                      "demonstrate": false
-                    },
-                    {
-                      "template": "build_word",
-                      "word": "lip",
-                      "extra": [
-                        "u"
-                      ],
-                      "pattern": "LETTER_I",
-                      "demonstrate": false
-                    }
-                  ]
-                },
-                {
                   "type": "LISTEN_AND_CHOOSE",
-                  "stage": "independent_practice",
-                  "title": "Read and find",
-                  "instructions": "Listen, then tap the word.",
-                  "instructionsSpeech": "Listen, then tap the word.",
+                  "stage": "guided_practice",
+                  "title": "Last sound",
+                  "instructions": "What sound do you hear at the end?",
+                  "instructionsSpeech": "What sound do you hear at the end?",
                   "questions": [
                     {
-                      "template": "listen_pick_word",
-                      "word": "pig",
-                      "distractors": [
-                        "pin",
-                        "big"
+                      "template": "sound_at_position",
+                      "word": "cat",
+                      "position": "end",
+                      "choices": [
+                        "p",
+                        "n"
                       ]
                     },
                     {
-                      "template": "listen_pick_word",
-                      "word": "six",
-                      "distractors": [
-                        "sit",
-                        "pin"
+                      "template": "sound_at_position",
+                      "word": "bus",
+                      "position": "end",
+                      "choices": [
+                        "t",
+                        "g"
                       ]
                     },
                     {
-                      "template": "listen_pick_word",
-                      "word": "lip",
-                      "distractors": [
-                        "pin",
-                        "sit"
+                      "template": "sound_at_position",
+                      "word": "bed",
+                      "position": "end",
+                      "choices": [
+                        "t",
+                        "n"
                       ]
+                    },
+                    {
+                      "template": "sound_at_position",
+                      "word": "fish",
+                      "position": "end",
+                      "choices": [
+                        "s",
+                        "ch"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "kg2-word-families",
+          "dimension": "WORD_READING",
+          "title": "Word families",
+          "childTitle": "Word families",
+          "description": "Sorts and reads rhyming word families (-at, -ig, -op).",
+          "difficulty": 2,
+          "importance": 3,
+          "phonicsStage": "CVC",
+          "prerequisites": [
+            "kg2-short-a",
+            "kg2-short-i"
+          ],
+          "lessons": [
+            {
+              "code": "kg2-word-families-1",
+              "title": "Word families",
+              "childTitle": "Word families",
+              "description": "Words that end the same way rhyme.",
+              "emoji": "🏡",
+              "minutes": 5,
+              "difficulty": 2,
+              "introSpeech": "Words in a family end the same way: cat, hat, mat!",
+              "activities": [
+                {
+                  "type": "SORT",
+                  "stage": "guided_practice",
+                  "title": "Sort the families",
+                  "instructions": "Put each word in its family.",
+                  "instructionsSpeech": "Put each word in its family.",
+                  "questions": [
+                    {
+                      "type": "SORT",
+                      "prompt": "Which family?",
+                      "promptSpeech": "Which family does each word belong to?",
+                      "explanation": "cat and hat end in at; pig and big end in ig; pot and dot end in ot.",
+                      "content": {
+                        "groups": [
+                          {
+                            "id": "at",
+                            "label": "-at"
+                          },
+                          {
+                            "id": "ig",
+                            "label": "-ig"
+                          },
+                          {
+                            "id": "ot",
+                            "label": "-ot"
+                          }
+                        ],
+                        "items": [
+                          {
+                            "id": "cat",
+                            "text": "cat",
+                            "emoji": "🐱"
+                          },
+                          {
+                            "id": "pig",
+                            "text": "pig",
+                            "emoji": "🐷"
+                          },
+                          {
+                            "id": "pot",
+                            "text": "pot",
+                            "emoji": "🍲"
+                          },
+                          {
+                            "id": "hat",
+                            "text": "hat",
+                            "emoji": "🎩"
+                          },
+                          {
+                            "id": "big",
+                            "text": "big"
+                          },
+                          {
+                            "id": "dot",
+                            "text": "dot",
+                            "emoji": "⚫"
+                          }
+                        ]
+                      },
+                      "answer": {
+                        "pairs": [
+                          [
+                            "cat",
+                            "at"
+                          ],
+                          [
+                            "hat",
+                            "at"
+                          ],
+                          [
+                            "pig",
+                            "ig"
+                          ],
+                          [
+                            "big",
+                            "ig"
+                          ],
+                          [
+                            "pot",
+                            "ot"
+                          ],
+                          [
+                            "dot",
+                            "ot"
+                          ]
+                        ]
+                      }
                     }
                   ]
                 },
                 {
-                  "type": "MISSING_LETTER",
+                  "type": "PICTURE_MATCH",
                   "stage": "independent_practice",
-                  "title": "Missing sound",
-                  "instructions": "Which sound is missing?",
-                  "instructionsSpeech": "Which sound is missing?",
+                  "title": "Read it",
+                  "instructions": "Read the word. Tap its picture.",
+                  "instructionsSpeech": "Read the word. Tap its picture.",
                   "questions": [
                     {
-                      "template": "missing_pattern",
-                      "word": "pig",
-                      "missing": "i",
-                      "pattern": "LETTER_I",
-                      "choices": [
-                        "a",
-                        "u"
+                      "template": "read_word",
+                      "word": "rat",
+                      "distractors": [
+                        "bat",
+                        "hat"
                       ]
                     },
                     {
-                      "template": "missing_pattern",
-                      "word": "six",
-                      "missing": "i",
-                      "pattern": "LETTER_I",
-                      "choices": [
-                        "o",
-                        "e"
+                      "template": "read_word",
+                      "word": "pin",
+                      "distractors": [
+                        "pig",
+                        "pot"
                       ]
-                    }
-                  ]
-                },
-                {
-                  "type": "SENTENCE_BUILDER",
-                  "stage": "review",
-                  "title": "Make a sentence",
-                  "instructions": "Put the words in order.",
-                  "instructionsSpeech": "Put the words in order.",
-                  "questions": [
-                    {
-                      "template": "order_sentence",
-                      "sentence": "I can run.",
-                      "emoji": "🏃"
                     }
                   ]
                 }
@@ -472,9 +666,11 @@
                     }
                   ]
                 }
-              ]
+              ],
+              "status": "archived"
             }
-          ]
+          ],
+          "status": "archived"
         }
       ]
     },

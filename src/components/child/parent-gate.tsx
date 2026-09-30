@@ -14,7 +14,9 @@ function makeQuestion() {
 
 export function ParentGate({ action }: { action: () => Promise<void> }) {
   const dialogRef = useRef<HTMLDialogElement>(null);
-  const [question, setQuestion] = useState(makeQuestion);
+  // A fixed first value keeps server and client renders identical; a random sum is drawn
+  // each time the gate opens.
+  const [question, setQuestion] = useState({ a: 7, b: 8, answer: 56 });
   const [value, setValue] = useState("");
   const [wrong, setWrong] = useState(false);
 

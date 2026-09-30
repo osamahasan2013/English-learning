@@ -6,160 +6,52 @@
       "subject": "PHONICS",
       "title": "Letters and Sounds",
       "emoji": "🔤",
-      "description": "Letter shapes and their main sounds, starting with the most useful letters.",
+      "description": "Every letter's shapes, name and main sound, A to Z.",
       "skills": [
         {
           "code": "kg1-letter-a",
           "dimension": "LETTER_SOUNDS",
           "title": "Letter A and its sound",
           "childTitle": "A a",
-          "pattern": "LETTER_A",
+          "description": "",
+          "difficulty": 1,
           "importance": 5,
-          "masteryThreshold": 90,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_A",
           "lessons": [
             {
               "code": "kg1-letter-a-1",
-              "title": "The letter A",
+              "title": "The letter a",
               "childTitle": "A a",
+              "description": "The letter a: its name, its shapes and its sound.",
               "emoji": "🍎",
-              "description": "Recognise A and a, hear its sound, and find words that start with it.",
-              "minutes": 5,
-              "activities": [
-                {
-                  "type": "INTRO",
-                  "stage": "explanation",
-                  "title": "Meet A a",
-                  "instructions": "Listen and look.",
-                  "instructionsSpeech": "Listen and look.",
-                  "questions": [
-                    {
-                      "template": "pattern_intro",
-                      "pattern": "LETTER_A",
-                      "examples": [
-                        "apple",
-                        "ant",
-                        "alligator"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "MULTIPLE_CHOICE",
-                  "stage": "guided_practice",
-                  "title": "Find the letter",
-                  "instructions": "Tap the letter.",
-                  "instructionsSpeech": "Tap the letter.",
-                  "questions": [
-                    {
-                      "template": "find_letter",
-                      "pattern": "LETTER_A",
-                      "distractors": [
-                        "o",
-                        "e"
-                      ]
-                    },
-                    {
-                      "template": "find_letter",
-                      "pattern": "LETTER_A",
-                      "distractors": [
-                        "o",
-                        "e"
-                      ],
-                      "case": "upper"
-                    }
-                  ]
-                },
-                {
-                  "type": "PICTURE_MATCH",
-                  "stage": "guided_practice",
-                  "title": "Starts with",
-                  "instructions": "Which one starts with this sound?",
-                  "instructionsSpeech": "Which one starts with this sound?",
-                  "questions": [
-                    {
-                      "template": "pick_starting_sound",
-                      "pattern": "LETTER_A",
-                      "word": "apple",
-                      "distractors": [
-                        "dog",
-                        "hat"
-                      ]
-                    },
-                    {
-                      "template": "pick_starting_sound",
-                      "pattern": "LETTER_A",
-                      "word": "ant",
-                      "distractors": [
-                        "fish",
-                        "egg"
-                      ]
-                    },
-                    {
-                      "template": "pick_starting_sound",
-                      "pattern": "LETTER_A",
-                      "word": "alligator",
-                      "distractors": [
-                        "pig",
-                        "lion"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "LISTEN_AND_CHOOSE",
-                  "stage": "independent_practice",
-                  "title": "Listen and find",
-                  "instructions": "Listen, then tap the picture.",
-                  "instructionsSpeech": "Listen, then tap the picture.",
-                  "questions": [
-                    {
-                      "template": "listen_pick_picture",
-                      "word": "apple",
-                      "distractors": [
-                        "lion",
-                        "zebra"
-                      ]
-                    },
-                    {
-                      "template": "listen_pick_picture",
-                      "word": "ant",
-                      "distractors": [
-                        "fox",
-                        "rabbit"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "MISSING_LETTER",
-                  "stage": "independent_practice",
-                  "title": "First letter",
-                  "instructions": "Which letter is missing?",
-                  "instructionsSpeech": "Which letter is missing?",
-                  "questions": [
-                    {
-                      "template": "missing_pattern",
-                      "word": "ant",
-                      "missing": "a",
-                      "pattern": "LETTER_A",
-                      "choices": [
-                        "o",
-                        "e"
-                      ]
-                    },
-                    {
-                      "template": "missing_pattern",
-                      "word": "apple",
-                      "missing": "a",
-                      "pattern": "LETTER_A",
-                      "choices": [
-                        "o",
-                        "e"
-                      ]
-                    }
-                  ]
-                }
-              ]
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter a!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_A",
+                "letter": "a",
+                "words": [
+                  "apple",
+                  "ant",
+                  "alligator"
+                ],
+                "distractors": [
+                  "LETTER_O",
+                  "LETTER_E",
+                  "LETTER_U"
+                ],
+                "distractorLetters": [
+                  "o",
+                  "e"
+                ],
+                "distractorWords": [
+                  "dog",
+                  "sun"
+                ]
+              }
             }
           ]
         },
@@ -168,153 +60,45 @@
           "dimension": "LETTER_SOUNDS",
           "title": "Letter B and its sound",
           "childTitle": "B b",
-          "pattern": "LETTER_B",
+          "description": "",
+          "difficulty": 1,
           "importance": 5,
-          "masteryThreshold": 90,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_B",
           "lessons": [
             {
               "code": "kg1-letter-b-1",
-              "title": "The letter B",
+              "title": "The letter b",
               "childTitle": "B b",
+              "description": "The letter b: its name, its shapes and its sound.",
               "emoji": "⚽",
-              "description": "Recognise B and b, hear its sound, and find words that start with it.",
-              "minutes": 5,
-              "activities": [
-                {
-                  "type": "INTRO",
-                  "stage": "explanation",
-                  "title": "Meet B b",
-                  "instructions": "Listen and look.",
-                  "instructionsSpeech": "Listen and look.",
-                  "questions": [
-                    {
-                      "template": "pattern_intro",
-                      "pattern": "LETTER_B",
-                      "examples": [
-                        "ball",
-                        "bee",
-                        "bus"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "MULTIPLE_CHOICE",
-                  "stage": "guided_practice",
-                  "title": "Find the letter",
-                  "instructions": "Tap the letter.",
-                  "instructionsSpeech": "Tap the letter.",
-                  "questions": [
-                    {
-                      "template": "find_letter",
-                      "pattern": "LETTER_B",
-                      "distractors": [
-                        "d",
-                        "p"
-                      ]
-                    },
-                    {
-                      "template": "find_letter",
-                      "pattern": "LETTER_B",
-                      "distractors": [
-                        "d",
-                        "p"
-                      ],
-                      "case": "upper"
-                    }
-                  ]
-                },
-                {
-                  "type": "PICTURE_MATCH",
-                  "stage": "guided_practice",
-                  "title": "Starts with",
-                  "instructions": "Which one starts with this sound?",
-                  "instructionsSpeech": "Which one starts with this sound?",
-                  "questions": [
-                    {
-                      "template": "pick_starting_sound",
-                      "pattern": "LETTER_B",
-                      "word": "bear",
-                      "distractors": [
-                        "dog",
-                        "hat"
-                      ]
-                    },
-                    {
-                      "template": "pick_starting_sound",
-                      "pattern": "LETTER_B",
-                      "word": "banana",
-                      "distractors": [
-                        "fish",
-                        "egg"
-                      ]
-                    },
-                    {
-                      "template": "pick_starting_sound",
-                      "pattern": "LETTER_B",
-                      "word": "bus",
-                      "distractors": [
-                        "pig",
-                        "lion"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "LISTEN_AND_CHOOSE",
-                  "stage": "independent_practice",
-                  "title": "Listen and find",
-                  "instructions": "Listen, then tap the picture.",
-                  "instructionsSpeech": "Listen, then tap the picture.",
-                  "questions": [
-                    {
-                      "template": "listen_pick_picture",
-                      "word": "ball",
-                      "distractors": [
-                        "lion",
-                        "zebra"
-                      ]
-                    },
-                    {
-                      "template": "listen_pick_picture",
-                      "word": "bee",
-                      "distractors": [
-                        "fox",
-                        "rabbit"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "MISSING_LETTER",
-                  "stage": "independent_practice",
-                  "title": "First letter",
-                  "instructions": "Which letter is missing?",
-                  "instructionsSpeech": "Which letter is missing?",
-                  "questions": [
-                    {
-                      "template": "missing_pattern",
-                      "word": "ball",
-                      "missing": "b",
-                      "pattern": "LETTER_B",
-                      "choices": [
-                        "d",
-                        "p"
-                      ]
-                    },
-                    {
-                      "template": "missing_pattern",
-                      "word": "bee",
-                      "missing": "b",
-                      "pattern": "LETTER_B",
-                      "choices": [
-                        "d",
-                        "p"
-                      ]
-                    }
-                  ]
-                }
-              ]
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter b!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_B",
+                "letter": "b",
+                "words": [
+                  "ball",
+                  "bus",
+                  "bed"
+                ],
+                "distractors": [
+                  "LETTER_D",
+                  "LETTER_P",
+                  "LETTER_M"
+                ],
+                "distractorLetters": [
+                  "d",
+                  "p"
+                ],
+                "distractorWords": [
+                  "cat",
+                  "sun"
+                ]
+              }
             }
           ]
         },
@@ -323,153 +107,468 @@
           "dimension": "LETTER_SOUNDS",
           "title": "Letter C and its sound",
           "childTitle": "C c",
-          "pattern": "LETTER_C",
+          "description": "",
+          "difficulty": 1,
           "importance": 5,
-          "masteryThreshold": 90,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_C",
           "lessons": [
             {
               "code": "kg1-letter-c-1",
-              "title": "The letter C",
+              "title": "The letter c",
               "childTitle": "C c",
+              "description": "The letter c: its name, its shapes and its sound.",
               "emoji": "🐱",
-              "description": "Recognise C and c, hear its sound, and find words that start with it.",
-              "minutes": 5,
-              "activities": [
-                {
-                  "type": "INTRO",
-                  "stage": "explanation",
-                  "title": "Meet C c",
-                  "instructions": "Listen and look.",
-                  "instructionsSpeech": "Listen and look.",
-                  "questions": [
-                    {
-                      "template": "pattern_intro",
-                      "pattern": "LETTER_C",
-                      "examples": [
-                        "cat",
-                        "cup",
-                        "car"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "MULTIPLE_CHOICE",
-                  "stage": "guided_practice",
-                  "title": "Find the letter",
-                  "instructions": "Tap the letter.",
-                  "instructionsSpeech": "Tap the letter.",
-                  "questions": [
-                    {
-                      "template": "find_letter",
-                      "pattern": "LETTER_C",
-                      "distractors": [
-                        "o",
-                        "e"
-                      ]
-                    },
-                    {
-                      "template": "find_letter",
-                      "pattern": "LETTER_C",
-                      "distractors": [
-                        "o",
-                        "e"
-                      ],
-                      "case": "upper"
-                    }
-                  ]
-                },
-                {
-                  "type": "PICTURE_MATCH",
-                  "stage": "guided_practice",
-                  "title": "Starts with",
-                  "instructions": "Which one starts with this sound?",
-                  "instructionsSpeech": "Which one starts with this sound?",
-                  "questions": [
-                    {
-                      "template": "pick_starting_sound",
-                      "pattern": "LETTER_C",
-                      "word": "cat",
-                      "distractors": [
-                        "dog",
-                        "hat"
-                      ]
-                    },
-                    {
-                      "template": "pick_starting_sound",
-                      "pattern": "LETTER_C",
-                      "word": "cup",
-                      "distractors": [
-                        "fish",
-                        "egg"
-                      ]
-                    },
-                    {
-                      "template": "pick_starting_sound",
-                      "pattern": "LETTER_C",
-                      "word": "cake",
-                      "distractors": [
-                        "pig",
-                        "lion"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "LISTEN_AND_CHOOSE",
-                  "stage": "independent_practice",
-                  "title": "Listen and find",
-                  "instructions": "Listen, then tap the picture.",
-                  "instructionsSpeech": "Listen, then tap the picture.",
-                  "questions": [
-                    {
-                      "template": "listen_pick_picture",
-                      "word": "cat",
-                      "distractors": [
-                        "lion",
-                        "zebra"
-                      ]
-                    },
-                    {
-                      "template": "listen_pick_picture",
-                      "word": "cup",
-                      "distractors": [
-                        "fox",
-                        "rabbit"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "MISSING_LETTER",
-                  "stage": "independent_practice",
-                  "title": "First letter",
-                  "instructions": "Which letter is missing?",
-                  "instructionsSpeech": "Which letter is missing?",
-                  "questions": [
-                    {
-                      "template": "missing_pattern",
-                      "word": "cat",
-                      "missing": "c",
-                      "pattern": "LETTER_C",
-                      "choices": [
-                        "o",
-                        "e"
-                      ]
-                    },
-                    {
-                      "template": "missing_pattern",
-                      "word": "cup",
-                      "missing": "c",
-                      "pattern": "LETTER_C",
-                      "choices": [
-                        "o",
-                        "e"
-                      ]
-                    }
-                  ]
-                }
-              ]
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter c!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_C",
+                "letter": "c",
+                "words": [
+                  "cat",
+                  "cup",
+                  "can"
+                ],
+                "distractors": [
+                  "LETTER_O",
+                  "LETTER_S",
+                  "LETTER_G"
+                ],
+                "distractorLetters": [
+                  "o",
+                  "s"
+                ],
+                "distractorWords": [
+                  "dog",
+                  "pig"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-d",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter D and its sound",
+          "childTitle": "D d",
+          "description": "",
+          "difficulty": 1,
+          "importance": 4,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_D",
+          "lessons": [
+            {
+              "code": "kg1-letter-d-1",
+              "title": "The letter d",
+              "childTitle": "D d",
+              "description": "The letter d: its name, its shapes and its sound.",
+              "emoji": "🐶",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter d!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_D",
+                "letter": "d",
+                "words": [
+                  "dog",
+                  "duck",
+                  "dot"
+                ],
+                "distractors": [
+                  "LETTER_B",
+                  "LETTER_P",
+                  "LETTER_T"
+                ],
+                "distractorLetters": [
+                  "b",
+                  "p"
+                ],
+                "distractorWords": [
+                  "cat",
+                  "sun"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-e",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter E and its sound",
+          "childTitle": "E e",
+          "description": "",
+          "difficulty": 1,
+          "importance": 5,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_E",
+          "lessons": [
+            {
+              "code": "kg1-letter-e-1",
+              "title": "The letter e",
+              "childTitle": "E e",
+              "description": "The letter e: its name, its shapes and its sound.",
+              "emoji": "🥚",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter e!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_E",
+                "letter": "e",
+                "words": [
+                  "egg",
+                  "bed",
+                  "elephant"
+                ],
+                "distractors": [
+                  "LETTER_A",
+                  "LETTER_I",
+                  "LETTER_O"
+                ],
+                "distractorLetters": [
+                  "a",
+                  "i"
+                ],
+                "distractorWords": [
+                  "cat",
+                  "sun"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-f",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter F and its sound",
+          "childTitle": "F f",
+          "description": "",
+          "difficulty": 1,
+          "importance": 4,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_F",
+          "lessons": [
+            {
+              "code": "kg1-letter-f-1",
+              "title": "The letter f",
+              "childTitle": "F f",
+              "description": "The letter f: its name, its shapes and its sound.",
+              "emoji": "🐟",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter f!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_F",
+                "letter": "f",
+                "words": [
+                  "fish",
+                  "fox",
+                  "fan"
+                ],
+                "distractors": [
+                  "LETTER_T",
+                  "LETTER_L",
+                  "LETTER_V"
+                ],
+                "distractorLetters": [
+                  "t",
+                  "l"
+                ],
+                "distractorWords": [
+                  "dog",
+                  "pig"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-g",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter G and its sound",
+          "childTitle": "G g",
+          "description": "",
+          "difficulty": 1,
+          "importance": 4,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_G",
+          "lessons": [
+            {
+              "code": "kg1-letter-g-1",
+              "title": "The letter g",
+              "childTitle": "G g",
+              "description": "The letter g: its name, its shapes and its sound.",
+              "emoji": "🐐",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter g!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_G",
+                "letter": "g",
+                "words": [
+                  "goat",
+                  "bag",
+                  "gate"
+                ],
+                "distractors": [
+                  "LETTER_Q",
+                  "LETTER_J",
+                  "LETTER_C"
+                ],
+                "distractorLetters": [
+                  "q",
+                  "j"
+                ],
+                "distractorWords": [
+                  "sun",
+                  "hat"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-h",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter H and its sound",
+          "childTitle": "H h",
+          "description": "",
+          "difficulty": 1,
+          "importance": 4,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_H",
+          "lessons": [
+            {
+              "code": "kg1-letter-h-1",
+              "title": "The letter h",
+              "childTitle": "H h",
+              "description": "The letter h: its name, its shapes and its sound.",
+              "emoji": "🎩",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter h!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_H",
+                "letter": "h",
+                "words": [
+                  "hat",
+                  "hen",
+                  "hug"
+                ],
+                "distractors": [
+                  "LETTER_N",
+                  "LETTER_K",
+                  "LETTER_B"
+                ],
+                "distractorLetters": [
+                  "n",
+                  "k"
+                ],
+                "distractorWords": [
+                  "dog",
+                  "sun"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-i",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter I and its sound",
+          "childTitle": "I i",
+          "description": "",
+          "difficulty": 1,
+          "importance": 5,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_I",
+          "lessons": [
+            {
+              "code": "kg1-letter-i-1",
+              "title": "The letter i",
+              "childTitle": "I i",
+              "description": "The letter i: its name, its shapes and its sound.",
+              "emoji": "🐞",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter i!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_I",
+                "letter": "i",
+                "words": [
+                  "insect",
+                  "pig",
+                  "inch"
+                ],
+                "distractors": [
+                  "LETTER_E",
+                  "LETTER_L",
+                  "LETTER_J"
+                ],
+                "distractorLetters": [
+                  "e",
+                  "l"
+                ],
+                "distractorWords": [
+                  "dog",
+                  "sun"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-j",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter J and its sound",
+          "childTitle": "J j",
+          "description": "",
+          "difficulty": 1,
+          "importance": 4,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_J",
+          "lessons": [
+            {
+              "code": "kg1-letter-j-1",
+              "title": "The letter j",
+              "childTitle": "J j",
+              "description": "The letter j: its name, its shapes and its sound.",
+              "emoji": "🍯",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter j!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_J",
+                "letter": "j",
+                "words": [
+                  "jam",
+                  "jet",
+                  "juice"
+                ],
+                "distractors": [
+                  "LETTER_G",
+                  "LETTER_I",
+                  "LETTER_Y"
+                ],
+                "distractorLetters": [
+                  "g",
+                  "i"
+                ],
+                "distractorWords": [
+                  "dog",
+                  "sun"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-k",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter K and its sound",
+          "childTitle": "K k",
+          "description": "",
+          "difficulty": 1,
+          "importance": 4,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_K",
+          "lessons": [
+            {
+              "code": "kg1-letter-k-1",
+              "title": "The letter k",
+              "childTitle": "K k",
+              "description": "The letter k: its name, its shapes and its sound.",
+              "emoji": "🪁",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter k!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_K",
+                "letter": "k",
+                "words": [
+                  "kite",
+                  "king",
+                  "kitten"
+                ],
+                "distractors": [
+                  "LETTER_H",
+                  "LETTER_X",
+                  "LETTER_C"
+                ],
+                "distractorLetters": [
+                  "h",
+                  "x"
+                ],
+                "distractorWords": [
+                  "dog",
+                  "sun"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-l",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter L and its sound",
+          "childTitle": "L l",
+          "description": "",
+          "difficulty": 1,
+          "importance": 4,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_L",
+          "lessons": [
+            {
+              "code": "kg1-letter-l-1",
+              "title": "The letter l",
+              "childTitle": "L l",
+              "description": "The letter l: its name, its shapes and its sound.",
+              "emoji": "🦁",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter l!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_L",
+                "letter": "l",
+                "words": [
+                  "lion",
+                  "leg",
+                  "log"
+                ],
+                "distractors": [
+                  "LETTER_I",
+                  "LETTER_T",
+                  "LETTER_F"
+                ],
+                "distractorLetters": [
+                  "i",
+                  "t"
+                ],
+                "distractorWords": [
+                  "dog",
+                  "sun"
+                ]
+              }
             }
           ]
         },
@@ -478,153 +577,280 @@
           "dimension": "LETTER_SOUNDS",
           "title": "Letter M and its sound",
           "childTitle": "M m",
-          "pattern": "LETTER_M",
+          "description": "",
+          "difficulty": 1,
           "importance": 5,
-          "masteryThreshold": 90,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_M",
           "lessons": [
             {
               "code": "kg1-letter-m-1",
-              "title": "The letter M",
+              "title": "The letter m",
               "childTitle": "M m",
+              "description": "The letter m: its name, its shapes and its sound.",
               "emoji": "🌙",
-              "description": "Recognise M and m, hear its sound, and find words that start with it.",
-              "minutes": 5,
-              "activities": [
-                {
-                  "type": "INTRO",
-                  "stage": "explanation",
-                  "title": "Meet M m",
-                  "instructions": "Listen and look.",
-                  "instructionsSpeech": "Listen and look.",
-                  "questions": [
-                    {
-                      "template": "pattern_intro",
-                      "pattern": "LETTER_M",
-                      "examples": [
-                        "moon",
-                        "mouse",
-                        "milk"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "MULTIPLE_CHOICE",
-                  "stage": "guided_practice",
-                  "title": "Find the letter",
-                  "instructions": "Tap the letter.",
-                  "instructionsSpeech": "Tap the letter.",
-                  "questions": [
-                    {
-                      "template": "find_letter",
-                      "pattern": "LETTER_M",
-                      "distractors": [
-                        "n",
-                        "w"
-                      ]
-                    },
-                    {
-                      "template": "find_letter",
-                      "pattern": "LETTER_M",
-                      "distractors": [
-                        "n",
-                        "w"
-                      ],
-                      "case": "upper"
-                    }
-                  ]
-                },
-                {
-                  "type": "PICTURE_MATCH",
-                  "stage": "guided_practice",
-                  "title": "Starts with",
-                  "instructions": "Which one starts with this sound?",
-                  "instructionsSpeech": "Which one starts with this sound?",
-                  "questions": [
-                    {
-                      "template": "pick_starting_sound",
-                      "pattern": "LETTER_M",
-                      "word": "monkey",
-                      "distractors": [
-                        "dog",
-                        "hat"
-                      ]
-                    },
-                    {
-                      "template": "pick_starting_sound",
-                      "pattern": "LETTER_M",
-                      "word": "moon",
-                      "distractors": [
-                        "fish",
-                        "egg"
-                      ]
-                    },
-                    {
-                      "template": "pick_starting_sound",
-                      "pattern": "LETTER_M",
-                      "word": "milk",
-                      "distractors": [
-                        "pig",
-                        "lion"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "LISTEN_AND_CHOOSE",
-                  "stage": "independent_practice",
-                  "title": "Listen and find",
-                  "instructions": "Listen, then tap the picture.",
-                  "instructionsSpeech": "Listen, then tap the picture.",
-                  "questions": [
-                    {
-                      "template": "listen_pick_picture",
-                      "word": "moon",
-                      "distractors": [
-                        "lion",
-                        "zebra"
-                      ]
-                    },
-                    {
-                      "template": "listen_pick_picture",
-                      "word": "mouse",
-                      "distractors": [
-                        "fox",
-                        "rabbit"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "MISSING_LETTER",
-                  "stage": "independent_practice",
-                  "title": "First letter",
-                  "instructions": "Which letter is missing?",
-                  "instructionsSpeech": "Which letter is missing?",
-                  "questions": [
-                    {
-                      "template": "missing_pattern",
-                      "word": "moon",
-                      "missing": "m",
-                      "pattern": "LETTER_M",
-                      "choices": [
-                        "n",
-                        "w"
-                      ]
-                    },
-                    {
-                      "template": "missing_pattern",
-                      "word": "milk",
-                      "missing": "m",
-                      "pattern": "LETTER_M",
-                      "choices": [
-                        "n",
-                        "w"
-                      ]
-                    }
-                  ]
-                }
-              ]
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter m!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_M",
+                "letter": "m",
+                "words": [
+                  "moon",
+                  "map",
+                  "mug"
+                ],
+                "distractors": [
+                  "LETTER_N",
+                  "LETTER_W",
+                  "LETTER_H"
+                ],
+                "distractorLetters": [
+                  "n",
+                  "w"
+                ],
+                "distractorWords": [
+                  "dog",
+                  "sun"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-n",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter N and its sound",
+          "childTitle": "N n",
+          "description": "",
+          "difficulty": 1,
+          "importance": 4,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_N",
+          "lessons": [
+            {
+              "code": "kg1-letter-n-1",
+              "title": "The letter n",
+              "childTitle": "N n",
+              "description": "The letter n: its name, its shapes and its sound.",
+              "emoji": "🥅",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter n!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_N",
+                "letter": "n",
+                "words": [
+                  "net",
+                  "nut",
+                  "nose"
+                ],
+                "distractors": [
+                  "LETTER_M",
+                  "LETTER_H",
+                  "LETTER_U"
+                ],
+                "distractorLetters": [
+                  "m",
+                  "h"
+                ],
+                "distractorWords": [
+                  "dog",
+                  "sun"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-o",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter O and its sound",
+          "childTitle": "O o",
+          "description": "",
+          "difficulty": 1,
+          "importance": 5,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_O",
+          "lessons": [
+            {
+              "code": "kg1-letter-o-1",
+              "title": "The letter o",
+              "childTitle": "O o",
+              "description": "The letter o: its name, its shapes and its sound.",
+              "emoji": "🐙",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter o!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_O",
+                "letter": "o",
+                "words": [
+                  "octopus",
+                  "dog",
+                  "ox"
+                ],
+                "distractors": [
+                  "LETTER_A",
+                  "LETTER_C",
+                  "LETTER_U"
+                ],
+                "distractorLetters": [
+                  "a",
+                  "c"
+                ],
+                "distractorWords": [
+                  "sun",
+                  "hat"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-p",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter P and its sound",
+          "childTitle": "P p",
+          "description": "",
+          "difficulty": 1,
+          "importance": 4,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_P",
+          "lessons": [
+            {
+              "code": "kg1-letter-p-1",
+              "title": "The letter p",
+              "childTitle": "P p",
+              "description": "The letter p: its name, its shapes and its sound.",
+              "emoji": "🐷",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter p!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_P",
+                "letter": "p",
+                "words": [
+                  "pig",
+                  "pen",
+                  "pan"
+                ],
+                "distractors": [
+                  "LETTER_B",
+                  "LETTER_Q",
+                  "LETTER_D"
+                ],
+                "distractorLetters": [
+                  "b",
+                  "q"
+                ],
+                "distractorWords": [
+                  "dog",
+                  "sun"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-q",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter Q and its sound",
+          "childTitle": "Q q",
+          "description": "",
+          "difficulty": 1,
+          "importance": 4,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_Q",
+          "lessons": [
+            {
+              "code": "kg1-letter-q-1",
+              "title": "The letter q",
+              "childTitle": "Q q",
+              "description": "The letter q: its name, its shapes and its sound.",
+              "emoji": "👸",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter q!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_Q",
+                "letter": "q",
+                "words": [
+                  "queen",
+                  "queen",
+                  "quack"
+                ],
+                "distractors": [
+                  "LETTER_G",
+                  "LETTER_O",
+                  "LETTER_P"
+                ],
+                "distractorLetters": [
+                  "g",
+                  "o"
+                ],
+                "distractorWords": [
+                  "dog",
+                  "sun"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-r",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter R and its sound",
+          "childTitle": "R r",
+          "description": "",
+          "difficulty": 1,
+          "importance": 4,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_R",
+          "lessons": [
+            {
+              "code": "kg1-letter-r-1",
+              "title": "The letter r",
+              "childTitle": "R r",
+              "description": "The letter r: its name, its shapes and its sound.",
+              "emoji": "🐰",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter r!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_R",
+                "letter": "r",
+                "words": [
+                  "rabbit",
+                  "red",
+                  "run"
+                ],
+                "distractors": [
+                  "LETTER_N",
+                  "LETTER_H",
+                  "LETTER_P"
+                ],
+                "distractorLetters": [
+                  "n",
+                  "h"
+                ],
+                "distractorWords": [
+                  "dog",
+                  "sun"
+                ]
+              }
             }
           ]
         },
@@ -633,148 +859,463 @@
           "dimension": "LETTER_SOUNDS",
           "title": "Letter S and its sound",
           "childTitle": "S s",
-          "pattern": "LETTER_S",
+          "description": "",
+          "difficulty": 1,
           "importance": 5,
-          "masteryThreshold": 90,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_S",
           "lessons": [
             {
               "code": "kg1-letter-s-1",
-              "title": "The letter S",
+              "title": "The letter s",
               "childTitle": "S s",
+              "description": "The letter s: its name, its shapes and its sound.",
               "emoji": "☀️",
-              "description": "Recognise S and s, hear its sound, and find words that start with it.",
-              "minutes": 5,
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter s!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_S",
+                "letter": "s",
+                "words": [
+                  "sun",
+                  "sock",
+                  "six"
+                ],
+                "distractors": [
+                  "LETTER_Z",
+                  "LETTER_C",
+                  "LETTER_X"
+                ],
+                "distractorLetters": [
+                  "z",
+                  "c"
+                ],
+                "distractorWords": [
+                  "dog",
+                  "hat"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-t",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter T and its sound",
+          "childTitle": "T t",
+          "description": "",
+          "difficulty": 1,
+          "importance": 5,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_T",
+          "lessons": [
+            {
+              "code": "kg1-letter-t-1",
+              "title": "The letter t",
+              "childTitle": "T t",
+              "description": "The letter t: its name, its shapes and its sound.",
+              "emoji": "⛺",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter t!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_T",
+                "letter": "t",
+                "words": [
+                  "tent",
+                  "tiger",
+                  "ten"
+                ],
+                "distractors": [
+                  "LETTER_F",
+                  "LETTER_L",
+                  "LETTER_D"
+                ],
+                "distractorLetters": [
+                  "f",
+                  "l"
+                ],
+                "distractorWords": [
+                  "dog",
+                  "sun"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-u",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter U and its sound",
+          "childTitle": "U u",
+          "description": "",
+          "difficulty": 1,
+          "importance": 5,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_U",
+          "lessons": [
+            {
+              "code": "kg1-letter-u-1",
+              "title": "The letter u",
+              "childTitle": "U u",
+              "description": "The letter u: its name, its shapes and its sound.",
+              "emoji": "☂️",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter u!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_U",
+                "letter": "u",
+                "words": [
+                  "umbrella",
+                  "sun",
+                  "up"
+                ],
+                "distractors": [
+                  "LETTER_N",
+                  "LETTER_A",
+                  "LETTER_O"
+                ],
+                "distractorLetters": [
+                  "n",
+                  "a"
+                ],
+                "distractorWords": [
+                  "dog",
+                  "hat"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-v",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter V and its sound",
+          "childTitle": "V v",
+          "description": "",
+          "difficulty": 1,
+          "importance": 4,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_V",
+          "lessons": [
+            {
+              "code": "kg1-letter-v-1",
+              "title": "The letter v",
+              "childTitle": "V v",
+              "description": "The letter v: its name, its shapes and its sound.",
+              "emoji": "🚐",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter v!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_V",
+                "letter": "v",
+                "words": [
+                  "van",
+                  "vet",
+                  "vase"
+                ],
+                "distractors": [
+                  "LETTER_W",
+                  "LETTER_Y",
+                  "LETTER_U"
+                ],
+                "distractorLetters": [
+                  "w",
+                  "y"
+                ],
+                "distractorWords": [
+                  "dog",
+                  "sun"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-w",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter W and its sound",
+          "childTitle": "W w",
+          "description": "",
+          "difficulty": 1,
+          "importance": 4,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_W",
+          "lessons": [
+            {
+              "code": "kg1-letter-w-1",
+              "title": "The letter w",
+              "childTitle": "W w",
+              "description": "The letter w: its name, its shapes and its sound.",
+              "emoji": "🕸️",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter w!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_W",
+                "letter": "w",
+                "words": [
+                  "web",
+                  "wing",
+                  "wet"
+                ],
+                "distractors": [
+                  "LETTER_V",
+                  "LETTER_M",
+                  "LETTER_U"
+                ],
+                "distractorLetters": [
+                  "v",
+                  "m"
+                ],
+                "distractorWords": [
+                  "dog",
+                  "sun"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-x",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter X and its sound",
+          "childTitle": "X x",
+          "description": "",
+          "difficulty": 1,
+          "importance": 4,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_X",
+          "lessons": [
+            {
+              "code": "kg1-letter-x-1",
+              "title": "The letter x",
+              "childTitle": "X x",
+              "description": "The letter x: its name, its shapes and its sound.",
+              "emoji": "📦",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter x!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_X",
+                "letter": "x",
+                "words": [
+                  "box",
+                  "fox",
+                  "six"
+                ],
+                "distractors": [
+                  "LETTER_K",
+                  "LETTER_Z",
+                  "LETTER_S"
+                ],
+                "distractorLetters": [
+                  "k",
+                  "z"
+                ],
+                "distractorWords": [
+                  "dog",
+                  "sun"
+                ],
+                "soundPosition": "end"
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-y",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter Y and its sound",
+          "childTitle": "Y y",
+          "description": "",
+          "difficulty": 1,
+          "importance": 4,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_Y",
+          "lessons": [
+            {
+              "code": "kg1-letter-y-1",
+              "title": "The letter y",
+              "childTitle": "Y y",
+              "description": "The letter y: its name, its shapes and its sound.",
+              "emoji": "🧶",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter y!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_Y",
+                "letter": "y",
+                "words": [
+                  "yarn",
+                  "yam",
+                  "yellow"
+                ],
+                "distractors": [
+                  "LETTER_V",
+                  "LETTER_J",
+                  "LETTER_W"
+                ],
+                "distractorLetters": [
+                  "v",
+                  "j"
+                ],
+                "distractorWords": [
+                  "dog",
+                  "sun"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-letter-z",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Letter Z and its sound",
+          "childTitle": "Z z",
+          "description": "",
+          "difficulty": 1,
+          "importance": 4,
+          "phonicsStage": "LETTER_SOUNDS",
+          "prerequisites": [],
+          "pattern": "LETTER_Z",
+          "lessons": [
+            {
+              "code": "kg1-letter-z-1",
+              "title": "The letter z",
+              "childTitle": "Z z",
+              "description": "The letter z: its name, its shapes and its sound.",
+              "emoji": "🦓",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Let's meet the letter z!",
+              "blueprint": {
+                "name": "letter_sound",
+                "pattern": "LETTER_Z",
+                "letter": "z",
+                "words": [
+                  "zebra",
+                  "zip",
+                  "zoo"
+                ],
+                "distractors": [
+                  "LETTER_S",
+                  "LETTER_X",
+                  "LETTER_N"
+                ],
+                "distractorLetters": [
+                  "s",
+                  "x"
+                ],
+                "distractorWords": [
+                  "dog",
+                  "hat"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "code": "kg1-letter-names",
+      "subject": "PHONICS",
+      "title": "Letter Names and Shapes",
+      "emoji": "🔠",
+      "description": "Big and small letters, and each letter's name.",
+      "skills": [
+        {
+          "code": "kg1-upper-lower",
+          "dimension": "LETTER_RECOGNITION",
+          "title": "Uppercase and lowercase letters",
+          "childTitle": "Big and small",
+          "description": "Matches capital and small letters.",
+          "difficulty": 1,
+          "importance": 3,
+          "phonicsStage": "LETTERS",
+          "prerequisites": [],
+          "lessons": [
+            {
+              "code": "kg1-upper-lower-1",
+              "title": "Big and small letters",
+              "childTitle": "Big and small",
+              "description": "Match capital letters to small letters.",
+              "emoji": "🔠",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Every letter has a big shape and a small shape.",
               "activities": [
                 {
-                  "type": "INTRO",
-                  "stage": "explanation",
-                  "title": "Meet S s",
-                  "instructions": "Listen and look.",
-                  "instructionsSpeech": "Listen and look.",
+                  "type": "MATCH",
+                  "stage": "guided_practice",
+                  "title": "Big and small",
+                  "instructions": "Match the big letters to the small letters.",
+                  "instructionsSpeech": "Match the big letters to the small letters.",
                   "questions": [
                     {
-                      "template": "pattern_intro",
-                      "pattern": "LETTER_S",
-                      "examples": [
-                        "sun",
-                        "sock",
-                        "snake"
+                      "template": "match_upper_lower",
+                      "patterns": [
+                        "LETTER_A",
+                        "LETTER_B",
+                        "LETTER_D"
+                      ]
+                    },
+                    {
+                      "template": "match_upper_lower",
+                      "patterns": [
+                        "LETTER_E",
+                        "LETTER_G",
+                        "LETTER_H"
+                      ]
+                    },
+                    {
+                      "template": "match_upper_lower",
+                      "patterns": [
+                        "LETTER_Q",
+                        "LETTER_R",
+                        "LETTER_N"
                       ]
                     }
                   ]
                 },
                 {
                   "type": "MULTIPLE_CHOICE",
-                  "stage": "guided_practice",
+                  "stage": "independent_practice",
                   "title": "Find the letter",
-                  "instructions": "Tap the letter.",
-                  "instructionsSpeech": "Tap the letter.",
+                  "instructions": "Find the letter.",
+                  "instructionsSpeech": "Find the letter.",
                   "questions": [
                     {
                       "template": "find_letter",
-                      "pattern": "LETTER_S",
+                      "pattern": "LETTER_B",
                       "distractors": [
-                        "z",
-                        "c"
-                      ]
-                    },
-                    {
-                      "template": "find_letter",
-                      "pattern": "LETTER_S",
-                      "distractors": [
-                        "z",
-                        "c"
+                        "d",
+                        "p"
                       ],
                       "case": "upper"
-                    }
-                  ]
-                },
-                {
-                  "type": "PICTURE_MATCH",
-                  "stage": "guided_practice",
-                  "title": "Starts with",
-                  "instructions": "Which one starts with this sound?",
-                  "instructionsSpeech": "Which one starts with this sound?",
-                  "questions": [
-                    {
-                      "template": "pick_starting_sound",
-                      "pattern": "LETTER_S",
-                      "word": "snake",
-                      "distractors": [
-                        "dog",
-                        "hat"
-                      ]
                     },
                     {
-                      "template": "pick_starting_sound",
-                      "pattern": "LETTER_S",
-                      "word": "star",
+                      "template": "find_letter",
+                      "pattern": "LETTER_G",
                       "distractors": [
-                        "fish",
-                        "egg"
-                      ]
-                    },
-                    {
-                      "template": "pick_starting_sound",
-                      "pattern": "LETTER_S",
-                      "word": "sock",
-                      "distractors": [
-                        "pig",
-                        "lion"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "LISTEN_AND_CHOOSE",
-                  "stage": "independent_practice",
-                  "title": "Listen and find",
-                  "instructions": "Listen, then tap the picture.",
-                  "instructionsSpeech": "Listen, then tap the picture.",
-                  "questions": [
-                    {
-                      "template": "listen_pick_picture",
-                      "word": "sun",
-                      "distractors": [
-                        "lion",
-                        "zebra"
-                      ]
-                    },
-                    {
-                      "template": "listen_pick_picture",
-                      "word": "sock",
-                      "distractors": [
-                        "fox",
-                        "rabbit"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "MISSING_LETTER",
-                  "stage": "independent_practice",
-                  "title": "First letter",
-                  "instructions": "Which letter is missing?",
-                  "instructionsSpeech": "Which letter is missing?",
-                  "questions": [
-                    {
-                      "template": "missing_pattern",
-                      "word": "sun",
-                      "missing": "s",
-                      "pattern": "LETTER_S",
-                      "choices": [
-                        "z",
-                        "c"
-                      ]
-                    },
-                    {
-                      "template": "missing_pattern",
-                      "word": "sock",
-                      "missing": "s",
-                      "pattern": "LETTER_S",
-                      "choices": [
-                        "z",
-                        "c"
+                        "q",
+                        "j"
                       ]
                     }
                   ]
@@ -784,36 +1325,49 @@
           ]
         },
         {
-          "code": "kg1-letter-t",
-          "dimension": "LETTER_SOUNDS",
-          "title": "Letter T and its sound",
-          "childTitle": "T t",
-          "pattern": "LETTER_T",
-          "importance": 5,
-          "masteryThreshold": 90,
+          "code": "kg1-letter-names",
+          "dimension": "LETTER_RECOGNITION",
+          "title": "Letter names",
+          "childTitle": "Letter names",
+          "description": "Knows each letter's name, and that it is not the letter's sound.",
+          "difficulty": 1,
+          "importance": 3,
+          "phonicsStage": "LETTERS",
+          "prerequisites": [
+            "kg1-upper-lower"
+          ],
           "lessons": [
             {
-              "code": "kg1-letter-t-1",
-              "title": "The letter T",
-              "childTitle": "T t",
-              "emoji": "🌳",
-              "description": "Recognise T and t, hear its sound, and find words that start with it.",
-              "minutes": 5,
+              "code": "kg1-letter-names-1",
+              "title": "Letter names",
+              "childTitle": "Letter names",
+              "description": "Hear a letter's name and find it.",
+              "emoji": "📛",
+              "minutes": 4,
+              "difficulty": 1,
+              "introSpeech": "Every letter has a name. The name is not the sound!",
               "activities": [
                 {
                   "type": "INTRO",
                   "stage": "explanation",
-                  "title": "Meet T t",
-                  "instructions": "Listen and look.",
-                  "instructionsSpeech": "Listen and look.",
+                  "title": "Name and sound",
+                  "instructions": "Listen: a name, then a sound.",
+                  "instructionsSpeech": "Listen: a name, then a sound.",
                   "questions": [
                     {
-                      "template": "pattern_intro",
-                      "pattern": "LETTER_T",
+                      "template": "letter_intro",
+                      "pattern": "LETTER_B",
                       "examples": [
-                        "tiger",
-                        "tree",
-                        "tent"
+                        "ball",
+                        "bus"
+                      ]
+                    },
+                    {
+                      "template": "letter_intro",
+                      "pattern": "LETTER_S",
+                      "examples": [
+                        "sun",
+                        "sock"
                       ]
                     }
                   ]
@@ -821,61 +1375,33 @@
                 {
                   "type": "MULTIPLE_CHOICE",
                   "stage": "guided_practice",
-                  "title": "Find the letter",
-                  "instructions": "Tap the letter.",
-                  "instructionsSpeech": "Tap the letter.",
+                  "title": "Find by name",
+                  "instructions": "Listen to the letter's name, then find it.",
+                  "instructionsSpeech": "Listen to the letter's name, then find it.",
                   "questions": [
                     {
                       "template": "find_letter",
-                      "pattern": "LETTER_T",
+                      "pattern": "LETTER_H",
                       "distractors": [
-                        "f",
-                        "l"
+                        "n",
+                        "k"
                       ]
                     },
                     {
                       "template": "find_letter",
-                      "pattern": "LETTER_T",
+                      "pattern": "LETTER_W",
                       "distractors": [
-                        "f",
-                        "l"
+                        "m",
+                        "v"
                       ],
                       "case": "upper"
-                    }
-                  ]
-                },
-                {
-                  "type": "PICTURE_MATCH",
-                  "stage": "guided_practice",
-                  "title": "Starts with",
-                  "instructions": "Which one starts with this sound?",
-                  "instructionsSpeech": "Which one starts with this sound?",
-                  "questions": [
-                    {
-                      "template": "pick_starting_sound",
-                      "pattern": "LETTER_T",
-                      "word": "tiger",
-                      "distractors": [
-                        "dog",
-                        "hat"
-                      ]
                     },
                     {
-                      "template": "pick_starting_sound",
-                      "pattern": "LETTER_T",
-                      "word": "turtle",
+                      "template": "find_letter",
+                      "pattern": "LETTER_Y",
                       "distractors": [
-                        "fish",
-                        "egg"
-                      ]
-                    },
-                    {
-                      "template": "pick_starting_sound",
-                      "pattern": "LETTER_T",
-                      "word": "tent",
-                      "distractors": [
-                        "pig",
-                        "lion"
+                        "v",
+                        "j"
                       ]
                     }
                   ]
@@ -883,53 +1409,133 @@
                 {
                   "type": "LISTEN_AND_CHOOSE",
                   "stage": "independent_practice",
-                  "title": "Listen and find",
-                  "instructions": "Listen, then tap the picture.",
-                  "instructionsSpeech": "Listen, then tap the picture.",
+                  "title": "Find by sound",
+                  "instructions": "Now listen to the SOUND, then find the letter.",
+                  "instructionsSpeech": "Now listen to the SOUND, then find the letter.",
                   "questions": [
                     {
-                      "template": "listen_pick_picture",
-                      "word": "tiger",
+                      "template": "letter_for_sound",
+                      "pattern": "LETTER_H",
                       "distractors": [
-                        "lion",
-                        "zebra"
+                        "LETTER_N",
+                        "LETTER_K"
                       ]
                     },
                     {
-                      "template": "listen_pick_picture",
-                      "word": "tree",
+                      "template": "letter_for_sound",
+                      "pattern": "LETTER_W",
                       "distractors": [
-                        "fox",
-                        "rabbit"
+                        "LETTER_M",
+                        "LETTER_V"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "kg1-beginning-sounds",
+          "dimension": "LETTER_SOUNDS",
+          "title": "Beginning sounds",
+          "childTitle": "First sounds",
+          "description": "Hears the first sound in a word.",
+          "difficulty": 2,
+          "importance": 3,
+          "phonicsStage": "BEGINNING_SOUNDS",
+          "prerequisites": [
+            "kg1-letter-m",
+            "kg1-letter-s",
+            "kg1-letter-t"
+          ],
+          "lessons": [
+            {
+              "code": "kg1-beginning-sounds-1",
+              "title": "First sounds",
+              "childTitle": "First sounds",
+              "description": "Which sound does the word start with?",
+              "emoji": "👂",
+              "minutes": 5,
+              "difficulty": 2,
+              "introSpeech": "Listen to the very first sound in each word.",
+              "activities": [
+                {
+                  "type": "MATCH",
+                  "stage": "guided_practice",
+                  "title": "Sound and letter",
+                  "instructions": "Tap a speaker to hear a sound, then tap its letter.",
+                  "instructionsSpeech": "Tap a speaker to hear a sound, then tap its letter.",
+                  "questions": [
+                    {
+                      "template": "match_sound_letter",
+                      "patterns": [
+                        "LETTER_M",
+                        "LETTER_S",
+                        "LETTER_T"
                       ]
                     }
                   ]
                 },
                 {
-                  "type": "MISSING_LETTER",
-                  "stage": "independent_practice",
-                  "title": "First letter",
-                  "instructions": "Which letter is missing?",
-                  "instructionsSpeech": "Which letter is missing?",
+                  "type": "PICTURE_MATCH",
+                  "stage": "guided_practice",
+                  "title": "Which one?",
+                  "instructions": "Which picture starts with this sound?",
+                  "instructionsSpeech": "Which picture starts with this sound?",
                   "questions": [
                     {
-                      "template": "missing_pattern",
-                      "word": "tree",
-                      "missing": "t",
-                      "pattern": "LETTER_T",
-                      "choices": [
-                        "f",
-                        "l"
+                      "template": "pick_starting_sound",
+                      "pattern": "LETTER_M",
+                      "word": "moon",
+                      "distractors": [
+                        "sun",
+                        "cat"
                       ]
                     },
                     {
-                      "template": "missing_pattern",
-                      "word": "tent",
-                      "missing": "t",
-                      "pattern": "LETTER_T",
+                      "template": "pick_starting_sound",
+                      "pattern": "LETTER_B",
+                      "word": "bus",
+                      "distractors": [
+                        "dog",
+                        "hat"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "LISTEN_AND_CHOOSE",
+                  "stage": "independent_practice",
+                  "title": "First sound",
+                  "instructions": "What sound do you hear first?",
+                  "instructionsSpeech": "What sound do you hear first?",
+                  "questions": [
+                    {
+                      "template": "sound_at_position",
+                      "word": "fish",
+                      "position": "beginning",
                       "choices": [
-                        "f",
-                        "l"
+                        "t",
+                        "s"
+                      ]
+                    },
+                    {
+                      "template": "sound_at_position",
+                      "word": "pig",
+                      "position": "beginning",
+                      "choices": [
+                        "b",
+                        "d"
+                      ]
+                    },
+                    {
+                      "template": "sound_at_position",
+                      "word": "sun",
+                      "position": "beginning",
+                      "choices": [
+                        "z",
+                        "c"
                       ]
                     }
                   ]

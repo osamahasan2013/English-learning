@@ -1,6 +1,6 @@
 # Development roadmap
 
-Status as of 2026-09-29. ✅ done · 🟡 partial · ⬜ not started.
+Status after Phase 4 (phonics engine). ✅ done · 🟡 partial · ⬜ not started.
 
 ## Milestone 1 — vertical slice ✅
 
@@ -60,26 +60,41 @@ programme) maps to row 4 below and parts of rows 8, 9, 11, 12 and 13:
 | Dashboards                   | child: level, recommended lesson, subjects, recent lessons, skills; parent: activities, average score, learning time, subject progress |
 | Tests                        | unit, SQL (`004_learning_engine.sql`), integration (`learning-engine.test.ts`), e2e (`learning-engine.spec.ts`)                        |
 
+## Phase 4 — phonics engine ✅
+
+Built on the Phase 3 engine (no separate mastery, progress or assessment system):
+
+| Area               | Where                                                                                                                                                              |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Phonics model      | migration `20261002100100`; phonemes, stages, pattern sounds as phonemes, relations, word segments, review flags (ADR-024, ADR-026)                                |
+| Word decomposition | `src/lib/learning/phonics.ts` (graphemes → phonemes, CVC shape, decodable), authored overrides in the words CSV                                                    |
+| Activity types     | `BLEND_SOUNDS`, `SEGMENT_WORD`, `FIND_PATTERN` + 13 phonics templates over existing types                                                                          |
+| Lessons            | blueprints `letter_sound`, `cvc_blending`, `phonics_pattern` (ADR-025); 26 letters, 5 short vowels, digraphs → suffixes                                            |
+| Assessment         | Phonics Check (12 areas) in the lesson player; server scoring per area; mastery + `last_assessed_at` (ADR-027)                                                     |
+| Screens            | `/child/phonics` (Letters, Sounds, Blend, Read Words, Practice, Mastery; stars), parent/admin pattern search, dashboard percentages                                |
+| Audio              | Listen / Slow / Again everywhere, visible no-sound fallback                                                                                                        |
+| Tests              | unit (`phonics`, `phonics-engine`, content files), SQL `005_phonics_engine.sql`, integration `phonics.test.ts`, e2e `phonics.spec.ts` on phone, tablet and desktop |
+
 ## Phases
 
-| #   | Phase                       | Status | Notes / next steps                                                                                                                        |
-| --- | --------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Project foundation          | ✅     | Next 16, TS, Tailwind, lint, tests, docs                                                                                                  |
-| 2   | Database and authentication | ✅     | Schema, RLS, email/password auth, password reset, parent profile (name, time zone), levels seeded by migration, DB-enforced family rules  |
-| 3   | Multi-child system          | ✅     | Create/edit/archive (max 12), switcher, child mode + grown-up gate, forged child ids rejected                                             |
-| 4   | Learning/content engine     | ✅     | Hierarchy, typed questions and activity config, registry (13 renderers), importer, templates, answer keys, engine services (Phase 3)      |
-| 5   | Phonics                     | 🟡     | Letters, digraphs, vowel teams, r-controlled, endings authored; more lessons per pattern (only 1 each now); pattern cards outside lessons |
-| 6   | Vocabulary                  | 🟡     | Word bank + My Words data. Next: Word Explorer (`/child/words/[id]`), My Words screen, manual save, search                                |
-| 7   | Spelling                    | 🟡     | SPELLING type + error classification. Next: spelling sessions, error-type analytics                                                       |
-| 8   | Reading                     | 🟡     | READING renderer (passage + comprehension) done. Next: story library screens, read-aloud with optional speech recognition + self-check    |
-| 9   | Writing                     | 🟡     | TRACING (canvas, coverage scoring) and WRITING (word bank) done. Next: undo/eraser, stroke order and direction metrics                    |
-| 10  | Assessment                  | 🟡     | Schema, placement config + scoring logic, seeded placement. Next: assessment player, results, reassessment timeline                       |
-| 11  | Adaptive learning           | 🟡     | Mastery bands, prerequisites, review queue, next lesson and recommendations, daily plan. Next: mixed review sessions across skills, SRS   |
-| 12  | Parent dashboard            | 🟡     | Stats, activities, average score, learning time, subject progress, skills, recommendations, badges. Next: monthly view, words list        |
-| 13  | Games and rewards           | 🟡     | Stars, points, badges, streaks; MATCH, SORT, DRAG_DROP renderers. Next: MEMORY_MATCH, PHONICS_CLASSIFICATION                              |
-| 14  | PWA/offline/sync            | 🟡     | Outbox, idempotent sync, SW. Next: fully client-side offline lesson loader from IndexedDB; background sync                                |
-| 15  | Admin CMS                   | 🟡     | Guarded area, overview, word search. Next: reusable Zod-driven edit forms, CSV upload in UI, media upload with type/size validation       |
-| 16  | Testing and optimisation    | 🟡     | CI for static checks and build. Next: DB + e2e tests in CI (Supabase CLI), axe accessibility checks, Lighthouse budget                    |
+| #   | Phase                       | Status | Notes / next steps                                                                                                                                                      |
+| --- | --------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Project foundation          | ✅     | Next 16, TS, Tailwind, lint, tests, docs                                                                                                                                |
+| 2   | Database and authentication | ✅     | Schema, RLS, email/password auth, password reset, parent profile (name, time zone), levels seeded by migration, DB-enforced family rules                                |
+| 3   | Multi-child system          | ✅     | Create/edit/archive (max 12), switcher, child mode + grown-up gate, forged child ids rejected                                                                           |
+| 4   | Learning/content engine     | ✅     | Hierarchy, typed questions and activity config, registry (13 renderers), importer, templates, answer keys, engine services (Phase 3)                                    |
+| 5   | Phonics                     | ✅     | Phase 4: phoneme model, word splits, 3 new activity types, blueprints, Phonics screen, Phonics Check. Next: recorded audio, more lessons per pattern, decodable readers |
+| 6   | Vocabulary                  | 🟡     | Word bank + My Words data. Next: Word Explorer (`/child/words/[id]`), My Words screen, manual save, search                                                              |
+| 7   | Spelling                    | 🟡     | SPELLING type + error classification. Next: spelling sessions, error-type analytics                                                                                     |
+| 8   | Reading                     | 🟡     | READING renderer (passage + comprehension) done. Next: story library screens, read-aloud with optional speech recognition + self-check                                  |
+| 9   | Writing                     | 🟡     | TRACING (canvas, coverage scoring) and WRITING (word bank) done. Next: undo/eraser, stroke order and direction metrics                                                  |
+| 10  | Assessment                  | 🟡     | Phonics Check playable and scored per area; placement config + scoring logic. Next: placement UI, reassessment timeline                                                 |
+| 11  | Adaptive learning           | 🟡     | Mastery bands, prerequisites, review queue, next lesson and recommendations, daily plan. Next: mixed review sessions across skills, SRS                                 |
+| 12  | Parent dashboard            | 🟡     | Stats, activities, average score, learning time, subject progress, skills, recommendations, badges. Next: monthly view, words list                                      |
+| 13  | Games and rewards           | 🟡     | Stars, points, badges, streaks; MATCH, SORT, DRAG_DROP renderers. Next: MEMORY_MATCH, PHONICS_CLASSIFICATION                                                            |
+| 14  | PWA/offline/sync            | 🟡     | Outbox, idempotent sync, SW. Next: fully client-side offline lesson loader from IndexedDB; background sync                                                              |
+| 15  | Admin CMS                   | 🟡     | Guarded area, overview, word search. Next: reusable Zod-driven edit forms, CSV upload in UI, media upload with type/size validation                                     |
+| 16  | Testing and optimisation    | 🟡     | CI for static checks and build. Next: DB + e2e tests in CI (Supabase CLI), axe accessibility checks, Lighthouse budget                                                  |
 
 ## Known limitations
 
@@ -94,7 +109,12 @@ programme) maps to row 4 below and parts of rows 8, 9, 11, 12 and 13:
 - VOCABULARY, SPELLING and LISTENING are defined subjects without units of their own yet
   (spelling and listening activities sit inside phonics and reading lessons).
 - The rate limiter is per server instance.
-- Assessment and placement have data and logic but no UI yet; parents set the level manually.
+- Placement ("Find My Level") has data and logic but no UI yet; parents set the level
+  manually. The Phonics Check is playable.
+- Word splits are rule-based: four words are flagged for review on purpose; unusual
+  spellings need an authored `segments` value.
+- Phonics lessons are one per pattern (a blueprint); extra practice comes from the review
+  queue and replays rather than more lessons.
 - Pictures are emoji (render slightly differently per platform); `image_assets` is ready
   for illustrated images.
 

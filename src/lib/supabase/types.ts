@@ -690,6 +690,38 @@ export type Database = {
           },
         ];
       };
+      content_flags: {
+        Row: {
+          id: string;
+          entity: string;
+          entity_key: string;
+          rule: string;
+          severity: string;
+          message: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          entity: string;
+          entity_key: string;
+          rule: string;
+          severity?: string;
+          message: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          entity?: string;
+          entity_key?: string;
+          rule?: string;
+          severity?: string;
+          message?: string;
+          created_at?: string;
+        };
+        Relationships: [
+
+        ];
+      };
       feedback_messages: {
         Row: {
           id: string;
@@ -1251,6 +1283,83 @@ export type Database = {
 
         ];
       };
+      phonemes: {
+        Row: {
+          code: string;
+          ipa: string;
+          say_as: string;
+          kind: string;
+          voiced: boolean;
+          example_word: string;
+          description: string;
+          sort_order: number;
+          created_at: string;
+          label: string;
+        };
+        Insert: {
+          code: string;
+          ipa: string;
+          say_as: string;
+          kind: string;
+          voiced: boolean;
+          example_word?: string;
+          description?: string;
+          sort_order?: number;
+          created_at?: string;
+          label: string;
+        };
+        Update: {
+          code?: string;
+          ipa?: string;
+          say_as?: string;
+          kind?: string;
+          voiced?: boolean;
+          example_word?: string;
+          description?: string;
+          sort_order?: number;
+          created_at?: string;
+          label?: string;
+        };
+        Relationships: [
+
+        ];
+      };
+      phonics_pattern_relations: {
+        Row: {
+          pattern_id: string;
+          related_pattern_id: string;
+          relation_type: string;
+          created_at: string;
+        };
+        Insert: {
+          pattern_id: string;
+          related_pattern_id: string;
+          relation_type: string;
+          created_at?: string;
+        };
+        Update: {
+          pattern_id?: string;
+          related_pattern_id?: string;
+          relation_type?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "phonics_pattern_relations_pattern_id_fkey";
+            columns: ["pattern_id"];
+            isOneToOne: false;
+            referencedRelation: "phonics_patterns";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "phonics_pattern_relations_related_pattern_id_fkey";
+            columns: ["related_pattern_id"];
+            isOneToOne: false;
+            referencedRelation: "phonics_patterns";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       phonics_pattern_sounds: {
         Row: {
           id: string;
@@ -1263,6 +1372,7 @@ export type Database = {
           sort_order: number;
           audio_asset_id: string | null;
           created_at: string;
+          phonemes: string[];
         };
         Insert: {
           id?: string;
@@ -1275,6 +1385,7 @@ export type Database = {
           sort_order?: number;
           audio_asset_id?: string | null;
           created_at?: string;
+          phonemes?: string[];
         };
         Update: {
           id?: string;
@@ -1287,6 +1398,7 @@ export type Database = {
           sort_order?: number;
           audio_asset_id?: string | null;
           created_at?: string;
+          phonemes?: string[];
         };
         Relationships: [
           {
@@ -1321,6 +1433,12 @@ export type Database = {
           status: Database["public"]["Enums"]["content_status"];
           created_at: string;
           updated_at: string;
+          stage_code: string | null;
+          position: string;
+          uppercase: string | null;
+          letter_name: string;
+          letter_name_say_as: string;
+          image_asset_id: string | null;
         };
         Insert: {
           id?: string;
@@ -1337,6 +1455,12 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          stage_code?: string | null;
+          position?: string;
+          uppercase?: string | null;
+          letter_name?: string;
+          letter_name_say_as?: string;
+          image_asset_id?: string | null;
         };
         Update: {
           id?: string;
@@ -1353,6 +1477,12 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          stage_code?: string | null;
+          position?: string;
+          uppercase?: string | null;
+          letter_name?: string;
+          letter_name_say_as?: string;
+          image_asset_id?: string | null;
         };
         Relationships: [
           {
@@ -1363,12 +1493,58 @@ export type Database = {
             referencedColumns: ["id"];
           },
           {
+            foreignKeyName: "phonics_patterns_image_asset_id_fkey";
+            columns: ["image_asset_id"];
+            isOneToOne: false;
+            referencedRelation: "image_assets";
+            referencedColumns: ["id"];
+          },
+          {
             foreignKeyName: "phonics_patterns_level_id_fkey";
             columns: ["level_id"];
             isOneToOne: false;
             referencedRelation: "levels";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "phonics_patterns_stage_code_fkey";
+            columns: ["stage_code"];
+            isOneToOne: false;
+            referencedRelation: "phonics_stages";
+            referencedColumns: ["code"];
+          },
+        ];
+      };
+      phonics_stages: {
+        Row: {
+          code: string;
+          name: string;
+          child_name: string;
+          description: string;
+          emoji: string;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          code: string;
+          name: string;
+          child_name?: string;
+          description?: string;
+          emoji?: string;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          code?: string;
+          name?: string;
+          child_name?: string;
+          description?: string;
+          emoji?: string;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Relationships: [
+
         ];
       };
       profiles: {
@@ -1985,6 +2161,7 @@ export type Database = {
           updated_at: string;
           difficulty: number;
           is_active: boolean;
+          phonics_stage_code: string | null;
         };
         Insert: {
           id?: string;
@@ -2003,6 +2180,7 @@ export type Database = {
           updated_at?: string;
           difficulty?: number;
           is_active?: boolean;
+          phonics_stage_code?: string | null;
         };
         Update: {
           id?: string;
@@ -2021,6 +2199,7 @@ export type Database = {
           updated_at?: string;
           difficulty?: number;
           is_active?: boolean;
+          phonics_stage_code?: string | null;
         };
         Relationships: [
           {
@@ -2036,6 +2215,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "phonics_patterns";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "skills_phonics_stage_code_fkey";
+            columns: ["phonics_stage_code"];
+            isOneToOne: false;
+            referencedRelation: "phonics_stages";
+            referencedColumns: ["code"];
           },
           {
             foreignKeyName: "skills_unit_id_fkey";
@@ -2438,6 +2624,55 @@ export type Database = {
           },
         ];
       };
+      word_segments: {
+        Row: {
+          word_id: string;
+          position: number;
+          grapheme: string;
+          pattern_id: string | null;
+          sound_id: string | null;
+          phonemes: string[];
+        };
+        Insert: {
+          word_id: string;
+          position: number;
+          grapheme: string;
+          pattern_id?: string | null;
+          sound_id?: string | null;
+          phonemes?: string[];
+        };
+        Update: {
+          word_id?: string;
+          position?: number;
+          grapheme?: string;
+          pattern_id?: string | null;
+          sound_id?: string | null;
+          phonemes?: string[];
+        };
+        Relationships: [
+          {
+            foreignKeyName: "word_segments_pattern_id_fkey";
+            columns: ["pattern_id"];
+            isOneToOne: false;
+            referencedRelation: "phonics_patterns";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "word_segments_sound_id_fkey";
+            columns: ["sound_id"];
+            isOneToOne: false;
+            referencedRelation: "phonics_pattern_sounds";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "word_segments_word_id_fkey";
+            columns: ["word_id"];
+            isOneToOne: false;
+            referencedRelation: "words";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       words: {
         Row: {
           id: string;
@@ -2467,6 +2702,9 @@ export type Database = {
           search: string | null;
           created_at: string;
           updated_at: string;
+          phonics_shape: string;
+          decodable: boolean;
+          segments_source: string;
         };
         Insert: {
           id?: string;
@@ -2495,6 +2733,9 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          phonics_shape?: string;
+          decodable?: boolean;
+          segments_source?: string;
         };
         Update: {
           id?: string;
@@ -2523,6 +2764,9 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          phonics_shape?: string;
+          decodable?: boolean;
+          segments_source?: string;
         };
         Relationships: [
           {

@@ -26,6 +26,8 @@ export type ErrorType =
   | "wrong_group"
   | "wrong_word"
   | "incomplete_trace"
+  | "wrong_sounds"
+  | "wrong_count"
   | "invalid_response";
 
 export function normalizeText(value: string) {
@@ -46,7 +48,7 @@ function normalizeWriting(value: string) {
     .trim();
 }
 
-export const SEQUENCE_TYPES = new Set(["SENTENCE_BUILDER", "DRAG_DROP"]);
+export const SEQUENCE_TYPES = new Set(["SENTENCE_BUILDER", "DRAG_DROP", "SEGMENT_WORD"]);
 export const PAIR_TYPES = new Set(["MATCH", "SORT"]);
 // Types whose near misses are "right letters, wrong order".
 const LETTER_TYPES = new Set(["WORD_BUILDER", "SPELLING"]);
@@ -134,7 +136,14 @@ export function evaluateResponse(
     return {
       isCorrect: false,
       almost: isAlmostShare(right, target.length),
-      errorType: questionType === "DRAG_DROP" ? "wrong_word" : "wrong_order",
+      errorType:
+        questionType === "DRAG_DROP"
+          ? "wrong_word"
+          : questionType === "SEGMENT_WORD"
+            ? response.sequence.length === target.length
+              ? "wrong_sounds"
+              : "wrong_count"
+            : "wrong_order",
     };
   }
 
@@ -150,7 +159,10 @@ export function evaluateResponse(
     case "LISTEN_AND_CHOOSE":
     case "PICTURE_MATCH":
     case "READING":
+    case "BLEND_SOUNDS":
       return { isCorrect: false, almost: false, errorType: "wrong_choice" };
+    case "FIND_PATTERN":
+      return { isCorrect: false, almost: false, errorType: "wrong_letters" };
     case "MISSING_LETTER":
       return { isCorrect: false, almost: false, errorType: "wrong_pattern" };
     case "WORD_BUILDER":

@@ -116,6 +116,7 @@ export function parseWordsCsv(input: string): {
       tags: list(get("tags")),
       patterns: parsePatternCell(get("phonics_pattern")),
       related: list(get("related")),
+      segments: get("segments") || undefined,
       status: get("status") || undefined,
     };
     const parsed = wordSchema.safeParse(candidate);

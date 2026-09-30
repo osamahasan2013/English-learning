@@ -6,197 +6,55 @@
       "subject": "PHONICS",
       "title": "Digraphs",
       "emoji": "🧩",
-      "description": "Two letters, one sound: sh, ch, th, wh, ck, ng.",
+      "description": "Two letters, one sound: sh, ch, th, ph, wh.",
       "skills": [
         {
           "code": "kg3-digraph-sh",
           "dimension": "PHONICS",
           "title": "SH",
           "childTitle": "sh",
-          "pattern": "SH",
-          "importance": 5,
+          "description": "Reads and spells words with sh.",
+          "difficulty": 3,
+          "importance": 4,
+          "phonicsStage": "DIGRAPHS",
           "prerequisites": [
             "kg2-short-i"
           ],
+          "pattern": "SH",
           "lessons": [
             {
               "code": "kg3-sh-1",
               "title": "The sh sound",
               "childTitle": "sh",
-              "emoji": "🚢",
+              "description": "Hear, see, read and spell sh.",
+              "emoji": "🐚",
               "minutes": 7,
-              "activities": [
-                {
-                  "type": "INTRO",
-                  "stage": "explanation",
-                  "title": "Meet sh",
-                  "instructions": "Listen and look.",
-                  "instructionsSpeech": "Listen and look.",
-                  "questions": [
-                    {
-                      "template": "pattern_intro",
-                      "pattern": "SH",
-                      "examples": [
-                        "ship",
-                        "fish",
-                        "shell"
-                      ]
-                    }
+              "difficulty": 3,
+              "introSpeech": "Let's learn sh!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "SH",
+                "grapheme": "sh",
+                "words": [
+                  "ship",
+                  "fish",
+                  "shell",
+                  "shop",
+                  "dish",
+                  "sheep"
+                ],
+                "contrast": {
+                  "pattern": "CH",
+                  "grapheme": "ch",
+                  "words": [
+                    "chip",
+                    "chin",
+                    "chick"
                   ]
                 },
-                {
-                  "type": "MULTIPLE_CHOICE",
-                  "stage": "guided_practice",
-                  "title": "Which word?",
-                  "instructions": "Tap the word with the sound.",
-                  "instructionsSpeech": "Tap the word with the sound.",
-                  "questions": [
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "SH",
-                      "word": "ship",
-                      "distractors": [
-                        "chip",
-                        "dog"
-                      ],
-                      "pictures": true
-                    },
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "SH",
-                      "word": "fish",
-                      "distractors": [
-                        "pig",
-                        "fox"
-                      ],
-                      "pictures": true
-                    },
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "SH",
-                      "word": "shell",
-                      "distractors": [
-                        "hen",
-                        "bed"
-                      ],
-                      "pictures": true
-                    }
-                  ]
-                },
-                {
-                  "type": "LISTEN_AND_CHOOSE",
-                  "stage": "guided_practice",
-                  "title": "Listen and find",
-                  "instructions": "Listen, then tap the picture.",
-                  "instructionsSpeech": "Listen, then tap the picture.",
-                  "questions": [
-                    {
-                      "template": "listen_pick_picture",
-                      "word": "sheep",
-                      "distractors": [
-                        "chick",
-                        "goat"
-                      ]
-                    },
-                    {
-                      "template": "listen_pick_picture",
-                      "word": "shoe",
-                      "distractors": [
-                        "sock",
-                        "hat"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "MISSING_LETTER",
-                  "stage": "independent_practice",
-                  "title": "Missing letters",
-                  "instructions": "Which letters are missing?",
-                  "instructionsSpeech": "Which letters are missing?",
-                  "questions": [
-                    {
-                      "template": "missing_pattern",
-                      "word": "ship",
-                      "missing": "sh",
-                      "pattern": "SH",
-                      "choices": [
-                        "ch",
-                        "th"
-                      ]
-                    },
-                    {
-                      "template": "missing_pattern",
-                      "word": "dish",
-                      "missing": "sh",
-                      "pattern": "SH",
-                      "choices": [
-                        "ch",
-                        "th"
-                      ]
-                    },
-                    {
-                      "template": "missing_pattern",
-                      "word": "fish",
-                      "missing": "sh",
-                      "pattern": "SH",
-                      "choices": [
-                        "ch",
-                        "th"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "WORD_BUILDER",
-                  "stage": "independent_practice",
-                  "title": "Build the word",
-                  "instructions": "Listen, then build the word.",
-                  "instructionsSpeech": "Listen, then build the word.",
-                  "questions": [
-                    {
-                      "template": "build_word",
-                      "word": "ship",
-                      "chunks": [
-                        "sh",
-                        "i",
-                        "p"
-                      ],
-                      "extra": [
-                        "ch"
-                      ],
-                      "pattern": "SH"
-                    },
-                    {
-                      "template": "build_word",
-                      "word": "fish",
-                      "chunks": [
-                        "f",
-                        "i",
-                        "sh"
-                      ],
-                      "extra": [
-                        "th"
-                      ],
-                      "pattern": "SH"
-                    }
-                  ]
-                },
-                {
-                  "type": "SENTENCE_BUILDER",
-                  "stage": "review",
-                  "title": "Make a sentence",
-                  "instructions": "Put the words in order.",
-                  "instructionsSpeech": "Put the words in order.",
-                  "questions": [
-                    {
-                      "template": "order_sentence",
-                      "sentence": "I see a ship.",
-                      "emoji": "🚢"
-                    }
-                  ]
-                }
-              ]
+                "sentence": "The fish is in the dish.",
+                "sentenceEmoji": "🐟"
+              }
             }
           ]
         },
@@ -205,190 +63,48 @@
           "dimension": "PHONICS",
           "title": "CH",
           "childTitle": "ch",
-          "pattern": "CH",
-          "importance": 5,
+          "description": "Reads and spells words with ch.",
+          "difficulty": 3,
+          "importance": 4,
+          "phonicsStage": "DIGRAPHS",
           "prerequisites": [
             "kg3-digraph-sh"
           ],
+          "pattern": "CH",
           "lessons": [
             {
               "code": "kg3-ch-1",
               "title": "The ch sound",
               "childTitle": "ch",
+              "description": "Hear, see, read and spell ch.",
               "emoji": "🐥",
               "minutes": 7,
-              "activities": [
-                {
-                  "type": "INTRO",
-                  "stage": "explanation",
-                  "title": "Meet ch",
-                  "instructions": "Listen and look.",
-                  "instructionsSpeech": "Listen and look.",
-                  "questions": [
-                    {
-                      "template": "pattern_intro",
-                      "pattern": "CH",
-                      "examples": [
-                        "chick",
-                        "cheese",
-                        "chair"
-                      ]
-                    }
+              "difficulty": 3,
+              "introSpeech": "Let's learn ch!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "CH",
+                "grapheme": "ch",
+                "words": [
+                  "chip",
+                  "chin",
+                  "chick",
+                  "lunch",
+                  "bench",
+                  "cheese"
+                ],
+                "contrast": {
+                  "pattern": "SH",
+                  "grapheme": "sh",
+                  "words": [
+                    "ship",
+                    "shop",
+                    "shell"
                   ]
                 },
-                {
-                  "type": "MULTIPLE_CHOICE",
-                  "stage": "guided_practice",
-                  "title": "Which word?",
-                  "instructions": "Tap the word with the sound.",
-                  "instructionsSpeech": "Tap the word with the sound.",
-                  "questions": [
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "CH",
-                      "word": "chick",
-                      "distractors": [
-                        "duck",
-                        "ship"
-                      ],
-                      "pictures": true
-                    },
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "CH",
-                      "word": "chin",
-                      "distractors": [
-                        "pin",
-                        "shell"
-                      ],
-                      "pictures": true
-                    },
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "CH",
-                      "word": "cherry",
-                      "distractors": [
-                        "apple",
-                        "sheep"
-                      ],
-                      "pictures": true
-                    }
-                  ]
-                },
-                {
-                  "type": "LISTEN_AND_CHOOSE",
-                  "stage": "guided_practice",
-                  "title": "Listen and find",
-                  "instructions": "Listen, then tap the picture.",
-                  "instructionsSpeech": "Listen, then tap the picture.",
-                  "questions": [
-                    {
-                      "template": "listen_pick_picture",
-                      "word": "cheese",
-                      "distractors": [
-                        "shoe",
-                        "egg"
-                      ]
-                    },
-                    {
-                      "template": "listen_pick_picture",
-                      "word": "chair",
-                      "distractors": [
-                        "bed",
-                        "dish"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "MISSING_LETTER",
-                  "stage": "independent_practice",
-                  "title": "Missing letters",
-                  "instructions": "Which letters are missing?",
-                  "instructionsSpeech": "Which letters are missing?",
-                  "questions": [
-                    {
-                      "template": "missing_pattern",
-                      "word": "chick",
-                      "missing": "ch",
-                      "pattern": "CH",
-                      "choices": [
-                        "sh",
-                        "th"
-                      ]
-                    },
-                    {
-                      "template": "missing_pattern",
-                      "word": "chin",
-                      "missing": "ch",
-                      "pattern": "CH",
-                      "choices": [
-                        "sh",
-                        "th"
-                      ]
-                    },
-                    {
-                      "template": "missing_pattern",
-                      "word": "chip",
-                      "missing": "ch",
-                      "pattern": "CH",
-                      "choices": [
-                        "sh",
-                        "th"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "WORD_BUILDER",
-                  "stage": "independent_practice",
-                  "title": "Build the word",
-                  "instructions": "Listen, then build the word.",
-                  "instructionsSpeech": "Listen, then build the word.",
-                  "questions": [
-                    {
-                      "template": "build_word",
-                      "word": "chin",
-                      "chunks": [
-                        "ch",
-                        "i",
-                        "n"
-                      ],
-                      "extra": [
-                        "sh"
-                      ],
-                      "pattern": "CH"
-                    },
-                    {
-                      "template": "build_word",
-                      "word": "chip",
-                      "chunks": [
-                        "ch",
-                        "i",
-                        "p"
-                      ],
-                      "extra": [
-                        "th"
-                      ],
-                      "pattern": "CH"
-                    }
-                  ]
-                },
-                {
-                  "type": "SENTENCE_BUILDER",
-                  "stage": "review",
-                  "title": "Make a sentence",
-                  "instructions": "Put the words in order.",
-                  "instructionsSpeech": "Put the words in order.",
-                  "questions": [
-                    {
-                      "template": "order_sentence",
-                      "sentence": "The chick is on the chair.",
-                      "emoji": "🐥"
-                    }
-                  ]
-                }
-              ]
+                "sentence": "I had lunch on the bench.",
+                "sentenceEmoji": "🍱"
+              }
             },
             {
               "code": "kg3-sh-ch-sort-1",
@@ -566,222 +282,151 @@
           "dimension": "PHONICS",
           "title": "TH (two sounds)",
           "childTitle": "th",
-          "pattern": "TH",
-          "importance": 5,
+          "description": "Reads and spells words with th.",
+          "difficulty": 4,
+          "importance": 4,
+          "phonicsStage": "DIGRAPHS",
           "prerequisites": [
             "kg3-digraph-sh"
           ],
+          "pattern": "TH",
           "lessons": [
             {
               "code": "kg3-th-1",
-              "title": "The th sound",
+              "title": "The th sounds",
               "childTitle": "th",
+              "description": "Hear, see, read and spell th.",
               "emoji": "👍",
               "minutes": 7,
-              "activities": [
-                {
-                  "type": "INTRO",
-                  "stage": "explanation",
-                  "title": "Meet th",
-                  "instructions": "Listen and look.",
-                  "instructionsSpeech": "Listen and look.",
-                  "questions": [
-                    {
-                      "template": "pattern_intro",
-                      "pattern": "TH",
-                      "examples": [
-                        "thumb",
-                        "three",
-                        "bath"
-                      ]
-                    }
+              "difficulty": 4,
+              "introSpeech": "Let's learn th!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "TH",
+                "grapheme": "th",
+                "words": [
+                  "thumb",
+                  "three",
+                  "path",
+                  "moth",
+                  "bath",
+                  "teeth"
+                ],
+                "contrast": {
+                  "pattern": "LETTER_T",
+                  "grapheme": "t",
+                  "words": [
+                    "ten",
+                    "tent",
+                    "tub"
                   ]
                 },
-                {
-                  "type": "MULTIPLE_CHOICE",
-                  "stage": "guided_practice",
-                  "title": "Which word?",
-                  "instructions": "Tap the word with the sound.",
-                  "instructionsSpeech": "Tap the word with the sound.",
-                  "questions": [
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "TH",
-                      "word": "thumb",
-                      "distractors": [
-                        "sun",
-                        "duck"
-                      ],
-                      "pictures": true,
-                      "sound": "TH_VOICELESS"
-                    },
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "TH",
-                      "word": "three",
-                      "distractors": [
-                        "tree",
-                        "sheep"
-                      ],
-                      "pictures": true,
-                      "sound": "TH_VOICELESS"
-                    },
-                    {
-                      "template": "pick_word_with_pattern",
-                      "pattern": "TH",
-                      "word": "mother",
-                      "distractors": [
-                        "monkey",
-                        "man"
-                      ],
-                      "pictures": true,
-                      "sound": "TH_VOICED"
-                    }
+                "sentence": "Three moths sat on the path.",
+                "soundSort": [
+                  "thumb",
+                  "three",
+                  "this",
+                  "mother"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg3-digraph-ph",
+          "dimension": "PHONICS",
+          "title": "PH",
+          "childTitle": "ph",
+          "description": "Reads and spells words with ph.",
+          "difficulty": 4,
+          "importance": 4,
+          "phonicsStage": "DIGRAPHS",
+          "prerequisites": [
+            "kg3-digraph-sh"
+          ],
+          "pattern": "PH",
+          "lessons": [
+            {
+              "code": "kg3-ph-1",
+              "title": "The ph sound",
+              "childTitle": "ph",
+              "description": "Hear, see, read and spell ph.",
+              "emoji": "🐬",
+              "minutes": 7,
+              "difficulty": 4,
+              "introSpeech": "Let's learn ph!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "PH",
+                "grapheme": "ph",
+                "words": [
+                  "phone",
+                  "dolphin",
+                  "graph",
+                  "photo",
+                  "trophy",
+                  "elephant"
+                ],
+                "contrast": {
+                  "pattern": "LETTER_F",
+                  "grapheme": "f",
+                  "words": [
+                    "fish",
+                    "fan",
+                    "fox"
                   ]
                 },
-                {
-                  "type": "LISTEN_AND_CHOOSE",
-                  "stage": "guided_practice",
-                  "title": "Listen and find",
-                  "instructions": "Listen, then tap the picture.",
-                  "instructionsSpeech": "Listen, then tap the picture.",
-                  "questions": [
-                    {
-                      "template": "listen_pick_picture",
-                      "word": "teeth",
-                      "distractors": [
-                        "feet",
-                        "shell"
-                      ]
-                    },
-                    {
-                      "template": "listen_pick_picture",
-                      "word": "bath",
-                      "distractors": [
-                        "bat",
-                        "bed"
-                      ]
-                    }
+                "sentence": "The dolphin has a trophy."
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg3-digraph-wh",
+          "dimension": "PHONICS",
+          "title": "WH",
+          "childTitle": "wh",
+          "description": "Reads and spells words with wh.",
+          "difficulty": 4,
+          "importance": 4,
+          "phonicsStage": "DIGRAPHS",
+          "prerequisites": [
+            "kg3-digraph-sh"
+          ],
+          "pattern": "WH",
+          "lessons": [
+            {
+              "code": "kg3-wh-1",
+              "title": "The wh sound",
+              "childTitle": "wh",
+              "description": "Hear, see, read and spell wh.",
+              "emoji": "🐳",
+              "minutes": 7,
+              "difficulty": 4,
+              "introSpeech": "Let's learn wh!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "WH",
+                "grapheme": "wh",
+                "words": [
+                  "whale",
+                  "wheel",
+                  "wheat",
+                  "white",
+                  "whisk",
+                  "whip"
+                ],
+                "contrast": {
+                  "pattern": "LETTER_W",
+                  "grapheme": "w",
+                  "words": [
+                    "web",
+                    "wing",
+                    "wet"
                   ]
                 },
-                {
-                  "type": "MULTIPLE_CHOICE",
-                  "stage": "guided_practice",
-                  "title": "Quiet or buzzy?",
-                  "instructions": "Which th sound do you hear?",
-                  "instructionsSpeech": "Which th sound do you hear?",
-                  "questions": [
-                    {
-                      "template": "pick_pattern_sound",
-                      "pattern": "TH",
-                      "word": "thumb"
-                    },
-                    {
-                      "template": "pick_pattern_sound",
-                      "pattern": "TH",
-                      "word": "this"
-                    },
-                    {
-                      "template": "pick_pattern_sound",
-                      "pattern": "TH",
-                      "word": "three"
-                    },
-                    {
-                      "template": "pick_pattern_sound",
-                      "pattern": "TH",
-                      "word": "mother"
-                    }
-                  ]
-                },
-                {
-                  "type": "MISSING_LETTER",
-                  "stage": "independent_practice",
-                  "title": "Missing letters",
-                  "instructions": "Which letters are missing?",
-                  "instructionsSpeech": "Which letters are missing?",
-                  "questions": [
-                    {
-                      "template": "missing_pattern",
-                      "word": "bath",
-                      "missing": "th",
-                      "pattern": "TH",
-                      "choices": [
-                        "sh",
-                        "ch"
-                      ]
-                    },
-                    {
-                      "template": "missing_pattern",
-                      "word": "thin",
-                      "missing": "th",
-                      "pattern": "TH",
-                      "choices": [
-                        "sh",
-                        "ch"
-                      ]
-                    },
-                    {
-                      "template": "missing_pattern",
-                      "word": "teeth",
-                      "missing": "th",
-                      "pattern": "TH",
-                      "choices": [
-                        "sh",
-                        "ch"
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "type": "WORD_BUILDER",
-                  "stage": "independent_practice",
-                  "title": "Build the word",
-                  "instructions": "Listen, then build the word.",
-                  "instructionsSpeech": "Listen, then build the word.",
-                  "questions": [
-                    {
-                      "template": "build_word",
-                      "word": "bath",
-                      "chunks": [
-                        "b",
-                        "a",
-                        "th"
-                      ],
-                      "extra": [
-                        "sh"
-                      ],
-                      "pattern": "TH"
-                    },
-                    {
-                      "template": "build_word",
-                      "word": "thin",
-                      "chunks": [
-                        "th",
-                        "i",
-                        "n"
-                      ],
-                      "extra": [
-                        "ch"
-                      ],
-                      "pattern": "TH"
-                    }
-                  ]
-                },
-                {
-                  "type": "SENTENCE_BUILDER",
-                  "stage": "review",
-                  "title": "Make a sentence",
-                  "instructions": "Put the words in order.",
-                  "instructionsSpeech": "Put the words in order.",
-                  "questions": [
-                    {
-                      "template": "order_sentence",
-                      "sentence": "This is my mother.",
-                      "emoji": "👩"
-                    }
-                  ]
-                }
-              ]
+                "sentence": "The white whale is big."
+              }
             }
           ]
         },
@@ -947,7 +592,168 @@
                     }
                   ]
                 }
-              ]
+              ],
+              "status": "archived"
+            }
+          ],
+          "status": "archived"
+        }
+      ]
+    },
+    {
+      "code": "kg3-magic-e",
+      "subject": "PHONICS",
+      "title": "Magic e: Long Vowels",
+      "emoji": "✨",
+      "description": "A final e makes the vowel say its name.",
+      "skills": [
+        {
+          "code": "kg3-magic-a",
+          "dimension": "PHONICS",
+          "title": "Magic e with a",
+          "childTitle": "a–e",
+          "description": "Reads and spells words with a–e.",
+          "difficulty": 4,
+          "importance": 4,
+          "phonicsStage": "LONG_VOWELS",
+          "prerequisites": [
+            "kg2-short-a"
+          ],
+          "pattern": "A_E",
+          "lessons": [
+            {
+              "code": "kg3-magic-a-1",
+              "title": "Magic e with a",
+              "childTitle": "a–e",
+              "description": "Hear, see, read and spell a–e.",
+              "emoji": "🎂",
+              "minutes": 7,
+              "difficulty": 4,
+              "introSpeech": "Let's learn a–e!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "A_E",
+                "grapheme": "a",
+                "words": [
+                  "cake",
+                  "lake",
+                  "gate",
+                  "snake",
+                  "whale",
+                  "grapes"
+                ],
+                "contrast": {
+                  "pattern": "LETTER_A",
+                  "grapheme": "a",
+                  "words": [
+                    "cat",
+                    "hat",
+                    "map"
+                  ]
+                },
+                "split": true,
+                "sentence": "The cake is by the lake."
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg3-magic-i",
+          "dimension": "PHONICS",
+          "title": "Magic e with i",
+          "childTitle": "i–e",
+          "description": "Reads and spells words with i–e.",
+          "difficulty": 4,
+          "importance": 4,
+          "phonicsStage": "LONG_VOWELS",
+          "prerequisites": [
+            "kg2-short-i"
+          ],
+          "pattern": "I_E",
+          "lessons": [
+            {
+              "code": "kg3-magic-i-1",
+              "title": "Magic e with i",
+              "childTitle": "i–e",
+              "description": "Hear, see, read and spell i–e.",
+              "emoji": "🪁",
+              "minutes": 7,
+              "difficulty": 4,
+              "introSpeech": "Let's learn i–e!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "I_E",
+                "grapheme": "i",
+                "words": [
+                  "kite",
+                  "bike",
+                  "five",
+                  "nine",
+                  "white",
+                  "like"
+                ],
+                "contrast": {
+                  "pattern": "LETTER_I",
+                  "grapheme": "i",
+                  "words": [
+                    "pig",
+                    "six",
+                    "pin"
+                  ]
+                },
+                "split": true,
+                "sentence": "I like my red bike."
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg3-magic-o",
+          "dimension": "PHONICS",
+          "title": "Magic e with o",
+          "childTitle": "o–e",
+          "description": "Reads and spells words with o–e.",
+          "difficulty": 4,
+          "importance": 4,
+          "phonicsStage": "LONG_VOWELS",
+          "prerequisites": [
+            "kg2-short-o"
+          ],
+          "pattern": "O_E",
+          "lessons": [
+            {
+              "code": "kg3-magic-o-1",
+              "title": "Magic e with o",
+              "childTitle": "o–e",
+              "description": "Hear, see, read and spell o–e.",
+              "emoji": "🦴",
+              "minutes": 7,
+              "difficulty": 4,
+              "introSpeech": "Let's learn o–e!",
+              "blueprint": {
+                "name": "phonics_pattern",
+                "pattern": "O_E",
+                "grapheme": "o",
+                "words": [
+                  "bone",
+                  "rope",
+                  "nose",
+                  "rose",
+                  "home",
+                  "stone"
+                ],
+                "contrast": {
+                  "pattern": "LETTER_O",
+                  "grapheme": "o",
+                  "words": [
+                    "dog",
+                    "pot",
+                    "box"
+                  ]
+                },
+                "split": true,
+                "sentence": "The dog has a bone."
+              }
             }
           ]
         }

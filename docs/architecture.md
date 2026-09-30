@@ -35,8 +35,10 @@ Service worker (Serwist): app shell + visited pages     re-evaluate, store once,
 | `/auth/confirm`                                                         | public                | Email links (`token_hash` or `code`)         |
 | `/onboarding`                                                           | parent                | First child profile                          |
 | `/parent/dashboard`, `/parent/children[/new\|/:id]`, `/parent/settings` | parent                | Family area                                  |
+| `/parent/phonics`                                                       | parent                | Phonics pattern search (filters, pages)      |
 | `/child/home`, `/child/learn/:lessonId`, `/child/rewards`               | parent + active child | Child area                                   |
-| `/admin/dashboard`, `/admin/words`                                      | admin                 | Content administration                       |
+| `/child/phonics[?show=…]`, `/child/check/:code`                         | parent + active child | Phonics screen; skill checks (Sound Check)   |
+| `/admin/dashboard`, `/admin/words`, `/admin/phonics`                    | admin                 | Content administration, review flags         |
 | `/api/sync`                                                             | parent (POST)         | Progress sync                                |
 | `/manifest.webmanifest`, `/sw.js`, `/offline.html`                      | public                | PWA                                          |
 
@@ -195,12 +197,58 @@ level path whose prerequisites are ready; recommendations = continue a started l
 the next lesson (after its missing prerequisite), then due review items — each with a
 reason.
 
+## Phonics engine (Phase 4)
+
+Phonics is content and pure logic on top of the learning engine — no separate mastery,
+progress or assessment system (ADR-024 – ADR-027).
+
+- **Model.** `phonemes` (39 ARPAbet sounds) are what is said; `phonics_patterns` (letters,
+  digraphs, blends, magic e, vowel teams, r-controlled, endings, suffixes) are what is
+  written. Each pattern has one or more pronunciations (`phonics_pattern_sounds`, each a
+  phoneme sequence: TH = TH or DH, ED = T, D or IH D), a stage in the 14-step progression
+  (`phonics_stages`), a position, relations to other patterns, and — for letters — the
+  upper case and the letter NAME, kept apart from its SOUND.
+- **Words.** `src/lib/learning/phonics.ts` splits every word into graphemes with their
+  phonemes (`word_segments`: ship = sh·i·p = SH IH P; cake = c·a·k·e with the e silent;
+  box has four sounds). Consonant digraphs are always one unit; other multi-letter patterns
+  only when the word is linked to them; anything doubtful becomes a `content_flags` row for
+  admins instead of a guess, and a CSV `segments` column overrides the split. The split
+  gives each word a shape (CVC, CCVC…) and a decodable flag.
+- **Activities.** Three new types, each with Zod schemas, an evaluator branch, answer-key
+  handling and a renderer: `BLEND_SOUNDS` (tap each sound, slow blend, blend, choose the
+  word), `SEGMENT_WORD` (how many sounds? then tap the phoneme cards in order; the count is
+  its own error type) and `FIND_PATTERN` (tap the letters that make the sound). Letter
+  intros show the name and the sound on separate buttons. The other phonics activities
+  (beginning/middle/end sound, sound → letter, pattern → word, sort by pattern or by
+  sound, missing letters, word builder, listen and choose, read the word, spell the word)
+  are templates over the existing types.
+- **Lessons.** Lesson blueprints (`src/lib/content/lesson-blueprints.ts`) expand one
+  data line into a full lesson at import time — `letter_sound`, `cvc_blending` and the
+  eight-step `phonics_pattern` (hear → see → practise → sort → read → spell → write →
+  sentence → quick check).
+- **Progress.** Phonics skills use ordinary skill mastery; `src/lib/learning/phonics-progress.ts`
+  turns it into stars for children (0–3 per skill, combined per stage) and percentages for
+  parents, plus "Practise sh" suggestions from the review priority.
+- **Assessment.** The Phonics Check is an `assessments` row whose items are grouped into
+  areas (letter recognition … spelling). It runs in the lesson player
+  (`loadAssessmentPayload`; one try per question); answers carry the assessment sitting id,
+  and the server scores each area (`src/lib/learning/assessment-scoring.ts`), stores an
+  `assessment_results` row, updates mastery from the same answers and sets
+  `last_assessed_at`.
+- **Screens.** `/child/phonics`: six large cards (Letters, Sounds, Blend, Read Words,
+  Practice, Mastery) with a spoken instruction for each; `/parent/phonics` and
+  `/admin/phonics`: server-side search with type/stage/level filters and pagination
+  (`searchPhonicsPatterns`), example words loaded for the visible page only; admins also see
+  the review flags.
+
 ## Progress pipeline
 
 1. The child answers. The player writes an `attempt` event (device-generated UUID, the
    lesson run id and the learning session id) to the IndexedDB outbox **before** showing
    feedback, then checks the response against the answer key. At the end it writes a
-   `lesson_run` event (not for a sneak peek).
+   `lesson_run` event (not for a sneak peek). In a skill check the answers carry
+   `assessmentId` + `assessmentAttemptId` instead of a run, and the end writes an
+   `assessment_run` event.
 2. `SyncProvider` flushes the outbox on load, on reconnect, when the app returns to the
    foreground, after each answer and every 30 s while anything is pending.
 3. `POST /api/sync` authenticates, rate-limits, validates (Zod), confirms the child belongs
@@ -250,8 +298,11 @@ timestamps are clamped to [now − 60 days, now + 5 min].
 one exists, otherwise speaks with browser speech synthesis (en-US, rate 0.85; "Slow" 0.55),
 preferring natural voices. It never throws; without audio the app still works because all
 text is shown. Replacing TTS with recordings means filling `audio_assets` — no component
-changes. Phonics sounds use `phonics_pattern_sounds.say_as` as a TTS approximation until
-recordings exist.
+changes. Phonics sounds use `phonics_pattern_sounds.say_as` / `phonemes.say_as` as a TTS
+approximation until recordings exist (`phonics_patterns.audio_asset_id` takes a recording).
+Every spoken item has **Listen**, **Slow** and **Again** (`AudioControls`); when a device
+cannot speak, the controls and the lesson player show a visible "no sound" note, and
+nothing waits for audio, so a lesson can always be finished.
 
 ## Offline / PWA
 

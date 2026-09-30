@@ -33,6 +33,9 @@ export const activityConfigSchemas = {
   // A passage the child reads (and can listen to) before answering its questions.
   READING: z.object({ ...common, passage: passageSchema, readAloud: z.boolean().default(true) }).strict(),
   WRITING: baseConfigSchema,
+  BLEND_SOUNDS: baseConfigSchema,
+  SEGMENT_WORD: baseConfigSchema,
+  FIND_PATTERN: baseConfigSchema,
   // showModel: animate the letter being written before the child traces it.
   TRACING: z.object({ ...common, showModel: z.boolean().default(true) }).strict(),
 } as const;

@@ -11,6 +11,7 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { getProfile } from "@/lib/auth/session";
 import { avatarEmoji } from "@/lib/avatars";
 import { listChildren, listDimensionNames, loadChildProgress } from "@/lib/server/family-data";
+import { loadChildPhonics, loadLatestPhonicsCheck } from "@/lib/server/phonics";
 import { ageFromDateOfBirth, cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -22,10 +23,13 @@ export default async function DashboardPage(props: PageProps<"/parent/dashboard"
 
   const child = children.find((c) => c.id === childParam) ?? children[0];
   const timeZone = profile?.timezone ?? "UTC";
-  const [progress, dimensionNames] = await Promise.all([
+  const [progress, dimensionNames, phonics, phonicsCheck] = await Promise.all([
     loadChildProgress(child.id, timeZone, new Date(), child.current_level_id),
     listDimensionNames(),
+    loadChildPhonics(child.id),
+    loadLatestPhonicsCheck(child.id),
   ]);
+  const phonicsStarted = phonics.stages.filter((s) => s.started > 0);
   const age = ageFromDateOfBirth(child.date_of_birth);
 
   return (
@@ -243,10 +247,35 @@ export default async function DashboardPage(props: PageProps<"/parent/dashboard"
           </Card>
           <Card className="space-y-3">
             <CardTitle>Assessments</CardTitle>
+            {phonicsCheck ? (
+              <div className="space-y-2">
+                <p className="font-semibold">
+                  Phonics Check: {Math.round(phonicsCheck.overall)}%
+                  <span className="text-muted ml-2 text-sm font-normal">
+                    {new Date(phonicsCheck.takenAt).toLocaleDateString("en-US", {
+                      dateStyle: "medium",
+                      timeZone,
+                    })}
+                  </span>
+                </p>
+                <ul className="grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
+                  {phonicsCheck.areas.map((a) => (
+                    <li key={a.label} className="flex justify-between gap-2">
+                      <span>
+                        <span aria-hidden>{a.secure ? "✅" : "🔸"} </span>
+                        {a.label}
+                        <span className="sr-only">{a.secure ? " (secure)" : " (needs practice)"}</span>
+                      </span>
+                      <span className="font-semibold">{Math.round(a.percent)}%</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
             {progress.assessmentResults.length === 0 ? (
               <p className="text-muted">
-                No assessments yet. &ldquo;Find My Level&rdquo; and reassessment are coming in the assessment
-                milestone; lesson results above already track each skill.
+                No assessments yet. Your child can take the Phonics Check from Phonics → Practice; lesson
+                results above already track each skill.
               </p>
             ) : (
               <ul>
@@ -260,6 +289,44 @@ export default async function DashboardPage(props: PageProps<"/parent/dashboard"
           </Card>
         </div>
       </div>
+
+      <Card className="space-y-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <CardTitle>Phonics</CardTitle>
+          <Link href="/parent/phonics" className="text-primary text-sm font-semibold">
+            Browse patterns →
+          </Link>
+        </div>
+        {phonicsStarted.length === 0 ? (
+          <p className="text-muted">No phonics practice yet.</p>
+        ) : (
+          <ul className="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-3">
+            {phonicsStarted.map((stage) => (
+              <li key={stage.code} className="space-y-1">
+                <div className="flex justify-between gap-2 text-sm">
+                  <span className="font-semibold">
+                    <span aria-hidden>{stage.emoji} </span>
+                    {stage.name}
+                  </span>
+                  <span>
+                    {stage.percent}%{" "}
+                    <span className="text-muted">
+                      ({stage.mastered}/{stage.skills.length} mastered)
+                    </span>
+                  </span>
+                </div>
+                <ProgressBar value={stage.percent} label={`${stage.name} mastery`} />
+              </li>
+            ))}
+          </ul>
+        )}
+        {phonics.practice.length > 0 ? (
+          <p className="text-sm">
+            <span className="font-semibold">Practise next: </span>
+            {phonics.practice.map((s) => s.title).join(", ")}
+          </p>
+        ) : null}
+      </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="space-y-3">

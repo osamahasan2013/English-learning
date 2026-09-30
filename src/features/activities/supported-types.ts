@@ -17,6 +17,9 @@ export const RENDERABLE_QUESTION_TYPES = [
   "READING",
   "WRITING",
   "TRACING",
+  "BLEND_SOUNDS",
+  "SEGMENT_WORD",
+  "FIND_PATTERN",
 ] as const satisfies readonly SupportedQuestionType[];
 
 export function isRenderableQuestionType(type: string): type is (typeof RENDERABLE_QUESTION_TYPES)[number] {

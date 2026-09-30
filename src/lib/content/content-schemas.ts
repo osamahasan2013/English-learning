@@ -88,11 +88,40 @@ export const referenceFileSchema = z.object({
 });
 export type ReferenceFile = z.infer<typeof referenceFileSchema>;
 
+const phonemeCode = z.string().regex(/^[A-Z]{1,3}$/, "phoneme codes are ARPAbet, e.g. SH, AE");
+
 export const phonicsFileSchema = z.object({
+  // The sound inventory (American English). Pronunciations below are sequences of these.
+  phonemes: z
+    .array(
+      z.object({
+        code: phonemeCode,
+        ipa: z.string().min(1).max(12),
+        label: z.string().min(1).max(8),
+        sayAs: z.string().min(1).max(40),
+        kind: z.enum(["consonant", "vowel", "r_colored_vowel"]),
+        voiced: z.boolean(),
+        example: z.string().default(""),
+        description: z.string().default(""),
+      }),
+    )
+    .default([]),
+  // The progression: Letters → Sounds → Beginning sounds → … → Advanced patterns.
+  stages: z
+    .array(
+      z.object({
+        code,
+        name: z.string().min(1).max(80),
+        childName: z.string().default(""),
+        description: z.string().default(""),
+        emoji: z.string().default(""),
+      }),
+    )
+    .default([]),
   patterns: z.array(
     z.object({
       code,
-      pattern: z.string().regex(/^[a-z]{1,8}$/),
+      pattern: z.string().regex(/^[a-z][a-z_]{0,7}$/),
       type: z.enum([
         "letter",
         "consonant_digraph",
@@ -111,6 +140,22 @@ export const phonicsFileSchema = z.object({
       childExplanation: z.string().default(""),
       masteryThreshold: z.number().int().min(50).max(100).default(85),
       sortOrder: z.number().int().default(0),
+      stage: code.optional(),
+      position: z.enum(["any", "initial", "medial", "final"]).default("any"),
+      // Letters: the capital form and the letter's name (not its sound).
+      uppercase: z.string().regex(/^[A-Z]{1,2}$/).optional(),
+      letterName: z.string().max(20).default(""),
+      letterNameSayAs: z.string().max(40).default(""),
+      // Recorded audio in Supabase Storage (optional; speech synthesis is the fallback).
+      audio: z.string().regex(/^audio\/[a-z0-9/_-]+\.(mp3|m4a|ogg|wav)$/, "audio must be audio/…/name.mp3").optional(),
+      relations: z
+        .array(
+          z.object({
+            code,
+            type: z.enum(["prerequisite", "related", "contrast", "same_sound"]),
+          }),
+        )
+        .default([]),
       status,
       sounds: z
         .array(
@@ -120,6 +165,7 @@ export const phonicsFileSchema = z.object({
             label: z.string().min(1).max(80),
             sayAs: z.string().min(1).max(40),
             primary: z.boolean().default(false),
+            phonemes: z.array(phonemeCode).default([]),
           }),
         )
         .min(1)
@@ -168,6 +214,8 @@ export const wordSchema = z.object({
     .array(z.object({ code, sound: code.optional(), example: z.boolean().default(false) }))
     .default([]),
   related: z.array(z.string().min(1).max(40)).default([]),
+  // Authored grapheme split when the automatic one would be wrong: "c a=A_LONG k e=".
+  segments: z.string().max(120).optional(),
   status,
 });
 export type WordInput = z.infer<typeof wordSchema>;
@@ -266,7 +314,12 @@ const lessonInputSchema = z.object({
   // Lessons (by code, any level) to complete first. Skill prerequisites also apply.
   prerequisites: z.array(slug).default([]),
   status,
-  activities: z.array(activityInputSchema).min(1),
+  // Either activities, or a blueprint the importer expands into them
+  // (src/lib/content/lesson-blueprints.ts).
+  blueprint: z.object({ name: z.string() }).passthrough().optional(),
+  activities: z.array(activityInputSchema).default([]),
+}).refine((l) => l.activities.length > 0 || l.blueprint, {
+  message: "a lesson needs activities or a blueprint",
 });
 
 const skillInputSchema = z.object({
@@ -281,6 +334,8 @@ const skillInputSchema = z.object({
   difficulty: difficulty.default(1),
   active: z.boolean().default(true),
   prerequisites: z.array(slug).default([]),
+  // Phonics stage for grouping phonics progress (LETTER_SOUNDS, DIGRAPHS, ...).
+  phonicsStage: code.optional(),
   status,
   lessons: z.array(lessonInputSchema).default([]),
 });

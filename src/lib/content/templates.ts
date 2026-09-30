@@ -7,11 +7,20 @@
 //
 // See docs/curriculum.md → "Authoring content" for the full list and examples.
 
+export type TemplateSegment = {
+  grapheme: string;
+  patternCode: string | null;
+  sayAs: string;
+  phonemes: string[];
+};
+
 export type TemplateWord = {
   word: string;
   emoji: string;
   childDefinition: string;
   patterns: { code: string; sound?: string }[];
+  // The word's grapheme split (src/lib/learning/phonics.ts); empty if not decomposed.
+  segments?: TemplateSegment[];
 };
 
 export type TemplatePattern = {
@@ -19,12 +28,18 @@ export type TemplatePattern = {
   pattern: string;
   type: string;
   childExplanation: string;
-  sounds: { code: string; label: string; sayAs: string; primary: boolean }[];
+  sounds: { code: string; label: string; sayAs: string; primary: boolean; phonemes?: string[] }[];
+  uppercase?: string | null;
+  letterName?: string;
+  letterNameSayAs?: string;
 };
+
+export type TemplatePhoneme = { code: string; label: string; sayAs: string; kind: string };
 
 export type TemplateContext = {
   word: (text: string) => TemplateWord | undefined;
   pattern: (code: string) => TemplatePattern | undefined;
+  phoneme?: (code: string) => TemplatePhoneme | undefined;
   // Deterministic seed (the question code), so re-imports produce identical content.
   seed: string;
 };
@@ -127,6 +142,15 @@ function wordOptions(ctx: TemplateContext, words: string[], withEmoji: boolean) 
       ...(withEmoji && w.emoji ? { emoji: w.emoji } : {}),
     };
   });
+}
+function needSegments(word: TemplateWord) {
+  if (!word.segments || word.segments.length === 0)
+    throw new TemplateError(`word "${word.word}" has no grapheme split`);
+  return word.segments;
+}
+function soundLabelFor(ctx: TemplateContext, phonemes: string[] | undefined, fallback: string) {
+  const labels = (phonemes ?? []).map((c) => ctx.phoneme?.(c)?.label).filter((l): l is string => !!l);
+  return labels.length ? labels.join("") : fallback;
 }
 function displayPattern(p: TemplatePattern) {
   return p.type === "letter" ? `${p.pattern.toUpperCase()} ${p.pattern}` : p.pattern;
@@ -232,16 +256,17 @@ export const TEMPLATES: Record<string, Expander> = {
     };
   },
 
-  // Find a letter among look-alikes.
+  // Find a letter among look-alikes, by its NAME ("Find the letter bee").
   find_letter(params, ctx) {
     const pattern = needPattern(ctx, str(params, "pattern"));
     const upper = params.case === "upper";
     const show = (l: string) => (upper ? l.toUpperCase() : l.toLowerCase());
     const letters = seededShuffle([pattern.pattern, ...strList(params, "distractors")], ctx.seed);
+    const name = pattern.letterNameSayAs || pattern.letterName || pattern.pattern;
     return {
       type: "MULTIPLE_CHOICE",
       prompt: `Find the letter ${show(pattern.pattern)}`,
-      promptSpeech: `Find the ${upper ? "big" : "small"} letter ${pattern.pattern}`,
+      promptSpeech: `Find the ${upper ? "big" : "small"} letter ${name}`,
       pattern: pattern.code,
       content: { options: letters.map((l) => ({ id: optionId(l), text: show(l), speech: l })) },
       answer: { accepted: [optionId(pattern.pattern)] },
@@ -312,6 +337,325 @@ export const TEMPLATES: Record<string, Expander> = {
         choices,
       },
       answer: { accepted: [missing] },
+    };
+  },
+
+  // A letter: its shapes, its NAME and its SOUND as separate things, and example words.
+  letter_intro(params, ctx) {
+    const pattern = needPattern(ctx, str(params, "pattern"));
+    if (pattern.type !== "letter") throw new TemplateError(`${pattern.code} is not a letter`);
+    const sound = primarySound(pattern);
+    const examples = strList(params, "examples").map((text) => {
+      const w = needWord(ctx, text);
+      return { text: w.word, emoji: w.emoji || undefined, highlight: pattern.pattern };
+    });
+    const upper = pattern.uppercase ?? pattern.pattern.toUpperCase();
+    const name = pattern.letterName || pattern.pattern;
+    const nameSpeech = pattern.letterNameSayAs || name;
+    const first = examples[0]?.text;
+    const soundLabel = soundLabelFor(ctx, sound.phonemes, pattern.pattern);
+    return {
+      type: "INTRO",
+      prompt: "",
+      promptSpeech: "",
+      pattern: pattern.code,
+      content: {
+        heading: `${upper} ${pattern.pattern}`,
+        display: `${upper} ${pattern.pattern}`,
+        body: optStr(params, "body") ?? pattern.childExplanation,
+        speech: `This is the letter ${nameSpeech}. It says ${sound.sayAs}${first ? `, as in ${first}` : ""}.`,
+        examples,
+        letter: {
+          upper,
+          lower: pattern.pattern,
+          name,
+          nameSpeech: `The letter's name is ${nameSpeech}.`,
+          soundLabel,
+          soundSpeech: sound.sayAs,
+        },
+      },
+      answer: null,
+    };
+  },
+
+  // Match capital letters to small letters.
+  match_upper_lower(params, ctx) {
+    const patterns = strList(params, "patterns").map((c) => needPattern(ctx, c));
+    if (patterns.length < 2) throw new TemplateError("needs at least two letters");
+    const left = patterns.map((p) => ({
+      id: `big-${p.pattern}`,
+      text: p.uppercase ?? p.pattern.toUpperCase(),
+      speech: `big ${p.letterNameSayAs || p.pattern}`,
+    }));
+    const right = seededShuffle(
+      patterns.map((p) => ({ id: `small-${p.pattern}`, text: p.pattern, speech: `small ${p.letterNameSayAs || p.pattern}` })),
+      ctx.seed,
+      true,
+    );
+    return {
+      type: "MATCH",
+      prompt: "Match big and small letters",
+      promptSpeech: "Match each big letter to its small letter.",
+      pattern: patterns[0].code,
+      content: { left, right },
+      answer: { pairs: patterns.map((p) => [`big-${p.pattern}`, `small-${p.pattern}`]) },
+    };
+  },
+
+  // Hear a SOUND, tap the letter (or pattern) that makes it.
+  letter_for_sound(params, ctx) {
+    const pattern = needPattern(ctx, str(params, "pattern"));
+    const sound = primarySound(pattern, optStr(params, "sound"));
+    const others = strList(params, "distractors").map((c) => needPattern(ctx, c));
+    const options = seededShuffle([pattern, ...others], ctx.seed).map((p) => ({
+      id: optionId(p.pattern),
+      text: p.pattern,
+    }));
+    return {
+      type: "LISTEN_AND_CHOOSE",
+      prompt: "Which one makes this sound?",
+      promptSpeech: `Which one says ${sound.sayAs}?`,
+      pattern: pattern.code,
+      content: { options },
+      answer: { accepted: [optionId(pattern.pattern)] },
+    };
+  },
+
+  // Beginning, middle or end sound of a word: hear the word, tap the letters that make
+  // that sound. Uses the word's grapheme split, so "ship" begins with sh, not s.
+  sound_at_position(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    const where = str(params, "position") as "beginning" | "middle" | "end";
+    if (!["beginning", "middle", "end"].includes(where)) throw new TemplateError(`bad position "${where}"`);
+    const segments = needSegments(target);
+    const sounding = segments.filter((s) => s.phonemes.length > 0);
+    const segment =
+      where === "beginning"
+        ? sounding[0]
+        : where === "end"
+          ? sounding[sounding.length - 1]
+          : sounding.slice(1, -1).find((s) => s.phonemes.some((c) => ctx.phoneme?.(c)?.kind !== "consonant")) ??
+            sounding[1];
+    if (!segment) throw new TemplateError(`"${target.word}" has no ${where} sound`);
+    const choices = strList(params, "choices").filter((c) => c !== segment.grapheme);
+    const options = seededShuffle([segment.grapheme, ...choices], ctx.seed).map((g) => ({ id: optionId(g), text: g }));
+    return {
+      type: "LISTEN_AND_CHOOSE",
+      prompt: `What sound is at the ${where === "middle" ? "middle" : where === "end" ? "end" : "beginning"}?`,
+      promptSpeech: `${target.word}. What sound do you hear at the ${where} of ${target.word}?`,
+      word: target.word,
+      pattern: segment.patternCode ?? undefined,
+      content: {
+        display: target.emoji ? `${target.emoji} ${target.word}` : target.word,
+        options,
+      },
+      answer: { accepted: [optionId(segment.grapheme)] },
+    };
+  },
+
+  // Blend the word's sounds, then choose the word they make.
+  blend_word(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    const segments = needSegments(target);
+    const words = seededShuffle([target.word, ...strList(params, "distractors")], ctx.seed);
+    return {
+      type: "BLEND_SOUNDS",
+      prompt: "Blend the sounds. What word is it?",
+      promptSpeech: "Tap each sound, then blend them. What word do they make?",
+      word: target.word,
+      pattern: optStr(params, "pattern"),
+      content: {
+        emoji: target.emoji || undefined,
+        units: segments
+          .filter((s) => s.phonemes.length > 0)
+          .map((s) => ({ grapheme: s.grapheme, sayAs: s.sayAs })),
+        options: wordOptions(ctx, words, params.pictures === true),
+      },
+      answer: { accepted: [optionId(target.word)] },
+    };
+  },
+
+  // How many sounds, and which ones? Sound cards are phonemes, not letters.
+  segment_word(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    const segments = needSegments(target);
+    const phonemes = segments.flatMap((s) => s.phonemes);
+    if (phonemes.length < 2) throw new TemplateError(`"${target.word}" has fewer than two sounds`);
+    const phoneme = (code: string) => {
+      const p = ctx.phoneme?.(code);
+      if (!p) throw new TemplateError(`phoneme ${code} is not defined`);
+      return p;
+    };
+    const cards = [...new Set([...phonemes, ...strList(params, "extraSounds", false)])].map((code) => {
+      const p = phoneme(code);
+      return { id: code.toLowerCase(), label: p.label, sayAs: p.sayAs };
+    });
+    return {
+      type: "SEGMENT_WORD",
+      prompt: "How many sounds?",
+      promptSpeech: `${target.word}. How many sounds do you hear in ${target.word}?`,
+      word: target.word,
+      pattern: optStr(params, "pattern"),
+      content: {
+        word: target.word,
+        emoji: target.emoji || undefined,
+        speech: target.word,
+        sounds: seededShuffle(cards, ctx.seed),
+        maxCount: Math.max(4, phonemes.length + 1),
+      },
+      answer: { acceptedSequences: [phonemes.map((c) => c.toLowerCase())] },
+    };
+  },
+
+  // Tap the letters that make the pattern in a word.
+  find_pattern(params, ctx) {
+    const pattern = needPattern(ctx, str(params, "pattern"));
+    const target = needWord(ctx, str(params, "word"));
+    if (pattern.pattern.includes("_")) throw new TemplateError(`${pattern.code} is split; use pick_word_with_pattern`);
+    const segments = needSegments(target);
+    let at = 0;
+    let found = -1;
+    for (const s of segments) {
+      if (s.patternCode === pattern.code) {
+        found = at;
+        break;
+      }
+      at += s.grapheme.length;
+    }
+    if (found === -1) throw new TemplateError(`"${target.word}" does not use ${pattern.code} in its split`);
+    return {
+      type: "FIND_PATTERN",
+      prompt: `Find ${pattern.pattern}`,
+      promptSpeech: `${target.word}. Tap the letters that make ${primarySound(pattern).sayAs}.`,
+      word: target.word,
+      pattern: pattern.code,
+      content: { word: target.word.toLowerCase(), emoji: target.emoji || undefined, speech: target.word, target: pattern.pattern },
+      answer: { accepted: [`${found}-${found + pattern.pattern.length - 1}`] },
+    };
+  },
+
+  // Read a written word (no audio of the word), tap its picture.
+  read_word(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    const words = seededShuffle([target.word, ...strList(params, "distractors")], ctx.seed);
+    const options = wordOptions(ctx, words, true);
+    if (options.some((o) => !("emoji" in o))) throw new TemplateError("read_word needs words with pictures");
+    return {
+      type: "PICTURE_MATCH",
+      prompt: "Read the word. Tap its picture.",
+      promptSpeech: "Read the word, then tap its picture.",
+      word: target.word,
+      pattern: optStr(params, "pattern"),
+      content: {
+        display: target.word,
+        hideOptionText: true,
+        options: options.map(({ speech: _speech, ...o }) => ({ ...o, text: undefined, speech: o.text })),
+      },
+      answer: { accepted: [optionId(target.word)] },
+    };
+  },
+
+  // Sort words into groups by pattern (sh words / ch words).
+  sort_by_pattern(params, ctx) {
+    const groups = params.groups;
+    if (!Array.isArray(groups) || groups.length < 2) throw new TemplateError('"groups" needs two or more groups');
+    const parsed = groups.map((g) => {
+      const group = g as Params;
+      const pattern = needPattern(ctx, str(group, "pattern"));
+      const words = strList(group, "words").map((w) => needWord(ctx, w));
+      return { pattern, words };
+    });
+    const items = seededShuffle(
+      parsed.flatMap((g) => g.words.map((w) => ({ id: optionId(w.word), text: w.word, emoji: w.emoji || undefined, speech: w.word }))),
+      ctx.seed,
+    );
+    return {
+      type: "SORT",
+      prompt: `${parsed.map((g) => g.pattern.pattern).join(" or ")}?`,
+      promptSpeech: `Sort the words: ${parsed.map((g) => primarySound(g.pattern).sayAs).join(", or ")}?`,
+      pattern: parsed[0].pattern.code,
+      content: {
+        groups: parsed.map((g) => ({ id: optionId(g.pattern.code), label: g.pattern.pattern.replace("_", "–") })),
+        items,
+      },
+      answer: {
+        pairs: parsed.flatMap((g) => g.words.map((w) => [optionId(w.word), optionId(g.pattern.code)])),
+      },
+    };
+  },
+
+  // Sort words by which pronunciation of one pattern they use (TH in thin vs this).
+  sort_by_sound(params, ctx) {
+    const pattern = needPattern(ctx, str(params, "pattern"));
+    if (pattern.sounds.length < 2) throw new TemplateError(`${pattern.code} has only one sound`);
+    const words = strList(params, "words").map((w) => needWord(ctx, w));
+    const pairs: [string, string][] = words.map((w) => {
+      const link = w.patterns.find((p) => p.code === pattern.code);
+      const sound = link?.sound ?? pattern.sounds.find((s) => s.primary)!.code;
+      if (!pattern.sounds.some((s) => s.code === sound)) throw new TemplateError(`bad sound for ${w.word}`);
+      return [optionId(w.word), optionId(sound)];
+    });
+    const used = new Set(pairs.map((p) => p[1]));
+    const groups = pattern.sounds.filter((s) => used.has(optionId(s.code)));
+    if (groups.length < 2) throw new TemplateError(`the words use only one ${pattern.code} sound`);
+    return {
+      type: "SORT",
+      prompt: `Which ${pattern.pattern} sound?`,
+      promptSpeech: `Listen to each word. Which ${pattern.pattern} sound does it have?`,
+      pattern: pattern.code,
+      content: {
+        groups: groups.map((s) => ({ id: optionId(s.code), label: s.label })),
+        items: seededShuffle(
+          words.map((w) => ({ id: optionId(w.word), text: w.word, emoji: w.emoji || undefined, speech: w.word })),
+          ctx.seed,
+        ),
+      },
+      answer: { pairs },
+    };
+  },
+
+  // Match each pattern to a word that has it.
+  match_pattern_word(params, ctx) {
+    const pairsIn = params.pairs;
+    if (!Array.isArray(pairsIn) || pairsIn.length < 2) throw new TemplateError('"pairs" needs two or more pairs');
+    const pairs = pairsIn.map((p) => {
+      const pair = p as Params;
+      return { pattern: needPattern(ctx, str(pair, "pattern")), word: needWord(ctx, str(pair, "word")) };
+    });
+    return {
+      type: "MATCH",
+      prompt: "Match the sound to the word",
+      promptSpeech: "Match each pattern to a word that has it.",
+      pattern: pairs[0].pattern.code,
+      content: {
+        left: pairs.map((p) => ({ id: optionId(p.pattern.code), text: p.pattern.pattern, speech: primarySound(p.pattern).sayAs })),
+        right: seededShuffle(
+          pairs.map((p) => ({ id: `w-${optionId(p.word.word)}`, text: p.word.word, emoji: p.word.emoji || undefined })),
+          ctx.seed,
+          true,
+        ),
+      },
+      answer: { pairs: pairs.map((p) => [optionId(p.pattern.code), `w-${optionId(p.word.word)}`]) },
+    };
+  },
+
+  // Match each SOUND (heard, not written) to its letter.
+  match_sound_letter(params, ctx) {
+    const patterns = strList(params, "patterns").map((c) => needPattern(ctx, c));
+    return {
+      type: "MATCH",
+      prompt: "Match the sound to the letter",
+      promptSpeech: "Tap a speaker to hear a sound, then tap its letter.",
+      pattern: patterns[0].code,
+      content: {
+        left: patterns.map((p, i) => ({ id: `sound-${i + 1}`, emoji: "🔊", speech: primarySound(p).sayAs })),
+        right: seededShuffle(
+          patterns.map((p) => ({ id: optionId(p.pattern), text: p.pattern })),
+          ctx.seed,
+          true,
+        ),
+      },
+      answer: { pairs: patterns.map((p, i) => [`sound-${i + 1}`, optionId(p.pattern)]) },
     };
   },
 
