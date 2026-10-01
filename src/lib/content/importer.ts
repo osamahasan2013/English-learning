@@ -9,8 +9,11 @@ import type {
   sentencesFileSchema,
   sightWordsFileSchema,
   storiesFileSchema,
+  vocabularyFileSchema,
   WordInput,
 } from "@/lib/content/content-schemas";
+import { exampleSentenceIssues, familyMembers } from "@/lib/content/vocabulary";
+import { categoryFacts, templateWordFromInput, wordForms, type CategoryRef } from "@/lib/content/word-bank";
 import { normalizeWord } from "@/lib/content/csv";
 import { parseActivityConfig } from "@/lib/content/activity-config";
 import { BlueprintError, expandBlueprint } from "@/lib/content/lesson-blueprints";
@@ -41,6 +44,7 @@ export type ImportBundle = {
   words?: WordInput[];
   sightWords?: z.infer<typeof sightWordsFileSchema>;
   sentences?: z.infer<typeof sentencesFileSchema>;
+  vocabulary?: z.infer<typeof vocabularyFileSchema>;
   stories?: z.infer<typeof storiesFileSchema>;
   curriculum?: CurriculumFile[];
   assessments?: z.infer<typeof assessmentsFileSchema>;
@@ -62,6 +66,7 @@ type Row = Record<string, unknown>;
 type Db = SupabaseClient;
 
 const BATCH_SIZE = 500;
+const EXAMPLE_EXTRA_WORDS = 3;
 // Tables whose primary key is their code (no uuid id column).
 const CODE_KEYED_TABLES = new Set([
   "skill_dimensions",
@@ -128,6 +133,14 @@ export class ContentImporter {
   // entity kinds whose flags this run replaces.
   private flags: Flag[] = [];
   private flagScopes = new Set<string>();
+  // Vocabulary: categories and level ranks (1 = KG1) for the word bank, example sentences
+  // waiting for the sentence bank, and sentences owned by sentences.json (not by a word).
+  private categoryRefs: Map<string, CategoryRef> | null = null;
+  private levelRanks: Map<string, number> | null = null;
+  private pendingExamples: { wordKey: string; texts: string[]; levelId: string; difficulty: number }[] = [];
+  private sentenceFileTexts = new Set<string>();
+  // The level rank of the curriculum file being imported (template distractor difficulty).
+  private currentLevelRank: number | undefined;
 
   constructor(
     private readonly db: Db,
@@ -323,17 +336,45 @@ export class ContentImporter {
         is_scored: t.isScored,
       })),
     );
-    await this.sync(
+    // Categories first, then their parents once every category exists.
+    const categoryReport = this.entity("word categories");
+    const knownCategories = new Set(file.wordCategories.map((c) => c.code));
+    const categories = file.wordCategories.filter((c) => {
+      if (!c.parent) return true;
+      const parent = file.wordCategories.find((p) => p.code === c.parent);
+      const problem = !knownCategories.has(c.parent)
+        ? `unknown parent "${c.parent}"`
+        : parent?.parent
+          ? "sub-categories are one level deep"
+          : c.parent === c.code
+            ? "a category cannot be its own parent"
+            : null;
+      if (!problem) return true;
+      categoryReport.invalid++;
+      categoryReport.errors.push(`category ${c.code}: ${problem}`);
+      return false;
+    });
+    const categoryIds = await this.sync(
       "word_categories",
       "word categories",
       ["code"],
-      file.wordCategories.map((c) => ({
+      categories.map((c) => ({
         code: c.code,
         name: c.name,
         emoji: c.emoji,
+        description: c.description,
         sort_order: c.sortOrder,
+        status: c.status,
       })),
     );
+    if (!this.options.dryRun) {
+      for (const c of categories) {
+        const parentId = c.parent ? (categoryIds.get(c.parent) ?? null) : null;
+        const { error } = await this.db.from("word_categories").update({ parent_id: parentId }).eq("code", c.code);
+        if (error) throw new Error(`writing word_categories: ${error.message}`);
+      }
+    }
+    this.categoryRefs = null;
     await this.sync(
       "achievements",
       "achievements",
@@ -597,13 +638,49 @@ export class ContentImporter {
     }));
   }
 
+  // Categories (with their parent) and level ranks, for the word bank.
+  private async loadVocabularyRefs() {
+    if (!this.categoryRefs) {
+      const rows = await fetchAll(this.db, "word_categories", "id,code,name,emoji,parent_id");
+      const codeOf = new Map(rows.map((r) => [String(r.id), String(r.code)]));
+      this.categoryRefs = new Map(
+        rows.map((r) => [
+          String(r.code),
+          {
+            code: String(r.code),
+            name: String(r.name),
+            emoji: String(r.emoji),
+            parent: r.parent_id ? (codeOf.get(String(r.parent_id)) ?? null) : null,
+          },
+        ]),
+      );
+    }
+    if (!this.levelRanks) {
+      const rows = await fetchAll(this.db, "levels", "code,sort_order");
+      const sorted = [...rows].sort((a, b) => Number(a.sort_order) - Number(b.sort_order));
+      this.levelRanks = new Map(sorted.map((r, i) => [String(r.code), i + 1]));
+    }
+    return { categories: this.categoryRefs, levelRanks: this.levelRanks };
+  }
+
   async importWords(words: WordInput[]) {
     await Promise.all([
       this.loadIds("levels", ["code"]),
       this.loadIds("word_categories", ["code"]),
       this.loadIds("phonics_patterns", ["code"]),
+      this.loadIds("image_assets", ["storage_path"]),
+      this.loadIds("audio_assets", ["storage_path"]),
     ]);
     await this.ensurePhonicsData();
+    const refs = await this.loadVocabularyRefs();
+    // Example sentences are heard as well as read, so they may be a little longer than the
+    // sentences a child at that level reads alone (EXAMPLE_EXTRA_WORDS).
+    const maxWords = new Map(
+      (await fetchAll(this.db, "levels", "code,max_sentence_words")).map((l) => [
+        String(l.code),
+        Number(l.max_sentence_words) ? Number(l.max_sentence_words) + EXAMPLE_EXTRA_WORDS : undefined,
+      ]),
+    );
     this.flagScopes.add("word");
     const report = this.entity("words");
     const rows: Row[] = [];
@@ -630,12 +707,45 @@ export class ContentImporter {
             severity: "warning",
             message: split.issues.join("; "),
           });
+        // A sub-category must belong to the category it is listed with.
+        if (w.subcategory) {
+          const sub = refs.categories.get(w.subcategory);
+          if (!sub) throw new Error(`unknown subcategory "${w.subcategory}"`);
+          if (!w.category || sub.parent !== w.category)
+            throw new Error(`subcategory ${w.subcategory} is not part of category ${w.category ?? "(none)"}`);
+        }
+        for (const level of w.levels) this.lookup("levels", level, "level");
+        // Example sentences: simple, about the word, short enough for the level.
+        const forms = wordForms(w);
+        for (const example of [w.exampleSentence, ...w.examples].filter(Boolean)) {
+          const issues = exampleSentenceIssues(example, w.word, forms, maxWords.get(w.level));
+          if (issues.length)
+            this.flag({
+              entity: "word",
+              entity_key: w.word,
+              rule: "example_sentence",
+              severity: "warning",
+              message: `"${example}" ${issues.join("; ")}`,
+            });
+        }
+        if (!w.childDefinition && !w.sightWord && w.status === "published")
+          this.flag({
+            entity: "word",
+            entity_key: w.word,
+            rule: "missing_meaning",
+            severity: "warning",
+            message: "no child-friendly meaning",
+          });
         const row = {
           word: w.word,
           normalized_word: normalizeWord(w.word),
           sense: w.sense,
           level_id: this.lookup("levels", w.level, "level"),
-          category_id: w.category ? this.lookup("word_categories", w.category, "category") : null,
+          category_id: w.subcategory
+            ? this.lookup("word_categories", w.subcategory, "subcategory")
+            : w.category
+              ? this.lookup("word_categories", w.category, "category")
+              : null,
           difficulty: w.difficulty,
           syllable_count: w.syllables,
           pronunciation: w.pronunciation,
@@ -647,8 +757,11 @@ export class ContentImporter {
           spelling_note: w.spellingNote,
           example_sentence: w.exampleSentence,
           plural: w.plural,
+          inflections: w.inflections,
           tags: w.tags,
           emoji: w.emoji,
+          image_asset_id: w.image ? this.lookup("image_assets", w.image, "image") : null,
+          audio_asset_id: w.audio ? this.lookup("audio_assets", w.audio, "audio recording") : null,
           phonics_shape: split.shape,
           decodable: split.decodable,
           segments_source: w.segments ? "authored" : "auto",
@@ -716,16 +829,44 @@ export class ContentImporter {
       ["word_id", "position"],
     );
 
-    // Related words, once every word exists.
+    // Relations, once every word exists: listed related words, synonyms and antonyms, and
+    // the word's own forms when they are words of the bank (mouse → mice).
     const relations: Row[] = [];
+    const FORM_RELATION: Record<string, string> = {
+      plural: "plural",
+      past: "verb_form",
+      past_participle: "verb_form",
+      ing: "verb_form",
+      third_person: "verb_form",
+      comparative: "adjective_form",
+      superlative: "adjective_form",
+    };
     for (const w of valid) {
-      for (const related of w.related) {
+      const listed: [string, string][] = [
+        ...w.related.map((x): [string, string] => [x, "related"]),
+        ...w.synonyms.map((x): [string, string] => [x, "synonym"]),
+        ...w.antonyms.map((x): [string, string] => [x, "antonym"]),
+      ];
+      for (const [related, type] of listed) {
         const relatedId = wordIds.get(`${normalizeWord(related)}|1`);
         if (!relatedId) {
-          report.errors.push(`word "${w.word}": related word "${related}" is not in the word bank`);
+          report.errors.push(`word "${w.word}": ${type} "${related}" is not in the word bank`);
           continue;
         }
-        relations.push({ word_id: idOf(w), related_word_id: relatedId, relation_type: "related" });
+        if (relatedId === idOf(w)) {
+          report.errors.push(`word "${w.word}": a word cannot be its own ${type}`);
+          continue;
+        }
+        relations.push({ word_id: idOf(w), related_word_id: relatedId, relation_type: type });
+      }
+      const forms: [string, string][] = [
+        ...(w.plural ? [["plural", w.plural] as [string, string]] : []),
+        ...Object.entries(w.inflections),
+      ];
+      for (const [key, form] of forms) {
+        const formId = wordIds.get(`${normalizeWord(form)}|1`);
+        if (formId && formId !== idOf(w))
+          relations.push({ word_id: idOf(w), related_word_id: formId, relation_type: FORM_RELATION[key] });
       }
     }
     await this.syncLinks("word_relations", "word_id", valid.map((w) => idOf(w)!).filter(Boolean), relations, [
@@ -734,20 +875,176 @@ export class ContentImporter {
       "relation_type",
     ]);
 
+    // Levels: the introducing level (primary) and the further levels the word suits.
+    const levelLinks: Row[] = [];
     for (const w of valid) {
-      this.wordBank.set(normalizeWord(w.word), {
-        word: w.word,
-        emoji: w.emoji,
-        childDefinition: w.childDefinition,
-        patterns: w.patterns.map((p) => ({ code: p.code, sound: p.sound })),
-        segments: (splits.get(normalizeWord(w.word))?.segments ?? []).map((seg) => ({
-          grapheme: seg.grapheme,
-          patternCode: seg.patternCode,
-          sayAs: seg.sayAs || this.phonemeSpeech(seg.phonemes),
-          phonemes: seg.phonemes,
-        })),
+      const wordId = idOf(w);
+      levelLinks.push({ word_id: wordId, level_id: this.lookup("levels", w.level, "level"), is_primary: true });
+      for (const level of w.levels.filter((l) => l !== w.level))
+        levelLinks.push({ word_id: wordId, level_id: this.lookup("levels", level, "level"), is_primary: false });
+    }
+    await this.syncLinks(
+      "word_levels",
+      "word_id",
+      valid.map((w) => idOf(w)!).filter(Boolean),
+      levelLinks.filter((r) => r.word_id),
+      ["word_id", "level_id"],
+    );
+
+    // Example sentences go into the sentence bank once it is imported (importWordExamples).
+    for (const w of valid) {
+      const texts = [...new Set([w.exampleSentence, ...w.examples].filter(Boolean))];
+      this.pendingExamples.push({
+        wordKey: `${normalizeWord(w.word)}|${w.sense}`,
+        texts,
+        levelId: this.lookup("levels", w.level, "level"),
+        difficulty: w.difficulty,
       });
     }
+
+    for (const w of valid) {
+      if (w.sense !== 1) continue;
+      const segments = (splits.get(normalizeWord(w.word))?.segments ?? []).map((seg) => ({
+        grapheme: seg.grapheme,
+        patternCode: seg.patternCode,
+        sayAs: seg.sayAs || this.phonemeSpeech(seg.phonemes),
+        phonemes: seg.phonemes,
+      }));
+      this.wordBank.set(normalizeWord(w.word), templateWordFromInput(w, segments, refs));
+    }
+  }
+
+  // Each word's curated example sentences become rows of the sentence bank (unless
+  // sentences.json owns that sentence) and are linked to the word, in order. The words a
+  // sentence uses are linked too (sentence_words), like any sentence.
+  async importWordExamples() {
+    if (this.pendingExamples.length === 0) return;
+    await Promise.all([this.loadIds("words", ["normalized_word", "sense"]), this.loadIds("sentences", ["text"])]);
+    const report = this.entity("example sentences");
+    const rows = new Map<string, Row>();
+    for (const e of this.pendingExamples)
+      for (const text of e.texts)
+        if (!this.sentenceFileTexts.has(text) && !rows.has(text))
+          rows.set(text, {
+            text,
+            level_id: e.levelId,
+            difficulty: e.difficulty,
+            grammar_complexity: 1,
+            word_count: text.split(/\s+/).length,
+            status: "published",
+          });
+    const ids = await this.sync("sentences", "example sentences", ["text"], [...rows.values()]);
+    const links: Row[] = [];
+    const wordIds: string[] = [];
+    for (const e of this.pendingExamples) {
+      const wordId = this.idMap("words").get(e.wordKey);
+      if (!wordId) continue;
+      wordIds.push(wordId);
+      e.texts.forEach((text, i) => {
+        const sentenceId = ids.get(text) ?? this.idMap("sentences").get(text);
+        if (sentenceId) links.push({ word_id: wordId, sentence_id: sentenceId, sort_order: i });
+        else if (!this.options.dryRun) report.errors.push(`example "${text}" was not stored`);
+      });
+    }
+    await this.syncLinks("word_sentences", "word_id", wordIds, links, ["word_id", "sentence_id"]);
+    const sentenceIds = [...rows.keys()].map((t) => ids.get(t)!).filter(Boolean);
+    const wordLinks = [...rows.keys()].flatMap((text) => {
+      const sentenceId = ids.get(text);
+      return sentenceId ? this.sentenceWordLinks(sentenceId, text) : [];
+    });
+    await this.syncLinks("sentence_words", "sentence_id", sentenceIds, wordLinks, ["sentence_id", "word_id"]);
+    this.pendingExamples = [];
+  }
+
+  // Words of the bank that a sentence uses (vocabulary it depends on).
+  private sentenceWordLinks(sentenceId: string, text: string): Row[] {
+    const tokens = new Set(
+      text
+        .split(/\s+/)
+        .map((t) => normalizeWord(t.replace(/[^\p{L}\p{N}']/gu, "")))
+        .filter(Boolean),
+    );
+    return [...tokens].flatMap((token) => {
+      const wordId = this.idMap("words").get(`${token}|1`);
+      return wordId ? [{ sentence_id: sentenceId, word_id: wordId }] : [];
+    });
+  }
+
+  // Word families (content/vocabulary.json). Members come from the word bank: one-syllable
+  // words ending in the rime whose vowel makes the family's sound (familyMembers), plus
+  // listed extra words, minus excluded ones.
+  async importFamilies(file: z.infer<typeof vocabularyFileSchema>) {
+    await Promise.all([
+      this.loadIds("levels", ["code"]),
+      this.loadIds("phonics_patterns", ["code"]),
+      this.loadIds("words", ["normalized_word", "sense"]),
+    ]);
+    await this.loadBanksFromDatabase();
+    const report = this.entity("word families");
+    const rows: Row[] = [];
+    const members = new Map<string, string[]>();
+    const candidates = [...this.wordBank.values()].map((w) => ({
+      word: w.word,
+      syllables: w.syllables ?? 1,
+      segments: (w.segments ?? []).map((seg) => ({ grapheme: seg.grapheme, phonemes: seg.phonemes })),
+    }));
+    for (const f of file.families) {
+      try {
+        let vowel: string[] = [];
+        if (f.vowelPattern) {
+          const pattern = this.patternBank.get(f.vowelPattern);
+          if (!pattern) throw new Error(`unknown phonics pattern "${f.vowelPattern}"`);
+          const sound = f.vowelSound
+            ? pattern.sounds.find((x) => x.code === f.vowelSound)
+            : pattern.sounds.find((x) => x.primary);
+          if (!sound) throw new Error(`unknown sound "${f.vowelSound}" for ${f.vowelPattern}`);
+          vowel = sound.phonemes ?? [];
+        }
+        const derived = familyMembers(f.rime, vowel, candidates);
+        for (const extra of f.words)
+          if (!this.wordBank.has(normalizeWord(extra))) throw new Error(`word "${extra}" is not in the word bank`);
+        const excluded = new Set(f.exclude.map(normalizeWord));
+        const list = [...new Set([...derived, ...f.words])].filter((w) => !excluded.has(normalizeWord(w)));
+        if (list.length < 2) throw new Error(`has ${list.length} member(s); a family needs at least two words`);
+        rows.push({
+          code: f.code,
+          rime: f.rime,
+          title: f.title,
+          level_id: this.lookup("levels", f.level, "level"),
+          vowel_pattern_id: f.vowelPattern ? this.lookup("phonics_patterns", f.vowelPattern, "phonics pattern") : null,
+          emoji: f.emoji,
+          sort_order: f.sortOrder,
+          status: f.status,
+        });
+        members.set(f.code, list);
+      } catch (error) {
+        report.invalid++;
+        report.errors.push(`family ${f.code}: ${(error as Error).message}`);
+      }
+    }
+    const ids = await this.sync("word_families", "word families", ["code"], rows);
+    const links: Row[] = [];
+    for (const [code, list] of members) {
+      list.forEach((word, i) => {
+        const wordId = this.idMap("words").get(`${normalizeWord(word)}|1`);
+        if (wordId) links.push({ family_id: ids.get(code), word_id: wordId, sort_order: i });
+      });
+    }
+    await this.syncLinks(
+      "word_family_members",
+      "family_id",
+      [...members.keys()].map((c) => ids.get(c)!).filter(Boolean),
+      links.filter((l) => l.family_id),
+      ["family_id", "word_id"],
+    );
+  }
+
+  // Words a template may use as distractors: published ones only (drafts never leak).
+  private publishedBankCache: TemplateWord[] | null = null;
+  private publishedBank() {
+    if (!this.publishedBankCache || this.publishedBankCache.length === 0)
+      this.publishedBankCache = [...this.wordBank.values()].filter((w) => w.published !== false);
+    return this.publishedBankCache;
   }
 
   private phonemeSpeech(phonemes: string[]) {
@@ -759,20 +1056,47 @@ export class ContentImporter {
   async loadBanksFromDatabase() {
     await this.ensurePhonicsData();
     if (this.wordBank.size === 0) {
-      const [words, links, patterns, sounds, segments] = await Promise.all([
-        fetchAll(this.db, "words", "id,word,emoji,child_definition,sense"),
+      const refs = await this.loadVocabularyRefs();
+      const [words, links, patterns, sounds, segments, categories, levels, synonyms, examples] = await Promise.all([
+        fetchAll(
+          this.db,
+          "words",
+          "id,word,emoji,child_definition,sense,category_id,level_id,part_of_speech,difficulty,syllable_count,plural,inflections,status",
+        ),
         fetchAll(this.db, "word_phonics_patterns", "word_id,pattern_id,sound_id"),
         fetchAll(this.db, "phonics_patterns", "id,code"),
         fetchAll(this.db, "phonics_pattern_sounds", "id,code,say_as"),
         fetchAll(this.db, "word_segments", "word_id,position,grapheme,pattern_id,sound_id,phonemes"),
+        fetchAll(this.db, "word_categories", "id,code"),
+        fetchAll(this.db, "levels", "id,code"),
+        fetchAll(this.db, "word_relations", "word_id,related_word_id", [
+          { op: "eq", column: "relation_type", value: "synonym" },
+        ]),
+        fetchAll(this.db, "word_sentences", "word_id,sentence_id,sort_order,sentences(text)"),
       ]);
       const patternCode = new Map(patterns.map((p) => [p.id, String(p.code)]));
       const soundById = new Map(sounds.map((s) => [s.id, s]));
+      const categoryCode = new Map(categories.map((c) => [c.id, String(c.code)]));
+      const levelCode = new Map(levels.map((l) => [l.id, String(l.code)]));
+      const wordText = new Map(words.map((w) => [w.id, String(w.word)]));
       for (const w of words.filter((w) => w.sense === 1)) {
         this.wordBank.set(normalizeWord(String(w.word)), {
           word: String(w.word),
           emoji: String(w.emoji),
           childDefinition: String(w.child_definition),
+          ...categoryFacts(w.category_id ? categoryCode.get(w.category_id) : null, refs.categories),
+          levelRank: refs.levelRanks.get(levelCode.get(w.level_id) ?? ""),
+          partOfSpeech: String(w.part_of_speech),
+          difficulty: Number(w.difficulty),
+          syllables: Number(w.syllable_count),
+          published: w.status === "published",
+          examples: examples
+            .filter((e) => e.word_id === w.id)
+            .sort((a, b) => Number(a.sort_order) - Number(b.sort_order))
+            .map((e) => String((Array.isArray(e.sentences) ? e.sentences[0] : (e.sentences as Row | null))?.text ?? ""))
+            .filter(Boolean),
+          synonyms: synonyms.filter((r) => r.word_id === w.id).map((r) => wordText.get(r.related_word_id) ?? ""),
+          forms: wordForms({ plural: String(w.plural ?? ""), inflections: (w.inflections ?? {}) as Record<string, string> }),
           patterns: links
             .filter((l) => l.word_id === w.id)
             .map((l) => ({
@@ -862,6 +1186,7 @@ export class ContentImporter {
     const report = this.entity("sentences");
     const rows: Row[] = [];
     const valid: typeof file.sentences = [];
+    for (const s of file.sentences) this.sentenceFileTexts.add(s.text);
     for (const s of file.sentences) {
       try {
         rows.push({
@@ -884,16 +1209,7 @@ export class ContentImporter {
     const patternLinks: Row[] = [];
     for (const s of valid) {
       const sentenceId = ids.get(s.text);
-      const tokens = new Set(
-        s.text
-          .split(/\s+/)
-          .map((t) => normalizeWord(t.replace(/[^\p{L}\p{N}']/gu, "")))
-          .filter(Boolean),
-      );
-      for (const token of tokens) {
-        const wordId = this.idMap("words").get(`${token}|1`);
-        if (wordId) wordLinks.push({ sentence_id: sentenceId, word_id: wordId });
-      }
+      if (sentenceId) wordLinks.push(...this.sentenceWordLinks(sentenceId, s.text));
       for (const code of s.patterns) {
         try {
           patternLinks.push({
@@ -959,6 +1275,8 @@ export class ContentImporter {
         word?: string;
         pattern?: string;
         story?: string;
+        area?: string;
+        sentence?: string;
       };
       if ("template" in input && typeof input.template === "string") {
         const {
@@ -972,6 +1290,8 @@ export class ContentImporter {
         const ctx: TemplateContext = {
           seed: code,
           word: (text) => this.wordBank.get(normalizeWord(text)),
+          words: () => this.publishedBank(),
+          levelRank: this.currentLevelRank,
           pattern: (patternCode) => this.patternBank.get(patternCode),
           phoneme: (phonemeCode) => {
             const p = this.phonemeInfo?.get(phonemeCode);
@@ -1011,7 +1331,11 @@ export class ContentImporter {
         content: expanded.content,
         answer: expanded.answer,
         explanation: String(input.explanation ?? ""),
-        metadata: "metadata" in input && input.metadata ? input.metadata : {},
+        metadata: {
+          ...("metadata" in input && input.metadata ? input.metadata : {}),
+          ...(expanded.area ? { wordArea: expanded.area } : {}),
+        },
+        sentence_id: expanded.sentence ? (this.idMap("sentences").get(expanded.sentence) ?? null) : null,
         word_id: expanded.word ? this.lookup("words", `${normalizeWord(expanded.word)}|1`, "word") : null,
         phonics_pattern_id: expanded.pattern
           ? this.lookup("phonics_patterns", expanded.pattern.toUpperCase(), "phonics pattern")
@@ -1039,10 +1363,12 @@ export class ContentImporter {
       this.loadIds("skills", ["code"]),
       this.loadIds("lessons", ["code"]),
       this.loadIds("phonics_stages", ["code"]),
+      this.loadIds("sentences", ["text"]),
     ]);
     await this.loadBanksFromDatabase();
     this.flagScopes.add("question");
     const levelId = this.lookup("levels", file.level, "level");
+    this.currentLevelRank = (await this.loadVocabularyRefs()).levelRanks.get(file.level);
 
     // Lessons written as a blueprint become ordinary activities here, before anything else
     // sees them (src/lib/content/lesson-blueprints.ts).
@@ -1051,7 +1377,7 @@ export class ContentImporter {
         skill.lessons = skill.lessons.filter((lesson) => {
           if (!lesson.blueprint) return true;
           try {
-            lesson.activities = expandBlueprint(lesson.blueprint).map((a) => ({
+            lesson.activities = expandBlueprint({ levelRank: this.currentLevelRank, ...lesson.blueprint }).map((a) => ({
               ...a,
               config: {},
               status: lesson.status,
@@ -1259,8 +1585,10 @@ export class ContentImporter {
       this.loadIds("phonics_patterns", ["code"]),
       this.loadIds("words", ["normalized_word", "sense"]),
       this.loadIds("stories", ["code"]),
+      this.loadIds("sentences", ["text"]),
     ]);
     await this.loadBanksFromDatabase();
+    this.currentLevelRank = undefined;
     const report = this.entity("assessments");
     const rows: Row[] = [];
     for (const a of file.assessments) {
@@ -1348,7 +1676,12 @@ export class ContentImporter {
     if (bundle.phonics) await this.importPhonics(bundle.phonics);
     if (bundle.words) await this.importWords(bundle.words);
     if (bundle.sightWords) await this.importSightWords(bundle.sightWords);
-    if (bundle.sentences) await this.importSentences(bundle.sentences);
+    if (bundle.sentences) {
+      for (const s of bundle.sentences.sentences) this.sentenceFileTexts.add(s.text);
+      await this.importSentences(bundle.sentences);
+    }
+    await this.importWordExamples();
+    if (bundle.vocabulary) await this.importFamilies(bundle.vocabulary);
     if (bundle.stories) await this.importStories(bundle.stories);
     for (const file of bundle.curriculum ?? []) await this.importCurriculum(file);
     if (bundle.assessments) await this.importAssessments(bundle.assessments);

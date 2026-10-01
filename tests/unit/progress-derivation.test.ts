@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  aggregateWordAttempts,
   attemptRejection,
   buildAttemptRow,
   clampTimestamp,
@@ -102,18 +101,6 @@ describe("aggregations", () => {
       best_stars: 3,
       completed_at: "2026-09-28T10:00:00Z",
       last_completed_at: "2026-09-29T10:00:00Z",
-    });
-  });
-
-  it("counts word attempts", () => {
-    const stats = aggregateWordAttempts([
-      { word_id: "w1", is_correct: true, attempted_at: "2026-09-28T10:00:00Z" },
-      { word_id: "w1", is_correct: false, attempted_at: "2026-09-29T10:00:00Z" },
-    ]);
-    expect(stats.get("w1")).toEqual({
-      attempts_count: 2,
-      correct_count: 1,
-      last_practiced_at: "2026-09-29T10:00:00Z",
     });
   });
 });

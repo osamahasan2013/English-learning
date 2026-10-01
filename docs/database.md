@@ -6,19 +6,20 @@ applied). TypeScript types in `src/lib/supabase/types.ts` are generated
 
 ## Migrations
 
-| File                                                  | Contents                                                                                                                                                                                                                          |
-| ----------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `20260929100100_foundation.sql`                       | enums, `set_updated_at()`, `profiles`, sign-up trigger, `is_admin()`                                                                                                                                                              |
-| `20260929100200_content_reference.sql`                | levels, subjects, skill dimensions, activity types, media assets                                                                                                                                                                  |
-| `20260929100300_language_content.sql`                 | phonics patterns and sounds, words, sight words, sentences, stories                                                                                                                                                               |
-| `20260929100400_curriculum.sql`                       | units, skills, lessons, activities, questions, assessments, achievements                                                                                                                                                          |
-| `20260929100500_family_and_progress.sql`              | children, learner history, derived progress                                                                                                                                                                                       |
-| `20260929100600_rls_and_grants.sql`                   | RLS policies, grants, `is_my_child()`, `archive_child()`                                                                                                                                                                          |
-| `20260930100100_parent_profiles_and_family_rules.sql` | time zone validation, sign-up time zone, published-level check, 12-child limit                                                                                                                                                    |
-| `20260930100200_seed_levels.sql`                      | the five learning levels (KG1–Grade 2), so a fresh database works without a content import                                                                                                                                        |
-| `20261001100100_learning_engine.sql`                  | Phase 3 engine: skill/lesson/question fields, lesson prerequisites, feedback messages, engine rules, learning sessions, activity/subject/level progress, review queue, attempt scores, hidden answers, `lesson_catalog` view      |
-| `20261002100100_phonics_engine.sql`                   | Phase 4 phonics: phoneme inventory, phonics stages, pattern fields (stage, position, letter case/name, image), sound phonemes, pattern relations, word segments, word shape/decodable, skill stage, content review flags          |
-| `20261003100100_progress_integrity.sql`               | Audit fixes (ADR-028): one first try per question per lesson run / assessment sitting (unique indexes), `activity_attempts.correct_answer` hidden from parents, content link tables readable only when their content is published |
+| File                                                  | Contents                                                                                                                                                                                                                                                                                               |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `20260929100100_foundation.sql`                       | enums, `set_updated_at()`, `profiles`, sign-up trigger, `is_admin()`                                                                                                                                                                                                                                   |
+| `20260929100200_content_reference.sql`                | levels, subjects, skill dimensions, activity types, media assets                                                                                                                                                                                                                                       |
+| `20260929100300_language_content.sql`                 | phonics patterns and sounds, words, sight words, sentences, stories                                                                                                                                                                                                                                    |
+| `20260929100400_curriculum.sql`                       | units, skills, lessons, activities, questions, assessments, achievements                                                                                                                                                                                                                               |
+| `20260929100500_family_and_progress.sql`              | children, learner history, derived progress                                                                                                                                                                                                                                                            |
+| `20260929100600_rls_and_grants.sql`                   | RLS policies, grants, `is_my_child()`, `archive_child()`                                                                                                                                                                                                                                               |
+| `20260930100100_parent_profiles_and_family_rules.sql` | time zone validation, sign-up time zone, published-level check, 12-child limit                                                                                                                                                                                                                         |
+| `20260930100200_seed_levels.sql`                      | the five learning levels (KG1–Grade 2), so a fresh database works without a content import                                                                                                                                                                                                             |
+| `20261001100100_learning_engine.sql`                  | Phase 3 engine: skill/lesson/question fields, lesson prerequisites, feedback messages, engine rules, learning sessions, activity/subject/level progress, review queue, attempt scores, hidden answers, `lesson_catalog` view                                                                           |
+| `20261002100100_phonics_engine.sql`                   | Phase 4 phonics: phoneme inventory, phonics stages, pattern fields (stage, position, letter case/name, image), sound phonemes, pattern relations, word segments, word shape/decodable, skill stage, content review flags                                                                               |
+| `20261003100100_progress_integrity.sql`               | Audit fixes (ADR-028): one first try per question per lesson run / assessment sitting (unique indexes), `activity_attempts.correct_answer` hidden from parents, content link tables readable only when their content is published                                                                      |
+| `20261004100100_vocabulary_engine.sql`                | Phase 5 vocabulary: sub-categories and category status, word levels, example sentences, word families, more relation types, media type/size checks and Storage buckets, word mastery and per-area progress, `weak_word` review reason, `set_word_saved` / `note_word_seen`, `word_category_stats` view |
 
 ## Conventions
 
@@ -49,7 +50,7 @@ applied). TypeScript types in `src/lib/supabase/types.ts` are generated
 | `subjects`                     | Content categories: PHONICS, READING, VOCABULARY, SPELLING, WRITING, LISTENING, SENTENCE_BUILDING, GAMES, ASSESSMENT (the Phase 2 categories LETTERS, BLENDING, SIGHT_WORDS, SENTENCES are archived). |
 | `skill_dimensions`             | What a skill measures, for assessment breakdowns (letter recognition … writing).                                                                                                                      |
 | `activity_types`               | Renderable question/activity types; `is_scored`.                                                                                                                                                      |
-| `audio_assets`, `image_assets` | Media in Supabase Storage; audio has `tts_text` fallback.                                                                                                                                             |
+| `audio_assets`, `image_assets` | Media in Supabase Storage (buckets `content-audio`, `content-images`); audio has a `tts_text` fallback; images record alt text, `mime_type` (PNG/JPEG/WebP) and `byte_size` (≤ 1 MB).                 |
 
 ### Language content
 
@@ -62,10 +63,13 @@ applied). TypeScript types in `src/lib/supabase/types.ts` are generated
 | `phonics_pattern_relations`                                | Pattern ↔ pattern: `prerequisite`, `related`, `contrast` (sh/ch), `same_sound` (ai/ay/a_e). Readable only when both patterns are published.                                                                                                                                                                                     |
 | `word_segments`                                            | A word as the graphemes a reader decodes, in order (ship = sh·i·p), each with its pattern, sound and phonemes (empty = silent). Derived by the importer or authored (CSV `segments`); readable only for published words. `words` also carries `phonics_shape` (CVC, CCVC…, from phonemes), `decodable` and `segments_source`.   |
 | `content_flags`                                            | Questionable content found by the importer (a doubtful split, a word that doesn't use its lesson's pattern, a duplicate pattern) for admin review. Replaced on each import; admins only.                                                                                                                                        |
-| `word_categories`                                          | Animals, Food, … Function Words.                                                                                                                                                                                                                                                                                                |
+| `word_categories`                                          | Configurable categories (Animals, Food, … Describing Words) with `status`, `description` and an optional `parent_id` (one level of sub-categories: Farm Animals, Fruit, Vegetables).                                                                                                                                            |
+| `word_levels`                                              | Every level a word suits (`is_primary` = `words.level_id`, kept in sync by a trigger).                                                                                                                                                                                                                                          |
+| `word_sentences`                                           | A word's curated example sentences, in order, as rows of `sentences`.                                                                                                                                                                                                                                                           |
+| `word_families`, `word_family_members`                     | Rime families (-at: cat, bat, hat) with level and the phonics pattern of their vowel; members derived by the importer from grapheme splits.                                                                                                                                                                                     |
 | `words`                                                    | The word bank (thousands of rows expected): level, difficulty, category, syllables, pronunciation, definitions (adult and child), part of speech, sight word, `is_irregular` + `spelling_note`, example sentence, plural, inflections, tags, emoji/image/audio, generated `search` tsvector. Unique `(normalized_word, sense)`. |
 | `word_phonics_patterns`                                    | Word ↔ pattern, with the specific sound and `is_example`.                                                                                                                                                                                                                                                                       |
-| `word_relations`                                           | Related words (related/synonym/antonym/family/rhyme).                                                                                                                                                                                                                                                                           |
+| `word_relations`                                           | Typed word ↔ word relations: related, synonym, antonym, family, rhyme, plural, verb_form, adjective_form.                                                                                                                                                                                                                       |
 | `sight_words`                                              | Level-specific sight-word lists.                                                                                                                                                                                                                                                                                                |
 | `sentences`, `sentence_words`, `sentence_phonics_patterns` | Sentence bank with vocabulary and phonics dependencies, grammar complexity.                                                                                                                                                                                                                                                     |
 | `stories`                                                  | Original or licensed passages (`pages` JSON); a non-original story must carry a license.                                                                                                                                                                                                                                        |
@@ -102,8 +106,9 @@ applied). TypeScript types in `src/lib/supabase/types.ts` are generated
 | `subject_progress`                          | derived | Per child × level × subject: status, lessons completed/total, attempts, correct, accuracy, average best score, timestamps.                                                                                                                                                                                                                                                                                      |
 | `level_progress`                            | derived | Per child × level: the same plus skills mastered/total.                                                                                                                                                                                                                                                                                                                                                         |
 | `skill_mastery`                             | derived | Per child × skill: status (NOT_STARTED/LEARNING/PRACTICING/ALMOST_MASTERED/MASTERED), mastery score, accuracy, recent accuracy, attempts, correct attempts, practice days, confidence, review priority, next review, last practised/assessed.                                                                                                                                                                   |
-| `review_items`                              | derived | The review queue: one open item per skill or word (`item_key`), referencing skill, word, phonics pattern and/or lesson, with priority, due date and reason (`weak_skill`, `due_review`, `recent_errors`, `missed_word`); resolved rather than deleted (ADR-022).                                                                                                                                                |
-| `word_progress`                             | derived | "My Words": saved flag and source, attempt/correct counts.                                                                                                                                                                                                                                                                                                                                                      |
+| `review_items`                              | derived | The review queue: one open item per skill or word (`item_key`), referencing skill, word, phonics pattern and/or lesson, with priority, due date and reason (`weak_skill`, `due_review`, `recent_errors`, `missed_word`, `weak_word`); resolved rather than deleted (ADR-022).                                                                                                                                   |
+| `word_progress`                             | derived | "My Words" and word mastery: saved flag, source and date (the family's choice wins over auto-save), first seen, attempts, correct, accuracy, mastery status and score, practice days, review priority and next review, last practised and last reviewed (practice outside a lesson run).                                                                                                                        |
+| `word_area_progress`                        | derived | Per child × word × area (recognition, listening, meaning, reading, spelling, usage): attempts, correct, accuracy, last practised.                                                                                                                                                                                                                                                                               |
 
 `activity_attempts.lesson_run_id` is intentionally not a foreign key: attempts may arrive
 before their run row.
@@ -122,6 +127,10 @@ skills *─1 phonics_patterns;  skills *─1 skill_dimensions
 phonics_patterns 1─* phonics_pattern_sounds (phonemes → phonemes);  words *─* phonics_patterns (with sound)
 phonics_patterns *─* phonics_patterns (relations);  phonics_patterns, skills *─1 phonics_stages
 words 1─* word_segments *─1 phonics_patterns / phonics_pattern_sounds
+words *─* levels (word_levels);  words *─1 word_categories (*─1 parent category)
+words *─* sentences (word_sentences: examples; sentence_words: vocabulary a sentence uses)
+words *─* word_families (word_family_members);  word_families *─1 phonics_patterns (vowel)
+children 1─* word_progress, word_area_progress *─1 words
 questions *─1 {words, sentences, phonics_patterns, stories, activity_types}
 assessments 1─* assessment_items *─1 questions
 ```
@@ -138,7 +147,9 @@ assessments 1─* assessment_items *─1 questions
 | Other families          | —    | nothing                                                              | nothing                                        | all          |
 
 Helpers: `is_admin()`, `is_my_child(child_id)` (both `security definer`, fixed
-`search_path`), `is_valid_time_zone(name)`.
+`search_path`), `is_valid_time_zone(name)`. My Words: `set_word_saved(child, word, saved)`
+and `note_word_seen(child, word)` (`security definer`; the child must be the caller's and
+the word published; only the saved/seen columns change — ADR-032).
 
 Rules enforced by the database, whatever the client sends:
 
@@ -168,8 +179,13 @@ Rules enforced by the database, whatever the client sends:
   lowercase letters; `phonics_shape` is C/V only; a pattern cannot relate to itself.
 - Phoneme and stage lists are readable by everyone signed in; relations and word segments
   follow the publication state of their patterns/words; `content_flags` is admin-only.
+- Vocabulary: categories, families and the link tables (`word_levels`, `word_sentences`,
+  `word_family_members`) are readable only when published (admins see all); sub-categories
+  are one level deep (`CATEGORY_TOO_DEEP`); `word_progress` and `word_area_progress` are
+  read-only for the owning parent; uploads are limited by type and size in the database
+  and in the Storage buckets, which only admins may write.
 
-Tests: `supabase/tests/00{1,2,3,4,5}_*.sql` (`npm run test:db`) and the API-level
+Tests: `supabase/tests/00{1,2,3,4,5,6}_*.sql` (`npm run test:db`) and the API-level
 integration tests in `tests/integration` (`npm run test:integration`).
 
 ## Indexes
@@ -182,3 +198,7 @@ session and (child, lesson); sessions by (child, started_at); activity progress 
 (`text_pattern_ops`), full-text (`search`, GIN) and tags (GIN); content children by parent
 and sort order. Phonics: patterns by stage and by type; words by phonics shape; segments by
 pattern (all words using a pattern); relations by related pattern; skills by stage.
+Vocabulary: word levels by (level, word); words by part of speech and (status, word);
+segments by (pattern, word); relations by related word; family members by word; example
+sentences by sentence; word progress by (child, review priority), (child, status) and
+(child, last practised); area progress by (child, area); categories by parent.

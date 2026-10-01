@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // The engine's tunable numbers. Defaults live here; an admin can override any of them
 // per rule set in the `learning_rules` table (code = mastery | prerequisites | review |
-// player | scoring), which the server merges over these defaults. Every value is
+// player | scoring | vocabulary), which the server merges over these defaults. Every value is
 // documented in docs/curriculum.md so parent-facing explanations can quote it.
 
 const statuses = ["NOT_STARTED", "LEARNING", "PRACTICING", "ALMOST_MASTERED", "MASTERED"] as const;
@@ -71,7 +71,23 @@ export const scoringRulesSchema = z.object({
   retryScore: z.number().min(0).max(100),
 });
 
+// Words use the skill mastery algorithm (mastery.ts) with these word-sized settings: a
+// single word is answered far less often than a whole skill.
+export const vocabularyRulesSchema = z.object({
+  // Evidence for one word: the score is scaled by min(1, first tries / this).
+  fullEvidenceAttempts: z.number().int().min(1).max(50),
+  // A word with at least minAttempts first tries and accuracy below this is weak and
+  // comes back for review (the review queue's weak_word reason).
+  minAttempts: z.number().int().min(1).max(50),
+  weakBelowAccuracy: z.number().min(1).max(100),
+  // Saved words (My Words) that have been practised are scheduled for review.
+  reviewSavedWords: z.boolean(),
+  // Questions in one word-practice session.
+  practiceQuestions: z.number().int().min(2).max(20),
+});
+
 export type MasteryRules = z.infer<typeof masteryRulesSchema>;
+export type VocabularyRules = z.infer<typeof vocabularyRulesSchema>;
 export type PrerequisiteRules = z.infer<typeof prerequisiteRulesSchema>;
 export type ReviewRules = z.infer<typeof reviewRulesSchema>;
 export type PlayerRules = z.infer<typeof playerRulesSchema>;
@@ -83,6 +99,7 @@ export type LearningRules = {
   review: ReviewRules;
   player: PlayerRules;
   scoring: ScoringRules;
+  vocabulary: VocabularyRules;
 };
 
 export const DEFAULT_RULES: LearningRules = {
@@ -108,6 +125,13 @@ export const DEFAULT_RULES: LearningRules = {
     firstTryScore: 100,
     retryScore: 50,
   },
+  vocabulary: {
+    fullEvidenceAttempts: 6,
+    minAttempts: 3,
+    weakBelowAccuracy: 70,
+    reviewSavedWords: true,
+    practiceQuestions: 6,
+  },
 };
 
 const schemas = {
@@ -116,6 +140,7 @@ const schemas = {
   review: reviewRulesSchema,
   player: playerRulesSchema,
   scoring: scoringRulesSchema,
+  vocabulary: vocabularyRulesSchema,
 } as const;
 
 // Merges stored overrides over the defaults. An override that fails validation is

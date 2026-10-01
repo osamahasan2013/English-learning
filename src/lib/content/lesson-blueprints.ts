@@ -215,6 +215,102 @@ export const BLUEPRINTS: Record<string, (p: Params) => BlueprintActivity[]> = {
     );
     return out;
   },
+
+  // A vocabulary set (Phase 5): 4–8 words, usually from one category. The structure
+  // grows with the level (levelRank, filled in by the importer from the curriculum file):
+  //   KG1      see & hear → listen and find → which one goes with <category>? → odd one out
+  //   KG2      + picture → word, word → picture, match pictures, meaning, missing letter
+  //   KG3      + build it, spell it, finish the sentence, look-alike words
+  //   Grade 1+ + match meanings, use it in a sentence, sort by category
+  // Distractors are chosen by the templates from the word bank (vocabulary.ts).
+  //   words[4..8], mixed (true when the words are not all from one category)
+  vocabulary_set(p) {
+    const words = list(p, "words", 4);
+    if (words.length > 8) throw new BlueprintError("a vocabulary set has at most 8 words");
+    const rank = typeof p.levelRank === "number" ? p.levelRank : 1;
+    const oneCategory = p.mixed !== true;
+    const at = (i: number) => words[i % words.length];
+    const out: BlueprintActivity[] = [
+      activity(
+        "INTRO",
+        "explanation",
+        "New words",
+        "Look, listen and say each word.",
+        words.map((word) => ({ template: "word_intro", word })),
+      ),
+      activity(
+        "LISTEN_AND_CHOOSE",
+        "guided_practice",
+        "Listen and find",
+        "Listen, then tap the picture.",
+        words.slice(0, rank <= 1 ? 4 : 2).map((word) => ({ template: "listen_pick_picture", word })),
+      ),
+    ];
+    if (rank >= 2) {
+      out.push(
+        activity("MULTIPLE_CHOICE", "guided_practice", "What is it?", "Look at the picture. Tap its word.", [
+          { template: "picture_to_word", word: at(2) },
+          { template: "picture_to_word", word: at(3) },
+        ]),
+        activity("PICTURE_MATCH", "guided_practice", "Read and find", "Read the word, then tap its picture.", [
+          { template: "word_to_picture", word: at(1) },
+        ]),
+        activity("MATCH", "independent_practice", "Match", "Match each word to its picture.", [
+          { template: "match_word_picture", words: words.slice(0, 4) },
+        ]),
+        activity("MULTIPLE_CHOICE", "independent_practice", "What does it mean?", "Which word means this?", [
+          { template: "meaning_to_word", word: at(0) },
+          ...(rank >= 4 ? [{ template: "meaning_to_word", word: at(4) }] : []),
+        ]),
+        activity("MISSING_LETTER", "independent_practice", "Missing letter", "Which letter is missing?", [
+          { template: "word_missing_letter", word: at(1) },
+        ]),
+      );
+    }
+    if (rank >= 3) {
+      out.push(
+        activity("WORD_BUILDER", "independent_practice", "Build it", "Build the word you hear.", [
+          { template: "build_vocab_word", word: at(2) },
+        ]),
+        activity("SPELLING", "independent_practice", "Spell it", "Type the word you hear.", [
+          { template: "spell_word", word: at(3) },
+        ]),
+        activity("LISTEN_AND_CHOOSE", "independent_practice", "Look closely", "Listen. Tap the word you hear.", [
+          { template: "similar_word", word: at(0) },
+        ]),
+        activity("DRAG_DROP", "independent_practice", "Finish the sentence", "Which word finishes the sentence?", [
+          { template: "complete_sentence", word: at(4) },
+        ]),
+      );
+    }
+    if (rank >= 4) {
+      out.push(
+        activity("MATCH", "independent_practice", "Match the meaning", "Match each word to what it means.", [
+          { template: "match_word_meaning", words: words.slice(0, 3) },
+        ]),
+        activity("MULTIPLE_CHOICE", "review", "Use it", "Which sentence makes sense?", [
+          { template: "use_in_sentence", word: at(5) },
+        ]),
+      );
+    }
+    if (oneCategory) {
+      out.push(
+        activity("MULTIPLE_CHOICE", "review", "Which one goes?", "Which one goes with the others?", [
+          { template: "pick_category_member", word: at(rank) },
+        ]),
+        activity("MULTIPLE_CHOICE", "review", "Odd one out", "Which one does not belong?", [
+          { template: "odd_one_out", words: words.slice(0, 3) },
+        ]),
+      );
+      if (rank >= 4)
+        out.push(
+          activity("SORT", "review", "Sort", "Put each word in its group.", [
+            { template: "sort_by_category", words: words.slice(0, 3) },
+          ]),
+        );
+    }
+    return out;
+  },
 };
 
 export function expandBlueprint(blueprint: Params): BlueprintActivity[] {

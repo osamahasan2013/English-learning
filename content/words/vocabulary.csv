@@ -1,0 +1,89 @@
+word,level,levels,category,subcategory,difficulty,phonics_pattern,segments,definition,child_definition,example_sentence,examples,sight_word,emoji,part_of_speech,syllables,irregular,spelling_note,synonyms,antonyms,inflections,plural,tags
+blue,KG1,,COLORS,,1,,,The color of a clear sky or the deep sea.,The color of the sky on a sunny day.,The sky is blue.,,no,🔵,adjective,1,no,,,,,,color
+green,KG1,,COLORS,,1,GR;EE*,,The color of growing grass and leaves.,The color of grass and leaves.,The grass is green.,,no,🟢,adjective,1,no,,,,,,color
+pink,KG1,,COLORS,,1,,,A pale red color.,"A light red color, like a flamingo.",Her dress is pink.,,no,🩷,adjective,1,no,,,,,,color
+orange,KG2,,COLORS,,2,OR,or a=[IH] n ge=[JH],The color between red and yellow.,The color of a carrot.,The carrot is orange.,,no,🟠,adjective,2,no,,,,,,color
+purple,KG2,,COLORS,,2,UR,p ur p le=[AH+L],A color made by mixing red and blue.,The color of grapes.,I have a purple crayon.,,no,🟣,adjective,2,no,,,,,,color
+black,KG2,,COLORS,,1,CK,,"The color with no light, like the night sky.","The darkest color, like the night sky.",The cat is black.,,no,🖤,adjective,1,no,,,white,,,color
+brown,KG2,,COLORS,,1,OW:OW_OU,,"The color of earth, wood or chocolate.",The color of chocolate and tree trunks.,The bear is brown.,,no,🟤,adjective,1,no,,,,,,color
+mom,KG1,,FAMILY,,1,,,A child's mother.,"Your mother, who loves and looks after you.",My mom reads to me.,,no,🤱,noun,1,no,,mother,dad,,moms,family
+dad,KG1,,FAMILY,,1,,,A child's father.,"Your father, who loves and looks after you.",My dad is tall.,,no,👨‍👧,noun,1,no,,,mom,,dads,family
+baby,KG1,,FAMILY,,1,,,A very young child who cannot walk or talk yet.,A very young child.,The baby is sleeping.,,no,👶,noun,2,no,,,,,babies,family
+grandma,KG1,KG2,FAMILY,,2,GR,,The mother of your mother or father.,Your mom's or dad's mother.,Grandma bakes a cake.,,no,👵,noun,2,no,,,grandpa,,grandmas,family
+grandpa,KG1,KG2,FAMILY,,2,GR,,The father of your mother or father.,Your mom's or dad's father.,Grandpa has a big hat.,,no,👴,noun,2,no,,,grandma,,grandpas,family
+sister,KG2,,FAMILY,,2,ER,,A girl or woman with the same parents as another person.,A girl who has the same mom and dad as you.,My sister likes to sing.,,no,👧,noun,2,no,,,brother,,sisters,family
+brother,KG2,,FAMILY,,2,TH:TH_VOICED;ER,,A boy or man with the same parents as another person.,A boy who has the same mom and dad as you.,My brother can run fast.,,no,👦,noun,2,no,,,sister,,brothers,family
+hand,KG1,,BODY,,1,,,The part at the end of the arm with fingers and a thumb.,The part of your arm you use to hold things.,Wave your hand.,,no,✋,noun,1,no,,,,,hands,body
+eye,KG1,,BODY,,1,,,The part of the body used for seeing.,The part of your face you see with.,I close one eye.,,no,👁️,noun,1,yes,Eye is spelled e-y-e but says one sound: the long i in 'I'.,,,,eyes,body
+ear,KG1,,BODY,,1,,ear=[IH+R],The part of the body used for hearing.,The part of your head you hear with.,I hear with my ear.,,no,👂,noun,1,no,,,,,ears,body
+carrot,KG2,,FOOD,VEGETABLES,2,,c a rr=[R] o=[AH] t,A long orange root vegetable.,An orange vegetable that rabbits love.,The rabbit eats a carrot.,,no,🥕,noun,2,no,,,,,carrots,food
+rice,KG2,,FOOD,,2,I_E,,"Small grains from a plant, cooked and eaten as food.",Small white grains that we cook and eat.,We eat rice for dinner.,,no,🍚,noun,1,no,,,,,,food
+water,KG1,,FOOD,,1,,,A clear liquid that falls as rain and that people drink.,The clear drink that comes from the tap and rain.,I drink water.,,no,🚰,noun,2,yes,Water says 'waw-ter': the a does not make its short sound.,,,,,drink
+soup,KG2,,FOOD,,2,,s ou=[UW] p,A liquid food made by cooking vegetables or meat in water.,A hot food you eat with a spoon.,The soup is hot.,,no,🍜,noun,1,no,,,,,soups,food
+doll,KG2,,TOYS,,1,,,A toy in the shape of a person.,A toy that looks like a small person.,The doll has a red hat.,,no,🪆,noun,1,no,,,,,dolls,toy
+puzzle,KG2,,TOYS,,2,,p u zz=[Z] le=[AH+L],A game or toy with pieces you fit together to make a picture.,A game where you fit pieces together.,We do a puzzle.,,no,🧩,noun,2,no,,,,,puzzles,toy
+robot,GRADE2,KG3,TECHNOLOGY,,3,,,A machine that can do tasks by itself.,A machine that can move and do jobs.,The robot can walk.,,no,🤖,noun,2,no,,,,,robots,technology
+lamp,KG3,,HOME,,1,,,A device that gives light.,A light you switch on in a room.,Turn on the lamp.,,no,💡,noun,1,no,,,,,lamps,home
+door,KG3,,HOME,,2,,d oor=[AO+R],A panel that opens and closes to let you in or out.,You open it to go into a room.,Please shut the door.,,no,🚪,noun,1,no,,,,,doors,home
+table,KG3,,HOME,,2,,t a=[EY] b le=[AH+L],Furniture with a flat top on legs.,A piece of furniture with a flat top and legs.,The plates are on the table.,,no,🪑,noun,2,no,,,,,tables,home
+dress,KG3,,CLOTHING,,2,,,A piece of clothing that covers the body and legs.,"Clothes for a girl or woman, a top and skirt in one.",She has a pink dress.,,no,👗,noun,1,no,,,,,dresses,clothes
+glove,KG3,,CLOTHING,,2,,g l o=[AH] v e=,A covering for the hand with a place for each finger.,You wear it on your hand to keep warm.,I lost my glove.,,no,🧤,noun,1,no,,,,,gloves,clothes
+flower,KG3,,NATURE,,2,FL;OW:OW_OU;ER,,The colored part of a plant that makes seeds.,"The pretty, colorful part of a plant.",The flower smells nice.,,no,🌸,noun,2,no,,,,,flowers,nature
+grass,KG3,,NATURE,,1,GR,,Short green plants that cover lawns and fields.,The short green plants that cover the ground.,The grass is wet.,,no,🌱,noun,1,no,,,,,,nature
+sad,GRADE1,KG3,FEELINGS,,2,,,Unhappy.,How you feel when something is not nice.,I am sad when it rains.,,no,😞,adjective,1,no,,,happy,comparative=sadder;superlative=saddest,,feeling
+angry,GRADE1,,FEELINGS,,3,,,Feeling strong displeasure.,How you feel when something is not fair.,The man is angry.,,no,😠,adjective,2,no,,,calm,comparative=angrier;superlative=angriest,,feeling
+scared,GRADE1,,FEELINGS,,3,,s c are=[EH+R] d,Afraid.,How you feel when you think something bad will happen.,The cat is scared of the dog.,,no,😨,adjective,1,no,,afraid,brave,,,feeling
+tired,GRADE1,,FEELINGS,,2,,t ire=[AY+ER] d,Needing rest or sleep.,How you feel when you need to sleep.,I am tired after the game.,,no,🥱,adjective,1,no,,sleepy,,,,feeling
+excited,GRADE1,,FEELINGS,,3,ED:ED_ID,,Very happy and eager.,How you feel when something fun is coming.,We are excited about the trip.,,no,🤩,adjective,3,no,,,,,,feeling
+calm,GRADE1,,FEELINGS,,3,,,Peaceful and not worried or angry.,"Quiet and still, not upset.",The sea is calm today.,,no,😌,adjective,1,yes,The l in calm is silent.,,angry,,,feeling
+afraid,GRADE2,,FEELINGS,,3,FR;AI*,,Feeling fear.,Feeling scared.,The puppy is afraid of the storm.,,no,😧,adjective,2,no,,scared,brave,,,feeling
+brave,GRADE1,,FEELINGS,,3,A_E,,Ready to face danger or pain.,Not scared to do something hard.,The brave firefighter helps us.,,no,🦸,adjective,1,no,,,scared,comparative=braver;superlative=bravest,,feeling
+sleepy,GRADE1,,FEELINGS,,2,EE,,Needing or ready for sleep.,Ready to go to sleep.,The baby is sleepy.,,no,😪,adjective,2,no,,tired,,,,feeling
+teacher,GRADE1,,JOBS,,3,EA:EA_LONG_E;CH;ER,,A person whose job is to teach.,A person who helps children learn at school.,My teacher reads us a story.,,no,🧑‍🏫,noun,2,no,,,,,teachers,job
+farmer,GRADE1,,JOBS,,3,AR;ER,,A person who owns or works on a farm.,A person who grows food and keeps animals.,The farmer has six cows.,,no,🧑‍🌾,noun,2,no,,,,,farmers,job
+pilot,GRADE1,,JOBS,,3,,,A person who flies an aircraft.,A person who flies a plane.,The pilot flies the plane.,,no,🧑‍✈️,noun,2,no,,,,,pilots,job
+doctor,GRADE1,,JOBS,,3,,d o c t or=[ER],A person trained to treat sick or hurt people.,A person who helps sick people get better.,The doctor checks my ears.,,no,👩‍⚕️,noun,2,no,,,,,doctors,job
+builder,GRADE1,,JOBS,,3,,b ui=[IH] l d er,A person whose job is building houses and other buildings.,A person who makes houses and walls.,The builder has a big hammer.,,no,👷,noun,2,no,,,,,builders,job
+firefighter,GRADE1,,JOBS,,4,,f ire=[AY+ER] f igh=[AY] t er,A person whose job is to put out fires and rescue people.,A person who puts out fires.,The firefighter climbs the ladder.,,no,🧑‍🚒,noun,4,no,,,,,firefighters,job
+wind,GRADE1,,WEATHER,,2,,,Air that moves.,Moving air that you can feel but not see.,The wind blows my hat away.,,no,🌬️,noun,1,no,,,,,winds,weather
+rainbow,GRADE1,,WEATHER,,3,AI;OW:OW_LONG_O,,An arc of colors in the sky made by sunlight and rain.,A curve of colors in the sky after rain.,We see a rainbow after the rain.,,no,🌈,noun,2,no,,,,,rainbows,weather
+cold,GRADE1,KG3,WEATHER,,2,,,Having a low temperature.,"Not warm at all, like ice and snow.",The snow is cold.,,no,🥶,adjective,1,no,,,hot,comparative=colder;superlative=coldest,,weather
+sunny,GRADE1,,WEATHER,,2,,,Bright with sunlight.,Full of sunshine.,It is a sunny day.,,no,🌤️,adjective,2,no,,,,,,weather
+eat,GRADE1,KG2,DAILY_ACTIVITIES,,1,EA:EA_LONG_E,,To take food into the mouth and swallow it.,To put food in your mouth and swallow it.,We eat lunch at noon.,,no,😋,verb,1,no,,,,past=ate;ing=eating;third_person=eats,,daily
+sleep,GRADE1,KG2,DAILY_ACTIVITIES,,1,EE*,,To rest with the eyes closed.,"To rest with your eyes closed, like at night.",I sleep in my bed.,,no,🛌,verb,1,no,,,,past=slept;ing=sleeping;third_person=sleeps,,daily
+wash,GRADE1,,DAILY_ACTIVITIES,,2,SH,,To clean with water.,To clean with water and soap.,Wash your hands with soap.,,no,🧽,verb,1,no,,clean,,past=washed;ing=washing;third_person=washes,,daily
+read,GRADE1,,DAILY_ACTIVITIES,,2,EA:EA_LONG_E,,To look at and understand written words.,To look at words and understand them.,I read a book in bed.,,no,📕,verb,1,no,,,,past=read;ing=reading;third_person=reads,,daily
+walk,GRADE1,,DAILY_ACTIVITIES,,2,,,To move by putting one foot in front of the other.,To move along on your feet.,We walk to school.,,no,🚶,verb,1,yes,The l in walk is silent.,,,past=walked;ing=walking;third_person=walks,,daily
+clean,GRADE1,,DAILY_ACTIVITIES,,2,CL;EA:EA_LONG_E,,To remove dirt from something.,To make something not dirty.,We clean our room.,,no,🧹,verb,1,no,,wash,,past=cleaned;ing=cleaning;third_person=cleans,,daily
+small,GRADE1,KG2,DESCRIBING,,1,,,Little in size.,"Little, not big.",The mouse is small.,,no,🐁,adjective,1,no,,,big,comparative=smaller;superlative=smallest,,describing
+fast,GRADE1,,DESCRIBING,,2,ST,,Moving or able to move quickly.,Moving very quickly.,The car is fast.,,no,🐆,adjective,1,no,,,slow,comparative=faster;superlative=fastest,,describing
+slow,GRADE1,,DESCRIBING,,2,OW:OW_LONG_O,,Moving or happening without speed.,Not fast; taking a long time.,The turtle is slow.,,no,🐢,adjective,1,no,,,fast,comparative=slower;superlative=slowest,,describing
+tall,GRADE1,,DESCRIBING,,2,,,Of great height.,Very high from the bottom to the top.,The tree is tall.,,no,🗼,adjective,1,no,,,short,comparative=taller;superlative=tallest,,describing
+short,GRADE1,,DESCRIBING,,2,SH;OR,,Small in height or length.,Not tall or not long.,The pencil is short.,,no,🤏,adjective,1,no,,,tall,comparative=shorter;superlative=shortest,,describing
+pencil,GRADE1,KG3,SCHOOL,,2,,,A thin tool for writing or drawing.,A stick you write and draw with.,I write with a pencil.,,no,✏️,noun,2,no,,,,,pencils,school
+ruler,GRADE1,,SCHOOL,,3,,r u=[UW] l er,A strip for measuring and drawing straight lines.,A flat stick for drawing straight lines.,Draw a line with the ruler.,,no,📐,noun,2,no,,,,,rulers,school
+scissors,GRADE1,,SCHOOL,,3,,,A tool with two blades for cutting.,A tool with two blades for cutting paper.,Cut the paper with scissors.,,no,✂️,noun,2,yes,Scissors has a silent c and double s that say /z/.,,,,,school
+glue,GRADE1,,SCHOOL,,2,,,A sticky substance used for joining things.,Sticky stuff that holds things together.,Put glue on the paper.,,no,🧴,noun,1,no,,,,,,school
+desk,GRADE1,,SCHOOL,,2,,,"A table for reading, writing or working.",A table where you sit to read and write.,My book is on my desk.,,no,🗄️,noun,1,no,,,,,desks,school
+computer,GRADE2,,TECHNOLOGY,,4,,c o=[AH] m p u=[Y+UW] t er,An electronic machine that stores and works with information.,"A machine for writing, games and finding things out.",We use a computer at school.,,no,💻,noun,3,no,,,,,computers,technology
+camera,GRADE2,,TECHNOLOGY,,3,,c a m e=[AH] r a=[AH],A device for taking photographs or videos.,A machine that takes photos.,Smile at the camera.,,no,📸,noun,3,no,,,,,cameras,technology
+keyboard,GRADE2,,TECHNOLOGY,,4,,k ey=[IY] b oar=[AO+R] d,A set of keys for typing on a computer.,The keys you press to type letters.,I type on the keyboard.,,no,⌨️,noun,2,no,,,,,keyboards,technology
+battery,GRADE2,,TECHNOLOGY,,4,,b a tt=[T] er y=[IY],A device that stores electricity.,It gives power to toys and phones.,The toy needs a new battery.,,no,🔋,noun,3,no,,,,,batteries,technology
+screen,GRADE2,,TECHNOLOGY,,3,EE,,The flat surface where pictures appear on a device.,The flat part of a computer or TV where you see pictures.,Look at the screen.,,no,🖥️,noun,1,no,,,,,screens,technology
+hospital,GRADE2,,COMMUNITY,,4,,,A building where sick or hurt people are cared for.,A place where doctors and nurses help sick people.,The nurse works at the hospital.,,no,🏥,noun,3,no,,,,,hospitals,place
+school,GRADE2,KG3,COMMUNITY,,2,,,A place where children are taught.,A place where children go to learn.,I go to school by bus.,,no,🏫,noun,1,yes,"In school, ch says /k/.",,,,schools,place
+market,GRADE2,,COMMUNITY,,3,AR,,A place where goods are bought and sold.,A place where people buy and sell food and things.,We buy apples at the market.,,no,🛒,noun,2,no,,shop,,,markets,place
+bank,GRADE2,,COMMUNITY,,3,,,A place where people keep and borrow money.,A place that keeps money safe.,Dad puts money in the bank.,,no,🏦,noun,1,no,,,,,banks,place
+library,GRADE2,,COMMUNITY,,4,,l i=[AY] b r ar=[EH+R] y=[IY],A building with books people can borrow.,A place full of books you can borrow.,We get books at the library.,,no,📚,noun,3,no,,,,,libraries,place
+park,GRADE2,KG3,PLACES,,2,AR*,,A public green area for play and rest.,An outdoor place with grass and swings to play.,We play in the park.,,no,🎠,noun,1,no,,,,,parks,place
+beach,GRADE2,,PLACES,,2,EA:EA_LONG_E;CH,,A sandy area by the sea.,Sand next to the sea.,We dig in the sand at the beach.,,no,🏖️,noun,1,no,,,,,beaches,place
+tennis,GRADE2,,SPORTS,,3,,,A game played by hitting a ball over a net with rackets.,A game where you hit a ball over a net with a racket.,We play tennis on Sunday.,,no,🎾,noun,2,no,,,,,,sport
+basketball,GRADE2,,SPORTS,,4,,,A game where players throw a ball through a high hoop.,A game where you throw a ball into a high hoop.,My brother plays basketball.,,no,🏀,noun,3,no,,,,,,sport
+baseball,GRADE2,,SPORTS,,4,,,A game played with a bat and ball and four bases.,A game where you hit a ball with a bat and run.,We watch a baseball game.,,no,⚾,noun,2,no,,,,,,sport
+race,GRADE2,,SPORTS,,3,A_E,,A contest of speed.,When people try to be the fastest.,She won the race.,,no,🏁,noun,1,no,,,,,races,sport
+skate,GRADE2,,SPORTS,,3,A_E,,To move on skates.,To glide on ice or wheels.,I skate on the ice.,,no,⛸️,verb,1,no,,,,past=skated;ing=skating;third_person=skates,,sport
+plane,KG3,,TRANSPORTATION,,2,A_E,,A flying vehicle with wings and engines.,A machine with wings that flies in the sky.,The plane is in the sky.,,no,🛩️,noun,1,no,,jet,,,planes,transport
+rocket,GRADE1,,TRANSPORTATION,,3,CK,,A vehicle that flies into space.,It flies up into space.,The rocket goes up to the moon.,,no,🚀,noun,2,no,,,,,rockets,transport
+one,KG2,,NUMBERS,,1,,,The number 1.,The number 1.,I have one nose.,,no,1️⃣,number,1,yes,One says 'wun': its letters do not follow the usual sounds.,,,,,number
+two,KG2,,NUMBERS,,1,,,The number 2.,The number 2.,I have two hands.,,no,2️⃣,number,1,yes,Two says 'too': the w is silent.,,,,,number
+four,KG2,,NUMBERS,,1,,,The number 4.,The number 4.,A dog has four legs.,,no,4️⃣,number,1,yes,Four says 'for'.,,,,,number

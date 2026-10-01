@@ -9,7 +9,6 @@ import {
 import { currentStreak } from "@/lib/learning/analytics";
 import { computeMastery } from "@/lib/learning/mastery";
 import {
-  aggregateWordAttempts,
   attemptRejection,
   buildAttemptRow,
   clampTimestamp,
@@ -25,12 +24,12 @@ import {
   type StoredQuestion,
 } from "@/lib/learning/progress-derivation";
 import {
-  deriveSkillReviewItem,
-  deriveWordReviewItem,
-  skillKey,
-  wordKey,
-  type ReviewItemRow,
-} from "@/lib/learning/review-queue";
+  autoSaveDecision,
+  computeWordProgress,
+  deriveWordReview,
+  wordAreaFor,
+} from "@/lib/learning/vocabulary";
+import { deriveSkillReviewItem, skillKey, wordKey, type ReviewItemRow } from "@/lib/learning/review-queue";
 import type { LearningRules } from "@/lib/learning/rules";
 import { scoreLesson } from "@/lib/learning/scoring";
 import type { MasteryStatus } from "@/lib/learning/mastery";
@@ -980,6 +979,9 @@ async function syncReviewItems(
   }
 }
 
+// Word progress (My Words), per-area progress and word review items, recomputed from all
+// of the child's first tries on questions about these words. Mastery is the skill mastery
+// algorithm with the vocabulary evidence target (src/lib/learning/vocabulary.ts).
 async function recomputeWordProgress(
   db: Db,
   childId: string,
@@ -987,65 +989,120 @@ async function recomputeWordProgress(
   now: Date,
   rules: LearningRules,
 ) {
-  const [{ data: attempts, error }, { data: existing, error: existingError }] = await Promise.all([
+  const [{ data: attempts, error }, { data: existing, error: existingError }, timeZone] = await Promise.all([
     db
       .from("activity_attempts")
-      .select("word_id, skill_id, lesson_id, is_correct, attempted_at")
+      .select(
+        "id, word_id, question_id, question_type, skill_id, lesson_id, lesson_run_id, is_correct, attempted_at",
+      )
       .eq("child_id", childId)
       .eq("attempt_number", 1)
       .in("word_id", wordIds),
-    db.from("word_progress").select("word_id").eq("child_id", childId).in("word_id", wordIds),
+    db
+      .from("word_progress")
+      .select("word_id, is_saved, saved_source, saved_at, first_seen_at")
+      .eq("child_id", childId)
+      .in("word_id", wordIds),
+    familyTimeZone(db, childId),
   ]);
   if (error || existingError) throw error ?? existingError;
   const wordAttempts = (attempts ?? []).filter(
     (a): a is typeof a & { word_id: string } => a.word_id !== null,
   );
-  const stats = aggregateWordAttempts(wordAttempts);
-  const existingIds = new Set((existing ?? []).map((r) => r.word_id));
-
-  // New words are saved to "My Words" automatically once answered correctly; existing rows
-  // only get fresh counts, so a word the parent/child removed stays removed.
-  const inserts = [...stats]
-    .filter(([wordId]) => !existingIds.has(wordId))
-    .map(([wordId, s]) => ({
-      child_id: childId,
-      word_id: wordId,
-      ...s,
-      is_saved: s.correct_count > 0,
-      saved_source: s.correct_count > 0 ? ("auto" as const) : null,
-    }));
-  if (inserts.length > 0) {
-    const { error: insertError } = await db
-      .from("word_progress")
-      .upsert(inserts, { onConflict: "child_id,word_id", ignoreDuplicates: true });
-    if (insertError) throw insertError;
+  const questionIds = [...new Set(wordAttempts.map((a) => a.question_id))];
+  const metadata = new Map<string, unknown>();
+  if (questionIds.length > 0) {
+    const { data: questions, error: questionsError } = await db
+      .from("questions")
+      .select("id, metadata")
+      .in("id", questionIds);
+    if (questionsError) throw questionsError;
+    for (const q of questions ?? []) metadata.set(q.id, q.metadata);
   }
-  for (const [wordId, s] of stats) {
-    if (!existingIds.has(wordId)) continue;
-    const { error: updateError } = await db
-      .from("word_progress")
-      .update({ ...s, updated_at: now.toISOString() })
-      .eq("child_id", childId)
-      .eq("word_id", wordId);
-    if (updateError) throw updateError;
-  }
+  const current = new Map((existing ?? []).map((r) => [r.word_id, r]));
 
-  const reviewRows = wordIds.flatMap((wordId) => {
+  const progressRows = [];
+  const areaRows = [];
+  const reviewRows: ReviewItemRow[] = [];
+  for (const wordId of wordIds) {
     const mine = wordAttempts
       .filter((a) => a.word_id === wordId)
-      .sort((a, b) => b.attempted_at.localeCompare(a.attempted_at));
-    const item = deriveWordReviewItem(
+      .sort((a, b) => b.attempted_at.localeCompare(a.attempted_at) || (a.id < b.id ? 1 : -1));
+    if (mine.length === 0) continue;
+    const progress = computeWordProgress(
+      mine.map((a) => ({
+        id: a.id,
+        isCorrect: a.is_correct,
+        attemptedAt: a.attempted_at,
+        area: wordAreaFor(a.question_type, metadata.get(a.question_id)),
+      })),
+      { now, timeZone, rules },
+    );
+    const before = current.get(wordId) ?? null;
+    const saved = autoSaveDecision(
+      before
+        ? { isSaved: before.is_saved, savedSource: before.saved_source as "auto" | "manual" | null }
+        : null,
+      progress.correct,
+    );
+    // Practice outside a lesson run (word practice, My Words, reviews) is a review.
+    const lastReview = mine.find((a) => a.lesson_run_id === null)?.attempted_at ?? null;
+    progressRows.push({
+      child_id: childId,
+      word_id: wordId,
+      attempts_count: progress.attempts,
+      correct_count: progress.correct,
+      last_practiced_at: progress.lastPracticedAt,
+      last_reviewed_at: lastReview,
+      first_seen_at: before?.first_seen_at ?? mine[mine.length - 1].attempted_at,
+      status: progress.status,
+      mastery_score: progress.masteryScore,
+      accuracy: progress.accuracy,
+      practice_days: progress.practiceDays,
+      review_priority: progress.reviewPriority,
+      next_review_at: progress.nextReviewAt,
+      is_saved: saved.isSaved,
+      saved_source: saved.savedSource,
+      saved_at: saved.isSaved ? (before?.saved_at ?? now.toISOString()) : null,
+      updated_at: now.toISOString(),
+    });
+    for (const area of progress.areas)
+      areaRows.push({
+        child_id: childId,
+        word_id: wordId,
+        area: area.area,
+        attempts_count: area.attempts,
+        correct_count: area.correct,
+        accuracy: area.accuracy,
+        last_practiced_at: area.lastPracticedAt,
+        updated_at: now.toISOString(),
+      });
+    const item = deriveWordReview(
       {
         wordId,
-        skillId: mine[0]?.skill_id ?? null,
-        lessonId: mine[0]?.lesson_id ?? null,
+        skillId: mine[0].skill_id,
+        lessonId: mine[0].lesson_id,
+        saved: saved.isSaved,
         attempts: mine.map((a) => ({ isCorrect: a.is_correct, attemptedAt: a.attempted_at })),
+        progress,
       },
       now,
-      rules.review,
+      rules,
     );
-    return item ? [item] : [];
-  });
+    if (item) reviewRows.push(item);
+  }
+  if (progressRows.length > 0) {
+    const { error: upsertError } = await db
+      .from("word_progress")
+      .upsert(progressRows, { onConflict: "child_id,word_id" });
+    if (upsertError) throw upsertError;
+  }
+  if (areaRows.length > 0) {
+    const { error: areaError } = await db
+      .from("word_area_progress")
+      .upsert(areaRows, { onConflict: "child_id,word_id,area" });
+    if (areaError) throw areaError;
+  }
   await syncReviewItems(db, childId, wordIds.map(wordKey), reviewRows, now);
 }
 

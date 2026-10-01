@@ -4,6 +4,7 @@ import { parseActivityConfig } from "@/lib/content/activity-config";
 import { parseQuestion, type ParsedQuestion } from "@/lib/content/question-schemas";
 import { isRenderableQuestionType } from "@/features/activities/supported-types";
 import { buildAnswerKey } from "@/lib/learning/answer-key";
+import { pickPracticeQuestions, wordAreaFor, type WordArea } from "@/lib/learning/vocabulary";
 import type { FeedbackKind, FeedbackMessage } from "@/lib/learning/feedback";
 import type { ClientQuestion, LessonPattern, LessonPayload, LessonStep } from "@/lib/learning/lesson-payload";
 import { logger } from "@/lib/logging";
@@ -207,11 +208,109 @@ export async function loadAssessmentPayload(code: string): Promise<LessonPayload
   };
 }
 
+// Word practice: published questions about the given words (most urgent first), from
+// published activities of published lessons, varied by area and at most
+// `vocabulary.practiceQuestions` long. Only an `area` filter (spelling, listening…) can
+// narrow it. RLS decides what is visible; answers become digest keys as for lessons.
+export async function loadWordPracticePayload(args: {
+  wordIds: string[];
+  area?: WordArea;
+  kind: "word" | "my_words";
+  title: string;
+  emoji: string;
+  returnHref: string;
+}): Promise<LessonPayload | null> {
+  const wordIds = args.wordIds.filter((id) => /^[0-9a-f-]{36}$/i.test(id)).slice(0, 50);
+  if (wordIds.length === 0) return null;
+  const supabase = await createClient();
+  const [{ data: rows, error }, feedbackRows, rules] = await Promise.all([
+    supabase
+      .from("questions")
+      .select(
+        `${QUESTION_COLUMNS}, metadata, activities!inner(id, title, instructions, instructions_speech, stage, activity_type, config, status, lessons!inner(status))`,
+      )
+      .in("word_id", wordIds)
+      .eq("status", "published")
+      .eq("activities.status", "published")
+      .eq("activities.lessons.status", "published")
+      .neq("question_type", "INTRO")
+      .order("sort_order")
+      .limit(400),
+    supabase
+      .from("feedback_messages")
+      .select("kind, text, speech, emoji")
+      .eq("status", "published")
+      .order("sort_order"),
+    loadLearningRules(supabase),
+  ]);
+  if (error) throw error;
+  if (feedbackRows.error) throw feedbackRows.error;
+  const candidates = (rows ?? [])
+    .map((q) => ({ ...q, wordId: q.word_id, area: wordAreaFor(q.question_type, q.metadata) }))
+    .filter((q) => !args.area || q.area === args.area);
+  // One word gets the whole session; several words share it (at least two questions each).
+  const limit = rules.vocabulary.practiceQuestions;
+  const picked = pickPracticeQuestions(
+    candidates,
+    wordIds,
+    limit,
+    Math.max(2, Math.ceil(limit / wordIds.length)),
+  );
+  if (picked.length === 0) return null;
+
+  const support = await loadQuestionSupport(supabase, picked);
+  const steps: LessonStep[] = [];
+  for (const q of picked) {
+    const activity = one(q.activities);
+    if (!activity) continue;
+    const config = parseActivityConfig(activity.activity_type, activity.config);
+    if (!config.ok) continue;
+    const step = await buildStep(q, support, "word-practice", {
+      activityId: activity.id,
+      activityTitle: activity.title,
+      instructions: activity.instructions,
+      instructionsSpeech: activity.instructions_speech,
+      stage: activity.stage,
+      config: config.config,
+      maxTries: config.config.maxTries ?? rules.player.maxTries,
+      explanation: q.explanation,
+    });
+    if (step) steps.push(step);
+  }
+  if (steps.length === 0) return null;
+
+  const key = `practice-${args.kind}-${args.area ?? "all"}-${wordIds.length === 1 ? wordIds[0] : "mine"}`;
+  return {
+    lesson: {
+      id: key,
+      code: key,
+      title: args.title,
+      childTitle: args.title,
+      emoji: args.emoji,
+      version: 1,
+      skillId: steps[0].skillId,
+      skillTitle: "",
+      description: "Practice your words.",
+      introSpeech: `${args.title}. Let's practice!`,
+      estimatedMinutes: Math.max(2, Math.round(steps.length / 2)),
+      difficulty: 1,
+      subjectName: "Vocabulary",
+      levelName: "",
+    },
+    practice: { kind: args.kind, returnHref: args.returnHref, wordIds },
+    steps,
+    feedback: toFeedback(feedbackRows.data ?? []),
+    rules: { player: rules.player, scoring: rules.scoring },
+    loadedAt: new Date().toISOString(),
+  };
+}
+
 const QUESTION_COLUMNS =
   "id, activity_id, skill_id, question_type, prompt, prompt_speech, content, explanation, word_id, phonics_pattern_id, version, sort_order";
 
 type QuestionRow = {
   id: string;
+  explanation?: string;
   skill_id: string;
   question_type: string;
   prompt: string;

@@ -402,24 +402,3 @@ export function deriveSession(args: {
 
 // "Learned" = answered correctly on the first try at least this many times.
 export const WORD_LEARNED_CORRECT_COUNT = 2;
-
-export function aggregateWordAttempts(
-  attempts: { word_id: string; is_correct: boolean; attempted_at: string }[],
-) {
-  const byWord = new Map<
-    string,
-    { attempts_count: number; correct_count: number; last_practiced_at: string }
-  >();
-  for (const a of attempts) {
-    const entry = byWord.get(a.word_id) ?? {
-      attempts_count: 0,
-      correct_count: 0,
-      last_practiced_at: a.attempted_at,
-    };
-    entry.attempts_count += 1;
-    if (a.is_correct) entry.correct_count += 1;
-    if (a.attempted_at > entry.last_practiced_at) entry.last_practiced_at = a.attempted_at;
-    byWord.set(a.word_id, entry);
-  }
-  return byWord;
-}

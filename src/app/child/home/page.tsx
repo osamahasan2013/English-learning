@@ -94,6 +94,22 @@ export default async function ChildHomePage() {
         </span>
       </Link>
 
+      <Link
+        href="/child/words"
+        className="bg-surface hover:bg-accent-soft flex items-center gap-4 rounded-[2rem] p-5 shadow-sm transition"
+      >
+        <span
+          className="bg-accent-soft flex size-16 shrink-0 items-center justify-center rounded-full text-4xl"
+          aria-hidden
+        >
+          📚
+        </span>
+        <span>
+          <span className="block text-3xl font-extrabold">Words</span>
+          <span className="text-muted block text-lg font-semibold">My Words · New Words · Practice</span>
+        </span>
+      </Link>
+
       {more.length > 0 ? (
         <section aria-labelledby="for-you" className="space-y-3">
           <h2 id="for-you" className="text-2xl font-extrabold">

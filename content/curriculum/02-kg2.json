@@ -1203,6 +1203,129 @@
           ]
         }
       ]
+    },
+    {
+      "code": "kg2-vocabulary",
+      "subject": "VOCABULARY",
+      "title": "Words Around Me",
+      "emoji": "📚",
+      "description": "Everyday words: see them, hear them, learn what they mean and use them.",
+      "skills": [
+        {
+          "code": "kg2-vocab-food",
+          "dimension": "VOCABULARY",
+          "title": "Food words",
+          "childTitle": "Food",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg2-vocab-food-1",
+              "title": "Food words",
+              "childTitle": "Food",
+              "description": "New words: apple, banana, milk, egg, carrot, rice.",
+              "emoji": "🍎",
+              "minutes": 5,
+              "introSpeech": "Let's learn some food words!",
+              "blueprint": {
+                "name": "vocabulary_set",
+                "words": [
+                  "apple",
+                  "banana",
+                  "milk",
+                  "egg",
+                  "carrot",
+                  "rice"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg2-vocab-toys",
+          "dimension": "VOCABULARY",
+          "title": "Toy words",
+          "childTitle": "Toys",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg2-vocab-toys-1",
+              "title": "Toy words",
+              "childTitle": "Toys",
+              "description": "New words: ball, kite, doll, puzzle, drum.",
+              "emoji": "🧸",
+              "minutes": 5,
+              "introSpeech": "Let's learn some toys words!",
+              "blueprint": {
+                "name": "vocabulary_set",
+                "words": [
+                  "ball",
+                  "kite",
+                  "doll",
+                  "puzzle",
+                  "drum"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg2-vocab-transport",
+          "dimension": "VOCABULARY",
+          "title": "Getting around",
+          "childTitle": "On the go",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg2-vocab-transport-1",
+              "title": "Getting around",
+              "childTitle": "On the go",
+              "description": "New words: bus, car, van, jet, truck, bike.",
+              "emoji": "🚌",
+              "minutes": 5,
+              "introSpeech": "Let's learn some on the go words!",
+              "blueprint": {
+                "name": "vocabulary_set",
+                "words": [
+                  "bus",
+                  "car",
+                  "van",
+                  "jet",
+                  "truck",
+                  "bike"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg2-vocab-colors",
+          "dimension": "VOCABULARY",
+          "title": "More colors",
+          "childTitle": "More colors",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg2-vocab-colors-1",
+              "title": "More colors",
+              "childTitle": "More colors",
+              "description": "New words: purple, orange, brown, black, white.",
+              "emoji": "🌈",
+              "minutes": 5,
+              "introSpeech": "Let's learn some more colors words!",
+              "blueprint": {
+                "name": "vocabulary_set",
+                "words": [
+                  "purple",
+                  "orange",
+                  "brown",
+                  "black",
+                  "white"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -125,9 +125,10 @@ export function parseAuthoredSegments(
         return toSegment(grapheme, pattern, pattern ? soundFor(pattern, links) : null);
       }
       if (value === "") return toSegment(grapheme, pattern, null);
-      const explicit = value.match(/^\[([A-Z ]+)\]$/);
+      // Phonemes in brackets, joined with "+" when there are several: ire=[AY+ER].
+      const explicit = value.match(/^\[([A-Z+]+)\]$/);
       if (explicit) {
-        const phonemes = explicit[1].trim().split(/\s+/);
+        const phonemes = explicit[1].split("+").filter(Boolean);
         return { grapheme, patternCode: pattern?.code ?? null, soundCode: null, phonemes, sayAs: "" };
       }
       const owner = patterns.find((p) => p.sounds.some((s) => s.code === value));

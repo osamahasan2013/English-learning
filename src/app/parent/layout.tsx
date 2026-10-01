@@ -9,6 +9,7 @@ const NAV: NavItem[] = [
   { href: "/parent/dashboard", label: "Dashboard" },
   { href: "/parent/children", label: "Children" },
   { href: "/parent/phonics", label: "Phonics" },
+  { href: "/parent/words", label: "Words" },
   { href: "/parent/settings", label: "Settings" },
 ];
 

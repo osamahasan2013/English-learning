@@ -496,6 +496,37 @@
       "name": "Function Words",
       "emoji": "🔗",
       "sortOrder": 23
+    },
+    {
+      "code": "DESCRIBING",
+      "name": "Describing Words",
+      "emoji": "📏",
+      "description": "Words that tell what something is like: big, fast, tall.",
+      "sortOrder": 24
+    },
+    {
+      "code": "FARM_ANIMALS",
+      "name": "Farm Animals",
+      "emoji": "🐄",
+      "description": "Animals that live on a farm.",
+      "parent": "ANIMALS",
+      "sortOrder": 101
+    },
+    {
+      "code": "FRUIT",
+      "name": "Fruit",
+      "emoji": "🍓",
+      "description": "Sweet food that grows on plants.",
+      "parent": "FOOD",
+      "sortOrder": 201
+    },
+    {
+      "code": "VEGETABLES",
+      "name": "Vegetables",
+      "emoji": "🥦",
+      "description": "Plants or parts of plants we cook or eat raw.",
+      "parent": "FOOD",
+      "sortOrder": 202
     }
   ],
   "achievements": [

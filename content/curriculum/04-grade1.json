@@ -1521,6 +1521,189 @@
           ]
         }
       ]
+    },
+    {
+      "code": "g1-vocabulary",
+      "subject": "VOCABULARY",
+      "title": "Word Explorers",
+      "emoji": "📚",
+      "description": "Everyday words: see them, hear them, learn what they mean and use them.",
+      "skills": [
+        {
+          "code": "g1-vocab-feelings",
+          "dimension": "VOCABULARY",
+          "title": "Feeling words",
+          "childTitle": "Feelings",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g1-vocab-feelings-1",
+              "title": "Feeling words",
+              "childTitle": "Feelings",
+              "description": "New words: sad, happy, angry, scared, tired, excited.",
+              "emoji": "😊",
+              "minutes": 8,
+              "introSpeech": "Let's learn some feelings words!",
+              "blueprint": {
+                "name": "vocabulary_set",
+                "words": [
+                  "sad",
+                  "happy",
+                  "angry",
+                  "scared",
+                  "tired",
+                  "excited"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "g1-vocab-jobs",
+          "dimension": "VOCABULARY",
+          "title": "People and jobs",
+          "childTitle": "Jobs",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g1-vocab-jobs-1",
+              "title": "People and jobs",
+              "childTitle": "Jobs",
+              "description": "New words: teacher, farmer, pilot, doctor, builder, firefighter.",
+              "emoji": "🧑‍🚒",
+              "minutes": 8,
+              "introSpeech": "Let's learn some jobs words!",
+              "blueprint": {
+                "name": "vocabulary_set",
+                "words": [
+                  "teacher",
+                  "farmer",
+                  "pilot",
+                  "doctor",
+                  "builder",
+                  "firefighter"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "g1-vocab-weather",
+          "dimension": "VOCABULARY",
+          "title": "Weather words",
+          "childTitle": "Weather",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g1-vocab-weather-1",
+              "title": "Weather words",
+              "childTitle": "Weather",
+              "description": "New words: rain, snow, cloud, wind, rainbow, storm.",
+              "emoji": "🌦️",
+              "minutes": 8,
+              "introSpeech": "Let's learn some weather words!",
+              "blueprint": {
+                "name": "vocabulary_set",
+                "words": [
+                  "rain",
+                  "snow",
+                  "cloud",
+                  "wind",
+                  "rainbow",
+                  "storm"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "g1-vocab-daily",
+          "dimension": "VOCABULARY",
+          "title": "My day",
+          "childTitle": "My day",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g1-vocab-daily-1",
+              "title": "My day",
+              "childTitle": "My day",
+              "description": "New words: eat, sleep, wash, read, walk, clean.",
+              "emoji": "🪥",
+              "minutes": 8,
+              "introSpeech": "Let's learn some my day words!",
+              "blueprint": {
+                "name": "vocabulary_set",
+                "words": [
+                  "eat",
+                  "sleep",
+                  "wash",
+                  "read",
+                  "walk",
+                  "clean"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "g1-vocab-describing",
+          "dimension": "VOCABULARY",
+          "title": "Describing words",
+          "childTitle": "Big and small",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g1-vocab-describing-1",
+              "title": "Describing words",
+              "childTitle": "Big and small",
+              "description": "New words: big, small, fast, slow, tall, short.",
+              "emoji": "📏",
+              "minutes": 8,
+              "introSpeech": "Let's learn some big and small words!",
+              "blueprint": {
+                "name": "vocabulary_set",
+                "words": [
+                  "big",
+                  "small",
+                  "fast",
+                  "slow",
+                  "tall",
+                  "short"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "g1-vocab-school",
+          "dimension": "VOCABULARY",
+          "title": "School things",
+          "childTitle": "School",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g1-vocab-school-1",
+              "title": "School things",
+              "childTitle": "School",
+              "description": "New words: pencil, ruler, scissors, book, crayon, glue.",
+              "emoji": "✏️",
+              "minutes": 8,
+              "introSpeech": "Let's learn some school words!",
+              "blueprint": {
+                "name": "vocabulary_set",
+                "words": [
+                  "pencil",
+                  "ruler",
+                  "scissors",
+                  "book",
+                  "crayon",
+                  "glue"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

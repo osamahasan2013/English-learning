@@ -13,6 +13,9 @@ const nextConfig: NextConfig = {
     // depend on this: it is written to IndexedDB first and synced separately (see
     // src/lib/offline). See node_modules/next/dist/docs/01-app/02-guides/offline-support.md.
     useOffline: true,
+    // Admin picture uploads are up to 1 MB (src/lib/content/media.ts) plus form overhead;
+    // the default Server Action body limit is exactly 1 MB.
+    serverActions: { bodySizeLimit: "2mb" },
   },
   async headers() {
     return [

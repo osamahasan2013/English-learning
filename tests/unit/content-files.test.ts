@@ -19,7 +19,8 @@ import { buildAnswerKey, checkWithKey, revealAnswer } from "@/lib/learning/answe
 import { evaluateResponse } from "@/lib/learning/evaluate";
 import type { ClientQuestion } from "@/lib/learning/lesson-payload";
 import { mergeLearningRules } from "@/lib/learning/rules";
-import { expandTemplate, type TemplateContext } from "@/lib/content/templates";
+import { expandTemplate, type TemplateContext, type TemplateWord } from "@/lib/content/templates";
+import { templateWordFromInput, type CategoryRef } from "@/lib/content/word-bank";
 import { RENDERABLE_QUESTION_TYPES } from "@/features/activities/supported-types";
 import { expandBlueprint } from "@/lib/content/lesson-blueprints";
 import {
@@ -77,28 +78,41 @@ const splits = new Map(
 );
 const speech = (codes: string[]) => codes.map((c) => phonemes.get(c)?.sayAs ?? c.toLowerCase()).join(" ");
 
-function expand(q: QuestionInput, seed: string) {
+// The word bank exactly as the importer builds it (src/lib/content/word-bank.ts).
+const categoryRefs = new Map<string, CategoryRef>(
+  reference.wordCategories.map((c) => [
+    c.code,
+    { code: c.code, name: c.name, emoji: c.emoji, parent: c.parent ?? null },
+  ]),
+);
+const levelRanks = new Map(
+  [...reference.levels].sort((a, b) => a.sortOrder - b.sortOrder).map((l, i) => [l.code, i + 1]),
+);
+const templateBank = new Map<string, TemplateWord>(
+  [...wordBank].map(([key, w]) => [
+    key,
+    templateWordFromInput(
+      w,
+      (splits.get(key)?.segments ?? []).map((seg) => ({
+        grapheme: seg.grapheme,
+        patternCode: seg.patternCode,
+        sayAs: seg.sayAs || speech(seg.phonemes),
+        phonemes: seg.phonemes,
+      })),
+      { categories: categoryRefs, levelRanks },
+    ),
+  ]),
+);
+const publishedWords = [...templateBank.values()].filter((w) => w.published !== false);
+
+function expand(q: QuestionInput, seed: string, level?: string) {
   if ("template" in q && typeof q.template === "string") {
     const { template, code: _c, difficulty: _d, skill: _s, explanation: _e, ...params } = q;
     const ctx: TemplateContext = {
       seed,
-      word: (t) => {
-        const w = wordBank.get(normalizeWord(t));
-        return (
-          w && {
-            word: w.word,
-            emoji: w.emoji,
-            childDefinition: w.childDefinition,
-            patterns: w.patterns,
-            segments: (splits.get(normalizeWord(t))?.segments ?? []).map((seg) => ({
-              grapheme: seg.grapheme,
-              patternCode: seg.patternCode,
-              sayAs: seg.sayAs || speech(seg.phonemes),
-              phonemes: seg.phonemes,
-            })),
-          }
-        );
-      },
+      words: () => publishedWords,
+      levelRank: level ? levelRanks.get(level) : undefined,
+      word: (t) => templateBank.get(normalizeWord(t)),
       pattern: (code) => {
         const p = patterns.get(code);
         return (
@@ -125,9 +139,12 @@ function expand(q: QuestionInput, seed: string) {
 }
 
 // Lessons written as a blueprint, expanded the way the importer does.
-function lessonActivities(lesson: CurriculumFile["units"][number]["skills"][number]["lessons"][number]) {
+function lessonActivities(
+  lesson: CurriculumFile["units"][number]["skills"][number]["lessons"][number],
+  level: string,
+) {
   if (!lesson.blueprint) return lesson.activities;
-  return expandBlueprint(lesson.blueprint).map((a) => ({
+  return expandBlueprint({ levelRank: levelRanks.get(level), ...lesson.blueprint }).map((a) => ({
     ...a,
     config: {},
     questions: a.questions.map((q) => ({ difficulty: 1, explanation: "", ...q }) as QuestionInput),
@@ -166,11 +183,11 @@ describe("shipped content", () => {
       for (const unit of file.units)
         for (const skill of unit.skills)
           for (const lesson of skill.lessons)
-            lessonActivities(lesson).forEach((activity, a) =>
+            lessonActivities(lesson, file.level).forEach((activity, a) =>
               activity.questions.forEach((q, i) => {
                 const seed = `${lesson.code}-a${a + 1}-q${i + 1}`;
                 try {
-                  const e = expand(q, seed);
+                  const e = expand(q, seed, file.level);
                   const parsed = parseQuestion(e.type, e.content, e.answer);
                   if (!parsed.ok) problems.push(`${seed}: ${parsed.error}`);
                   // A pattern question's word must really use the pattern's sound.
@@ -214,7 +231,7 @@ describe("shipped content", () => {
       for (const unit of file.units)
         for (const skill of unit.skills)
           for (const lesson of skill.lessons)
-            lessonActivities(lesson).forEach((activity, a) => {
+            lessonActivities(lesson, file.level).forEach((activity, a) => {
               const parsed = parseActivityConfig(activity.type, activity.config);
               if (!parsed.ok) problems.push(`${lesson.code}-a${a + 1}: ${parsed.error}`);
             });
@@ -225,7 +242,7 @@ describe("shipped content", () => {
     const types = new Set(
       curriculum.flatMap((f) =>
         f.units.flatMap((u) =>
-          u.skills.flatMap((s) => s.lessons.flatMap((l) => lessonActivities(l).map((a) => a.type))),
+          u.skills.flatMap((s) => s.lessons.flatMap((l) => lessonActivities(l, f.level).map((a) => a.type))),
         ),
       ),
     );
@@ -276,10 +293,10 @@ describe("shipped content", () => {
       for (const unit of file.units)
         for (const skill of unit.skills)
           for (const lesson of skill.lessons)
-            for (const [a, activity] of lessonActivities(lesson).entries())
+            for (const [a, activity] of lessonActivities(lesson, file.level).entries())
               for (const [i, q] of activity.questions.entries()) {
                 const seed = `${lesson.code}-a${a + 1}-q${i + 1}`;
-                const e = expand(q, seed);
+                const e = expand(q, seed, file.level);
                 const parsed = parseQuestion(e.type, e.content, e.answer);
                 if (!parsed.ok || parsed.question.answer === null) continue;
                 const answer = parsed.question.answer as AnswerSpec;

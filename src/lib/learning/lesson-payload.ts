@@ -74,6 +74,10 @@ export type LessonPayload = {
   // answers are recorded against an assessment sitting instead of a lesson run, with one
   // try each. `lesson` then describes the assessment.
   assessment?: { id: string; code: string; areas: { stage: number; label: string }[] };
+  // Set when this payload is word practice (Word Explorer, My Words): published questions
+  // about the chosen words, taken from their lessons. Answers count like any answers, but
+  // no lesson run is recorded — the lessons themselves are not "completed" by practice.
+  practice?: { kind: "word" | "my_words"; returnHref: string; wordIds: string[] };
   steps: LessonStep[];
   feedback: FeedbackMessage[];
   rules: { player: PlayerRules; scoring: ScoringRules };

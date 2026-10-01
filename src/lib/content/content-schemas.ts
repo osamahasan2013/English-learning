@@ -48,8 +48,17 @@ export const referenceFileSchema = z.object({
   activityTypes: z.array(
     z.object({ code, name: z.string(), description: z.string().default(""), isScored: z.boolean() }),
   ),
+  // Configurable categories; `parent` makes a sub-category (one level deep).
   wordCategories: z.array(
-    z.object({ code, name: z.string(), emoji: z.string().default(""), sortOrder: z.number().int() }),
+    z.object({
+      code,
+      name: z.string().min(1).max(60),
+      emoji: z.string().default(""),
+      description: z.string().max(200).default(""),
+      parent: code.optional(),
+      sortOrder: z.number().int(),
+      status,
+    }),
   ),
   achievements: z.array(
     z.object({
@@ -79,7 +88,7 @@ export const referenceFileSchema = z.object({
   rules: z
     .array(
       z.object({
-        code: z.enum(["mastery", "prerequisites", "review", "player", "scoring"]),
+        code: z.enum(["mastery", "prerequisites", "review", "player", "scoring", "vocabulary"]),
         description: z.string().default(""),
         config: z.record(z.unknown()),
       }),
@@ -189,19 +198,42 @@ export const PARTS_OF_SPEECH = [
   "other",
 ] as const;
 
+// Grammatical forms a word can list (CSV `inflections`: "past=jumped;ing=jumping").
+export const INFLECTION_KEYS = [
+  "plural",
+  "past",
+  "past_participle",
+  "ing",
+  "third_person",
+  "comparative",
+  "superlative",
+] as const;
+
 // One word, as produced from a words.csv row (see parseWordRow) or a JSON import.
 export const wordSchema = z.object({
-  word: z.string().trim().min(1).max(40),
+  word: z
+    .string()
+    .trim()
+    .min(1)
+    .max(40)
+    // One written word: letters and apostrophes (every letter must belong to a grapheme of
+    // its split, so spaces and hyphens cannot be stored).
+    .regex(/^[A-Za-z][A-Za-z']*$/, "a word uses letters (and apostrophes) only"),
   sense: z.number().int().min(1).max(9).default(1),
+  // The level that introduces the word; `levels` lists further levels it suits.
   level: code,
+  levels: z.array(code).default([]),
   category: code.optional(),
+  subcategory: code.optional(),
   difficulty,
   partOfSpeech: z.enum(PARTS_OF_SPEECH).default("noun"),
   syllables: z.number().int().min(1).max(8).default(1),
   pronunciation: z.string().default(""),
   definition: z.string().default(""),
   childDefinition: z.string().default(""),
-  exampleSentence: z.string().default(""),
+  exampleSentence: z.string().max(300).default(""),
+  // More curated example sentences (CSV `examples`, separated by |).
+  examples: z.array(z.string().trim().min(2).max(300)).max(5).default([]),
   sightWord: z.boolean().default(false),
   irregular: z.boolean().default(false),
   spellingNote: z.string().default(""),
@@ -214,11 +246,39 @@ export const wordSchema = z.object({
     .array(z.object({ code, sound: code.optional(), example: z.boolean().default(false) }))
     .default([]),
   related: z.array(z.string().min(1).max(40)).default([]),
+  synonyms: z.array(z.string().min(1).max(40)).default([]),
+  antonyms: z.array(z.string().min(1).max(40)).default([]),
+  inflections: z.record(z.enum(INFLECTION_KEYS), z.string().trim().min(1).max(40)).default({}),
+  // Storage paths of an already uploaded picture / recording (image_assets / audio_assets).
+  image: z.string().trim().max(200).optional(),
+  audio: z.string().trim().max(200).optional(),
   // Authored grapheme split when the automatic one would be wrong: "c a=A_LONG k e=".
   segments: z.string().max(120).optional(),
   status,
 });
 export type WordInput = z.infer<typeof wordSchema>;
+
+// content/vocabulary.json: word families. Members are found in the word bank from each
+// word's grapheme split (src/lib/content/vocabulary.ts → familyMembers); `words` adds
+// members the rule cannot find and `exclude` removes ones it should not take.
+export const vocabularyFileSchema = z.object({
+  families: z.array(
+    z.object({
+      code,
+      rime: z.string().regex(/^[a-z]{1,6}$/),
+      title: z.string().min(1).max(80),
+      level: code,
+      vowelPattern: code.optional(),
+      // The vowel sound of the family (a sound code of vowelPattern, default its primary).
+      vowelSound: code.optional(),
+      emoji: z.string().default(""),
+      sortOrder: z.number().int().default(0),
+      words: z.array(z.string().min(1).max(40)).default([]),
+      exclude: z.array(z.string().min(1).max(40)).default([]),
+      status,
+    }),
+  ),
+});
 
 export const sightWordsFileSchema = z.object({
   lists: z.array(

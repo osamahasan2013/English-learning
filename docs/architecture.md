@@ -41,13 +41,16 @@ Service worker (Serwist): app shell + visited pages     re-evaluate, store once,
 | `/onboarding`                                                           | parent                | First child profile                          |
 | `/parent/dashboard`, `/parent/children[/new\|/:id]`, `/parent/settings` | parent                | Family area                                  |
 | `/parent/phonics`                                                       | parent                | Phonics pattern search (filters, pages)      |
+| `/parent/words[?child=]`                                                | parent                | Vocabulary progress + word bank search       |
 | `/child/home`, `/child/learn/:lessonId`, `/child/rewards`               | parent + active child | Child area                                   |
 | `/child/phonics[?show=…]`, `/child/check/:code`                         | parent + active child | Phonics screen; skill checks (Sound Check)   |
-| `/admin/dashboard`, `/admin/words`, `/admin/phonics`                    | admin                 | Content administration, review flags         |
+| `/child/words`, `/child/words/category/:code`, `/child/words/find`      | parent + active child | Vocabulary home, categories, word search     |
+| `/child/words/:wordId[/practice]`, `/child/words/mine`, `…/practice`    | parent + active child | Word Explorer, word practice, My Words       |
+| `/admin/dashboard`, `/admin/words[/:id]`, `/admin/phonics`              | admin                 | Content admin, word pictures, review flags   |
 | `/api/sync`                                                             | parent (POST)         | Progress sync                                |
 | `/manifest.webmanifest`, `/sw.js`, `/offline.html`                      | public                | PWA                                          |
 
-Routes from the product brief that are not built yet (`/child/words`, `/child/reading`,
+Routes from the product brief that are not built yet (`/child/reading`,
 `/child/writing`, `/parent/assessments`, `/admin/lessons`, …) are deliberately absent until
 their phase: there are no placeholder pages. `src/proxy.ts` redirects signed-out visitors
 away from `/parent`, `/child`, `/admin`, `/onboarding` and `/update-password` (UX only;
@@ -246,6 +249,48 @@ progress or assessment system (ADR-024 – ADR-027).
   (`searchPhonicsPatterns`), example words loaded for the visible page only; admins also see
   the review flags.
 
+## Vocabulary engine (Phase 5)
+
+Vocabulary is content and word-level views of the learning engine (ADR-029 – ADR-032).
+
+- **Model.** `words` (the bank) with configurable `word_categories` (a sub-category has
+  a parent; a word points at its most specific category), `word_levels` (every level a
+  word suits; `words.level_id` is the introducing one), curated example sentences
+  (`word_sentences` → the sentence bank, so a future Sentence Engine reads the same rows),
+  typed relations (synonym, antonym, related, family, rhyme, plural, verb form, adjective
+  form), word families (`word_families` with a rime and the phonics pattern of its vowel;
+  members derived from grapheme splits), and media (`image_assets`/`audio_assets` in
+  Storage). Phonics comes from Phase 4: the word's split (`word_segments`) answers "which
+  words practise SH?", its shape "which are CVC?".
+- **Lessons and activities.** A `vocabulary_set` blueprint turns 4–8 words into a lesson
+  whose structure grows with the level (see docs/curriculum.md). Fourteen activity kinds
+  are templates over existing types: picture → word, word → picture, listen → choose,
+  word → meaning, meaning match, picture match, missing letter, word builder, spelling,
+  sentence completion (DRAG_DROP), choose the correct word, sort by category, which one
+  goes with the category, odd one out and "which sentence makes sense?". Distractors are
+  chosen from the bank by rules at import (`src/lib/content/vocabulary.ts`, ADR-030).
+- **Word Explorer** (`/child/words/:id`): picture, the word with Listen / Slow / Again
+  (a recording when one exists), meaning, example sentence, the sound strip (tap a
+  grapheme, then Blend), word family and opposites, Save to My Words, and Read / Spell /
+  Listen / Practice — only for areas that have questions.
+- **Practice.** `loadWordPracticePayload` picks published lesson questions about the
+  chosen words (most urgent first, varied by area, `vocabulary.practiceQuestions` long)
+  and the ordinary player plays them with `payload.practice` set: answers carry no lesson
+  run and no run is recorded. My Words practice takes the due/weak saved words first.
+- **Progress.** The progress writer recomputes, per answered word: `word_progress`
+  (attempts, accuracy, mastery status and score from `computeMastery` with the vocabulary
+  evidence target, practice days, review priority and date, first seen, last reviewed,
+  saved), `word_area_progress` and the word's review item (`missed_word`, `weak_word`, or
+  `due_review` for saved words). A word is saved automatically when first answered right
+  unless the family chose otherwise; saving/removing and "first seen" go through
+  `set_word_saved` / `note_word_seen` (ownership-checked database functions).
+- **Screens.** `/child/words` (My Words, New Words, Practice, Categories, Word Explorer;
+  categories with progress bars), `/parent/words` (learned / practised / mastered, weak
+  areas and categories, words to practise, recent words, and the word bank search),
+  a Words card on the parent dashboard, `/admin/words` (all filters) and
+  `/admin/words/:id` (details and picture upload). Searches run in the database with
+  pagination (`searchWords`); category totals come from the `word_category_stats` view.
+
 ## Progress pipeline
 
 1. The child answers. The player writes an `attempt` event (device-generated UUID, the
@@ -308,7 +353,9 @@ preferring natural voices. It never throws; without audio the app still works be
 text is shown. Replacing TTS with recordings means filling `audio_assets` — no component
 changes. Phonics sounds use `phonics_pattern_sounds.say_as` / `phonemes.say_as` as a TTS
 approximation until recordings exist (`phonics_patterns.audio_asset_id` takes a recording).
-Every spoken item has **Listen**, **Slow** and **Again** (`AudioControls`); when a device
+Word recordings are `audio_assets` files in the `content-audio` bucket (public URL); the
+Word Explorer passes them to the service and falls back to speech synthesis. Every spoken
+item has **Listen**, **Slow** and **Again** (`AudioControls`); when a device
 cannot speak, the controls and the lesson player show a visible "no sound" note, and
 nothing waits for audio, so a lesson can always be finished.
 
@@ -339,6 +386,8 @@ nothing waits for audio, so a lesson can always be finished.
 - Correct answers are never readable by signed-in users (`questions.answer` has no SELECT
   grant) and never sent to the browser in plain text.
 - Server Actions and the sync route re-check `getUser()`; redirects are same-site only.
+- Uploaded pictures are validated from their bytes (type, size, dimensions, alt text) and
+  stored by admins only in a type- and size-limited Storage bucket (ADR-031).
 - Security headers in `next.config.ts`. Rate limiting on `/api/sync` (in-memory, per
   instance — see ADR-009).
 - Structured logs without personal data (`src/lib/logging.ts`).

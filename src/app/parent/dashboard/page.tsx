@@ -12,6 +12,8 @@ import { getProfile } from "@/lib/auth/session";
 import { avatarEmoji } from "@/lib/avatars";
 import { listChildren, listDimensionNames, loadChildProgress } from "@/lib/server/family-data";
 import { loadChildPhonics, loadLatestPhonicsCheck } from "@/lib/server/phonics";
+import { loadVocabularyReport } from "@/lib/server/vocabulary";
+import { VocabularySummaryCard } from "@/components/parent/vocabulary-report";
 import { ageFromDateOfBirth, cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -23,11 +25,12 @@ export default async function DashboardPage(props: PageProps<"/parent/dashboard"
 
   const child = children.find((c) => c.id === childParam) ?? children[0];
   const timeZone = profile?.timezone ?? "UTC";
-  const [progress, dimensionNames, phonics, phonicsCheck] = await Promise.all([
+  const [progress, dimensionNames, phonics, phonicsCheck, vocabulary] = await Promise.all([
     loadChildProgress(child.id, timeZone, new Date(), child.current_level_id),
     listDimensionNames(),
     loadChildPhonics(child.id),
     loadLatestPhonicsCheck(child.id),
+    loadVocabularyReport(child.id),
   ]);
   const phonicsStarted = phonics.stages.filter((s) => s.started > 0);
   const age = ageFromDateOfBirth(child.date_of_birth);
@@ -327,6 +330,8 @@ export default async function DashboardPage(props: PageProps<"/parent/dashboard"
           </p>
         ) : null}
       </Card>
+
+      <VocabularySummaryCard report={vocabulary} childId={child.id} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="space-y-3">

@@ -16,7 +16,8 @@ import {
 } from "@/lib/learning/feedback";
 import { resolveSession } from "@/lib/learning/learning-session";
 import { checkPrerequisites } from "@/lib/learning/prerequisites";
-import { deriveSkillReviewItem, deriveWordReviewItem, dueReviewItems } from "@/lib/learning/review-queue";
+import { deriveSkillReviewItem, dueReviewItems } from "@/lib/learning/review-queue";
+import { deriveWordReview } from "@/lib/learning/vocabulary";
 import { DEFAULT_RULES, mergeLearningRules } from "@/lib/learning/rules";
 import { accuracy, attemptScore, percentage, scoreLesson, summarizeAttempts } from "@/lib/learning/scoring";
 import { traceCoverage } from "@/lib/learning/tracing";
@@ -275,25 +276,27 @@ describe("review queue", () => {
   });
 
   it("brings back a missed word until it is answered correctly", () => {
-    const word = { wordId: "w1", skillId: "s1", lessonId: "l1" };
-    const missed = deriveWordReviewItem(
-      { ...word, attempts: [{ isCorrect: false, attemptedAt: "2026-09-29T10:00:00Z" }] },
+    const word = { wordId: "w1", skillId: "s1", lessonId: "l1", saved: false };
+    const progress = { attempts: 1, accuracy: 0, reviewPriority: 60, nextReviewAt: null };
+    const missed = deriveWordReview(
+      { ...word, attempts: [{ isCorrect: false, attemptedAt: "2026-09-29T10:00:00Z" }], progress },
       now,
     );
     expect(missed).toMatchObject({ item_key: "word:w1", reason: "missed_word", priority: 55 });
-    const fixed = deriveWordReviewItem(
+    const fixed = deriveWordReview(
       {
         ...word,
         attempts: [
           { isCorrect: false, attemptedAt: "2026-09-29T10:00:00Z" },
           { isCorrect: true, attemptedAt: "2026-09-30T10:00:00Z" },
         ],
+        progress: { ...progress, attempts: 2, accuracy: 50 },
       },
       now,
     );
     expect(fixed).toBeNull();
-    const old = deriveWordReviewItem(
-      { ...word, attempts: [{ isCorrect: false, attemptedAt: "2026-08-01T10:00:00Z" }] },
+    const old = deriveWordReview(
+      { ...word, attempts: [{ isCorrect: false, attemptedAt: "2026-08-01T10:00:00Z" }], progress },
       now,
     );
     expect(old).toBeNull();

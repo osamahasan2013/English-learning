@@ -7,6 +7,17 @@
 //
 // See docs/curriculum.md → "Authoring content" for the full list and examples.
 
+import {
+  distractorPlan,
+  findWordInSentence,
+  pickContrastGroup,
+  pickDistractors,
+  swapWord,
+  type DistractorNeed,
+  type DistractorStrategy,
+} from "@/lib/content/vocabulary";
+import type { WordArea } from "@/lib/learning/vocabulary";
+
 export type TemplateSegment = {
   grapheme: string;
   patternCode: string | null;
@@ -21,6 +32,22 @@ export type TemplateWord = {
   patterns: { code: string; sound?: string }[];
   // The word's grapheme split (src/lib/learning/phonics.ts); empty if not decomposed.
   segments?: TemplateSegment[];
+  // Vocabulary facts, used to choose distractors and build meaning/usage questions.
+  category?: string | null;
+  topCategory?: string | null;
+  topCategoryName?: string;
+  topCategoryEmoji?: string;
+  levelRank?: number;
+  partOfSpeech?: string;
+  difficulty?: number;
+  syllables?: number;
+  // Only published words are offered as distractors.
+  published?: boolean;
+  // Curated example sentences, first = main.
+  examples?: string[];
+  synonyms?: string[];
+  // Other written forms that count as the word (plural, -ing, past…).
+  forms?: string[];
 };
 
 export type TemplatePattern = {
@@ -42,6 +69,10 @@ export type TemplateContext = {
   phoneme?: (code: string) => TemplatePhoneme | undefined;
   // Deterministic seed (the question code), so re-imports produce identical content.
   seed: string;
+  // The word bank (vocabulary templates choose distractors from it) and the lesson's level
+  // rank (1 = KG1), which sets how many and how close the distractors are.
+  words?: () => TemplateWord[];
+  levelRank?: number;
 };
 
 export type ExpandedQuestion = {
@@ -52,6 +83,10 @@ export type ExpandedQuestion = {
   answer: Record<string, unknown> | null;
   word?: string;
   pattern?: string;
+  // What the question exercises for its word (stored as metadata.wordArea).
+  area?: WordArea;
+  // A sentence of the sentence bank the question is built on (linked as sentence_id).
+  sentence?: string;
 };
 
 type Params = Record<string, unknown>;
@@ -156,6 +191,53 @@ function displayPattern(p: TemplatePattern) {
   return p.type === "letter" ? `${p.pattern.toUpperCase()} ${p.pattern}` : p.pattern;
 }
 
+// Distractor words: the ones the author listed, else chosen from the word bank by the
+// vocabulary rules (src/lib/content/vocabulary.ts) for the lesson's level.
+function distractorWords(
+  params: Params,
+  ctx: TemplateContext,
+  target: TemplateWord,
+  opts: { need?: DistractorNeed[]; strategy?: DistractorStrategy; count?: number } = {},
+): TemplateWord[] {
+  const given = strList(params, "distractors", false);
+  if (given.length > 0) return given.map((text) => needWord(ctx, text));
+  if (!ctx.words) throw new TemplateError('"distractors" is required');
+  const plan = distractorPlan(ctx.levelRank);
+  return pickDistractors(target, ctx.words(), {
+    count: opts.count ?? plan.count,
+    strategy: opts.strategy ?? plan.strategy,
+    need: opts.need,
+    levelRank: ctx.levelRank,
+    seed: ctx.seed,
+  });
+}
+function needEmoji(word: TemplateWord) {
+  if (!word.emoji) throw new TemplateError(`word "${word.word}" has no picture`);
+  return word.emoji;
+}
+function needDefinition(word: TemplateWord) {
+  if (!word.childDefinition) throw new TemplateError(`word "${word.word}" has no child-friendly meaning`);
+  return word.childDefinition;
+}
+// The example sentence that contains the word itself (not only a form of it).
+function exampleWith(word: TemplateWord, preferred?: string) {
+  const sentences = [preferred, ...(word.examples ?? [])].filter((s): s is string => !!s);
+  for (const sentence of sentences) {
+    const found = findWordInSentence(sentence, word.word);
+    if (found && found.form.toLowerCase() === word.word.toLowerCase()) return { sentence, found };
+  }
+  throw new TemplateError(`word "${word.word}" has no example sentence that uses it`);
+}
+const pictures = (ctx: TemplateContext) => (ctx.levelRank ?? 1) <= 3;
+function sameTopCategory(words: TemplateWord[]) {
+  const category = words[0]?.topCategory;
+  if (!category || words.some((w) => w.topCategory !== category))
+    throw new TemplateError("all words must be in the same category");
+  return { code: category, name: words[0].topCategoryName || category, emoji: words[0].topCategoryEmoji || "" };
+}
+const CONSONANT_TILES = ["b", "d", "f", "g", "h", "k", "l", "m", "n", "p", "r", "s", "t", "w"];
+const VOWEL_TILES = ["a", "e", "i", "o", "u"];
+
 type Expander = (params: Params, ctx: TemplateContext) => ExpandedQuestion;
 
 export const TEMPLATES: Record<string, Expander> = {
@@ -211,12 +293,14 @@ export const TEMPLATES: Record<string, Expander> = {
   // Hear a word, tap its picture.
   listen_pick_picture(params, ctx) {
     const target = needWord(ctx, str(params, "word"));
-    const words = seededShuffle([target.word, ...strList(params, "distractors")], ctx.seed);
+    const others = distractorWords(params, ctx, target, { need: ["emoji"] }).map((w) => w.word);
+    const words = seededShuffle([target.word, ...others], ctx.seed);
     return {
       type: "LISTEN_AND_CHOOSE",
       prompt: "Find the picture",
       promptSpeech: target.word,
       word: target.word,
+      area: "listening",
       content: { hideOptionText: params.showText !== true, options: wordOptions(ctx, words, true) },
       answer: { accepted: [optionId(target.word)] },
     };
@@ -225,12 +309,14 @@ export const TEMPLATES: Record<string, Expander> = {
   // Hear a word, tap it written (reading, no pictures).
   listen_pick_word(params, ctx) {
     const target = needWord(ctx, str(params, "word"));
-    const words = seededShuffle([target.word, ...strList(params, "distractors")], ctx.seed);
+    const others = distractorWords(params, ctx, target, { strategy: "similar" }).map((w) => w.word);
+    const words = seededShuffle([target.word, ...others], ctx.seed);
     return {
       type: "LISTEN_AND_CHOOSE",
       prompt: "Tap the word you hear",
       promptSpeech: target.word,
       word: target.word,
+      area: "listening",
       content: { options: wordOptions(ctx, words, false).map(({ speech: _speech, ...o }) => o) },
       answer: { accepted: [optionId(target.word)] },
     };
@@ -537,7 +623,8 @@ export const TEMPLATES: Record<string, Expander> = {
   // Read a written word (no audio of the word), tap its picture.
   read_word(params, ctx) {
     const target = needWord(ctx, str(params, "word"));
-    const words = seededShuffle([target.word, ...strList(params, "distractors")], ctx.seed);
+    const others = distractorWords(params, ctx, target, { need: ["emoji"] }).map((w) => w.word);
+    const words = seededShuffle([target.word, ...others], ctx.seed);
     const options = wordOptions(ctx, words, true);
     if (options.some((o) => !("emoji" in o))) throw new TemplateError("read_word needs words with pictures");
     return {
@@ -545,6 +632,7 @@ export const TEMPLATES: Record<string, Expander> = {
       prompt: "Read the word. Tap its picture.",
       promptSpeech: "Read the word, then tap its picture.",
       word: target.word,
+      area: "reading",
       pattern: optStr(params, "pattern"),
       content: {
         display: target.word,
@@ -704,8 +792,305 @@ export const TEMPLATES: Record<string, Expander> = {
       prompt: "Type the word you hear",
       promptSpeech: target.word,
       word: target.word,
+      area: "spelling",
       content: { emoji: target.emoji || undefined, speech: target.word, hint: optStr(params, "hint") },
       answer: { accepted: [target.word.toLowerCase()] },
+    };
+  },
+
+  // ---- Vocabulary (Phase 5). Distractors come from the word bank when not listed. ----
+
+  // A picture, choose its word. (Recognition)
+  picture_to_word(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    const emoji = needEmoji(target);
+    const others = distractorWords(params, ctx, target, { need: ["emoji"] }).map((w) => w.word);
+    return {
+      type: "MULTIPLE_CHOICE",
+      prompt: "What is this?",
+      promptSpeech: "What is this? Tap the word.",
+      word: target.word,
+      area: "recognition",
+      content: { display: emoji, options: wordOptions(ctx, seededShuffle([target.word, ...others], ctx.seed), false) },
+      answer: { accepted: [optionId(target.word)] },
+    };
+  },
+
+  // A written word, choose its picture (= read_word with bank distractors). (Reading)
+  word_to_picture(params, ctx) {
+    return TEMPLATES.read_word(params, ctx);
+  },
+
+  // Hear a word among look-alike words (cat / cap / cut). (Recognition)
+  similar_word(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    const others = distractorWords(params, ctx, target, { strategy: "similar" }).map((w) => w.word);
+    const words = seededShuffle([target.word, ...others], ctx.seed);
+    return {
+      type: "LISTEN_AND_CHOOSE",
+      prompt: "Tap the word you hear",
+      promptSpeech: target.word,
+      word: target.word,
+      area: "recognition",
+      content: { options: wordOptions(ctx, words, false).map(({ speech: _speech, ...o }) => o) },
+      answer: { accepted: [optionId(target.word)] },
+    };
+  },
+
+  // "Which one means: something you drink?" (Meaning)
+  meaning_to_word(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    const meaning = needDefinition(target);
+    const withPictures = pictures(ctx) && !!target.emoji;
+    const others = distractorWords(params, ctx, target, {
+      strategy: "contrast",
+      need: withPictures ? ["definition", "emoji"] : ["definition"],
+    }).map((w) => w.word);
+    return {
+      type: "MULTIPLE_CHOICE",
+      prompt: "Which one means…",
+      promptSpeech: `Which one means: ${meaning}`,
+      word: target.word,
+      area: "meaning",
+      content: { display: meaning, options: wordOptions(ctx, seededShuffle([target.word, ...others], ctx.seed), withPictures) },
+      answer: { accepted: [optionId(target.word)] },
+    };
+  },
+
+  // Match words to their meanings. (Meaning)
+  match_word_meaning(params, ctx) {
+    const words = strList(params, "words").map((w) => needWord(ctx, w));
+    if (words.length < 2 || words.length > 4) throw new TemplateError("needs two to four words");
+    const meanings = words.map((w) => needDefinition(w));
+    if (new Set(meanings.map((m) => m.toLowerCase())).size !== meanings.length)
+      throw new TemplateError("two words share a meaning");
+    if (meanings.some((m) => m.length > 80)) throw new TemplateError("a meaning is too long to match (80 letters)");
+    return {
+      type: "MATCH",
+      prompt: "Match the word to what it means",
+      promptSpeech: "Match each word to what it means.",
+      area: "meaning",
+      content: {
+        left: words.map((w) => ({ id: optionId(w.word), text: w.word, speech: w.word })),
+        right: seededShuffle(
+          words.map((w) => ({ id: `m-${optionId(w.word)}`, text: w.childDefinition, speech: w.childDefinition })),
+          ctx.seed,
+          true,
+        ),
+      },
+      answer: { pairs: words.map((w) => [optionId(w.word), `m-${optionId(w.word)}`]) },
+    };
+  },
+
+  // Match words to their pictures. (Recognition)
+  match_word_picture(params, ctx) {
+    const words = strList(params, "words").map((w) => needWord(ctx, w));
+    if (words.length < 2 || words.length > 5) throw new TemplateError("needs two to five words");
+    words.forEach(needEmoji);
+    if (new Set(words.map((w) => w.emoji)).size !== words.length) throw new TemplateError("two words share a picture");
+    return {
+      type: "MATCH",
+      prompt: "Match the word to its picture",
+      promptSpeech: "Match each word to its picture.",
+      area: "recognition",
+      content: {
+        left: words.map((w) => ({ id: optionId(w.word), text: w.word, speech: w.word })),
+        right: seededShuffle(
+          words.map((w) => ({ id: `p-${optionId(w.word)}`, emoji: w.emoji, speech: w.word })),
+          ctx.seed,
+          true,
+        ),
+      },
+      answer: { pairs: words.map((w) => [optionId(w.word), `p-${optionId(w.word)}`]) },
+    };
+  },
+
+  // A letter is missing: c _ t. The gap is a vowel sound by default (from the word's
+  // grapheme split, so "sh" in "ship" is one gap, never "s" alone). (Spelling)
+  word_missing_letter(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    const segments = (target.segments ?? []).filter((s) => s.grapheme.length > 0);
+    const given = optStr(params, "missing")?.toLowerCase();
+    const segment = given
+      ? { grapheme: given }
+      : (segments.find((s) => s.grapheme.length === 1 && VOWEL_TILES.includes(s.grapheme) && s.phonemes.length > 0) ??
+        segments.find((s) => s.phonemes.length > 0));
+    if (!segment) throw new TemplateError(`"${target.word}" has no grapheme split`);
+    const missing = segment.grapheme;
+    const pool = VOWEL_TILES.includes(missing) ? VOWEL_TILES : CONSONANT_TILES;
+    const choices = seededShuffle(pool.filter((c) => c !== missing), ctx.seed).slice(0, 2);
+    return {
+      ...TEMPLATES.missing_pattern({ word: target.word, missing, choices }, ctx),
+      area: "spelling",
+    };
+  },
+
+  // Build the word from letter tiles, with a few extra letters. (Spelling)
+  build_vocab_word(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    const letters = [...target.word.toLowerCase()];
+    if (!letters.every((l) => /[a-z]/.test(l))) throw new TemplateError(`"${target.word}" has characters that are not letters`);
+    if (letters.length > 8) throw new TemplateError(`"${target.word}" is too long to build`);
+    const extra = seededShuffle(
+      CONSONANT_TILES.concat(VOWEL_TILES).filter((l) => !letters.includes(l)),
+      `${ctx.seed}-extra`,
+    ).slice(0, (ctx.levelRank ?? 1) >= 4 ? 3 : 2);
+    return {
+      ...TEMPLATES.build_word({ word: target.word, extra }, ctx),
+      area: "spelling",
+    };
+  },
+
+  // Finish the example sentence with the right word. (Usage)
+  complete_sentence(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    const { sentence, found } = exampleWith(target, optStr(params, "sentence"));
+    const others = distractorWords(params, ctx, target, { strategy: "grammar" }).map((w) => w.word.toLowerCase());
+    const answer = found.match.toLowerCase();
+    return {
+      type: "DRAG_DROP",
+      prompt: "Finish the sentence",
+      promptSpeech: `Which word finishes the sentence? ${found.before} blank ${found.after}`,
+      word: target.word,
+      area: "usage",
+      sentence,
+      content: {
+        emoji: target.emoji || undefined,
+        parts: [
+          ...(found.before.trim() ? [{ text: found.before.trim() }] : []),
+          { blank: true },
+          ...(found.after.trim() ? [{ text: found.after.trim() }] : []),
+        ],
+        bank: seededShuffle([answer, ...others], ctx.seed),
+      },
+      answer: { acceptedSequences: [[answer]] },
+    };
+  },
+
+  // Which sentence uses the word correctly? "The girl is happy." / "The girl is table."
+  // The wrong sentences swap in a word of another kind, so they plainly do not make sense.
+  // (Usage — the integration point for the future Sentence Engine: the right option is a
+  // sentence-bank row, linked to the question.)
+  use_in_sentence(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    const { sentence } = exampleWith(target, optStr(params, "sentence"));
+    const count = (ctx.levelRank ?? 1) >= 4 ? 2 : 1;
+    const wrong = distractorWords(params, ctx, target, { strategy: "nonsense", count }).map((w) => {
+      const swapped = swapWord(sentence, target.word, w.word);
+      if (!swapped) throw new TemplateError(`cannot swap "${target.word}" in "${sentence}"`);
+      return swapped;
+    });
+    const all = [sentence, ...wrong];
+    if (all.some((s) => s.length > 80)) throw new TemplateError("sentence is too long for a choice (80 letters)");
+    return {
+      type: "MULTIPLE_CHOICE",
+      prompt: `Which sentence uses "${target.word}" the right way?`,
+      promptSpeech: `${target.word}. Which sentence makes sense?`,
+      word: target.word,
+      area: "usage",
+      sentence,
+      content: {
+        display: target.emoji ? `${target.emoji} ${target.word}` : target.word,
+        options: seededShuffle(all, ctx.seed, true).map((s, i) => ({
+          id: s === sentence ? "right" : `wrong-${i + 1}`,
+          text: s,
+          speech: s,
+        })),
+      },
+      answer: { accepted: ["right"] },
+    };
+  },
+
+  // Which one belongs in this category? (Meaning)
+  pick_category_member(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    if (!target.topCategory) throw new TemplateError(`word "${target.word}" has no category`);
+    const name = target.topCategoryName || target.topCategory;
+    const withPictures = pictures(ctx) && !!target.emoji;
+    const others = distractorWords(params, ctx, target, {
+      strategy: "contrast",
+      need: withPictures ? ["emoji"] : [],
+    });
+    if (others.some((w) => w.topCategory === target.topCategory))
+      throw new TemplateError("a distractor is in the same category");
+    return {
+      type: "MULTIPLE_CHOICE",
+      prompt: `Which one goes with ${name}?`,
+      promptSpeech: `Which one goes with ${name}?`,
+      word: target.word,
+      area: "meaning",
+      content: {
+        display: `${target.topCategoryEmoji ?? ""} ${name}`.trim(),
+        options: wordOptions(ctx, seededShuffle([target.word, ...others.map((w) => w.word)], ctx.seed), withPictures),
+      },
+      answer: { accepted: [optionId(target.word)] },
+    };
+  },
+
+  // Three words from one category and one that does not belong. (Meaning)
+  odd_one_out(params, ctx) {
+    const words = strList(params, "words").map((w) => needWord(ctx, w));
+    if (words.length < 3) throw new TemplateError("needs three words from one category");
+    const category = sameTopCategory(words);
+    const oddText = optStr(params, "odd");
+    const odd = oddText
+      ? needWord(ctx, oddText)
+      : distractorWords({}, ctx, words[0], {
+          strategy: "contrast",
+          count: 1,
+          need: pictures(ctx) ? ["emoji"] : [],
+        })[0];
+    if (odd.topCategory === category.code) throw new TemplateError(`"${odd.word}" is in the same category`);
+    const withPictures = pictures(ctx) && [...words, odd].every((w) => !!w.emoji);
+    return {
+      type: "MULTIPLE_CHOICE",
+      prompt: "Which one does not belong?",
+      promptSpeech: "Which one does not belong?",
+      area: "meaning",
+      content: {
+        options: wordOptions(ctx, seededShuffle([...words.slice(0, 3), odd].map((w) => w.word), ctx.seed), withPictures),
+      },
+      answer: { accepted: [optionId(odd.word)] },
+    };
+  },
+
+  // Sort words into their category and another one chosen from the bank. (Meaning)
+  sort_by_category(params, ctx) {
+    const words = strList(params, "words").map((w) => needWord(ctx, w));
+    if (words.length < 2) throw new TemplateError("needs two or more words");
+    const category = sameTopCategory(words);
+    const mine = words.slice(0, 3);
+    if (!ctx.words) throw new TemplateError("sorting needs the word bank");
+    const theirs = pickContrastGroup(words[0], ctx.words(), {
+      count: mine.length,
+      need: pictures(ctx) ? ["emoji"] : [],
+      levelRank: ctx.levelRank,
+      seed: ctx.seed,
+    });
+    const otherCategory = theirs[0].topCategory!;
+    const otherName = theirs[0].topCategoryName || otherCategory;
+    const group = (code: string) => `g-${optionId(code)}`;
+    return {
+      type: "SORT",
+      prompt: `${category.name} or ${otherName}?`,
+      promptSpeech: `Sort the words: ${category.name}, or ${otherName}?`,
+      area: "meaning",
+      content: {
+        groups: [
+          { id: group(category.code), label: category.name, emoji: category.emoji || undefined },
+          { id: group(otherCategory), label: otherName, emoji: theirs[0].topCategoryEmoji || undefined },
+        ],
+        items: seededShuffle(
+          [...mine, ...theirs].map((w) => ({ id: optionId(w.word), text: w.word, emoji: w.emoji || undefined, speech: w.word })),
+          ctx.seed,
+        ),
+      },
+      answer: {
+        pairs: [
+          ...mine.map((w) => [optionId(w.word), group(category.code)]),
+          ...theirs.map((w) => [optionId(w.word), group(otherCategory)]),
+        ],
+      },
     };
   },
 };

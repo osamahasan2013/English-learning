@@ -112,6 +112,8 @@ function LessonRun({
 }) {
   const saveKey = `${childId}:${payload.lesson.id}`;
   const assessment = payload.assessment ?? null;
+  // Word practice records answers only: no lesson run, so no lesson is "completed" by it.
+  const practice = payload.practice ?? null;
   const previewLimit = readiness && !readiness.ready ? readiness.previewSteps : null;
   const allSteps = payload.steps;
 
@@ -146,7 +148,7 @@ function LessonRun({
   const sessionId = () => currentSessionId(childId, payload.rules.player.sessionTimeoutMinutes);
 
   useEffect(() => {
-    cacheLesson(payload).catch(() => {});
+    if (!payload.practice) cacheLesson(payload).catch(() => {});
   }, [payload]);
 
   useEffect(() => {
@@ -195,7 +197,7 @@ function LessonRun({
   // preview is not a completed lesson, so it records answers but no run. An assessment
   // records its sitting instead, which the server scores per area.
   useEffect(() => {
-    if (state.screen !== "summary" || runRecorded.current || preview) return;
+    if (state.screen !== "summary" || runRecorded.current || preview || practice) return;
     runRecorded.current = true;
     const completedAt = new Date().toISOString();
     void recordEvent(
@@ -231,7 +233,7 @@ function LessonRun({
       kind: "attempt",
       id: newId(),
       questionId: step.questionId,
-      lessonRunId: assessment ? null : runId,
+      lessonRunId: assessment || practice ? null : runId,
       assessmentId: assessment?.id ?? null,
       assessmentAttemptId: assessment ? runId : null,
       sessionId: sessionId(),
@@ -298,6 +300,7 @@ function LessonRun({
         startedAt={startedAt}
         achievements={achievements}
         preview={preview}
+        practice={practice}
         recommendation={readiness?.recommendation ?? null}
         onPlayAgain={() => onRestart(false)}
         speak={speak}
@@ -626,6 +629,7 @@ function LessonSummary({
   startedAt,
   achievements,
   preview,
+  practice,
   recommendation,
   onPlayAgain,
   speak,
@@ -635,6 +639,7 @@ function LessonSummary({
   startedAt: string;
   achievements: Achievement[];
   preview: boolean;
+  practice: LessonPayload["practice"] | null;
   recommendation: { lessonId: string; title: string } | null;
   onPlayAgain: () => void;
   speak: (text: string) => Promise<unknown>;
@@ -651,10 +656,10 @@ function LessonSummary({
         {preview ? "👀" : score.stars === 3 ? "🏆" : completed.emoji || "🎉"}
       </p>
       <h1 className="text-4xl font-extrabold">
-        {preview ? "Nice peek!" : `You finished ${payload.lesson.childTitle}!`}
+        {preview ? "Nice peek!" : practice ? "Great practice!" : `You finished ${payload.lesson.childTitle}!`}
       </h1>
       <p className="text-2xl font-bold">{completed.text}</p>
-      {!preview ? (
+      {!preview && !practice ? (
         <p className="text-6xl" aria-label={`${score.stars} out of 3 stars`}>
           {"⭐".repeat(score.stars)}
           <span className="opacity-25">{"⭐".repeat(3 - score.stars)}</span>
@@ -686,8 +691,18 @@ function LessonSummary({
             <span aria-hidden>💪</span> Practise {recommendation.title}
           </Link>
         ) : null}
+        {practice ? (
+          <Link
+            href={practice.returnHref}
+            className="bg-accent inline-flex min-h-20 items-center gap-2 rounded-3xl px-8 text-2xl font-semibold text-white"
+          >
+            <span aria-hidden>{practice.kind === "word" ? "🔙" : "📚"}</span>{" "}
+            {practice.kind === "word" ? "Back to the word" : "My Words"}
+          </Link>
+        ) : null}
         <Button size="xl" variant="secondary" onClick={onPlayAgain}>
-          <span aria-hidden>🔁</span> {preview ? "Play the whole lesson" : "Play again"}
+          <span aria-hidden>🔁</span>{" "}
+          {preview ? "Play the whole lesson" : practice ? "Practice again" : "Play again"}
         </Button>
         <Link
           href="/child/home"

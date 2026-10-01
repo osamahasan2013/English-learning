@@ -37,18 +37,21 @@ Original, age-appropriate content covering KG1–Grade 2:
   4 magic-e patterns, 10 vowel teams (ai, ay, ee, ea, oa, ow, oo, ou, oi, oy), 6
   r-controlled (ar, er, ir, or, ur, air), 4 endings (ing, ed, s, es) and 6 suffixes (tion,
   sion, ment, ness, ful, less); 45 pattern relations (prerequisite, contrast, same sound).
-- 305 words, each split into graphemes and phonemes (1,045 segments; 143 CVC words, 286
-  decodable), 25 sight words, 21 sentences, 4 original stories.
-- 75 lessons / 533 activities / 706 lesson questions across 20 units, the "Find My Level"
-  placement (8 stages) and the **Phonics Check** (12 areas, 24 questions).
+- 393 words in 27 categories (24 top-level + Farm Animals, Fruit, Vegetables), each split
+  into graphemes and phonemes (1,422 segments), 20 extra word levels, 393 curated example
+  sentences, 41 typed relations, 13 word families (-at, -an, -ap, -ip, -in, -ig, -op, -ot,
+  -og, -ug, -et, -en, -ed; 47 members), 25 sight words, 21 sentences, 4 original stories.
+- 96 lessons / 784 activities / 1,113 lesson questions across 25 units — including 21
+  vocabulary sets (407 questions) — the "Find My Level" placement (8 stages) and the
+  **Phonics Check** (12 areas, 24 questions).
 
-| Level   | Phonics (Phase 4)                                                                                                                                           | Other units                                        |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| KG1     | One lesson per letter a–z (name, sound, beginning sound, picture sort, find the letter); upper/lower case, letter names, beginning sounds                   | Trace letters                                      |
-| KG2     | Short a, i, o, u, e CVC lessons (blend, segment, middle sound, build, read, spell); segmenting; ending sounds; word families                                | Word games, sight words, sentence order, CVC check |
-| KG3     | Digraphs sh, ch (+ sh/ch sort), th (two sounds), ph, wh; magic e with a, i, o                                                                               | Tricky words                                       |
-| Grade 1 | ck, ng; consonant blends; vowel teams ee, ea (two sounds), ai/ay, oa, ow (two sounds), oo (two sounds), ou, oi/oy; ar, or, er/ir/ur, air; -ing, -ed, -s/-es | Read and match                                     |
-| Grade 2 | -tion/-sion, suffixes (-ment, -ness, -ful, -less), multisyllable words                                                                                      | Story time                                         |
+| Level   | Phonics (Phase 4)                                                                                                                                           | Other units                                                                                   |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| KG1     | One lesson per letter a–z (name, sound, beginning sound, picture sort, find the letter); upper/lower case, letter names, beginning sounds                   | Trace letters; words: animals, colors, my body, family                                        |
+| KG2     | Short a, i, o, u, e CVC lessons (blend, segment, middle sound, build, read, spell); segmenting; ending sounds; word families                                | Word games, sight words, sentence order, CVC check; words: food, toys, on the go, more colors |
+| KG3     | Digraphs sh, ch (+ sh/ch sort), th (two sounds), ph, wh; magic e with a, i, o                                                                               | Tricky words; words: clothes, my house, nature                                                |
+| Grade 1 | ck, ng; consonant blends; vowel teams ee, ea (two sounds), ai/ay, oa, ow (two sounds), oo (two sounds), ou, oi/oy; ar, or, er/ir/ur, air; -ing, -ed, -s/-es | Read and match; words: feelings, jobs, weather, my day, describing, school                    |
+| Grade 2 | -tion/-sion, suffixes (-ment, -ness, -ful, -less), multisyllable words                                                                                      | Story time; words: technology, my town, sports, places                                        |
 
 **Multiple pronunciations are modelled explicitly**, never flattened into one rule: TH
 (thumb/this), EA (leaf/bread), OW (snow/cow), OO (moon/book), -ED (jumped/played/painted),
@@ -60,14 +63,15 @@ shoe…) are flagged `is_irregular` with a `spelling_note` that explains the exc
 
 Files in `content/`:
 
-| File                                                 | Contains                                                                          |
-| ---------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `reference.json`                                     | levels, subjects, skill dimensions, activity types, word categories, achievements |
-| `phonics.json`                                       | phonemes, phonics stages, patterns with their sounds (as phonemes) and relations  |
-| `words/*.csv`                                        | the word bank (same format as bulk imports, below)                                |
-| `sight-words.json`, `sentences.json`, `stories.json` | lists by level                                                                    |
-| `curriculum/*.json`                                  | one file per level: units → skills → lessons → activities → questions             |
-| `assessments.json`                                   | assessments by stage                                                              |
+| File                                                 | Contains                                                                                                                             |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `reference.json`                                     | levels, subjects, skill dimensions, activity types, word categories (with `parent` for sub-categories), achievements, rule overrides |
+| `vocabulary.json`                                    | word families (rime, level, vowel pattern; members found in the word bank)                                                           |
+| `phonics.json`                                       | phonemes, phonics stages, patterns with their sounds (as phonemes) and relations                                                     |
+| `words/*.csv`                                        | the word bank (same format as bulk imports, below)                                                                                   |
+| `sight-words.json`, `sentences.json`, `stories.json` | lists by level                                                                                                                       |
+| `curriculum/*.json`                                  | one file per level: units → skills → lessons → activities → questions                                                                |
+| `assessments.json`                                   | assessments by stage                                                                                                                 |
 
 Run `npm run content:import -- --dry-run` to validate, then `npm run content:import`.
 `npm test` also validates every shipped file without a database.
@@ -91,6 +95,26 @@ teaching structure and a fix to the structure fixes every lesson:
 | `letter_sound`    | meet the letter (name + sound) → big and small → which letter makes this sound? → first (or last) sound → find the letter → missing letter → quick check              | `pattern`, `letter`, `words[3]`, `distractors`, `distractorLetters`, `distractorWords`, `soundPosition`    |
 | `cvc_blending`    | hear → blend it (tap sounds, slow blend, choose the word) → count the sounds → middle sound → build → read → spell                                                    | `pattern`, `vowel`, `words[5]`, `distractorWords`, `otherVowels`                                           |
 | `phonics_pattern` | Hear it → See it (find the letters) → Practise → Sort (pattern vs contrast) → [Two sounds] → Read → Spell (missing letters) → Write → Use it (sentence) → Quick check | `pattern`, `grapheme`, `words[6+]`, `contrast{pattern, grapheme, words}`, `sentence`, `soundSort`, `split` |
+
+### Vocabulary sets (Phase 5)
+
+A vocabulary lesson is one `vocabulary_set` blueprint with 4–8 words (usually one
+category; `"mixed": true` skips the category activities). The importer passes the level,
+and the lesson grows with it:
+
+| Level    | Activities                                                                                                  |
+| -------- | ----------------------------------------------------------------------------------------------------------- |
+| KG1      | meet the words → listen and find the picture (×4) → which one goes with ⟨category⟩? → odd one out           |
+| KG2      | + picture → word (×2), read the word → picture, match words to pictures, which word means…?, missing letter |
+| KG3      | + build the word, spell it, look-alike words (cat / cap / cut), finish the sentence                         |
+| Grade 1+ | + match words to meanings, a second meaning question, which sentence makes sense?, sort by category         |
+
+Distractors are chosen from the published word bank by rules (`src/lib/content/vocabulary.ts`):
+never the word, a synonym, a word with the same picture or a word above the child's level
+(+1 at most); 2 options for KG1–KG2, 3 later; other categories for the youngest children
+and the same category from Grade 1 (harder); look-alike spellings for recognition; another
+part of speech for "which sentence makes sense?" ("The girl is table."). A question that
+cannot get suitable distractors is reported invalid — never filled with random words.
 
 ### Question templates
 
@@ -123,6 +147,24 @@ expands from the word bank, so pictures, meanings and sounds come from one place
 | `sort_by_sound`          | Sort words by which sound a pattern makes (EA: leaf / bread) | `pattern`, `words`                                             |
 | `match_pattern_word`     | Match patterns to words                                      | `pairs`                                                        |
 | `match_sound_letter`     | Match sounds to letters                                      | `patterns`                                                     |
+| `picture_to_word`        | A picture: tap its word                                      | `word`, optional `distractors`                                 |
+| `word_to_picture`        | A written word: tap its picture                              | `word`, optional `distractors`                                 |
+| `similar_word`           | Hear a word among look-alikes                                | `word`, optional `distractors`                                 |
+| `meaning_to_word`        | "Which one means: something you drink?"                      | `word`, optional `distractors`                                 |
+| `match_word_meaning`     | Match words to child-friendly meanings                       | `words[2–4]`                                                   |
+| `match_word_picture`     | Match words to pictures                                      | `words[2–5]`                                                   |
+| `word_missing_letter`    | A letter is missing (a vowel by default, from the split)     | `word`, optional `missing`                                     |
+| `build_vocab_word`       | Build the word from letters plus a few extra                 | `word`                                                         |
+| `complete_sentence`      | Finish the word's example sentence (DRAG_DROP)               | `word`, optional `sentence`, `distractors`                     |
+| `use_in_sentence`        | Which sentence uses the word the right way?                  | `word`, optional `sentence`                                    |
+| `pick_category_member`   | Which one goes with ⟨category⟩?                              | `word`, optional `distractors`                                 |
+| `odd_one_out`            | Three from a category and one that does not belong           | `words[3+]`, optional `odd`                                    |
+| `sort_by_category`       | Sort words into their category and another one               | `words[2+]`                                                    |
+
+`listen_pick_picture`, `listen_pick_word` and `read_word` also choose their distractors
+from the bank when none are listed. Vocabulary templates record what a question exercises
+(`metadata.wordArea`: recognition, listening, meaning, reading, spelling, usage) and link
+usage questions to their sentence (`sentence_id`).
 
 Question/activity codes default to `<lesson>-a<n>-q<n>`; give explicit `code`s if you
 reorder questions and want history to stay attached to the same question.
@@ -131,7 +173,18 @@ reorder questions and want history to stay attached to the same question.
 
 Required columns: `word, level, category, difficulty, phonics_pattern, definition,
 example_sentence, sight_word`. Optional: `emoji, part_of_speech, child_definition,
-syllables, pronunciation, irregular, spelling_note, plural, tags, related, sense, status`.
+syllables, pronunciation, irregular, spelling_note, plural, tags, related, sense, status`,
+and (Phase 5) `levels` (further levels, `KG3;GRADE1`), `subcategory` (must belong to
+`category`), `examples` (more example sentences, separated by `|`), `synonyms`,
+`antonyms` (words of the bank, `;`), `inflections` (`past=jumped;ing=jumping`; keys
+plural, past, past_participle, ing, third_person, comparative, superlative — forms that
+are words of the bank become plural / verb_form / adjective_form relations), `image` and
+`audio` (storage paths of uploaded media). A word is letters and apostrophes only.
+
+Example sentences become rows of the sentence bank linked to the word. They are checked
+(capital letter, end punctuation, the word or one of its forms inside, at most the level's
+sentence length + 3 words, since they are heard as well as read) and anything doubtful is
+flagged for review; a word without a child-friendly meaning is flagged too.
 `phonics_pattern` is `CODE[:SOUND][*]` separated by `;` (e.g. `TH:TH_VOICED*;EE`; `*` =
 featured example). Lists (`tags`, `related`) use `;`. Optional `segments` overrides the
 automatic grapheme split, one token per grapheme: `g` (its pattern and linked sound),
@@ -167,6 +220,18 @@ overridable in the `learning_rules` table:
   overdue) × (0.8 + 0.1 × importance).
 
 Because it is recomputed from history, a skill that slips drops back down.
+
+### Word mastery
+
+Each word uses the skill mastery model above on all first tries about that word, with a
+word-sized evidence target (`vocabulary.fullEvidenceAttempts` = 6): one right answer is
+LEARNING, never MASTERED, and MASTERED still needs two practice days. Answers are also
+counted per area (recognition, listening, meaning, reading, spelling, usage). A word is
+**weak** with ≥ 3 answers and accuracy below 70%; weak words, words missed on their latest
+first try (14 days) and saved words at their review date are review items. Children see
+0–3 stars per word; parents see words learned (≥ 2 first-try right answers), practised and
+mastered, weak areas and categories (only with ≥ 6 answers), words to practise and recent
+words.
 
 ## Prerequisites
 

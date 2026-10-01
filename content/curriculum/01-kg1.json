@@ -1756,6 +1756,128 @@
           ]
         }
       ]
+    },
+    {
+      "code": "kg1-vocabulary",
+      "subject": "VOCABULARY",
+      "title": "Words Around Me",
+      "emoji": "📚",
+      "description": "Everyday words: see them, hear them, learn what they mean and use them.",
+      "skills": [
+        {
+          "code": "kg1-vocab-animals",
+          "dimension": "VOCABULARY",
+          "title": "Animal words",
+          "childTitle": "Animals",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg1-vocab-animals-1",
+              "title": "Animal words",
+              "childTitle": "Animals",
+              "description": "New words: cat, dog, fish, duck, pig, lion.",
+              "emoji": "🐾",
+              "minutes": 5,
+              "introSpeech": "Let's learn some animals words!",
+              "blueprint": {
+                "name": "vocabulary_set",
+                "words": [
+                  "cat",
+                  "dog",
+                  "fish",
+                  "duck",
+                  "pig",
+                  "lion"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-vocab-colors",
+          "dimension": "VOCABULARY",
+          "title": "Color words",
+          "childTitle": "Colors",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg1-vocab-colors-1",
+              "title": "Color words",
+              "childTitle": "Colors",
+              "description": "New words: blue, green, yellow, pink, red.",
+              "emoji": "🎨",
+              "minutes": 5,
+              "introSpeech": "Let's learn some colors words!",
+              "blueprint": {
+                "name": "vocabulary_set",
+                "words": [
+                  "blue",
+                  "green",
+                  "yellow",
+                  "pink",
+                  "red"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-vocab-body",
+          "dimension": "VOCABULARY",
+          "title": "My body",
+          "childTitle": "My body",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg1-vocab-body-1",
+              "title": "My body",
+              "childTitle": "My body",
+              "description": "New words: hand, eye, ear, nose, leg.",
+              "emoji": "✋",
+              "minutes": 5,
+              "introSpeech": "Let's learn some my body words!",
+              "blueprint": {
+                "name": "vocabulary_set",
+                "words": [
+                  "hand",
+                  "eye",
+                  "ear",
+                  "nose",
+                  "leg"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-vocab-family",
+          "dimension": "VOCABULARY",
+          "title": "My family",
+          "childTitle": "Family",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg1-vocab-family-1",
+              "title": "My family",
+              "childTitle": "Family",
+              "description": "New words: mom, dad, baby, grandma, grandpa.",
+              "emoji": "👪",
+              "minutes": 5,
+              "introSpeech": "Let's learn some family words!",
+              "blueprint": {
+                "name": "vocabulary_set",
+                "words": [
+                  "mom",
+                  "dad",
+                  "baby",
+                  "grandma",
+                  "grandpa"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

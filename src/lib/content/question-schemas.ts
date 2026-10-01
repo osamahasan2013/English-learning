@@ -12,7 +12,8 @@ const text = (max: number) => z.string().trim().min(1).max(max);
 
 export const choiceOptionSchema = z.object({
   id: z.string().regex(/^[a-z0-9-]{1,40}$/),
-  text: z.string().trim().max(60).optional(),
+  // Up to a short sentence ("Which sentence makes sense?").
+  text: z.string().trim().max(80).optional(),
   emoji: z.string().max(16).optional(),
   // What to say when the option's speaker is tapped (defaults to `text`).
   speech: z.string().trim().max(120).optional(),
@@ -96,7 +97,8 @@ const itemId = z.string().regex(/^[a-z0-9-]{1,40}$/);
 // Match pairs (left ↔ right): a picture to its word, a capital to its small letter.
 export const matchItemSchema = z.object({
   id: itemId,
-  text: z.string().trim().max(40).optional(),
+  // A word, or a child-friendly meaning (word → meaning matching).
+  text: z.string().trim().max(80).optional(),
   emoji: z.string().max(16).optional(),
   speech: z.string().trim().max(120).optional(),
 });

@@ -18,6 +18,7 @@ import {
   sentencesFileSchema,
   sightWordsFileSchema,
   storiesFileSchema,
+  vocabularyFileSchema,
 } from "@/lib/content/content-schemas";
 import { parseWordsCsv } from "@/lib/content/csv";
 import { ContentImporter, type ImportBundle } from "@/lib/content/importer";
@@ -76,6 +77,7 @@ if (wordsOnly) {
   }
   bundle.sightWords = readJson("sight-words.json", sightWordsFileSchema);
   bundle.sentences = readJson("sentences.json", sentencesFileSchema);
+  bundle.vocabulary = readJson("vocabulary.json", vocabularyFileSchema);
   bundle.stories = readJson("stories.json", storiesFileSchema);
   const curriculumDir = path.join(contentDir, "curriculum");
   if (existsSync(curriculumDir)) {

@@ -298,3 +298,60 @@ placement ("Find My Level") can use the same player later with its own scoring.
   **Consequences.** A modified client can no longer inflate progress or read answers;
   genuine offline runs are unaffected (they answer every question). Existing duplicate first
   tries were re-marked as retries by the migration, keeping history.
+
+## ADR-029 — Vocabulary is content and word-level views of the learning engine
+
+**Decision.** Phase 5 adds no lesson, progress, mastery, review or assessment system of
+its own. Vocabulary lessons are ordinary lessons expanded from a `vocabulary_set`
+blueprint; word questions are ordinary questions with a `word_id` and a
+`metadata.wordArea` (recognition, listening, meaning, reading, spelling, usage); word
+answers are ordinary attempts. Word mastery is the skill mastery algorithm
+(`computeMastery`) with one word-sized setting (`vocabulary.fullEvidenceAttempts`, 6),
+stored in `word_progress` with a per-area breakdown in `word_area_progress`, both
+recomputed from history by the progress writer. Weak (`weak_word`), missed and saved,
+due words are rows of the existing review queue. Word practice (Word Explorer, My Words)
+replays published lesson questions about the chosen words in the ordinary lesson player
+with no lesson run.
+**Why.** The brief requires reusing the Phase 3/4 architecture; one answer pipeline keeps
+offline sync, server re-evaluation, idempotency and parent reporting identical.
+**Consequences.** A word can only be practised once some lesson asks about it (the seed
+content covers the vocabulary sets and phonics words; the Explorer says so otherwise).
+Practice answers make the source lesson `IN_PROGRESS` but never `COMPLETED`.
+
+## ADR-030 — Distractors are chosen by rules at import time
+
+**Decision.** Vocabulary templates choose wrong options from the published word bank by
+deterministic rules (`src/lib/content/vocabulary.ts`): never the word, its synonyms or a
+word with the same picture; only words a child at that level knows (+1 level at most);
+other categories for KG1–KG3 and the same category later (harder), look-alike spellings
+for recognition, another part of speech for "which sentence makes sense?". The chosen
+options are stored in the question, like authored ones. When the bank cannot supply
+suitable distractors the question is reported invalid instead of using random words.
+**Why.** Random unrelated words make questions trivially easy or unfair; choosing at
+import keeps answers server-side (digest answer keys) and re-imports reproducible.
+**Consequences.** Adding words can change distractors on the next import (questions get
+a new version); authors can still list `distractors` explicitly.
+
+## ADR-031 — Media lives in Supabase Storage, validated from its bytes
+
+**Decision.** Word pictures and recordings are files in public, type- and size-limited
+buckets (`content-images`: PNG/JPEG/WebP ≤ 1 MB; `content-audio`: MP3/MP4/OGG/WAV
+≤ 2 MB), writable by admins only. An upload is validated on the server from the file's
+first bytes (real type, pixel size 32–4096, alt text) before it is stored under a
+content-addressed path; `image_assets` records type and size with database checks.
+Pages fall back to the word's emoji and to speech synthesis.
+**Why.** No binaries in Postgres; never trust a file name or a browser-declared type.
+**Consequences.** The Docker-free local stack has no Storage, so uploads are verified by
+unit tests and only work against hosted Supabase.
+
+## ADR-032 — My Words is written through ownership-checked database functions
+
+**Decision.** Saving or removing a word and recording "first seen" go through
+`set_word_saved` / `note_word_seen` (`security definer`): they check `is_my_child` and
+that the word is published, and touch only the saved/seen columns. All other word
+progress stays server-derived. Automatic saving (first right answer) never overrides a
+family's own choice (`saved_source = 'manual'`).
+**Why.** A child's own choice is not derived from history, but families must still never
+write progress figures or another family's rows.
+**Consequences.** Saving needs a connection (it is not an outbox event); answers still go
+through the offline outbox.

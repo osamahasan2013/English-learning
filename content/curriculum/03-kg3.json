@@ -875,6 +875,102 @@
           ]
         }
       ]
+    },
+    {
+      "code": "kg3-vocabulary",
+      "subject": "VOCABULARY",
+      "title": "Words Around Me",
+      "emoji": "📚",
+      "description": "Everyday words: see them, hear them, learn what they mean and use them.",
+      "skills": [
+        {
+          "code": "kg3-vocab-clothes",
+          "dimension": "VOCABULARY",
+          "title": "Clothes",
+          "childTitle": "Clothes",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg3-vocab-clothes-1",
+              "title": "Clothes",
+              "childTitle": "Clothes",
+              "description": "New words: hat, sock, shoe, cap, coat, dress.",
+              "emoji": "👕",
+              "minutes": 8,
+              "introSpeech": "Let's learn some clothes words!",
+              "blueprint": {
+                "name": "vocabulary_set",
+                "words": [
+                  "hat",
+                  "sock",
+                  "shoe",
+                  "cap",
+                  "coat",
+                  "dress"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg3-vocab-rooms",
+          "dimension": "VOCABULARY",
+          "title": "Things in my house",
+          "childTitle": "My house",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg3-vocab-rooms-1",
+              "title": "Things in my house",
+              "childTitle": "My house",
+              "description": "New words: chair, clock, bath, lamp, bed, door.",
+              "emoji": "🛋️",
+              "minutes": 8,
+              "introSpeech": "Let's learn some my house words!",
+              "blueprint": {
+                "name": "vocabulary_set",
+                "words": [
+                  "chair",
+                  "clock",
+                  "bath",
+                  "lamp",
+                  "bed",
+                  "door"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg3-vocab-nature",
+          "dimension": "VOCABULARY",
+          "title": "Nature words",
+          "childTitle": "Nature",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg3-vocab-nature-1",
+              "title": "Nature words",
+              "childTitle": "Nature",
+              "description": "New words: tree, moon, star, rock, shell, flower.",
+              "emoji": "🌳",
+              "minutes": 8,
+              "introSpeech": "Let's learn some nature words!",
+              "blueprint": {
+                "name": "vocabulary_set",
+                "words": [
+                  "tree",
+                  "moon",
+                  "star",
+                  "rock",
+                  "shell",
+                  "flower"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

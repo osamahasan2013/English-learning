@@ -1388,6 +1388,131 @@
         }
       ],
       "status": "archived"
+    },
+    {
+      "code": "g2-vocabulary",
+      "subject": "VOCABULARY",
+      "title": "Word Explorers",
+      "emoji": "📚",
+      "description": "Everyday words: see them, hear them, learn what they mean and use them.",
+      "skills": [
+        {
+          "code": "g2-vocab-technology",
+          "dimension": "VOCABULARY",
+          "title": "Technology words",
+          "childTitle": "Tech",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g2-vocab-technology-1",
+              "title": "Technology words",
+              "childTitle": "Tech",
+              "description": "New words: robot, computer, camera, keyboard, battery, screen.",
+              "emoji": "💻",
+              "minutes": 8,
+              "introSpeech": "Let's learn some tech words!",
+              "blueprint": {
+                "name": "vocabulary_set",
+                "words": [
+                  "robot",
+                  "computer",
+                  "camera",
+                  "keyboard",
+                  "battery",
+                  "screen"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "g2-vocab-community",
+          "dimension": "VOCABULARY",
+          "title": "Places in my town",
+          "childTitle": "My town",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g2-vocab-community-1",
+              "title": "Places in my town",
+              "childTitle": "My town",
+              "description": "New words: bank, hospital, school, market, library, mail.",
+              "emoji": "🏘️",
+              "minutes": 8,
+              "introSpeech": "Let's learn some my town words!",
+              "blueprint": {
+                "name": "vocabulary_set",
+                "words": [
+                  "bank",
+                  "hospital",
+                  "school",
+                  "market",
+                  "library",
+                  "mail"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "g2-vocab-sports",
+          "dimension": "VOCABULARY",
+          "title": "Sports words",
+          "childTitle": "Sports",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g2-vocab-sports-1",
+              "title": "Sports words",
+              "childTitle": "Sports",
+              "description": "New words: race, tennis, skate, baseball, basketball, trophy.",
+              "emoji": "🏀",
+              "minutes": 8,
+              "introSpeech": "Let's learn some sports words!",
+              "blueprint": {
+                "name": "vocabulary_set",
+                "words": [
+                  "race",
+                  "tennis",
+                  "skate",
+                  "baseball",
+                  "basketball",
+                  "trophy"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "g2-vocab-places",
+          "dimension": "VOCABULARY",
+          "title": "Places to visit",
+          "childTitle": "Places",
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g2-vocab-places-1",
+              "title": "Places to visit",
+              "childTitle": "Places",
+              "description": "New words: farm, beach, zoo, city, station, park.",
+              "emoji": "🗺️",
+              "minutes": 8,
+              "introSpeech": "Let's learn some places words!",
+              "blueprint": {
+                "name": "vocabulary_set",
+                "words": [
+                  "farm",
+                  "beach",
+                  "zoo",
+                  "city",
+                  "station",
+                  "park"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

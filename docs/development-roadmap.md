@@ -1,6 +1,6 @@
 # Development roadmap
 
-Status after Phase 4 (phonics engine). ✅ done · 🟡 partial · ⬜ not started.
+Status after Phase 5 (vocabulary engine). ✅ done · 🟡 partial · ⬜ not started.
 
 ## Milestone 1 — vertical slice ✅
 
@@ -75,26 +75,42 @@ Built on the Phase 3 engine (no separate mastery, progress or assessment system)
 | Audio              | Listen / Slow / Again everywhere, visible no-sound fallback                                                                                                        |
 | Tests              | unit (`phonics`, `phonics-engine`, content files), SQL `005_phonics_engine.sql`, integration `phonics.test.ts`, e2e `phonics.spec.ts` on phone, tablet and desktop |
 
+## Phase 5 — vocabulary engine ✅
+
+Built on the Phase 3 engine and the Phase 4 phonics data (no separate mastery, progress,
+review or activity system):
+
+| Area       | Where                                                                                                                                                              |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Word model | migration `20261004100100`: sub-categories, word levels, example sentences, families, relation types, media checks + buckets, word mastery and areas (ADR-029–032) |
+| Activities | `vocabulary_set` blueprint + 14 vocabulary templates over existing types; rule-based distractors (`src/lib/content/vocabulary.ts`, ADR-030)                        |
+| Progress   | word mastery (`computeMastery`, vocabulary rules), per-area progress, auto-save, weak/missed/saved review items (`src/lib/learning/vocabulary.ts`)                 |
+| Screens    | `/child/words` (My Words, New Words, Practice, Categories, Word Explorer), word practice in the lesson player, `/parent/words`, dashboard card, `/admin/words/:id` |
+| Search     | `searchWords`: start of word, category (+ sub-categories), level, difficulty, phonics pattern, shape, part of speech — in the database, paginated                  |
+| Import     | CSV `levels`, `subcategory`, `examples`, `synonyms`, `antonyms`, `inflections`, `image`, `audio`; `content/vocabulary.json` families; example-sentence checks      |
+| Seed       | 393 words, 27 categories, 393 example sentences, 13 families, 21 vocabulary lessons (407 questions) across KG1–Grade 2                                             |
+| Tests      | unit `vocabulary.test.ts`, content files, SQL `006_vocabulary_engine.sql`, integration `vocabulary.test.ts`, e2e `vocabulary.spec.ts` on phone, tablet and desktop |
+
 ## Phases
 
-| #   | Phase                       | Status | Notes / next steps                                                                                                                                                      |
-| --- | --------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Project foundation          | ✅     | Next 16, TS, Tailwind, lint, tests, docs                                                                                                                                |
-| 2   | Database and authentication | ✅     | Schema, RLS, email/password auth, password reset, parent profile (name, time zone), levels seeded by migration, DB-enforced family rules                                |
-| 3   | Multi-child system          | ✅     | Create/edit/archive (max 12), switcher, child mode + grown-up gate, forged child ids rejected                                                                           |
-| 4   | Learning/content engine     | ✅     | Hierarchy, typed questions and activity config, registry (13 renderers), importer, templates, answer keys, engine services (Phase 3)                                    |
-| 5   | Phonics                     | ✅     | Phase 4: phoneme model, word splits, 3 new activity types, blueprints, Phonics screen, Phonics Check. Next: recorded audio, more lessons per pattern, decodable readers |
-| 6   | Vocabulary                  | 🟡     | Word bank + My Words data. Next: Word Explorer (`/child/words/[id]`), My Words screen, manual save, search                                                              |
-| 7   | Spelling                    | 🟡     | SPELLING type + error classification. Next: spelling sessions, error-type analytics                                                                                     |
-| 8   | Reading                     | 🟡     | READING renderer (passage + comprehension) done. Next: story library screens, read-aloud with optional speech recognition + self-check                                  |
-| 9   | Writing                     | 🟡     | TRACING (canvas, coverage scoring) and WRITING (word bank) done. Next: undo/eraser, stroke order and direction metrics                                                  |
-| 10  | Assessment                  | 🟡     | Phonics Check playable and scored per area; placement config + scoring logic. Next: placement UI, reassessment timeline                                                 |
-| 11  | Adaptive learning           | 🟡     | Mastery bands, prerequisites, review queue, next lesson and recommendations, daily plan. Next: mixed review sessions across skills, SRS                                 |
-| 12  | Parent dashboard            | 🟡     | Stats, activities, average score, learning time, subject progress, skills, recommendations, badges. Next: monthly view, words list                                      |
-| 13  | Games and rewards           | 🟡     | Stars, points, badges, streaks; MATCH, SORT, DRAG_DROP renderers. Next: MEMORY_MATCH, PHONICS_CLASSIFICATION                                                            |
-| 14  | PWA/offline/sync            | 🟡     | Outbox, idempotent sync, SW. Next: fully client-side offline lesson loader from IndexedDB; background sync                                                              |
-| 15  | Admin CMS                   | 🟡     | Guarded area, overview, word search. Next: reusable Zod-driven edit forms, CSV upload in UI, media upload with type/size validation                                     |
-| 16  | Testing and optimisation    | 🟡     | CI for static checks and build. Next: DB + e2e tests in CI (Supabase CLI), axe accessibility checks, Lighthouse budget                                                  |
+| #   | Phase                       | Status | Notes / next steps                                                                                                                                                            |
+| --- | --------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | Project foundation          | ✅     | Next 16, TS, Tailwind, lint, tests, docs                                                                                                                                      |
+| 2   | Database and authentication | ✅     | Schema, RLS, email/password auth, password reset, parent profile (name, time zone), levels seeded by migration, DB-enforced family rules                                      |
+| 3   | Multi-child system          | ✅     | Create/edit/archive (max 12), switcher, child mode + grown-up gate, forged child ids rejected                                                                                 |
+| 4   | Learning/content engine     | ✅     | Hierarchy, typed questions and activity config, registry (13 renderers), importer, templates, answer keys, engine services (Phase 3)                                          |
+| 5   | Phonics                     | ✅     | Phase 4: phoneme model, word splits, 3 new activity types, blueprints, Phonics screen, Phonics Check. Next: recorded audio, more lessons per pattern, decodable readers       |
+| 6   | Vocabulary                  | ✅     | Phase 5: word model, Word Explorer, My Words, 14 vocabulary activities, word mastery + review, search, parent progress. Next: illustrated pictures, recorded audio, more sets |
+| 7   | Spelling                    | 🟡     | SPELLING type + error classification. Next: spelling sessions, error-type analytics                                                                                           |
+| 8   | Reading                     | 🟡     | READING renderer (passage + comprehension) done. Next: story library screens, read-aloud with optional speech recognition + self-check                                        |
+| 9   | Writing                     | 🟡     | TRACING (canvas, coverage scoring) and WRITING (word bank) done. Next: undo/eraser, stroke order and direction metrics                                                        |
+| 10  | Assessment                  | 🟡     | Phonics Check playable and scored per area; placement config + scoring logic. Next: placement UI, reassessment timeline                                                       |
+| 11  | Adaptive learning           | 🟡     | Mastery bands, prerequisites, review queue, next lesson and recommendations, daily plan. Next: mixed review sessions across skills, SRS                                       |
+| 12  | Parent dashboard            | 🟡     | Stats, activities, average score, learning time, subject progress, skills, recommendations, badges. Next: monthly view, words list                                            |
+| 13  | Games and rewards           | 🟡     | Stars, points, badges, streaks; MATCH, SORT, DRAG_DROP renderers. Next: MEMORY_MATCH, PHONICS_CLASSIFICATION                                                                  |
+| 14  | PWA/offline/sync            | 🟡     | Outbox, idempotent sync, SW. Next: fully client-side offline lesson loader from IndexedDB; background sync                                                                    |
+| 15  | Admin CMS                   | 🟡     | Guarded area, overview, word search. Next: reusable Zod-driven edit forms, CSV upload in UI, media upload with type/size validation                                           |
+| 16  | Testing and optimisation    | 🟡     | CI for static checks and build. Next: DB + e2e tests in CI (Supabase CLI), axe accessibility checks, Lighthouse budget                                                        |
 
 ## Known limitations
 
@@ -106,8 +122,14 @@ Built on the Phase 3 engine (no separate mastery, progress or assessment system)
   tried one by one on a modified client; the server's re-evaluation is what protects
   progress (ADR-021).
 - Tracing is scored on coverage of the letter only (no stroke order or direction yet).
-- VOCABULARY, SPELLING and LISTENING are defined subjects without units of their own yet
-  (spelling and listening activities sit inside phonics and reading lessons).
+- SPELLING and LISTENING are defined subjects without units of their own yet (spelling
+  and listening activities sit inside phonics, reading and vocabulary lessons).
+- A word can be practised only when some lesson asks about it: 307 of the 393 words have
+  questions today; the others say "coming soon" in the Word Explorer.
+- Picture upload needs Supabase Storage (hosted only; the Docker-free local stack has
+  none), and no word has an uploaded picture or recording yet — emoji and speech
+  synthesis are used.
+- Saving to My Words needs a connection (answers are still offline-first).
 - The rate limiter is per server instance.
 - Placement ("Find My Level") has data and logic but no UI yet; parents set the level
   manually. The Phonics Check is playable.

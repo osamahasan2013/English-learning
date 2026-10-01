@@ -70,6 +70,18 @@ const list = (v: string | undefined) =>
     .map((s) => s.trim())
     .filter(Boolean);
 
+// inflections cell: "past=jumped;ing=jumping" → { past: "jumped", ing: "jumping" }. A
+// malformed entry keeps its raw text as the key, so validation reports it.
+export function parseInflectionsCell(cell: string | undefined) {
+  const out: Record<string, string> = {};
+  for (const entry of list(cell)) {
+    const at = entry.indexOf("=");
+    if (at === -1) out[entry] = "";
+    else out[entry.slice(0, at).trim().toLowerCase()] = entry.slice(at + 1).trim();
+  }
+  return out;
+}
+
 // phonics_pattern cell: "SH*;EE" or "TH:TH_VOICED*" — code, optional :SOUND, * = featured
 // example of that pattern.
 export function parsePatternCell(cell: string | undefined) {
@@ -100,7 +112,9 @@ export function parseWordsCsv(input: string): {
       word: get("word"),
       sense: get("sense") ? Number(get("sense")) : undefined,
       level: get("level")?.toUpperCase(),
+      levels: list(get("levels")).map((l) => l.toUpperCase()),
       category: get("category") ? get("category")!.toUpperCase() : undefined,
+      subcategory: get("subcategory") ? get("subcategory")!.toUpperCase() : undefined,
       difficulty: Number(get("difficulty")),
       partOfSpeech: get("part_of_speech") || undefined,
       syllables: get("syllables") ? Number(get("syllables")) : undefined,
@@ -108,6 +122,11 @@ export function parseWordsCsv(input: string): {
       definition: get("definition") || undefined,
       childDefinition: get("child_definition") || undefined,
       exampleSentence: get("example_sentence") || undefined,
+      // Sentences may contain ";", so extra examples are separated by "|" only.
+      examples: (get("examples") ?? "")
+        .split("|")
+        .map((x) => x.trim())
+        .filter(Boolean),
       sightWord: truthy(get("sight_word")),
       irregular: truthy(get("irregular")),
       spellingNote: get("spelling_note") || undefined,
@@ -116,6 +135,11 @@ export function parseWordsCsv(input: string): {
       tags: list(get("tags")),
       patterns: parsePatternCell(get("phonics_pattern")),
       related: list(get("related")),
+      synonyms: list(get("synonyms")),
+      antonyms: list(get("antonyms")),
+      inflections: parseInflectionsCell(get("inflections")),
+      image: get("image") || undefined,
+      audio: get("audio") || undefined,
       segments: get("segments") || undefined,
       status: get("status") || undefined,
     };

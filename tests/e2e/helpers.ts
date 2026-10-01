@@ -97,7 +97,7 @@ export async function startLesson(page: Page) {
 // correctly on the first try; otherwise every first try is wrong.
 export async function playLesson(page: Page, questions: Map<string, QuestionRow>, correct: boolean) {
   for (let guard = 0; guard < 200; guard++) {
-    const finished = page.getByRole("heading", { level: 1, name: /You finished|Nice peek/ });
+    const finished = page.getByRole("heading", { level: 1, name: /You finished|Nice peek|Great practice/ });
     const start = page.getByRole("button", { name: /^(Start|Try the whole lesson)$/ });
     const section = page.locator("section[data-question-id]");
     // Whichever screen the player is on (it first checks the device for a saved run).

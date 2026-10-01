@@ -775,6 +775,8 @@ export type Database = {
           status: Database["public"]["Enums"]["content_status"];
           created_at: string;
           updated_at: string;
+          mime_type: string | null;
+          byte_size: number | null;
         };
         Insert: {
           id?: string;
@@ -787,6 +789,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          mime_type?: string | null;
+          byte_size?: number | null;
         };
         Update: {
           id?: string;
@@ -799,6 +803,8 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          mime_type?: string | null;
+          byte_size?: number | null;
         };
         Relationships: [
 
@@ -2462,6 +2468,54 @@ export type Database = {
           },
         ];
       };
+      word_area_progress: {
+        Row: {
+          child_id: string;
+          word_id: string;
+          area: string;
+          attempts_count: number;
+          correct_count: number;
+          accuracy: number;
+          last_practiced_at: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          child_id: string;
+          word_id: string;
+          area: string;
+          attempts_count?: number;
+          correct_count?: number;
+          accuracy?: number;
+          last_practiced_at?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          child_id?: string;
+          word_id?: string;
+          area?: string;
+          attempts_count?: number;
+          correct_count?: number;
+          accuracy?: number;
+          last_practiced_at?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "word_area_progress_child_id_fkey";
+            columns: ["child_id"];
+            isOneToOne: false;
+            referencedRelation: "children";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "word_area_progress_word_id_fkey";
+            columns: ["word_id"];
+            isOneToOne: false;
+            referencedRelation: "words";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       word_categories: {
         Row: {
           id: string;
@@ -2470,6 +2524,10 @@ export type Database = {
           emoji: string;
           sort_order: number;
           created_at: string;
+          parent_id: string | null;
+          description: string;
+          status: Database["public"]["Enums"]["content_status"];
+          updated_at: string;
         };
         Insert: {
           id?: string;
@@ -2478,6 +2536,10 @@ export type Database = {
           emoji?: string;
           sort_order?: number;
           created_at?: string;
+          parent_id?: string | null;
+          description?: string;
+          status?: Database["public"]["Enums"]["content_status"];
+          updated_at?: string;
         };
         Update: {
           id?: string;
@@ -2486,9 +2548,148 @@ export type Database = {
           emoji?: string;
           sort_order?: number;
           created_at?: string;
+          parent_id?: string | null;
+          description?: string;
+          status?: Database["public"]["Enums"]["content_status"];
+          updated_at?: string;
         };
         Relationships: [
-
+          {
+            foreignKeyName: "word_categories_parent_id_fkey";
+            columns: ["parent_id"];
+            isOneToOne: false;
+            referencedRelation: "word_categories";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      word_families: {
+        Row: {
+          id: string;
+          code: string;
+          rime: string;
+          title: string;
+          level_id: string;
+          vowel_pattern_id: string | null;
+          emoji: string;
+          sort_order: number;
+          status: Database["public"]["Enums"]["content_status"];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          code: string;
+          rime: string;
+          title: string;
+          level_id: string;
+          vowel_pattern_id?: string | null;
+          emoji?: string;
+          sort_order?: number;
+          status?: Database["public"]["Enums"]["content_status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          code?: string;
+          rime?: string;
+          title?: string;
+          level_id?: string;
+          vowel_pattern_id?: string | null;
+          emoji?: string;
+          sort_order?: number;
+          status?: Database["public"]["Enums"]["content_status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "word_families_level_id_fkey";
+            columns: ["level_id"];
+            isOneToOne: false;
+            referencedRelation: "levels";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "word_families_vowel_pattern_id_fkey";
+            columns: ["vowel_pattern_id"];
+            isOneToOne: false;
+            referencedRelation: "phonics_patterns";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      word_family_members: {
+        Row: {
+          family_id: string;
+          word_id: string;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          family_id: string;
+          word_id: string;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          family_id?: string;
+          word_id?: string;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "word_family_members_family_id_fkey";
+            columns: ["family_id"];
+            isOneToOne: false;
+            referencedRelation: "word_families";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "word_family_members_word_id_fkey";
+            columns: ["word_id"];
+            isOneToOne: false;
+            referencedRelation: "words";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      word_levels: {
+        Row: {
+          word_id: string;
+          level_id: string;
+          is_primary: boolean;
+          created_at: string;
+        };
+        Insert: {
+          word_id: string;
+          level_id: string;
+          is_primary?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          word_id?: string;
+          level_id?: string;
+          is_primary?: boolean;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "word_levels_level_id_fkey";
+            columns: ["level_id"];
+            isOneToOne: false;
+            referencedRelation: "levels";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "word_levels_word_id_fkey";
+            columns: ["word_id"];
+            isOneToOne: false;
+            referencedRelation: "words";
+            referencedColumns: ["id"];
+          },
         ];
       };
       word_phonics_patterns: {
@@ -2548,6 +2749,15 @@ export type Database = {
           last_practiced_at: string | null;
           created_at: string;
           updated_at: string;
+          first_seen_at: string | null;
+          saved_at: string | null;
+          last_reviewed_at: string | null;
+          status: Database["public"]["Enums"]["mastery_status"];
+          mastery_score: number;
+          accuracy: number;
+          practice_days: number;
+          review_priority: number;
+          next_review_at: string | null;
         };
         Insert: {
           child_id: string;
@@ -2559,6 +2769,15 @@ export type Database = {
           last_practiced_at?: string | null;
           created_at?: string;
           updated_at?: string;
+          first_seen_at?: string | null;
+          saved_at?: string | null;
+          last_reviewed_at?: string | null;
+          status?: Database["public"]["Enums"]["mastery_status"];
+          mastery_score?: number;
+          accuracy?: number;
+          practice_days?: number;
+          review_priority?: number;
+          next_review_at?: string | null;
         };
         Update: {
           child_id?: string;
@@ -2570,6 +2789,15 @@ export type Database = {
           last_practiced_at?: string | null;
           created_at?: string;
           updated_at?: string;
+          first_seen_at?: string | null;
+          saved_at?: string | null;
+          last_reviewed_at?: string | null;
+          status?: Database["public"]["Enums"]["mastery_status"];
+          mastery_score?: number;
+          accuracy?: number;
+          practice_days?: number;
+          review_priority?: number;
+          next_review_at?: string | null;
         };
         Relationships: [
           {
@@ -2666,6 +2894,42 @@ export type Database = {
           },
           {
             foreignKeyName: "word_segments_word_id_fkey";
+            columns: ["word_id"];
+            isOneToOne: false;
+            referencedRelation: "words";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      word_sentences: {
+        Row: {
+          word_id: string;
+          sentence_id: string;
+          sort_order: number;
+          created_at: string;
+        };
+        Insert: {
+          word_id: string;
+          sentence_id: string;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Update: {
+          word_id?: string;
+          sentence_id?: string;
+          sort_order?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "word_sentences_sentence_id_fkey";
+            columns: ["sentence_id"];
+            isOneToOne: false;
+            referencedRelation: "sentences";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "word_sentences_word_id_fkey";
             columns: ["word_id"];
             isOneToOne: false;
             referencedRelation: "words";
@@ -2835,12 +3099,21 @@ export type Database = {
         };
         Relationships: [];
       };
+      word_category_stats: {
+        Row: {
+          category_id: string | null;
+          published_words: number | null;
+        };
+        Relationships: [];
+      };
     };
     Functions: {
       archive_child: { Args: { p_child_id: string }; Returns: undefined };
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
       is_my_child: { Args: { p_child_id: string }; Returns: boolean };
       is_valid_time_zone: { Args: { p_name: string }; Returns: boolean };
+      note_word_seen: { Args: { p_child_id: string; p_word_id: string }; Returns: undefined };
+      set_word_saved: { Args: { p_child_id: string; p_word_id: string; p_saved: boolean }; Returns: undefined };
     };
     Enums: {
       app_role: "parent" | "admin";
