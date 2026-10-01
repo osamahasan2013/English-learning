@@ -20,6 +20,7 @@ applied). TypeScript types in `src/lib/supabase/types.ts` are generated
 | `20261002100100_phonics_engine.sql`                   | Phase 4 phonics: phoneme inventory, phonics stages, pattern fields (stage, position, letter case/name, image), sound phonemes, pattern relations, word segments, word shape/decodable, skill stage, content review flags                                                                               |
 | `20261003100100_progress_integrity.sql`               | Audit fixes (ADR-028): one first try per question per lesson run / assessment sitting (unique indexes), `activity_attempts.correct_answer` hidden from parents, content link tables readable only when their content is published                                                                      |
 | `20261004100100_vocabulary_engine.sql`                | Phase 5 vocabulary: sub-categories and category status, word levels, example sentences, word families, more relation types, media type/size checks and Storage buckets, word mastery and per-area progress, `weak_word` review reason, `set_word_saved` / `note_word_seen`, `word_category_stats` view |
+| `20261005100100_content_storage_select.sql`           | Admins may read (SELECT) the files in the `content-images` / `content-audio` buckets; without it every admin upload (upsert) was refused by RLS                                                                                                                                                        |
 
 ## Conventions
 
@@ -183,9 +184,13 @@ Rules enforced by the database, whatever the client sends:
   `word_family_members`) are readable only when published (admins see all); sub-categories
   are one level deep (`CATEGORY_TOO_DEEP`); `word_progress` and `word_area_progress` are
   read-only for the owning parent; uploads are limited by type and size in the database
-  and in the Storage buckets, which only admins may write.
+  and in the Storage buckets, which only admins may write or list (`storage.objects`
+  insert/update/delete/select policies for `content-images` and `content-audio`;
+  SELECT added in `20261005100100`, needed for upserts). Everyone reads the files
+  through the public bucket URLs.
 
-Tests: `supabase/tests/00{1,2,3,4,5,6}_*.sql` (`npm run test:db`) and the API-level
+Tests: `supabase/tests/00{1,2,3,4,5,6,7}_*.sql` (`npm run test:db`; 007 checks the Storage
+policies and is skipped where Supabase Storage is not installed) and the API-level
 integration tests in `tests/integration` (`npm run test:integration`).
 
 ## Indexes

@@ -80,16 +80,16 @@ Built on the Phase 3 engine (no separate mastery, progress or assessment system)
 Built on the Phase 3 engine and the Phase 4 phonics data (no separate mastery, progress,
 review or activity system):
 
-| Area       | Where                                                                                                                                                              |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Word model | migration `20261004100100`: sub-categories, word levels, example sentences, families, relation types, media checks + buckets, word mastery and areas (ADR-029–032) |
-| Activities | `vocabulary_set` blueprint + 14 vocabulary templates over existing types; rule-based distractors (`src/lib/content/vocabulary.ts`, ADR-030)                        |
-| Progress   | word mastery (`computeMastery`, vocabulary rules), per-area progress, auto-save, weak/missed/saved review items (`src/lib/learning/vocabulary.ts`)                 |
-| Screens    | `/child/words` (My Words, New Words, Practice, Categories, Word Explorer), word practice in the lesson player, `/parent/words`, dashboard card, `/admin/words/:id` |
-| Search     | `searchWords`: start of word, category (+ sub-categories), level, difficulty, phonics pattern, shape, part of speech — in the database, paginated                  |
-| Import     | CSV `levels`, `subcategory`, `examples`, `synonyms`, `antonyms`, `inflections`, `image`, `audio`; `content/vocabulary.json` families; example-sentence checks      |
-| Seed       | 393 words, 27 categories, 393 example sentences, 13 families, 21 vocabulary lessons (407 questions) across KG1–Grade 2                                             |
-| Tests      | unit `vocabulary.test.ts`, content files, SQL `006_vocabulary_engine.sql`, integration `vocabulary.test.ts`, e2e `vocabulary.spec.ts` on phone, tablet and desktop |
+| Area       | Where                                                                                                                                                                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Word model | migration `20261004100100`: sub-categories, word levels, example sentences, families, relation types, media checks + buckets, word mastery and areas (ADR-029–032); `20261005100100`: admin read policy on the content buckets (upload fix) |
+| Activities | `vocabulary_set` blueprint + 14 vocabulary templates over existing types; rule-based distractors (`src/lib/content/vocabulary.ts`, ADR-030)                                                                                                 |
+| Progress   | word mastery (`computeMastery`, vocabulary rules), per-area progress, auto-save, weak/missed/saved review items (`src/lib/learning/vocabulary.ts`)                                                                                          |
+| Screens    | `/child/words` (My Words, New Words, Practice, Categories, Word Explorer), word practice in the lesson player, `/parent/words`, dashboard card, `/admin/words/:id`                                                                          |
+| Search     | `searchWords`: start of word, category (+ sub-categories), level, difficulty, phonics pattern, shape, part of speech — in the database, paginated                                                                                           |
+| Import     | CSV `levels`, `subcategory`, `examples`, `synonyms`, `antonyms`, `inflections`, `image`, `audio`; `content/vocabulary.json` families; example-sentence checks                                                                               |
+| Seed       | 393 words, 27 categories, 393 example sentences, 13 families, 21 vocabulary lessons (407 questions) across KG1–Grade 2                                                                                                                      |
+| Tests      | unit `vocabulary.test.ts`, content files, SQL `006_vocabulary_engine.sql` + `007_content_storage.sql`, integration `vocabulary.test.ts`, e2e `vocabulary.spec.ts` on phone, tablet and desktop                                              |
 
 ## Phases
 
@@ -128,7 +128,13 @@ review or activity system):
   questions today; the others say "coming soon" in the Word Explorer.
 - Picture upload needs Supabase Storage (hosted only; the Docker-free local stack has
   none), and no word has an uploaded picture or recording yet — emoji and speech
-  synthesis are used.
+  synthesis are used. The Phase 5 storage policies gave admins no SELECT on the content
+  buckets, so every upload (an upsert) was refused by RLS; this was missed because the
+  upload had never been run on hosted (only the bucket and policy setup was checked).
+  Fixed by `20261005100100` and verified on hosted at the database level (admin
+  upload/read/overwrite allowed; parents and anonymous visitors refused). A real upload
+  through `/admin/words/:id` on hosted is still to be done: hosted has no admin account
+  yet (see `docs/development.md` to make one).
 - Saving to My Words needs a connection (answers are still offline-first).
 - The rate limiter is per server instance.
 - Placement ("Find My Level") has data and logic but no UI yet; parents set the level

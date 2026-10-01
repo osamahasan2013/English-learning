@@ -343,6 +343,12 @@ Pages fall back to the word's emoji and to speech synthesis.
 **Why.** No binaries in Postgres; never trust a file name or a browser-declared type.
 **Consequences.** The Docker-free local stack has no Storage, so uploads are verified by
 unit tests and only work against hosted Supabase.
+**Correction (20261005100100).** The first policy set gave admins INSERT/UPDATE/DELETE
+but no SELECT on the content buckets. Storage needs SELECT for an upsert (and for any
+write that returns or matches rows), so every admin upload failed with an RLS error. It
+was not caught because no upload had been run on hosted. Admins now also have SELECT,
+limited to the two content buckets; parents and anonymous visitors still cannot write or
+list them (`supabase/tests/007_content_storage.sql`, run against hosted).
 
 ## ADR-032 — My Words is written through ownership-checked database functions
 
