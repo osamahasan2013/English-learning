@@ -348,7 +348,9 @@ but no SELECT on the content buckets. Storage needs SELECT for an upsert (and fo
 write that returns or matches rows), so every admin upload failed with an RLS error. It
 was not caught because no upload had been run on hosted. Admins now also have SELECT,
 limited to the two content buckets; parents and anonymous visitors still cannot write or
-list them (`supabase/tests/007_content_storage.sql`, run against hosted).
+list them (`supabase/tests/007_content_storage.sql`, run against hosted). Verified end
+to end on production on 2026-10-02 (upload through the admin page, public URL, rendering,
+re-upload without duplicates, refused anonymous/parent/invalid/oversized uploads).
 
 ## ADR-032 — My Words is written through ownership-checked database functions
 

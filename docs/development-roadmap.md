@@ -132,9 +132,12 @@ review or activity system):
   buckets, so every upload (an upsert) was refused by RLS; this was missed because the
   upload had never been run on hosted (only the bucket and policy setup was checked).
   Fixed by `20261005100100` and verified on hosted at the database level (admin
-  upload/read/overwrite allowed; parents and anonymous visitors refused). A real upload
-  through `/admin/words/:id` on hosted is still to be done: hosted has no admin account
-  yet (see `docs/development.md` to make one).
+  upload/read/overwrite allowed; parents and anonymous visitors refused), then end to end
+  on production (2026-10-02) with a temporary admin: a PNG uploaded through
+  `/admin/words/:id` was stored, recorded, linked, served by its public URL and shown on
+  the page; a re-upload reused the same file and record; a fake PNG, a file over 1 MB and
+  anonymous or parent uploads were refused. The test picture was removed afterwards.
+  Hosted has no admin account (see `docs/development.md` to make one).
 - Saving to My Words needs a connection (answers are still offline-first).
 - The rate limiter is per server instance.
 - Placement ("Find My Level") has data and logic but no UI yet; parents set the level
