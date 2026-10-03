@@ -24,7 +24,9 @@ export type SoundEntry = {
   // What speech synthesis says for the sound ("" when no safe rendering exists).
   tts: string;
   quality: SoundQuality;
-  keyword?: { word: string; position: KeywordPosition } | null;
+  // Words that have the sound, in order of preference (the first one not on screen is
+  // used, so a question never gives its answer away: "the sound at the start of egg").
+  keyword?: { words: string[]; position: KeywordPosition } | null;
   // A recorded clip of the sound, preferred over everything else.
   assetUrl?: string | null;
 };
@@ -91,9 +93,16 @@ const KEYWORD_PHRASE: Record<KeywordPosition, (word: string) => string> = {
   last: (w) => `the sound at the end of ${w}`,
 };
 
-function entryText(entry: SoundEntry): string {
+// Words on screen, which a keyword must not name (it would give the answer away).
+export type ResolveOptions = { avoid?: ReadonlySet<string> };
+
+function entryText(entry: SoundEntry, options: ResolveOptions): string {
   if (entry.quality !== "keyword" && entry.tts) return entry.tts;
-  return entry.keyword ? KEYWORD_PHRASE[entry.keyword.position](entry.keyword.word) : "";
+  if (!entry.keyword?.words.length) return "";
+  const avoid = options.avoid;
+  const word = entry.keyword.words.find((w) => !avoid?.has(w));
+  // Every keyword is on screen: no safe way to name the sound without the answer.
+  return word ? KEYWORD_PHRASE[entry.keyword.position](word) : "";
 }
 
 export type ResolvedSound = {
@@ -107,10 +116,14 @@ export type ResolvedSound = {
 // One sound → what to play. Sequences without their own entry ("K S") are built from
 // their phonemes when every phoneme has a synthesis rendering; otherwise nothing is said
 // rather than something wrong.
-export function resolveSound(phonemes: readonly string[], table: SoundTable): ResolvedSound {
+export function resolveSound(
+  phonemes: readonly string[],
+  table: SoundTable,
+  options: ResolveOptions = {},
+): ResolvedSound {
   const entry = table.sounds[soundKey(phonemes)];
   if (entry) {
-    const text = entryText(entry);
+    const text = entryText(entry, options);
     if (entry.assetUrl) return { text, assetUrl: entry.assetUrl, strategy: "asset", quality: entry.quality };
     if (text)
       return {
@@ -197,7 +210,7 @@ export type SpeechPart = { kind: "tts"; text: string } | { kind: "asset"; url: s
 // token's rendering into one utterance (natural phrasing); a recorded clip splits it.
 // Unsafe words left in plain text (content imported before this check existed) are
 // dropped: silence is better than teaching a letter name as a sound.
-export function planSpeech(text: string, table: SoundTable): SpeechPart[] {
+export function planSpeech(text: string, table: SoundTable, options: ResolveOptions = {}): SpeechPart[] {
   const parts: SpeechPart[] = [];
   let buffer = "";
   const flush = () => {
@@ -214,7 +227,9 @@ export function planSpeech(text: string, table: SoundTable): SpeechPart[] {
       continue;
     }
     const r =
-      piece.kind === "sound" ? resolveSound(piece.phonemes, table) : resolveLetter(piece.letter, table);
+      piece.kind === "sound"
+        ? resolveSound(piece.phonemes, table, options)
+        : resolveLetter(piece.letter, table);
     if (r.assetUrl) {
       flush();
       parts.push({ kind: "asset", url: r.assetUrl, fallback: r.text });
@@ -225,8 +240,8 @@ export function planSpeech(text: string, table: SoundTable): SpeechPart[] {
 }
 
 // The whole thing as synthesis would say it (no clips): for tests, audits and captions.
-export function speakableText(text: string, table: SoundTable) {
-  return planSpeech(text, stripAssets(table))
+export function speakableText(text: string, table: SoundTable, options: ResolveOptions = {}) {
+  return planSpeech(text, stripAssets(table), options)
     .map((p) => (p.kind === "tts" ? p.text : p.fallback))
     .join(" ");
 }
@@ -259,7 +274,10 @@ export function buildSoundTable(
     const entry: SoundEntry = {
       tts: row.tts,
       quality: row.quality,
-      keyword: row.keyword ? { word: row.keyword, position: row.keywordPosition ?? "first" } : null,
+      // Several keywords are stored space-separated: "egg elephant elbow".
+      keyword: row.keyword
+        ? { words: row.keyword.split(/\s+/).filter(Boolean), position: row.keywordPosition ?? "first" }
+        : null,
       assetUrl: row.assetUrl ?? null,
     };
     const existing = sounds[key];
@@ -330,4 +348,18 @@ export function soundLabelLookup(phonemes: readonly { code: string; label: strin
     }
     return out;
   };
+}
+
+// The words a question shows (its options, items, word…), which a keyword must avoid.
+export function visibleWords(content: unknown): Set<string> {
+  const words = new Set<string>();
+  const walk = (value: unknown, key: string) => {
+    if (typeof value === "string") {
+      if (key === "text" || key === "word" || key === "display")
+        for (const w of value.toLowerCase().match(/[a-z]+/g) ?? []) words.add(w);
+    } else if (Array.isArray(value)) value.forEach((v) => walk(v, key));
+    else if (value && typeof value === "object") for (const [k, v] of Object.entries(value)) walk(v, k);
+  };
+  walk(content, "");
+  return words;
 }

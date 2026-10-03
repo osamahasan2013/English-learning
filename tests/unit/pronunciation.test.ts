@@ -13,6 +13,7 @@ import {
   speechFromDisplay,
   speechProblems,
   soundLabelLookup,
+  visibleWords,
   type SoundTable,
 } from "@/lib/audio/pronunciation";
 import { phonicsFileSchema } from "@/lib/content/content-schemas";
@@ -88,6 +89,52 @@ describe("sounds without a safe synthesis rendering", () => {
     expect(speakableText(soundToken(["K", "S"]), table)).toBe("kuh suh");
     // A part with no rendering: nothing, not a guess.
     expect(resolveSound(["K", "AE"], table).strategy).toBe("none");
+  });
+});
+
+describe("keywords never give the answer away", () => {
+  const t = buildSoundTable([
+    {
+      phonemes: ["EH"],
+      tts: "",
+      quality: "keyword",
+      keyword: "egg elephant elbow",
+      keywordPosition: "first",
+    },
+  ]);
+
+  it("names the first keyword that is not on screen", () => {
+    const question = {
+      options: [
+        { id: "sun", text: "sun" },
+        { id: "egg", text: "egg" },
+      ],
+    };
+    const avoid = visibleWords(question);
+    expect(speakableText("Which one starts with {/EH/}?", t)).toBe(
+      "Which one starts with the sound at the start of egg?",
+    );
+    expect(speakableText("Which one starts with {/EH/}?", t, { avoid })).toBe(
+      "Which one starts with the sound at the start of elephant?",
+    );
+  });
+
+  it("says nothing for the sound when every keyword is on screen", () => {
+    const avoid = new Set(["egg", "elephant", "elbow"]);
+    expect(resolveSound(["EH"], t, { avoid }).strategy).toBe("none");
+  });
+
+  it("collects the words a question shows", () => {
+    expect(
+      [
+        ...visibleWords({
+          word: "Ship",
+          display: "🚢 ship",
+          options: [{ text: "fish", speech: "x" }],
+          items: [{ text: "big egg" }],
+        }),
+      ].sort(),
+    ).toEqual(["big", "egg", "fish", "ship"]);
   });
 });
 

@@ -121,7 +121,10 @@ const KEYWORD_POSITIONS = ["first", "middle", "last"] as const;
 const audioPath = z
   .string()
   .regex(/^audio\/[a-z0-9/_-]+\.(mp3|m4a|ogg|wav)$/, "audio must be audio/…/name.mp3");
-const keywordWord = z.string().regex(/^[a-z]{2,20}$/, "a keyword is one lowercase word");
+// One to four lowercase words that have the sound, in order of preference.
+const keywordWord = z
+  .string()
+  .regex(/^[a-z]{2,20}( [a-z]{2,20}){0,3}$/, "keywords are 1–4 lowercase words, space-separated");
 const speechRendering = z
   .string()
   .max(40)

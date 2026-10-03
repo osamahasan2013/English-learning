@@ -439,3 +439,5 @@ bare letter groups. The audio service plays one thing at a time and cancels sequ
 sound without a re-import. Consonants remain approximate (with "uh") and five vowel sounds
 are keyword-only until recordings exist; blending by ear is weaker for those. Old cached
 lessons without a sound table do not speak their tokens (silence, not wrong sounds).
+A keyword is never one of the words on screen in a scored question (several keywords per
+sound; the player passes the visible words), so the fallback cannot give the answer away.

@@ -23,6 +23,7 @@ applied). TypeScript types in `src/lib/supabase/types.ts` are generated
 | `20261005100100_content_storage_select.sql`           | Admins may read (SELECT) the files in the `content-images` / `content-audio` buckets; without it every admin upload (upsert) was refused by RLS                                                                                                                                                           |
 | `20261006100100_spelling_engine.sql`                  | Phase 6 spelling: `spelling_types`, `spelling_words` (the spelling view of a word), attempt `hints_used` / `spelling_analysis` / `error_pattern_id`, `spelling_progress`, spelling and pattern review keys and reasons, `feedback_messages.error_category`, `spelling_word` review flags, analytics views |
 | `20261007100100_pronunciation.sql`                    | Pronunciation (ADR-036): `phonemes` and `phonics_pattern_sounds` gain `tts_quality` (pure / approximate / keyword), `keyword` + `keyword_position`; `say_as` may be empty (keyword sounds; single-sound patterns use the phoneme); `phonemes.audio_asset_id` for recorded clips                           |
+| `20261007100200_pronunciation_keywords.sql`           | A sound's `keyword` may list up to four words (the first not on screen is used, so a question never names its own answer)                                                                                                                                                                                 |
 
 ## Conventions
 

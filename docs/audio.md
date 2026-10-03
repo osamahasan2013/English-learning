@@ -49,7 +49,12 @@ kuh.").
      voices cannot say an isolated consonant.
 3. **Keyword** — for sounds no browser voice can produce from text (the short vowels /æ/
    /ɛ/ /ɪ/, /ʊ/ as in book, /aʊ/ as in cow, /ks/, /ɪd/), the app says "the sound at the
-   start of apple" instead of inventing a wrong one. These sounds need recordings.
+   start of apple" instead of inventing a wrong one. These sounds need recordings. Each
+   sound lists up to four keywords (`egg elephant elbow`). In a scored question the
+   player passes the words on screen (its options and items), and the first keyword
+   _not_ shown is used. "Which one starts with /e/?" with egg as a choice says "…the
+   start of elephant", never giving the answer away. If every keyword is on screen the
+   sound is not spoken.
 4. **Nothing** — a token that cannot be resolved is silent, never spoken as letters.
 
 Multi-sound patterns can carry their own rendering (`shun` for TION, `ing` for ING,

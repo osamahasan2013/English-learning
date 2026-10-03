@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { addChild, lessonQuestions, registerParent, startLesson } from "./helpers";
+import { addChild, answerQuestion, lessonQuestions, registerParent, startLesson } from "./helpers";
 
 // What the browser is actually asked to say, end to end: lesson content from the database
 // (sound tokens) → the sound table in the payload → the pronunciation resolver → the
@@ -66,4 +66,31 @@ test("phonics sounds are spoken as sounds and letter names as names", async ({ p
     expect(text).not.toMatch(/\{[/@]/);
     expect(text).not.toMatch(/\b(sss|shh|hh|th|sh|ng)\b/i);
   }
+});
+
+test("a sound named by a keyword never names one of the answer choices", async ({ page }) => {
+  await recordSpeech(page);
+  await registerParent(page);
+  await addChild(page, "Ivo", /Kindergarten 1/);
+  await page.getByRole("button", { name: /Start learning as Ivo/ }).click();
+  await expect(page).toHaveURL(/\/child\/home/);
+
+  // Letter a: "Which one starts with /a/?" with apple among the choices. Short a cannot be
+  // synthesised, so it is named by a keyword, which must not be "apple".
+  const { lessonId, questions } = await lessonQuestions("kg1-letter-a-1");
+  const target = [...questions.values()].find(
+    (q) => q.question_type === "PICTURE_MATCH" && JSON.stringify(q.content).includes('"apple"'),
+  )!;
+  await page.goto(`/child/learn/${lessonId}`);
+  await startLesson(page);
+  for (let guard = 0; guard < 20; guard++) {
+    const id = await page.locator("section[data-question-id]").getAttribute("data-question-id");
+    if (id === target.id) break;
+    const next = page.getByRole("button", { name: /^Next/ });
+    if (!(await next.isVisible())) await answerQuestion(page, questions.get(id!)!, true);
+    await page.getByRole("button", { name: /^Next/ }).click();
+  }
+  await expect
+    .poll(async () => (await spoken(page)).find((t) => t.startsWith("Which one starts with")))
+    .toBe("Which one starts with the sound at the start of ant?");
 });

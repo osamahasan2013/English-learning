@@ -10,6 +10,7 @@ import { ACTIVITY_RENDERERS } from "@/features/activities/registry";
 import { isRenderableQuestionType } from "@/features/activities/supported-types";
 import { useAudio } from "@/lib/audio/use-audio";
 import type { SpeakFn } from "@/lib/audio/audio-service";
+import { visibleWords } from "@/lib/audio/pronunciation";
 import type { QuestionResponse } from "@/lib/content/question-schemas";
 import { checkWithKey, revealAnswer, type Reveal } from "@/lib/learning/answer-key";
 import { pickFeedback, renderFeedback, type FeedbackKind } from "@/lib/learning/feedback";
@@ -153,11 +154,24 @@ function LessonRun({
   // so its audio also works when the lesson is played offline.
   const { speak: play, supported: audioSupported } = useAudio(payload.sounds);
 
+  // A scored question's own words (its options, items…): a keyword fallback for a sound
+  // must not name them ("Which one starts with the sound at the start of egg?").
+  const avoid = useRef<string[] | undefined>(undefined);
   const speak: SpeakFn = useCallback(
-    (text, speed = "normal", options) => play(typeof text === "string" ? { text, speed } : text, options),
+    (text, speed = "normal", options) => {
+      const requests = typeof text === "string" ? [{ text, speed }] : text;
+      return play(
+        requests.map((r) => ({ ...r, avoid: r.avoid ?? avoid.current })),
+        options,
+      );
+    },
     [play],
   );
   const step: LessonStep | undefined = steps[state.index];
+  // Declared before the effect that reads the prompt aloud, so it is current by then.
+  useEffect(() => {
+    avoid.current = step?.scored ? [...visibleWords(step.question.content)] : undefined;
+  }, [step]);
   const view = currentView(state);
   const sessionId = () => currentSessionId(childId, payload.rules.player.sessionTimeoutMinutes);
 

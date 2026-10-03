@@ -17,6 +17,8 @@ export type AudioRequest = {
   // A recorded file (Supabase Storage URL) for the whole text. Takes priority.
   assetUrl?: string | null;
   speed?: AudioSpeed;
+  // Words on screen that a keyword fallback must not name (they are the answer choices).
+  avoid?: readonly string[];
 };
 
 // played: something was heard. interrupted: a newer request (or leaving) stopped it — not
@@ -158,7 +160,7 @@ export type PlayOptions = {
 };
 
 function partsFor(request: AudioRequest, sounds: SoundTable): SpeechPart[] {
-  const parts = planSpeech(request.text, sounds);
+  const parts = planSpeech(request.text, sounds, request.avoid ? { avoid: new Set(request.avoid) } : {});
   if (!request.assetUrl) return parts;
   const fallback = parts.map((p) => (p.kind === "tts" ? p.text : p.fallback)).join(" ");
   return [{ kind: "asset", url: request.assetUrl, fallback }];
