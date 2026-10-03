@@ -302,3 +302,32 @@ export function speechProblems(
   }
   return [...new Set(problems)];
 }
+
+// "/k/", "/ee/", "/id/" in display text → phonemes, from the phonemes' child labels (k,
+// ee, sh …). An exact, unambiguous label wins; otherwise the label is split into labels
+// that are each unambiguous ("id" → i + d). Ambiguous labels ("oo", "th") give undefined.
+export function soundLabelLookup(phonemes: readonly { code: string; label: string }[]) {
+  const byLabel = new Map<string, string[]>();
+  for (const p of phonemes) byLabel.set(p.label, [...(byLabel.get(p.label) ?? []), p.code]);
+  const exact = (label: string) => {
+    const codes = byLabel.get(label);
+    return codes && codes.length === 1 ? codes[0] : undefined;
+  };
+  return (label: string): string[] | undefined => {
+    const one = exact(label);
+    if (one) return [one];
+    if (byLabel.has(label)) return undefined;
+    // Split into the longest unambiguous labels, left to right.
+    const out: string[] = [];
+    let rest = label;
+    while (rest) {
+      let found = "";
+      for (let n = Math.min(3, rest.length); n > 0 && !found; n--)
+        if (exact(rest.slice(0, n))) found = rest.slice(0, n);
+      if (!found) return undefined;
+      out.push(exact(found)!);
+      rest = rest.slice(found.length);
+    }
+    return out;
+  };
+}

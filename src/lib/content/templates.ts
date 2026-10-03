@@ -18,7 +18,7 @@ import {
 } from "@/lib/content/vocabulary";
 import type { WordArea } from "@/lib/learning/vocabulary";
 import { buildSpellingHints, type SpellingActivity, type SpellingSegment } from "@/lib/learning/spelling";
-import { letterToken, speechFromDisplay } from "@/lib/audio/pronunciation";
+import { hasSpeechTokens, letterToken, speechFromDisplay } from "@/lib/audio/pronunciation";
 
 export type TemplateSegment = {
   grapheme: string;
@@ -281,6 +281,12 @@ function spellingSplit(word: TemplateWord, ctx: TemplateContext): SpellingSegmen
     patternType: g.patternCode ? (ctx.pattern(g.patternCode)?.type ?? null) : null,
   }));
 }
+// A pattern intro's speech: the explanation, then the sound and an example — unless the
+// explanation already says the sound (no "fuh, as in phone. fuh, as in phone.").
+function introSpeech(body: string, sound: string, example?: string) {
+  if (hasSpeechTokens(body)) return body.replace(/:\s*$/, ".");
+  return `${body} ${sound}${example ? `, as in ${example}` : ""}.`;
+}
 function spellingHints(word: TemplateWord, ctx: TemplateContext, split = spellingSplit(word, ctx)) {
   const spelling = needSpelling(word);
   return buildSpellingHints({
@@ -364,7 +370,7 @@ export const TEMPLATES: Record<string, Expander> = {
         body,
         speech:
           optStr(params, "speech") ??
-          `${speechFromDisplay(body, ctx.soundForLabel)} ${sound.sayAs}${first ? `, as in ${first}` : ""}.`,
+          introSpeech(speechFromDisplay(body, ctx.soundForLabel), sound.sayAs, first),
         examples,
       },
       answer: null,

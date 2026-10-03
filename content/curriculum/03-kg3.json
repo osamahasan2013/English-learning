@@ -793,22 +793,25 @@
                     {
                       "template": "word_intro",
                       "word": "said",
-                      "body": "said. The a i says eh in this word. Mom said yes."
+                      "body": "The ai says /e/ in this word. Mom said yes.",
+                      "speech": "said. The {@a} {@i} says {/EH/} in this word. Mom said yes."
                     },
                     {
                       "template": "word_intro",
                       "word": "was",
-                      "body": "was. The a says uh and the s says z. It was sunny."
+                      "body": "The a says /u/ and the s says /z/. It was sunny.",
+                      "speech": "was. The {@a} says {/AH/} and the {@s} says {/Z/}. It was sunny."
                     },
                     {
                       "template": "word_intro",
                       "word": "they",
-                      "body": "they. The e y says ay. They are my friends."
+                      "body": "The ey says /ay/. They are my friends.",
+                      "speech": "they. The {@e} {@y} says {/EY/}. They are my friends."
                     },
                     {
                       "template": "word_intro",
                       "word": "have",
-                      "body": "have. The e at the end is quiet. I have a pet."
+                      "body": "The e at the end is quiet. I have a pet."
                     }
                   ]
                 },

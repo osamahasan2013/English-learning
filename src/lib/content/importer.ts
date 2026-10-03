@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { soundToken, speechProblems } from "@/lib/audio/pronunciation";
+import { soundLabelLookup, soundToken, speechProblems } from "@/lib/audio/pronunciation";
 import type { z } from "zod";
 import type {
   assessmentsFileSchema,
@@ -1392,10 +1392,7 @@ export class ContentImporter {
             const p = this.phonemeInfo?.get(phonemeCode);
             return p && { code: p.code, label: p.label, sayAs: p.sayAs, kind: p.kind };
           },
-          soundForLabel: (label) => {
-            const matches = [...(this.phonemeInfo?.values() ?? [])].filter((p) => p.label === label);
-            return matches.length === 1 ? [matches[0].code] : undefined;
-          },
+          soundForLabel: soundLabelLookup([...(this.phonemeInfo?.values() ?? [])]),
         };
         expanded = expandTemplate(template, params as Record<string, unknown>, ctx);
       } else {

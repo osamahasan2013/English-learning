@@ -1249,7 +1249,7 @@
                         "painted"
                       ],
                       "body": "When we add e d, it means it already happened. The ending can sound like t, d, or id. Listen:",
-                      "speech": "When we add e d, it means it already happened. The ending can sound like t, as in jumped. Or d, as in played. Or id, as in painted."
+                      "speech": "When we add {@e} {@d}, it means it already happened. The ending can sound like {/T/}, as in jumped. Or {/D/}, as in played. Or {/IH D/}."
                     }
                   ]
                 },

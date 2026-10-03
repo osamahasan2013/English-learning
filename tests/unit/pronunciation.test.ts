@@ -12,6 +12,7 @@ import {
   speakableText,
   speechFromDisplay,
   speechProblems,
+  soundLabelLookup,
   type SoundTable,
 } from "@/lib/audio/pronunciation";
 import { phonicsFileSchema } from "@/lib/content/content-schemas";
@@ -146,6 +147,21 @@ describe("unsafe speech", () => {
     const speech = speechFromDisplay("The ch in school says /k/.", (l) => (l === "k" ? ["K"] : undefined));
     expect(speech).toBe("The {@c} {@h} in school says {/K/}.");
     expect(speakableText(speech, table)).toBe("The C aitch in school says kuh.");
+  });
+
+  it("reads sound labels written between slashes, splitting only unambiguous ones", () => {
+    const lookup = soundLabelLookup([
+      { code: "IH", label: "i" },
+      { code: "D", label: "d" },
+      { code: "IY", label: "ee" },
+      { code: "UW", label: "oo" },
+      { code: "UH", label: "oo" },
+    ]);
+    expect(lookup("ee")).toEqual(["IY"]);
+    expect(lookup("id")).toEqual(["IH", "D"]);
+    expect(lookup("oo")).toBeUndefined();
+    expect(lookup("zz")).toBeUndefined();
+    expect(speechFromDisplay("It can say /d/ or /id/.", lookup)).toBe("It can say {/D/} or {/IH D/}.");
   });
 
   it("checks every speech string in a question", () => {
