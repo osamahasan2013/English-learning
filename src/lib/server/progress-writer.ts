@@ -38,6 +38,7 @@ import {
   patternKey,
   spellingKey,
 } from "@/lib/learning/spelling";
+import { deriveReadingWordReview, readingKey } from "@/lib/learning/reading";
 import type { LearningRules } from "@/lib/learning/rules";
 import { scoreLesson } from "@/lib/learning/scoring";
 import type { MasteryStatus } from "@/lib/learning/mastery";
@@ -45,6 +46,7 @@ import type {
   AssessmentRunEvent,
   AttemptEvent,
   LessonRunEvent,
+  ReadingEvent,
   SyncEvent,
   SyncResponse,
   SyncResult,
@@ -82,11 +84,13 @@ export async function processSyncBatch(
   const attempts = usable.filter((e): e is AttemptEvent => e.kind === "attempt");
   const runs = usable.filter((e): e is LessonRunEvent => e.kind === "lesson_run");
   const sittings = usable.filter((e): e is AssessmentRunEvent => e.kind === "assessment_run");
+  const readings = usable.filter((e): e is ReadingEvent => e.kind === "reading");
 
   const stored = await storeAttempts(db, childId, attempts, now, results, rules);
   const newRuns = await storeLessonRuns(db, childId, runs, now, results, rules);
   const assessed = await storeAssessmentResults(db, childId, sittings, now, results, rules);
   for (const id of assessed.sessionIds) newRuns.sessionIds.add(id);
+  const read = await storeReadingSessions(db, childId, readings, now, results);
 
   const lessonIds = new Set([...stored.lessonIds, ...newRuns.lessonIds]);
   if (lessonIds.size > 0) await recomputeLessonTree(db, childId, [...lessonIds]);
@@ -100,6 +104,8 @@ export async function processSyncBatch(
     const focusPatterns = await recomputeSpellingProgress(db, childId, [...stored.newWordIds], now, rules);
     for (const id of focusPatterns) stored.errorPatternIds.add(id);
   }
+  if (read.storyIds.size > 0 || stored.newWordIds.size > 0)
+    await recomputeReadingWordReviews(db, childId, read, [...stored.newWordIds], now, rules);
   if (stored.errorPatternIds.size > 0)
     await recomputePatternReviews(db, childId, [...stored.errorPatternIds], now, rules);
   if (lessonIds.size > 0 || stored.newSkillIds.size > 0)
@@ -1381,6 +1387,201 @@ async function recomputePatternReviews(
     if (item) rows.push(item);
   }
   await syncReviewItems(db, childId, patternIds.map(patternKey), rows, now);
+}
+
+// Reading sessions (READ_PASSAGE): stored once each, never scored. The story must be
+// published; the word count comes from the story; help words are kept only if they are
+// words of that story; a lesson or question the device names is kept only if it is a
+// published one (a READ_PASSAGE question), otherwise dropped rather than trusted.
+async function storeReadingSessions(
+  db: Db,
+  childId: string,
+  events: ReadingEvent[],
+  now: Date,
+  results: Map<string, SyncResult>,
+) {
+  const storyIds = new Set<string>();
+  const helpWordIds = new Set<string>();
+  if (events.length === 0) return { storyIds, helpWordIds };
+
+  const { data: existing, error: existingError } = await db
+    .from("reading_sessions")
+    .select("id")
+    .in(
+      "id",
+      events.map((e) => e.id),
+    );
+  if (existingError) throw existingError;
+  const already = new Set((existing ?? []).map((r) => r.id));
+  const fresh = events.filter((e) => {
+    if (!already.has(e.id)) return true;
+    results.set(e.id, { id: e.id, status: "duplicate" });
+    return false;
+  });
+  if (fresh.length === 0) return { storyIds, helpWordIds };
+
+  const [stories, lessons, questions] = await Promise.all([
+    db
+      .from("stories")
+      .select("id, word_count, story_words(word_id)")
+      .in("id", [...new Set(fresh.map((e) => e.storyId))])
+      .eq("status", "published"),
+    db
+      .from("lessons")
+      .select("id")
+      .in("id", [...new Set(fresh.map((e) => e.lessonId).filter((id): id is string => !!id))])
+      .eq("status", "published"),
+    db
+      .from("questions")
+      .select("id")
+      .in("id", [...new Set(fresh.map((e) => e.questionId).filter((id): id is string => !!id))])
+      .eq("status", "published")
+      .eq("question_type", "READ_PASSAGE"),
+  ]);
+  for (const r of [stories, lessons, questions]) if (r.error) throw r.error;
+  const storyById = new Map(
+    (stories.data ?? []).map((st) => [
+      st.id,
+      { wordCount: st.word_count, words: new Set((st.story_words ?? []).map((w) => w.word_id)) },
+    ]),
+  );
+  const lessonIds = new Set((lessons.data ?? []).map((l) => l.id));
+  const questionIds = new Set((questions.data ?? []).map((q) => q.id));
+
+  const rows = [];
+  for (const e of fresh) {
+    const story = storyById.get(e.storyId);
+    if (!story) {
+      results.set(e.id, { id: e.id, status: "rejected", reason: "unknown_story" });
+      continue;
+    }
+    const help = [...new Set(e.helpWordIds)].filter((id) => story.words.has(id));
+    rows.push({
+      id: e.id,
+      child_id: childId,
+      story_id: e.storyId,
+      lesson_id: e.lessonId && lessonIds.has(e.lessonId) ? e.lessonId : null,
+      lesson_run_id: e.lessonId && lessonIds.has(e.lessonId) ? e.lessonRunId : null,
+      question_id: e.questionId && questionIds.has(e.questionId) ? e.questionId : null,
+      learning_session_id: e.sessionId ?? null,
+      mode: e.mode,
+      started_at: clampTimestamp(e.startedAt, now),
+      duration_ms: e.durationMs,
+      word_count: story.wordCount,
+      listens: e.listens,
+      slow_listens: e.slowListens,
+      rereads: e.rereads,
+      help_word_ids: help,
+      self_check: e.selfCheck,
+      received_at: now.toISOString(),
+    });
+    storyIds.add(e.storyId);
+    for (const id of help) helpWordIds.add(id);
+  }
+  if (rows.length > 0) {
+    const { error } = await db
+      .from("reading_sessions")
+      .upsert(rows, { onConflict: "id", ignoreDuplicates: true });
+    if (error) throw error;
+    for (const r of rows) results.set(r.id, { id: r.id, status: "stored" });
+  }
+  return { storyIds, helpWordIds };
+}
+
+// Review items for words the child keeps tapping for help while reading (reading:<word id>),
+// recomputed from the child's reading history and first tries: for the words tapped in this
+// batch, and for the open items a new reading or answer may resolve.
+async function recomputeReadingWordReviews(
+  db: Db,
+  childId: string,
+  read: { storyIds: Set<string>; helpWordIds: Set<string> },
+  answeredWordIds: string[],
+  now: Date,
+  rules: LearningRules,
+) {
+  const { data: open, error: openError } = await db
+    .from("review_items")
+    .select("word_id")
+    .eq("child_id", childId)
+    .eq("status", "open")
+    .like("item_key", "reading:%");
+  if (openError) throw openError;
+  const openIds = new Set((open ?? []).map((r) => r.word_id).filter((id): id is string => !!id));
+  if (openIds.size === 0 && read.helpWordIds.size === 0) return;
+
+  // Open items touched by this batch: a story containing the word was read, or the word was
+  // answered.
+  const touched = new Set<string>(read.helpWordIds);
+  for (const id of answeredWordIds) if (openIds.has(id)) touched.add(id);
+  if (read.storyIds.size > 0 && openIds.size > 0) {
+    const { data: links, error } = await db
+      .from("story_words")
+      .select("word_id")
+      .in("story_id", [...read.storyIds])
+      .in("word_id", [...openIds]);
+    if (error) throw error;
+    for (const l of links ?? []) touched.add(l.word_id);
+  }
+  const wordIds = [...touched];
+  if (wordIds.length === 0) return;
+
+  const { data: links, error: linksError } = await db
+    .from("story_words")
+    .select("story_id, word_id")
+    .in("word_id", wordIds);
+  if (linksError) throw linksError;
+  const storiesByWord = new Map<string, Set<string>>();
+  for (const l of links ?? []) {
+    const set = storiesByWord.get(l.word_id) ?? new Set<string>();
+    set.add(l.story_id);
+    storiesByWord.set(l.word_id, set);
+  }
+  const allStories = [...new Set((links ?? []).map((l) => l.story_id))];
+  const [sessions, correct] = await Promise.all([
+    allStories.length
+      ? db
+          .from("reading_sessions")
+          .select("story_id, lesson_id, started_at, help_word_ids")
+          .eq("child_id", childId)
+          .in("story_id", allStories)
+          .order("started_at", { ascending: false })
+          .limit(500)
+      : Promise.resolve({ data: [], error: null }),
+    db
+      .from("activity_attempts")
+      .select("word_id, attempted_at")
+      .eq("child_id", childId)
+      .eq("attempt_number", 1)
+      .eq("is_correct", true)
+      .in("word_id", wordIds),
+  ]);
+  if (sessions.error || correct.error) throw sessions.error ?? correct.error;
+  const lastCorrect = new Map<string, string>();
+  for (const a of correct.data ?? []) {
+    if (!a.word_id) continue;
+    const prev = lastCorrect.get(a.word_id);
+    if (!prev || a.attempted_at > prev) lastCorrect.set(a.word_id, a.attempted_at);
+  }
+  const reviewRows: ReviewItemRow[] = [];
+  for (const wordId of wordIds) {
+    const stories = storiesByWord.get(wordId) ?? new Set<string>();
+    const mine = (sessions.data ?? []).filter((r) => stories.has(r.story_id));
+    const item = deriveReadingWordReview(
+      {
+        wordId,
+        lessonId: mine.find((r) => r.lesson_id)?.lesson_id ?? null,
+        readings: mine.map((r) => ({
+          startedAt: r.started_at,
+          tapped: (r.help_word_ids ?? []).includes(wordId),
+        })),
+        lastCorrectAt: lastCorrect.get(wordId) ?? null,
+      },
+      now,
+      rules.reading,
+    );
+    if (item) reviewRows.push(item);
+  }
+  await syncReviewItems(db, childId, wordIds.map(readingKey), reviewRows, now);
 }
 
 async function recomputeSessions(db: Db, childId: string, sessionIds: string[]) {

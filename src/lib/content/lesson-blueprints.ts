@@ -11,7 +11,12 @@
 // then go through exactly the same validation and import as hand-written ones. Only the
 // structure is shared; every word, pattern and sentence is content.
 
-type Question = Record<string, unknown> & { template: string };
+import type { StoryInput } from "@/lib/content/content-schemas";
+import { readingLessonActivities, ReadingContentError } from "@/lib/content/reading-content";
+import type { ReadingLevelRules } from "@/lib/learning/rules";
+
+// Template questions ({ template, ... }) or raw questions (reading comprehension).
+type Question = Record<string, unknown>;
 
 export type BlueprintActivity = {
   type: string;
@@ -476,6 +481,27 @@ BLUEPRINTS.spelling_set = (p) => {
     ),
   );
   return out;
+};
+
+// A reading lesson from a story of stories.json (src/lib/content/reading-content.ts):
+//   { "name": "reading", "story": "the-big-cat" }
+// The importer adds what the story and level provide: `storyData` (the parsed story),
+// `readingSkills` (reading skill → skill code of the level), `readingLevel` (the level's
+// reading rules) and `patternWords` (target pattern → a word of the text that uses it).
+BLUEPRINTS.reading = (p) => {
+  const story = p.storyData as StoryInput | undefined;
+  if (!story) throw new BlueprintError(`story "${String(p.story)}" is not in stories.json`);
+  try {
+    return readingLessonActivities({
+      story,
+      skills: (p.readingSkills as Map<string, string>) ?? new Map(),
+      level: p.readingLevel as ReadingLevelRules,
+      patternWords: (p.patternWords as Map<string, string>) ?? new Map(),
+    });
+  } catch (error) {
+    if (error instanceof ReadingContentError) throw new BlueprintError(error.message);
+    throw error;
+  }
 };
 
 export function expandBlueprint(blueprint: Params): BlueprintActivity[] {

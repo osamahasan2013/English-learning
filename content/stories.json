@@ -1,60 +1,2231 @@
 {
   "stories": [
     {
+      "code": "my-pets",
+      "title": "My Pets",
+      "level": "KG1",
+      "contentType": "PHRASE_READING",
+      "difficulty": 1,
+      "readingLevel": 1,
+      "genre": "fiction",
+      "topic": "pets",
+      "tags": [
+        "pets",
+        "phrases"
+      ],
+      "summary": "Short phrases about three pets.",
+      "coverEmoji": "🐾",
+      "targetSkills": [
+        "WORD_RECOGNITION",
+        "FIND_EXPLICIT_INFORMATION"
+      ],
+      "targetPatterns": [
+        "LETTER_D"
+      ],
+      "focusWords": [
+        "pet"
+      ],
+      "practiceWords": [],
+      "pages": [
+        {
+          "text": "A cat.",
+          "emoji": "🐱"
+        },
+        {
+          "text": "A big dog.",
+          "emoji": "🐶"
+        },
+        {
+          "text": "A red fish.",
+          "emoji": "🐟"
+        },
+        {
+          "text": "My pets!",
+          "emoji": "❤️"
+        }
+      ],
+      "questions": [
+        {
+          "type": "CHOICE",
+          "skill": "FIND_EXPLICIT_INFORMATION",
+          "prompt": "Which pet is red?",
+          "options": [
+            {
+              "id": "fish",
+              "text": "fish",
+              "emoji": "🐟"
+            },
+            {
+              "id": "cat",
+              "text": "cat",
+              "emoji": "🐱"
+            },
+            {
+              "id": "dog",
+              "text": "dog",
+              "emoji": "🐶"
+            }
+          ],
+          "answer": "fish",
+          "ref": [
+            2,
+            0
+          ],
+          "explanation": "The story says: A red fish."
+        },
+        {
+          "type": "CHOICE",
+          "skill": "FIND_EXPLICIT_INFORMATION",
+          "prompt": "Which pet is big?",
+          "options": [
+            {
+              "id": "cat",
+              "text": "cat",
+              "emoji": "🐱"
+            },
+            {
+              "id": "dog",
+              "text": "dog",
+              "emoji": "🐶"
+            },
+            {
+              "id": "fish",
+              "text": "fish",
+              "emoji": "🐟"
+            }
+          ],
+          "answer": "dog",
+          "ref": [
+            1,
+            0
+          ],
+          "explanation": "The story says: A big dog."
+        }
+      ],
+      "names": [],
+      "reread": false
+    },
+    {
+      "code": "sun-and-moon",
+      "title": "Sun and Moon",
+      "level": "KG1",
+      "contentType": "SENTENCE_READING",
+      "difficulty": 1,
+      "readingLevel": 2,
+      "genre": "fiction",
+      "topic": "sky",
+      "tags": [
+        "sky",
+        "sentences"
+      ],
+      "summary": "The sun is up, and then the moon is up.",
+      "coverEmoji": "🌞",
+      "targetSkills": [
+        "SENTENCE_READING",
+        "WORD_RECOGNITION"
+      ],
+      "targetPatterns": [
+        "LETTER_S"
+      ],
+      "focusWords": [
+        "sun",
+        "moon"
+      ],
+      "practiceWords": [
+        "the"
+      ],
+      "pages": [
+        {
+          "text": "I see the sun.",
+          "emoji": "🌞"
+        },
+        {
+          "text": "The sun is up.",
+          "emoji": "☀️"
+        },
+        {
+          "text": "I see the moon.",
+          "emoji": "🌙"
+        },
+        {
+          "text": "The moon is up.",
+          "emoji": "⭐"
+        }
+      ],
+      "questions": [
+        {
+          "type": "TRUE_FALSE",
+          "skill": "FIND_EXPLICIT_INFORMATION",
+          "prompt": "Is the moon up?",
+          "answer": true,
+          "ref": [
+            3,
+            0
+          ],
+          "explanation": "The story says: The moon is up."
+        },
+        {
+          "type": "CHOICE",
+          "skill": "WORD_RECOGNITION",
+          "prompt": "Tap the moon.",
+          "options": [
+            {
+              "id": "moon",
+              "text": "moon",
+              "emoji": "🌙"
+            },
+            {
+              "id": "sun",
+              "text": "sun",
+              "emoji": "🌞"
+            },
+            {
+              "id": "star",
+              "text": "star",
+              "emoji": "⭐"
+            }
+          ],
+          "answer": "moon",
+          "explanation": "This is the moon."
+        }
+      ],
+      "names": [],
+      "reread": false
+    },
+    {
+      "code": "fox-in-a-box",
+      "title": "Fox in a Box",
+      "level": "KG1",
+      "contentType": "RHYME",
+      "difficulty": 1,
+      "readingLevel": 2,
+      "genre": "rhyme",
+      "topic": "animals",
+      "tags": [
+        "rhyme",
+        "animals"
+      ],
+      "summary": "A rhyme about a fox that hides in a box.",
+      "coverEmoji": "🦊",
+      "targetSkills": [
+        "WORD_RECOGNITION",
+        "FIND_EXPLICIT_INFORMATION"
+      ],
+      "targetPatterns": [
+        "LETTER_X"
+      ],
+      "focusWords": [
+        "fox",
+        "box"
+      ],
+      "practiceWords": [],
+      "pages": [
+        {
+          "text": "A fox.",
+          "emoji": "🦊"
+        },
+        {
+          "text": "A box.",
+          "emoji": "📦"
+        },
+        {
+          "text": "A fox in a box!",
+          "emoji": "🦊"
+        },
+        {
+          "text": "Look at the fox!",
+          "emoji": "👀"
+        }
+      ],
+      "questions": [
+        {
+          "type": "CHOICE",
+          "skill": "FIND_EXPLICIT_INFORMATION",
+          "prompt": "Where is the fox?",
+          "options": [
+            {
+              "id": "box",
+              "text": "in a box",
+              "emoji": "📦"
+            },
+            {
+              "id": "van",
+              "text": "in a van",
+              "emoji": "🚐"
+            },
+            {
+              "id": "tree",
+              "text": "in a tree",
+              "emoji": "🌳"
+            }
+          ],
+          "answer": "box",
+          "ref": [
+            2,
+            0
+          ],
+          "explanation": "The rhyme says: A fox in a box!"
+        },
+        {
+          "type": "CHOICE",
+          "skill": "VOCABULARY_IN_CONTEXT",
+          "prompt": "Which one is a box?",
+          "options": [
+            {
+              "id": "box",
+              "text": "box",
+              "emoji": "📦"
+            },
+            {
+              "id": "fox",
+              "text": "fox",
+              "emoji": "🦊"
+            },
+            {
+              "id": "cup",
+              "text": "cup",
+              "emoji": "🥤"
+            }
+          ],
+          "answer": "box",
+          "explanation": "A box is something you can put things in."
+        }
+      ],
+      "names": [],
+      "reread": false
+    },
+    {
       "code": "the-big-cat",
       "title": "The Big Cat",
       "level": "KG2",
-      "difficulty": 1,
+      "contentType": "SHORT_STORY",
+      "difficulty": 2,
+      "readingLevel": 4,
+      "genre": "fiction",
+      "topic": "animals",
+      "tags": [
+        "cvc",
+        "animals"
+      ],
       "summary": "A big cat looks for a place to nap.",
       "coverEmoji": "🐱",
+      "targetSkills": [
+        "SENTENCE_READING",
+        "DECODING",
+        "FIND_EXPLICIT_INFORMATION"
+      ],
+      "targetPatterns": [
+        "LETTER_A"
+      ],
+      "focusWords": [
+        "cat"
+      ],
+      "practiceWords": [
+        "the"
+      ],
       "pages": [
-        { "text": "I see a cat.", "emoji": "🐱" },
-        { "text": "The cat is big.", "emoji": "🐈" },
-        { "text": "The cat can sit on a mat.", "emoji": "🧶" },
-        { "text": "The cat naps in the sun.", "emoji": "☀️" }
-      ]
+        {
+          "text": "I see a cat.",
+          "emoji": "🐱"
+        },
+        {
+          "text": "The cat is big.",
+          "emoji": "🐈"
+        },
+        {
+          "text": "It can sit on my bed.",
+          "emoji": "🛏️"
+        },
+        {
+          "text": "It is hot in the sun.",
+          "emoji": "☀️"
+        },
+        {
+          "text": "The cat can nap.",
+          "emoji": "😴"
+        }
+      ],
+      "questions": [
+        {
+          "type": "CHOICE",
+          "skill": "FIND_EXPLICIT_INFORMATION",
+          "prompt": "Where can the cat sit?",
+          "options": [
+            {
+              "id": "bed",
+              "text": "on my bed",
+              "emoji": "🛏️"
+            },
+            {
+              "id": "bus",
+              "text": "on a bus",
+              "emoji": "🚌"
+            },
+            {
+              "id": "box",
+              "text": "in a box",
+              "emoji": "📦"
+            }
+          ],
+          "answer": "bed",
+          "ref": [
+            2,
+            0
+          ],
+          "explanation": "The story says: It can sit on my bed."
+        },
+        {
+          "type": "TRUE_FALSE",
+          "skill": "FIND_EXPLICIT_INFORMATION",
+          "prompt": "Is the cat small?",
+          "answer": false,
+          "ref": [
+            1,
+            0
+          ],
+          "explanation": "The story says: The cat is big."
+        },
+        {
+          "type": "WORD_MEANING",
+          "skill": "VOCABULARY_IN_CONTEXT",
+          "word": "hot",
+          "prompt": "In the story, the sun is hot. What does hot mean?",
+          "options": [
+            {
+              "id": "warm",
+              "text": "very warm"
+            },
+            {
+              "id": "cold",
+              "text": "very cold"
+            },
+            {
+              "id": "wet",
+              "text": "very wet"
+            }
+          ],
+          "answer": "warm",
+          "ref": [
+            3,
+            0
+          ],
+          "explanation": "Hot means very warm, like the sun."
+        }
+      ],
+      "names": [],
+      "reread": false
+    },
+    {
+      "code": "ben-and-the-hen",
+      "title": "Ben and the Hen",
+      "level": "KG2",
+      "contentType": "SHORT_STORY",
+      "difficulty": 2,
+      "readingLevel": 5,
+      "genre": "fiction",
+      "topic": "farm",
+      "tags": [
+        "cvc",
+        "farm"
+      ],
+      "summary": "Ben's red hen has a surprise for him.",
+      "coverEmoji": "🐔",
+      "targetSkills": [
+        "SENTENCE_READING",
+        "DECODING",
+        "FIND_EXPLICIT_INFORMATION"
+      ],
+      "targetPatterns": [
+        "LETTER_E"
+      ],
+      "focusWords": [
+        "hen",
+        "egg"
+      ],
+      "practiceWords": [
+        "is"
+      ],
+      "names": [
+        "Ben"
+      ],
+      "pages": [
+        {
+          "text": "Ben has a hen.",
+          "emoji": "👦"
+        },
+        {
+          "text": "The hen is red.",
+          "emoji": "🐔"
+        },
+        {
+          "text": "The hen is in a pen.",
+          "emoji": "🏡"
+        },
+        {
+          "text": "Ben can see a big egg!",
+          "emoji": "🥚"
+        },
+        {
+          "text": "Ben is happy.",
+          "emoji": "😀"
+        }
+      ],
+      "questions": [
+        {
+          "type": "CHOICE",
+          "skill": "FIND_EXPLICIT_INFORMATION",
+          "prompt": "What colour is the hen?",
+          "options": [
+            {
+              "id": "red",
+              "text": "red",
+              "emoji": "🔴"
+            },
+            {
+              "id": "black",
+              "text": "black",
+              "emoji": "⚫"
+            },
+            {
+              "id": "brown",
+              "text": "brown",
+              "emoji": "🟤"
+            }
+          ],
+          "answer": "red",
+          "ref": [
+            1,
+            0
+          ],
+          "explanation": "The story says: The hen is red."
+        },
+        {
+          "type": "CHOICE",
+          "skill": "FIND_EXPLICIT_INFORMATION",
+          "prompt": "Where is the hen?",
+          "options": [
+            {
+              "id": "pen",
+              "text": "in a pen"
+            },
+            {
+              "id": "van",
+              "text": "in a van"
+            },
+            {
+              "id": "bus",
+              "text": "on a bus"
+            }
+          ],
+          "answer": "pen",
+          "ref": [
+            2,
+            0
+          ],
+          "explanation": "The story says: The hen is in a pen."
+        },
+        {
+          "type": "TRUE_FALSE",
+          "skill": "FIND_EXPLICIT_INFORMATION",
+          "prompt": "Is Ben sad?",
+          "answer": false,
+          "ref": [
+            4,
+            0
+          ],
+          "explanation": "The story says: Ben is happy."
+        }
+      ],
+      "reread": false
+    },
+    {
+      "code": "in-the-tub",
+      "title": "In the Tub",
+      "level": "KG2",
+      "contentType": "SENTENCE_READING",
+      "difficulty": 2,
+      "readingLevel": 5,
+      "genre": "fiction",
+      "topic": "home",
+      "tags": [
+        "cvc",
+        "home"
+      ],
+      "summary": "On a hot day, a child cools off in a tub.",
+      "coverEmoji": "🛁",
+      "targetSkills": [
+        "SENTENCE_READING",
+        "DECODING",
+        "VOCABULARY_IN_CONTEXT"
+      ],
+      "targetPatterns": [
+        "LETTER_U"
+      ],
+      "focusWords": [
+        "tub"
+      ],
+      "practiceWords": [
+        "see"
+      ],
+      "pages": [
+        {
+          "text": "It is hot.",
+          "emoji": "🌞"
+        },
+        {
+          "text": "I see a big tub.",
+          "emoji": "🛁"
+        },
+        {
+          "text": "I sit in the tub.",
+          "emoji": "🧒"
+        },
+        {
+          "text": "The tub is wet.",
+          "emoji": "💧"
+        },
+        {
+          "text": "I am happy!",
+          "emoji": "😀"
+        }
+      ],
+      "questions": [
+        {
+          "type": "CHOICE",
+          "skill": "FIND_EXPLICIT_INFORMATION",
+          "prompt": "Where do I sit?",
+          "options": [
+            {
+              "id": "tub",
+              "text": "in the tub",
+              "emoji": "🛁"
+            },
+            {
+              "id": "bus",
+              "text": "on a bus",
+              "emoji": "🚌"
+            },
+            {
+              "id": "bed",
+              "text": "in a bed",
+              "emoji": "🛏️"
+            }
+          ],
+          "answer": "tub",
+          "ref": [
+            2,
+            0
+          ],
+          "explanation": "The story says: I sit in the tub."
+        },
+        {
+          "type": "TRUE_FALSE",
+          "skill": "FIND_EXPLICIT_INFORMATION",
+          "prompt": "Is it hot?",
+          "answer": true,
+          "ref": [
+            0,
+            0
+          ],
+          "explanation": "The story says: It is hot."
+        },
+        {
+          "type": "WORD_MEANING",
+          "skill": "VOCABULARY_IN_CONTEXT",
+          "word": "wet",
+          "prompt": "The tub is wet. What does wet mean?",
+          "options": [
+            {
+              "id": "water",
+              "text": "it has water on it"
+            },
+            {
+              "id": "big",
+              "text": "it is very big"
+            },
+            {
+              "id": "red",
+              "text": "it is red"
+            }
+          ],
+          "answer": "water",
+          "ref": [
+            3,
+            0
+          ],
+          "explanation": "Wet means there is water on it."
+        }
+      ],
+      "names": [],
+      "reread": false
     },
     {
       "code": "sam-and-the-shell",
       "title": "Sam and the Shell",
       "level": "KG3",
+      "contentType": "SHORT_STORY",
       "difficulty": 3,
+      "readingLevel": 7,
+      "genre": "fiction",
+      "topic": "beach",
+      "tags": [
+        "digraphs",
+        "beach"
+      ],
       "summary": "Sam finds a shell on the beach and hears the sea.",
       "coverEmoji": "🐚",
+      "targetSkills": [
+        "SENTENCE_READING",
+        "DECODING",
+        "SEQUENCING",
+        "CHARACTER_IDENTIFICATION",
+        "SETTING"
+      ],
+      "targetPatterns": [
+        "SH"
+      ],
+      "focusWords": [
+        "shell",
+        "ship"
+      ],
+      "practiceWords": [
+        "was"
+      ],
+      "names": [
+        "Sam"
+      ],
+      "reread": true,
       "pages": [
-        { "text": "Sam went to the beach with his mother.", "emoji": "🏖️" },
-        { "text": "He saw a ship on the sea. Then he saw a shell in the sand.", "emoji": "🚢" },
-        { "text": "Sam held the shell to his ear. Shhh! It was like the sea.", "emoji": "🐚" },
-        { "text": "Sam put the shell in his bag. It was the best thing he found that day.", "emoji": "👜" }
+        {
+          "text": "Sam went to the beach with his mother.",
+          "emoji": "🏖️"
+        },
+        {
+          "text": "He saw a ship on the sea. Then he saw a shell in the sand.",
+          "emoji": "🚢"
+        },
+        {
+          "text": "Sam held the shell to his ear. It was like the sea!",
+          "emoji": "🐚"
+        },
+        {
+          "text": "Sam put the shell in his bag. It was the best shell of all.",
+          "emoji": "👜"
+        }
+      ],
+      "questions": [
+        {
+          "type": "CHOICE",
+          "skill": "CHARACTER_IDENTIFICATION",
+          "prompt": "Who went to the beach with Sam?",
+          "options": [
+            {
+              "id": "mother",
+              "text": "his mother",
+              "emoji": "👩"
+            },
+            {
+              "id": "sister",
+              "text": "his sister",
+              "emoji": "👧"
+            },
+            {
+              "id": "dad",
+              "text": "his dad",
+              "emoji": "👨"
+            }
+          ],
+          "answer": "mother",
+          "ref": [
+            0,
+            0
+          ],
+          "explanation": "The story says: Sam went to the beach with his mother."
+        },
+        {
+          "type": "CHOICE",
+          "skill": "SETTING",
+          "prompt": "Where does the story happen?",
+          "options": [
+            {
+              "id": "beach",
+              "text": "at the beach",
+              "emoji": "🏖️"
+            },
+            {
+              "id": "farm",
+              "text": "on a farm",
+              "emoji": "🚜"
+            },
+            {
+              "id": "school",
+              "text": "at school",
+              "emoji": "🏫"
+            }
+          ],
+          "answer": "beach",
+          "ref": [
+            0,
+            0
+          ],
+          "explanation": "Sam went to the beach."
+        },
+        {
+          "type": "ORDER",
+          "skill": "SEQUENCING",
+          "prompt": "What happened first, next and last?",
+          "events": [
+            {
+              "text": "Sam saw a ship.",
+              "emoji": "🚢"
+            },
+            {
+              "text": "Sam saw a shell in the sand.",
+              "emoji": "🐚"
+            },
+            {
+              "text": "Sam put the shell in his bag.",
+              "emoji": "👜"
+            }
+          ],
+          "explanation": "First the ship, then the shell, then the bag."
+        },
+        {
+          "type": "TRUE_FALSE",
+          "skill": "FIND_EXPLICIT_INFORMATION",
+          "prompt": "Did Sam put the shell in his bag?",
+          "answer": true,
+          "ref": [
+            3,
+            0
+          ],
+          "explanation": "The story says: Sam put the shell in his bag."
+        }
       ]
+    },
+    {
+      "code": "pip-the-chick",
+      "title": "Pip the Chick",
+      "level": "KG3",
+      "contentType": "STORY_SEQUENCE",
+      "difficulty": 3,
+      "readingLevel": 7,
+      "genre": "fiction",
+      "topic": "farm",
+      "tags": [
+        "digraphs",
+        "farm"
+      ],
+      "summary": "A little chick is lost and looks for her mother.",
+      "coverEmoji": "🐤",
+      "targetSkills": [
+        "SENTENCE_READING",
+        "SEQUENCING",
+        "CHARACTER_IDENTIFICATION"
+      ],
+      "targetPatterns": [
+        "CH"
+      ],
+      "focusWords": [
+        "chick"
+      ],
+      "practiceWords": [
+        "she"
+      ],
+      "names": [
+        "Pip"
+      ],
+      "pages": [
+        {
+          "text": "Pip the chick is lost.",
+          "emoji": "🐤"
+        },
+        {
+          "text": "She looks in the shed.",
+          "emoji": "🛖"
+        },
+        {
+          "text": "She looks in the grass.",
+          "emoji": "🌱"
+        },
+        {
+          "text": "She looks by the gate.",
+          "emoji": "🚪"
+        },
+        {
+          "text": "Then she can hear her mother.",
+          "emoji": "🐔"
+        },
+        {
+          "text": "Pip runs to her mother. Now Pip is home!",
+          "emoji": "🏡"
+        }
+      ],
+      "questions": [
+        {
+          "type": "CHOICE",
+          "skill": "CHARACTER_IDENTIFICATION",
+          "prompt": "Who is Pip?",
+          "options": [
+            {
+              "id": "chick",
+              "text": "a chick",
+              "emoji": "🐤"
+            },
+            {
+              "id": "dog",
+              "text": "a dog",
+              "emoji": "🐶"
+            },
+            {
+              "id": "fish",
+              "text": "a fish",
+              "emoji": "🐟"
+            }
+          ],
+          "answer": "chick",
+          "ref": [
+            0,
+            0
+          ],
+          "explanation": "The story says: Pip the chick."
+        },
+        {
+          "type": "CHOICE",
+          "skill": "FIND_EXPLICIT_INFORMATION",
+          "prompt": "Where does Pip look first?",
+          "options": [
+            {
+              "id": "shed",
+              "text": "in the shed",
+              "emoji": "🛖"
+            },
+            {
+              "id": "grass",
+              "text": "in the grass",
+              "emoji": "🌱"
+            },
+            {
+              "id": "gate",
+              "text": "by the gate",
+              "emoji": "🚪"
+            }
+          ],
+          "answer": "shed",
+          "ref": [
+            1,
+            0
+          ],
+          "explanation": "First, she looks in the shed."
+        },
+        {
+          "type": "ORDER",
+          "skill": "SEQUENCING",
+          "prompt": "Put what Pip did in order.",
+          "events": [
+            {
+              "text": "Pip looks in the shed.",
+              "emoji": "🛖"
+            },
+            {
+              "text": "Pip looks in the grass.",
+              "emoji": "🌱"
+            },
+            {
+              "text": "Pip runs to her mother.",
+              "emoji": "🐔"
+            }
+          ],
+          "explanation": "Shed, then grass, then her mother."
+        },
+        {
+          "type": "TRUE_FALSE",
+          "skill": "FIND_EXPLICIT_INFORMATION",
+          "prompt": "Is Pip lost at the end?",
+          "answer": false,
+          "ref": [
+            5,
+            1
+          ],
+          "explanation": "The story says: Now Pip is home!"
+        }
+      ],
+      "reread": false
+    },
+    {
+      "code": "at-the-shop",
+      "title": "At the Shop",
+      "level": "KG3",
+      "contentType": "DIALOGUE",
+      "difficulty": 3,
+      "readingLevel": 8,
+      "genre": "fiction",
+      "topic": "shopping",
+      "tags": [
+        "dialogue",
+        "digraphs"
+      ],
+      "summary": "Tom and his mom talk about what to buy at the shop.",
+      "coverEmoji": "🏪",
+      "targetSkills": [
+        "SENTENCE_READING",
+        "CHARACTER_IDENTIFICATION",
+        "SETTING"
+      ],
+      "targetPatterns": [
+        "SH"
+      ],
+      "focusWords": [
+        "shop",
+        "cheese"
+      ],
+      "practiceWords": [
+        "you"
+      ],
+      "names": [
+        "Tom"
+      ],
+      "pages": [
+        {
+          "text": "We need to go to the shop.",
+          "emoji": "👩",
+          "speaker": "Mom"
+        },
+        {
+          "text": "Can I come too?",
+          "emoji": "👦",
+          "speaker": "Tom"
+        },
+        {
+          "text": "Yes, you can come.",
+          "emoji": "👩",
+          "speaker": "Mom"
+        },
+        {
+          "text": "Can we get cheese and chips?",
+          "emoji": "🧀",
+          "speaker": "Tom"
+        },
+        {
+          "text": "We can get cheese. No chips today!",
+          "emoji": "👩",
+          "speaker": "Mom"
+        },
+        {
+          "text": "That is fine. I like cheese!",
+          "emoji": "😀",
+          "speaker": "Tom"
+        }
+      ],
+      "questions": [
+        {
+          "type": "CHOICE",
+          "skill": "CHARACTER_IDENTIFICATION",
+          "prompt": "Who asks to come to the shop?",
+          "options": [
+            {
+              "id": "tom",
+              "text": "Tom",
+              "emoji": "👦"
+            },
+            {
+              "id": "mom",
+              "text": "Mom",
+              "emoji": "👩"
+            },
+            {
+              "id": "dad",
+              "text": "Dad",
+              "emoji": "👨"
+            }
+          ],
+          "answer": "tom",
+          "ref": [
+            1,
+            0
+          ],
+          "explanation": "Tom says: Can I come too?"
+        },
+        {
+          "type": "CHOICE",
+          "skill": "SETTING",
+          "prompt": "Where are they going?",
+          "options": [
+            {
+              "id": "shop",
+              "text": "to the shop",
+              "emoji": "🏪"
+            },
+            {
+              "id": "lake",
+              "text": "to the lake",
+              "emoji": "🏞️"
+            },
+            {
+              "id": "zoo",
+              "text": "to the zoo",
+              "emoji": "🦁"
+            }
+          ],
+          "answer": "shop",
+          "ref": [
+            0,
+            0
+          ],
+          "explanation": "Mom says: We need to go to the shop."
+        },
+        {
+          "type": "TRUE_FALSE",
+          "skill": "FIND_EXPLICIT_INFORMATION",
+          "prompt": "Will they get chips today?",
+          "answer": false,
+          "ref": [
+            4,
+            1
+          ],
+          "explanation": "Mom says: No chips today!"
+        },
+        {
+          "type": "WORD_MEANING",
+          "skill": "VOCABULARY_IN_CONTEXT",
+          "word": "shop",
+          "prompt": "What is a shop?",
+          "options": [
+            {
+              "id": "buy",
+              "text": "a place where you buy things"
+            },
+            {
+              "id": "boat",
+              "text": "a big boat"
+            },
+            {
+              "id": "fish",
+              "text": "a small fish"
+            }
+          ],
+          "answer": "buy",
+          "ref": [
+            0,
+            0
+          ],
+          "explanation": "A shop is a place where you buy things."
+        }
+      ],
+      "reread": false
+    },
+    {
+      "code": "the-moth",
+      "title": "The Moth",
+      "level": "KG3",
+      "contentType": "POEM",
+      "difficulty": 3,
+      "readingLevel": 6,
+      "genre": "poem",
+      "topic": "insects",
+      "tags": [
+        "poem",
+        "digraphs"
+      ],
+      "summary": "A short poem about a moth by a lamp.",
+      "coverEmoji": "🦋",
+      "targetSkills": [
+        "SENTENCE_READING",
+        "VOCABULARY_IN_CONTEXT"
+      ],
+      "targetPatterns": [
+        "TH"
+      ],
+      "focusWords": [
+        "moth",
+        "lamp"
+      ],
+      "practiceWords": [],
+      "pages": [
+        {
+          "text": "A moth is on the lamp.",
+          "emoji": "💡"
+        },
+        {
+          "text": "It is white and thin.",
+          "emoji": "🤍"
+        },
+        {
+          "text": "It flaps and flaps its wings.",
+          "emoji": "🦋"
+        },
+        {
+          "text": "Then off it goes again!",
+          "emoji": "✨"
+        }
+      ],
+      "questions": [
+        {
+          "type": "CHOICE",
+          "skill": "FIND_EXPLICIT_INFORMATION",
+          "prompt": "Where is the moth?",
+          "options": [
+            {
+              "id": "lamp",
+              "text": "on the lamp",
+              "emoji": "💡"
+            },
+            {
+              "id": "door",
+              "text": "on the door",
+              "emoji": "🚪"
+            },
+            {
+              "id": "rock",
+              "text": "on a rock",
+              "emoji": "🪨"
+            }
+          ],
+          "answer": "lamp",
+          "ref": [
+            0,
+            0
+          ],
+          "explanation": "The poem says: A moth is on the lamp."
+        },
+        {
+          "type": "CHOICE",
+          "skill": "FIND_EXPLICIT_INFORMATION",
+          "prompt": "What colour is the moth?",
+          "options": [
+            {
+              "id": "white",
+              "text": "white",
+              "emoji": "🤍"
+            },
+            {
+              "id": "black",
+              "text": "black",
+              "emoji": "🖤"
+            },
+            {
+              "id": "red",
+              "text": "red",
+              "emoji": "❤️"
+            }
+          ],
+          "answer": "white",
+          "ref": [
+            1,
+            0
+          ],
+          "explanation": "The poem says: It is white and thin."
+        },
+        {
+          "type": "WORD_MEANING",
+          "skill": "VOCABULARY_IN_CONTEXT",
+          "word": "thin",
+          "prompt": "The moth is thin. What does thin mean?",
+          "options": [
+            {
+              "id": "not-fat",
+              "text": "not fat"
+            },
+            {
+              "id": "loud",
+              "text": "very loud"
+            },
+            {
+              "id": "hot",
+              "text": "very hot"
+            }
+          ],
+          "answer": "not-fat",
+          "ref": [
+            1,
+            0
+          ],
+          "explanation": "Thin means not fat."
+        }
+      ],
+      "names": [],
+      "reread": false
     },
     {
       "code": "the-snail-and-the-rain",
       "title": "The Snail and the Rain",
       "level": "GRADE1",
+      "contentType": "SHORT_STORY",
       "difficulty": 5,
+      "readingLevel": 11,
+      "genre": "fiction",
+      "topic": "weather",
+      "tags": [
+        "vowel-teams",
+        "weather"
+      ],
       "summary": "A slow snail enjoys a rainy day while everyone else hides.",
       "coverEmoji": "🐌",
+      "targetSkills": [
+        "SENTENCE_READING",
+        "READING_FLUENCY",
+        "MAIN_IDEA",
+        "SUPPORTING_DETAILS",
+        "SIMPLE_INFERENCE"
+      ],
+      "targetPatterns": [
+        "AI"
+      ],
+      "focusWords": [
+        "snail",
+        "rain"
+      ],
+      "practiceWords": [
+        "their"
+      ],
+      "reread": true,
       "pages": [
-        { "text": "It was a gray day. Dark clouds filled the sky, and then the rain began.", "emoji": "🌧️" },
-        { "text": "The goat ran into the barn. The sheep hid under a tree. The birds sat in their nest.", "emoji": "🐐" },
-        { "text": "But the snail did not hide. The snail likes the rain. Wet leaves are the best place to go for a slow walk.", "emoji": "🐌" },
-        { "text": "When the sun came out, the snail was far from home. It did not mind. It had seen the whole garden.", "emoji": "🌞" }
-      ]
+        {
+          "text": "It was a gray day. Dark clouds filled the sky, and then the rain began.",
+          "emoji": "🌧️"
+        },
+        {
+          "text": "The goat ran into the barn. The sheep hid under a tree. The birds sat in their nest.",
+          "emoji": "🐐"
+        },
+        {
+          "text": "But the snail did not hide. The snail likes the rain. Wet leaves are the best place for a slow walk.",
+          "emoji": "🐌"
+        },
+        {
+          "text": "When the sun came out, the snail was far from home. It did not mind at all.",
+          "emoji": "🌞"
+        }
+      ],
+      "questions": [
+        {
+          "type": "CHOICE",
+          "skill": "MAIN_IDEA",
+          "prompt": "What is this story mostly about?",
+          "options": [
+            {
+              "id": "snail",
+              "text": "a snail that likes the rain"
+            },
+            {
+              "id": "goat",
+              "text": "a goat that likes the barn"
+            },
+            {
+              "id": "sun",
+              "text": "a hot, sunny day"
+            }
+          ],
+          "answer": "snail",
+          "explanation": "Most of the story is about the snail and the rain."
+        },
+        {
+          "type": "SELECT_ALL",
+          "skill": "SUPPORTING_DETAILS",
+          "prompt": "Which animals hid from the rain?",
+          "options": [
+            {
+              "id": "goat",
+              "text": "the goat",
+              "emoji": "🐐"
+            },
+            {
+              "id": "sheep",
+              "text": "the sheep",
+              "emoji": "🐑"
+            },
+            {
+              "id": "birds",
+              "text": "the birds",
+              "emoji": "🐦"
+            },
+            {
+              "id": "snail",
+              "text": "the snail",
+              "emoji": "🐌"
+            }
+          ],
+          "answer": [
+            "goat",
+            "sheep",
+            "birds"
+          ],
+          "ref": [
+            1,
+            0
+          ],
+          "explanation": "The goat, the sheep and the birds hid. The snail did not."
+        },
+        {
+          "type": "CHOICE",
+          "skill": "FIND_EXPLICIT_INFORMATION",
+          "prompt": "Where did the goat go?",
+          "options": [
+            {
+              "id": "barn",
+              "text": "into the barn"
+            },
+            {
+              "id": "tree",
+              "text": "under a tree"
+            },
+            {
+              "id": "nest",
+              "text": "into a nest"
+            }
+          ],
+          "answer": "barn",
+          "ref": [
+            1,
+            0
+          ],
+          "explanation": "The story says: The goat ran into the barn."
+        },
+        {
+          "type": "CHOICE",
+          "skill": "SIMPLE_INFERENCE",
+          "prompt": "How does the snail feel about the rain?",
+          "options": [
+            {
+              "id": "happy",
+              "text": "happy"
+            },
+            {
+              "id": "scared",
+              "text": "scared"
+            },
+            {
+              "id": "angry",
+              "text": "angry"
+            }
+          ],
+          "answer": "happy",
+          "ref": [
+            2,
+            1
+          ],
+          "explanation": "The snail likes the rain, so it feels happy."
+        }
+      ],
+      "names": []
+    },
+    {
+      "code": "how-seeds-grow",
+      "title": "How Seeds Grow",
+      "level": "GRADE1",
+      "contentType": "INFORMATIONAL_TEXT",
+      "difficulty": 5,
+      "readingLevel": 12,
+      "genre": "non-fiction",
+      "topic": "plants",
+      "tags": [
+        "vowel-teams",
+        "science"
+      ],
+      "summary": "A seed needs soil, water and sun to grow into a plant.",
+      "coverEmoji": "🌱",
+      "targetSkills": [
+        "SENTENCE_READING",
+        "MAIN_IDEA",
+        "SUPPORTING_DETAILS",
+        "PREDICTION"
+      ],
+      "targetPatterns": [
+        "EE"
+      ],
+      "focusWords": [
+        "seed",
+        "soil"
+      ],
+      "practiceWords": [
+        "very"
+      ],
+      "pages": [
+        {
+          "text": "A seed is very small, but it can grow into a plant.",
+          "emoji": "🌱"
+        },
+        {
+          "text": "First, a seed needs soil. We put the seed in the soil.",
+          "emoji": "🪴"
+        },
+        {
+          "text": "Next, the seed needs water and sun. Rain and sunny days help it grow.",
+          "emoji": "🌧️"
+        },
+        {
+          "text": "Then a little root grows down. A green stem grows up.",
+          "emoji": "🌿"
+        },
+        {
+          "text": "Soon the plant has leaves. One day it may have a flower!",
+          "emoji": "🌻"
+        }
+      ],
+      "questions": [
+        {
+          "type": "CHOICE",
+          "skill": "MAIN_IDEA",
+          "prompt": "What is this text mostly about?",
+          "options": [
+            {
+              "id": "grow",
+              "text": "how a seed grows"
+            },
+            {
+              "id": "rain",
+              "text": "why it rains"
+            },
+            {
+              "id": "cook",
+              "text": "how to cook food"
+            }
+          ],
+          "answer": "grow",
+          "explanation": "The text tells how a seed grows into a plant."
+        },
+        {
+          "type": "SELECT_ALL",
+          "skill": "SUPPORTING_DETAILS",
+          "prompt": "What does a seed need?",
+          "options": [
+            {
+              "id": "soil",
+              "text": "soil",
+              "emoji": "🪴"
+            },
+            {
+              "id": "water",
+              "text": "water",
+              "emoji": "💧"
+            },
+            {
+              "id": "sun",
+              "text": "sun",
+              "emoji": "🌞"
+            },
+            {
+              "id": "toys",
+              "text": "toys",
+              "emoji": "🧸"
+            }
+          ],
+          "answer": [
+            "soil",
+            "water",
+            "sun"
+          ],
+          "ref": [
+            2,
+            0
+          ],
+          "explanation": "A seed needs soil, water and sun."
+        },
+        {
+          "type": "CHOICE",
+          "skill": "PREDICTION",
+          "prompt": "The plant has leaves. What may it have next?",
+          "options": [
+            {
+              "id": "flower",
+              "text": "a flower",
+              "emoji": "🌻"
+            },
+            {
+              "id": "wheel",
+              "text": "a wheel",
+              "emoji": "🛞"
+            },
+            {
+              "id": "bell",
+              "text": "a bell",
+              "emoji": "🔔"
+            }
+          ],
+          "answer": "flower",
+          "ref": [
+            4,
+            1
+          ],
+          "explanation": "The text says: One day it may have a flower!"
+        },
+        {
+          "type": "ORDER",
+          "skill": "SUPPORTING_DETAILS",
+          "prompt": "Put the steps in order.",
+          "events": [
+            {
+              "text": "Put the seed in the soil.",
+              "emoji": "🪴"
+            },
+            {
+              "text": "Give it water and sun.",
+              "emoji": "💧"
+            },
+            {
+              "text": "A root and a stem grow.",
+              "emoji": "🌿"
+            }
+          ],
+          "explanation": "Soil first, then water and sun, then a root and a stem."
+        }
+      ],
+      "names": [],
+      "reread": false
+    },
+    {
+      "code": "the-boat-race",
+      "title": "The Boat Race",
+      "level": "GRADE1",
+      "contentType": "SHORT_STORY",
+      "difficulty": 6,
+      "readingLevel": 13,
+      "genre": "fiction",
+      "topic": "friends",
+      "tags": [
+        "vowel-teams",
+        "friends"
+      ],
+      "summary": "Two friends race toy boats on a windy day.",
+      "coverEmoji": "⛵",
+      "targetSkills": [
+        "SENTENCE_READING",
+        "CHARACTER_IDENTIFICATION",
+        "SIMPLE_INFERENCE",
+        "PREDICTION"
+      ],
+      "targetPatterns": [
+        "OA"
+      ],
+      "focusWords": [
+        "boat",
+        "wind"
+      ],
+      "practiceWords": [
+        "they"
+      ],
+      "names": [
+        "Jo",
+        "Lee"
+      ],
+      "pages": [
+        {
+          "text": "Jo and Lee each made a toy boat.",
+          "emoji": "⛵"
+        },
+        {
+          "text": "Jo painted her boat red. Lee painted his boat blue.",
+          "emoji": "🎨"
+        },
+        {
+          "text": "They took the boats to the lake for a race.",
+          "emoji": "🏞️"
+        },
+        {
+          "text": "The wind began to blow. Lee's boat went fast, but Jo's boat got stuck by a rock.",
+          "emoji": "💨"
+        },
+        {
+          "text": "Lee came back to help. He gave the boat a push. Then they both laughed.",
+          "emoji": "😄"
+        }
+      ],
+      "questions": [
+        {
+          "type": "CHOICE",
+          "skill": "CHARACTER_IDENTIFICATION",
+          "prompt": "Whose boat was red?",
+          "options": [
+            {
+              "id": "jo",
+              "text": "Jo's boat"
+            },
+            {
+              "id": "lee",
+              "text": "Lee's boat"
+            },
+            {
+              "id": "both",
+              "text": "both boats"
+            }
+          ],
+          "answer": "jo",
+          "ref": [
+            1,
+            0
+          ],
+          "explanation": "The story says: Jo painted her boat red."
+        },
+        {
+          "type": "CHOICE",
+          "skill": "FIND_EXPLICIT_INFORMATION",
+          "prompt": "What made the boats go?",
+          "options": [
+            {
+              "id": "wind",
+              "text": "the wind",
+              "emoji": "💨"
+            },
+            {
+              "id": "rain",
+              "text": "the rain",
+              "emoji": "🌧️"
+            },
+            {
+              "id": "car",
+              "text": "a car",
+              "emoji": "🚗"
+            }
+          ],
+          "answer": "wind",
+          "ref": [
+            3,
+            0
+          ],
+          "explanation": "The wind began to blow."
+        },
+        {
+          "type": "CHOICE",
+          "skill": "SIMPLE_INFERENCE",
+          "prompt": "What kind of friend is Lee?",
+          "options": [
+            {
+              "id": "kind",
+              "text": "kind and helpful"
+            },
+            {
+              "id": "mean",
+              "text": "mean"
+            },
+            {
+              "id": "sleepy",
+              "text": "sleepy"
+            }
+          ],
+          "answer": "kind",
+          "ref": [
+            4,
+            0
+          ],
+          "explanation": "Lee came back to help Jo, so he is kind."
+        },
+        {
+          "type": "TRUE_FALSE",
+          "skill": "FIND_EXPLICIT_INFORMATION",
+          "prompt": "Did Jo's boat get stuck?",
+          "answer": true,
+          "ref": [
+            3,
+            1
+          ],
+          "explanation": "Jo's boat got stuck by a rock."
+        }
+      ],
+      "reread": false
     },
     {
       "code": "the-storm-at-the-farm",
       "title": "The Storm at the Farm",
       "level": "GRADE2",
+      "contentType": "SHORT_STORY",
       "difficulty": 7,
+      "readingLevel": 16,
+      "genre": "fiction",
+      "topic": "farm",
+      "tags": [
+        "farm",
+        "weather"
+      ],
       "summary": "A girl helps her grandfather get the animals safe before a storm.",
       "coverEmoji": "⛈️",
+      "targetSkills": [
+        "SENTENCE_READING",
+        "READING_FLUENCY",
+        "CAUSE_AND_EFFECT",
+        "SIMPLE_INFERENCE",
+        "STORY_SUMMARY"
+      ],
+      "targetPatterns": [
+        "OR"
+      ],
+      "focusWords": [
+        "storm",
+        "farm"
+      ],
+      "practiceWords": [
+        "were"
+      ],
+      "names": [
+        "Mara"
+      ],
+      "reread": true,
       "pages": [
-        { "text": "Mara was visiting her grandfather's farm when the sky turned dark and the wind started to howl.", "emoji": "🚜" },
-        { "text": "\"A storm is coming,\" Grandpa said. \"We need to get the horses into the barn before the thunder starts.\"", "emoji": "🐴" },
-        { "text": "Mara was scared of thunder, but she knew the horses were scared too. She talked to them in a calm, quiet voice as she led them inside.", "emoji": "⛈️" },
-        { "text": "When the last horse was safe, the rain poured down. Grandpa smiled. \"You were very helpful,\" he said. Mara felt proud, and not scared at all.", "emoji": "🌈" }
+        {
+          "text": "Mara was at her grandpa's farm. The sky turned dark, and the wind started to howl.",
+          "emoji": "🚜"
+        },
+        {
+          "text": "\"A storm is coming,\" Grandpa said. \"We need to get the horses into the barn.\"",
+          "emoji": "🐴"
+        },
+        {
+          "text": "Mara was scared of thunder, but she knew the horses were scared too. She talked to them in a calm, quiet voice.",
+          "emoji": "⛈️"
+        },
+        {
+          "text": "When the last horse was safe, the rain poured down. Grandpa smiled. \"You were very helpful,\" he said.",
+          "emoji": "🌈"
+        },
+        {
+          "text": "Mara felt proud, and she was not scared at all.",
+          "emoji": "😊"
+        }
+      ],
+      "questions": [
+        {
+          "type": "CHOICE",
+          "skill": "CAUSE_AND_EFFECT",
+          "prompt": "Why did they put the horses in the barn?",
+          "options": [
+            {
+              "id": "storm",
+              "text": "because a storm was coming"
+            },
+            {
+              "id": "hungry",
+              "text": "because the horses were hungry"
+            },
+            {
+              "id": "night",
+              "text": "because it was time for bed"
+            }
+          ],
+          "answer": "storm",
+          "ref": [
+            1,
+            0
+          ],
+          "explanation": "Grandpa said a storm was coming."
+        },
+        {
+          "type": "CHOICE",
+          "skill": "SIMPLE_INFERENCE",
+          "prompt": "Why did Mara talk in a calm, quiet voice?",
+          "options": [
+            {
+              "id": "help",
+              "text": "to help the horses feel safe"
+            },
+            {
+              "id": "sing",
+              "text": "because she wanted to sing"
+            },
+            {
+              "id": "sleep",
+              "text": "because she was sleepy"
+            }
+          ],
+          "answer": "help",
+          "ref": [
+            2,
+            1
+          ],
+          "explanation": "The horses were scared, so a calm voice helped them."
+        },
+        {
+          "type": "CHOICE",
+          "skill": "STORY_SUMMARY",
+          "prompt": "Which is the best short retelling?",
+          "options": [
+            {
+              "id": "best",
+              "text": "Mara helps Grandpa get the horses safe before a storm and feels proud."
+            },
+            {
+              "id": "rain",
+              "text": "It rains on a farm."
+            },
+            {
+              "id": "ride",
+              "text": "Mara rides a horse to school."
+            }
+          ],
+          "answer": "best",
+          "explanation": "It tells the beginning, middle and end in a few words."
+        },
+        {
+          "type": "CHOICE",
+          "skill": "CHARACTER_IDENTIFICATION",
+          "prompt": "How did Mara feel at the end?",
+          "options": [
+            {
+              "id": "proud",
+              "text": "proud"
+            },
+            {
+              "id": "scared",
+              "text": "scared"
+            },
+            {
+              "id": "angry",
+              "text": "angry"
+            }
+          ],
+          "answer": "proud",
+          "ref": [
+            4,
+            0
+          ],
+          "explanation": "The story says: Mara felt proud."
+        }
       ]
+    },
+    {
+      "code": "cats-and-dogs",
+      "title": "Cats and Dogs",
+      "level": "GRADE2",
+      "contentType": "INFORMATIONAL_TEXT",
+      "difficulty": 7,
+      "readingLevel": 17,
+      "genre": "non-fiction",
+      "topic": "pets",
+      "tags": [
+        "science",
+        "compare"
+      ],
+      "summary": "How cats and dogs are alike and different as pets.",
+      "coverEmoji": "🐾",
+      "targetSkills": [
+        "SENTENCE_READING",
+        "MAIN_IDEA",
+        "SUPPORTING_DETAILS",
+        "COMPARE_AND_CONTRAST"
+      ],
+      "targetPatterns": [
+        "OR"
+      ],
+      "focusWords": [
+        "pet"
+      ],
+      "practiceWords": [
+        "talk"
+      ],
+      "pages": [
+        {
+          "text": "Cats and dogs are the most popular pets. They are alike in some ways and different in others.",
+          "emoji": "🐾"
+        },
+        {
+          "text": "Both cats and dogs have fur, four legs and a tail. Both need food, water and love.",
+          "emoji": "❤️"
+        },
+        {
+          "text": "Dogs like to go for walks with their owners. Most dogs love to play fetch with a ball.",
+          "emoji": "🐶"
+        },
+        {
+          "text": "Cats like to be on their own more. A cat can sleep for most of the day.",
+          "emoji": "🐱"
+        },
+        {
+          "text": "A dog barks to talk, but a cat meows or purrs. Which pet would you pick?",
+          "emoji": "💬"
+        }
+      ],
+      "questions": [
+        {
+          "type": "CHOICE",
+          "skill": "MAIN_IDEA",
+          "prompt": "What is this text mostly about?",
+          "options": [
+            {
+              "id": "compare",
+              "text": "how cats and dogs are alike and different"
+            },
+            {
+              "id": "food",
+              "text": "how to cook pet food"
+            },
+            {
+              "id": "zoo",
+              "text": "animals at the zoo"
+            }
+          ],
+          "answer": "compare",
+          "explanation": "The text compares cats and dogs."
+        },
+        {
+          "type": "SELECT_ALL",
+          "skill": "COMPARE_AND_CONTRAST",
+          "prompt": "What do cats AND dogs both have?",
+          "options": [
+            {
+              "id": "fur",
+              "text": "fur"
+            },
+            {
+              "id": "tail",
+              "text": "a tail"
+            },
+            {
+              "id": "legs",
+              "text": "four legs"
+            },
+            {
+              "id": "wings",
+              "text": "wings"
+            }
+          ],
+          "answer": [
+            "fur",
+            "tail",
+            "legs"
+          ],
+          "ref": [
+            1,
+            0
+          ],
+          "explanation": "Both have fur, four legs and a tail."
+        },
+        {
+          "type": "MATCH",
+          "skill": "COMPARE_AND_CONTRAST",
+          "prompt": "Match each pet to what it does.",
+          "pairs": [
+            {
+              "left": {
+                "text": "dog",
+                "emoji": "🐶"
+              },
+              "right": {
+                "text": "barks"
+              }
+            },
+            {
+              "left": {
+                "text": "cat",
+                "emoji": "🐱"
+              },
+              "right": {
+                "text": "purrs"
+              }
+            }
+          ],
+          "explanation": "A dog barks. A cat meows or purrs."
+        },
+        {
+          "type": "CHOICE",
+          "skill": "SUPPORTING_DETAILS",
+          "prompt": "What do most dogs love to do?",
+          "options": [
+            {
+              "id": "fetch",
+              "text": "play fetch with a ball"
+            },
+            {
+              "id": "sleep",
+              "text": "sleep all day"
+            },
+            {
+              "id": "swim",
+              "text": "swim in the sea"
+            }
+          ],
+          "answer": "fetch",
+          "ref": [
+            2,
+            1
+          ],
+          "explanation": "Most dogs love to play fetch with a ball."
+        }
+      ],
+      "names": [],
+      "reread": false
+    },
+    {
+      "code": "the-lost-library-book",
+      "title": "The Lost Library Book",
+      "level": "GRADE2",
+      "contentType": "SHORT_STORY",
+      "difficulty": 8,
+      "readingLevel": 18,
+      "genre": "fiction",
+      "topic": "school",
+      "tags": [
+        "school",
+        "problem-solving"
+      ],
+      "summary": "Omar loses a library book and works out where it went.",
+      "coverEmoji": "📚",
+      "targetSkills": [
+        "SENTENCE_READING",
+        "CAUSE_AND_EFFECT",
+        "SIMPLE_INFERENCE",
+        "PREDICTION",
+        "STORY_SUMMARY"
+      ],
+      "targetPatterns": [
+        "OO"
+      ],
+      "focusWords": [
+        "library",
+        "book"
+      ],
+      "practiceWords": [
+        "find"
+      ],
+      "names": [
+        "Omar"
+      ],
+      "pages": [
+        {
+          "text": "Omar had a library book about space. He had to take it back the next day.",
+          "emoji": "📚"
+        },
+        {
+          "text": "That night, he could not find it. It was not on his desk or under his bed.",
+          "emoji": "🛏️"
+        },
+        {
+          "text": "Omar felt worried because he did not want to pay for a lost book.",
+          "emoji": "😟"
+        },
+        {
+          "text": "He thought about where he had read it last. He had read it in the park after school!",
+          "emoji": "🌳"
+        },
+        {
+          "text": "The next morning, he ran to the park with his dad. The book was on the bench, a little wet but safe.",
+          "emoji": "🪑"
+        },
+        {
+          "text": "Omar took it back to the library. Now he puts his books in his school bag every time.",
+          "emoji": "🎒"
+        }
+      ],
+      "questions": [
+        {
+          "type": "CHOICE",
+          "skill": "CAUSE_AND_EFFECT",
+          "prompt": "Why did Omar feel worried?",
+          "options": [
+            {
+              "id": "lost",
+              "text": "he could not find the library book"
+            },
+            {
+              "id": "late",
+              "text": "he was late for school"
+            },
+            {
+              "id": "rain",
+              "text": "it was raining"
+            }
+          ],
+          "answer": "lost",
+          "ref": [
+            2,
+            0
+          ],
+          "explanation": "He did not want to pay for a lost book."
+        },
+        {
+          "type": "ORDER",
+          "skill": "SEQUENCING",
+          "prompt": "Put what happened in order.",
+          "events": [
+            {
+              "text": "Omar could not find the book.",
+              "emoji": "🔍"
+            },
+            {
+              "text": "He remembered reading it in the park.",
+              "emoji": "💭"
+            },
+            {
+              "text": "He found the book on a bench.",
+              "emoji": "🪑"
+            },
+            {
+              "text": "He took the book back to the library.",
+              "emoji": "📚"
+            }
+          ],
+          "explanation": "Lost, remembered, found, returned."
+        },
+        {
+          "type": "CHOICE",
+          "skill": "SIMPLE_INFERENCE",
+          "prompt": "Why was the book a little wet?",
+          "options": [
+            {
+              "id": "night",
+              "text": "it was outside all night"
+            },
+            {
+              "id": "bath",
+              "text": "Omar read it in the bath"
+            },
+            {
+              "id": "drink",
+              "text": "Omar spilled a drink"
+            }
+          ],
+          "answer": "night",
+          "ref": [
+            4,
+            1
+          ],
+          "explanation": "It was left in the park all night."
+        },
+        {
+          "type": "CHOICE",
+          "skill": "STORY_SUMMARY",
+          "prompt": "Which is the best short retelling?",
+          "options": [
+            {
+              "id": "best",
+              "text": "Omar finds his lost book in the park and learns to keep books safe."
+            },
+            {
+              "id": "space",
+              "text": "Omar goes to space."
+            },
+            {
+              "id": "park",
+              "text": "Omar plays in the park all day."
+            }
+          ],
+          "answer": "best",
+          "explanation": "It tells the problem, how he solved it and what he learned."
+        },
+        {
+          "type": "CHOICE",
+          "skill": "PREDICTION",
+          "prompt": "What will Omar do with his next library book?",
+          "options": [
+            {
+              "id": "bag",
+              "text": "keep it in his school bag"
+            },
+            {
+              "id": "park",
+              "text": "leave it in the park"
+            },
+            {
+              "id": "lose",
+              "text": "lose it again"
+            }
+          ],
+          "answer": "bag",
+          "ref": [
+            5,
+            1
+          ],
+          "explanation": "Now he puts his books in his school bag every time."
+        }
+      ],
+      "reread": false
     }
   ]
 }

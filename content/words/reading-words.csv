@@ -1,0 +1,119 @@
+word,level,category,difficulty,phonics_pattern,definition,child_definition,example_sentence,sight_word,irregular,part_of_speech,syllables,inflections,tags
+on,KG2,FUNCTION_WORDS,2,,Touching the top of something.,Touching the top of something.,The cup is on the mat.,no,no,preposition,1,,reading
+has,KG2,FUNCTION_WORDS,2,,Owns or holds something.,Owns or holds something.,Ben has a hat.,yes,yes,verb,1,,reading
+nap,KG2,DAILY_ACTIVITIES,2,,A short sleep in the day.,A short sleep in the day.,The cat can nap.,no,no,verb,1,past=napped;ing=napping;third_person=naps,reading
+again,KG3,FUNCTION_WORDS,3,,One more time.,One more time.,Read it again.,yes,yes,adverb,2,,reading
+all,KG3,FUNCTION_WORDS,3,,Every one of them.,Every one of them.,We all sing.,yes,yes,determiner,1,,reading
+best,KG3,DESCRIBING,3,ST,Better than all the others.,Better than all the others.,This is the best cake.,no,no,adjective,1,,reading
+by,KG3,FUNCTION_WORDS,3,,Next to something.,Next to something.,The dog sat by the door.,yes,yes,preposition,1,,reading
+fine,KG3,DESCRIBING,3,I_E,Good or OK.,Good or OK.,I feel fine.,no,no,adjective,1,,reading
+flap,KG3,ACTIONS,3,FL,To move wings up and down.,To move wings up and down.,The bird can flap its wings.,no,no,verb,1,past=flapped;ing=flapping;third_person=flaps,reading
+get,KG3,FUNCTION_WORDS,3,,To take or be given something.,To take or be given something.,Can I get a cup?,no,no,verb,1,past=got;ing=getting;third_person=gets,reading
+hear,KG3,ACTIONS,3,,To take in sounds with your ears.,To take in sounds with your ears.,I can hear a bird.,yes,yes,verb,1,past=heard;third_person=hears,reading
+hold,KG3,ACTIONS,3,,To keep something in your hands.,To keep something in your hands.,Hold my hand.,no,no,verb,1,past=held;third_person=holds,reading
+his,KG3,FUNCTION_WORDS,3,,Belonging to him.,Belonging to him.,That is his hat.,yes,yes,pronoun,1,,reading
+lost,KG3,FEELINGS,3,ST,"Not able to find the way, or not found.","Not able to find the way, or not found.",The puppy is lost.,no,no,adjective,1,,reading
+need,KG3,FUNCTION_WORDS,3,EE,To have to have something.,To have to have something.,Plants need water.,no,no,verb,1,past=needed;third_person=needs,reading
+now,KG3,FUNCTION_WORDS,3,OW:OW_OU,At this time.,At this time.,Come here now.,no,no,adverb,1,,reading
+off,KG3,FUNCTION_WORDS,3,,Away from a place.,Away from a place.,The bird flew off.,no,no,preposition,1,,reading
+put,KG3,FUNCTION_WORDS,3,,To place something somewhere.,To place something somewhere.,Put the cup on the table.,yes,yes,verb,1,past=put;ing=putting;third_person=puts,reading
+sand,KG3,NATURE,3,,Tiny bits of rock at the beach.,Tiny bits of rock at the beach.,I dig in the sand.,no,no,noun,1,,reading
+then,KG3,FUNCTION_WORDS,3,TH:TH_VOICED,After that.,After that.,"We ate, then we played.",no,no,adverb,1,,reading
+today,KG3,FUNCTION_WORDS,3,,This day.,This day.,It is sunny today.,yes,yes,adverb,2,,reading
+too,KG3,FUNCTION_WORDS,3,OO:OO_LONG,Also.,Also.,I want to come too.,yes,yes,adverb,1,,reading
+with,KG3,FUNCTION_WORDS,3,TH:TH_VOICELESS,Together.,Together.,I play with my sister.,no,no,preposition,1,,reading
+yes,KG3,FUNCTION_WORDS,3,,A word you say to agree.,A word you say to agree.,"Yes, you can come.",no,no,interjection,1,,reading
+went,KG3,FUNCTION_WORDS,3,,Moved to a place (past of go).,Moved to a place (past of go).,We went to the park.,yes,yes,verb,1,,reading
+saw,KG3,FUNCTION_WORDS,3,,Looked at something (past of see).,Looked at something (past of see).,I saw a ship.,yes,yes,verb,1,,reading
+back,GRADE1,FUNCTION_WORDS,5,CK,To the place you came from.,To the place you came from.,Come back home.,no,no,adverb,1,,reading
+barn,GRADE1,PLACES,5,AR,A farm building for animals.,A farm building for animals.,The cow is in the barn.,no,no,noun,1,,reading
+begin,GRADE1,ACTIONS,5,,To start.,To start.,The show will begin soon.,no,no,verb,2,past=began;third_person=begins,reading
+blow,GRADE1,ACTIONS,5,OW:OW_LONG_O,To push air out.,To push air out.,The wind will blow.,no,no,verb,1,past=blew;third_person=blows,reading
+both,GRADE1,FUNCTION_WORDS,5,TH:TH_VOICELESS,The two of them.,The two of them.,Both cats are black.,yes,yes,determiner,1,,reading
+but,GRADE1,FUNCTION_WORDS,5,,A word that shows something is different.,A word that shows something is different.,"I am small, but I am fast.",no,no,conjunction,1,,reading
+dark,GRADE1,DESCRIBING,5,AR,With little or no light.,With little or no light.,It is dark at night.,no,no,adjective,1,,reading
+down,GRADE1,FUNCTION_WORDS,5,OW:OW_OU,Toward the ground.,Toward the ground.,Sit down.,no,no,adverb,1,,reading
+each,GRADE1,FUNCTION_WORDS,5,EA:EA_LONG_E;CH,Every one.,Every one.,Each child has a book.,no,no,determiner,1,,reading
+far,GRADE1,DESCRIBING,5,AR,A long way away.,A long way away.,The moon is far away.,no,no,adjective,1,,reading
+fill,GRADE1,ACTIONS,5,,To make something full.,To make something full.,Fill the cup with water.,no,no,verb,1,past=filled;third_person=fills,reading
+for,GRADE1,FUNCTION_WORDS,5,OR,Meant to be given to.,Meant to be given to.,This cake is for you.,no,no,preposition,1,,reading
+from,GRADE1,FUNCTION_WORDS,5,FR,Starting at a place.,Starting at a place.,I walk home from school.,yes,yes,preposition,1,,reading
+give,GRADE1,ACTIONS,5,,To let someone have something.,To let someone have something.,Give the dog a bone.,yes,yes,verb,1,past=gave;third_person=gives,reading
+gray,GRADE1,COLORS,5,GR;AY,The color of clouds on a rainy day.,The color of clouds on a rainy day.,The sky is gray.,no,no,adjective,1,,reading
+grow,GRADE1,NATURE,5,GR;OW:OW_LONG_O,To get bigger.,To get bigger.,Plants grow in the sun.,no,no,verb,1,past=grew;third_person=grows,reading
+help,GRADE1,ACTIONS,5,,To make things easier for someone.,To make things easier for someone.,Can you help me?,no,no,verb,1,third_person=helps,reading
+hide,GRADE1,ACTIONS,5,I_E,To go where no one can see you.,To go where no one can see you.,The cat likes to hide.,no,no,verb,1,past=hid;third_person=hides,reading
+into,GRADE1,FUNCTION_WORDS,5,,To the inside of.,To the inside of.,The frog jumped into the pond.,yes,no,preposition,2,,reading
+laugh,GRADE1,FEELINGS,5,,To make the sound of being happy.,To make the sound of being happy.,Jokes make me laugh.,no,yes,verb,1,past=laughed;third_person=laughs,reading
+little,GRADE1,DESCRIBING,5,,Small.,Small.,A little bug sat on a leaf.,yes,no,adjective,2,,reading
+make,GRADE1,ACTIONS,5,A_E,To build or create.,To build or create.,Let's make a cake.,yes,no,verb,1,past=made;third_person=makes,reading
+may,GRADE1,FUNCTION_WORDS,5,AY,Might.,Might.,It may rain today.,no,no,verb,1,,reading
+mind,GRADE1,FEELINGS,5,,To be upset about something.,To be upset about something.,I do not mind the rain.,no,no,verb,1,,reading
+nest,GRADE1,NATURE,5,ST,A home that birds make.,A home that birds make.,The bird sat in its nest.,no,no,noun,1,,reading
+next,GRADE1,FUNCTION_WORDS,5,,Coming after this one.,Coming after this one.,What will happen next?,no,no,adverb,1,,reading
+not,GRADE1,FUNCTION_WORDS,5,,A word that means no.,A word that means no.,I am not cold.,no,no,adverb,1,,reading
+out,GRADE1,FUNCTION_WORDS,5,OU,Away from the inside.,Away from the inside.,The sun came out.,no,no,adverb,1,,reading
+place,GRADE1,PLACES,5,A_E,A spot or area.,A spot or area.,This is a good place to sit.,no,no,noun,1,,reading
+plant,GRADE1,NATURE,5,,A living thing that grows in soil.,A living thing that grows in soil.,The plant needs water.,no,no,noun,1,,reading
+push,GRADE1,ACTIONS,5,SH,To move something away from you.,To move something away from you.,Push the door.,no,no,verb,1,past=pushed;third_person=pushes,reading
+root,GRADE1,NATURE,5,OO:OO_LONG,The part of a plant under the ground.,The part of a plant under the ground.,The root drinks water.,no,no,noun,1,,reading
+sky,GRADE1,NATURE,5,,The space above us where clouds are.,The space above us where clouds are.,The sky is blue.,no,no,noun,1,,reading
+soon,GRADE1,FUNCTION_WORDS,5,OO:OO_LONG,In a short time.,In a short time.,We will eat soon.,no,no,adverb,1,,reading
+stem,GRADE1,NATURE,5,ST,The stalk of a plant.,The stalk of a plant.,The flower has a long stem.,no,no,noun,1,,reading
+stuck,GRADE1,DESCRIBING,5,ST;CK,Not able to move.,Not able to move.,The car is stuck in the mud.,no,no,adjective,1,,reading
+take,GRADE1,ACTIONS,5,A_E,To pick up or carry something.,To pick up or carry something.,Take your coat.,yes,no,verb,1,past=took;third_person=takes,reading
+their,GRADE1,FUNCTION_WORDS,5,,Belonging to them.,Belonging to them.,The kids have their bags.,yes,yes,pronoun,1,,reading
+under,GRADE1,FUNCTION_WORDS,5,ER,Below something.,Below something.,The cat is under the bed.,no,no,preposition,2,,reading
+very,GRADE1,FUNCTION_WORDS,5,,Really.,Really.,The elephant is very big.,yes,no,adverb,2,,reading
+when,GRADE1,FUNCTION_WORDS,5,WH,At the time that.,At the time that.,I smile when I am happy.,no,no,conjunction,1,,reading
+came,GRADE1,FUNCTION_WORDS,5,A_E,Moved toward here (past of come).,Moved toward here (past of come).,The dog came to me.,yes,yes,verb,1,,reading
+did,GRADE1,FUNCTION_WORDS,5,,Past of do.,Past of do.,I did my best.,yes,no,verb,1,,reading
+had,GRADE1,FUNCTION_WORDS,5,,Past of have.,Past of have.,I had a red ball.,yes,no,verb,1,,reading
+about,GRADE2,FUNCTION_WORDS,7,OU,On the subject of.,On the subject of.,This book is about dogs.,yes,no,preposition,2,,reading
+after,GRADE2,FUNCTION_WORDS,7,ER,Later than.,Later than.,We play after school.,yes,no,preposition,2,,reading
+alike,GRADE2,DESCRIBING,7,I_E,The same in some way.,The same in some way.,The twins look alike.,no,no,adjective,2,,reading
+bark,GRADE2,ACTIONS,7,AR,The loud sound a dog makes.,The loud sound a dog makes.,Dogs bark at the mail truck.,no,no,verb,1,past=barked;third_person=barks,reading
+be,GRADE2,FUNCTION_WORDS,7,,To exist or happen.,To exist or happen.,I want to be a pilot.,yes,yes,verb,1,,reading
+different,GRADE2,DESCRIBING,7,ER,Not the same.,Not the same.,My shoes are different colors.,no,no,adjective,3,,reading
+every,GRADE2,FUNCTION_WORDS,7,,Each one of all.,Each one of all.,I read every day.,yes,yes,determiner,3,,reading
+feel,GRADE2,FEELINGS,7,EE,To have a feeling.,To have a feeling.,I feel happy.,no,no,verb,1,past=felt;third_person=feels,reading
+fetch,GRADE2,ACTIONS,7,CH,To go and bring back.,To go and bring back.,The dog can fetch the ball.,no,no,verb,1,,reading
+find,GRADE2,ACTIONS,7,,To see something you were looking for.,To see something you were looking for.,Can you find my sock?,yes,no,verb,1,past=found;third_person=finds,reading
+food,GRADE2,FOOD,7,OO:OO_LONG,What people and animals eat.,What people and animals eat.,Dogs need food and water.,no,no,noun,1,,reading
+fur,GRADE2,BODY,7,UR,The soft hair on an animal.,The soft hair on an animal.,My cat has soft fur.,no,no,noun,1,,reading
+howl,GRADE2,ACTIONS,7,OW:OW_OU,"To make a long, loud cry.","To make a long, loud cry.",The wind will howl.,no,no,verb,1,,reading
+know,GRADE2,ACTIONS,7,OW:OW_LONG_O,To have something in your mind.,To have something in your mind.,I know the answer.,yes,yes,verb,1,past=knew;third_person=knows,reading
+last,GRADE2,FUNCTION_WORDS,7,ST,At the end.,At the end.,Z is the last letter.,no,no,adjective,1,,reading
+love,GRADE2,FEELINGS,7,,To care for someone a lot.,To care for someone a lot.,I love my family.,yes,yes,verb,1,,reading
+meow,GRADE2,ACTIONS,7,OW:OW_OU,The sound a cat makes.,The sound a cat makes.,The cat will meow for food.,no,no,verb,2,third_person=meows,reading
+more,GRADE2,FUNCTION_WORDS,7,OR,A bigger amount.,A bigger amount.,Can I have more milk?,yes,no,determiner,1,,reading
+morning,GRADE2,DAILY_ACTIVITIES,7,OR;ING,The early part of the day.,The early part of the day.,I eat toast in the morning.,no,no,noun,2,,reading
+most,GRADE2,FUNCTION_WORDS,7,ST,The biggest amount.,The biggest amount.,Most birds can fly.,yes,no,determiner,1,,reading
+night,GRADE2,NATURE,7,,The dark time when we sleep.,The dark time when we sleep.,The moon shines at night.,no,no,noun,1,,reading
+or,GRADE2,FUNCTION_WORDS,7,OR,A word that gives a choice.,A word that gives a choice.,Do you want milk or juice?,no,no,conjunction,1,,reading
+other,GRADE2,FUNCTION_WORDS,7,TH:TH_VOICED;ER,Not this one.,Not this one.,Use your other hand.,yes,yes,determiner,2,,reading
+own,GRADE2,FUNCTION_WORDS,7,OW:OW_LONG_O,Belonging to you.,Belonging to you.,I have my own room.,yes,no,adjective,1,,reading
+owner,GRADE2,FAMILY,7,OW:OW_LONG_O;ER,A person who has something.,A person who has something.,The dog ran to its owner.,no,no,noun,2,,reading
+pay,GRADE2,COMMUNITY,7,AY,To give money for something.,To give money for something.,We pay at the shop.,no,no,verb,1,,reading
+pick,GRADE2,ACTIONS,7,CK,To choose.,To choose.,Pick a card.,no,no,verb,1,,reading
+popular,GRADE2,DESCRIBING,7,,Liked by many people.,Liked by many people.,Soccer is a popular game.,no,no,adjective,3,,reading
+pour,GRADE2,ACTIONS,7,,To make liquid flow out.,To make liquid flow out.,Pour the milk.,no,no,verb,1,past=poured;third_person=pours,reading
+proud,GRADE2,FEELINGS,7,OU,Happy about something you did well.,Happy about something you did well.,I am proud of my picture.,no,no,adjective,1,,reading
+purr,GRADE2,ACTIONS,7,UR,The soft sound a happy cat makes.,The soft sound a happy cat makes.,My cat will purr on my lap.,no,no,verb,1,third_person=purrs,reading
+quiet,GRADE2,DESCRIBING,7,,Making very little noise.,Making very little noise.,Be quiet in the library.,no,no,adjective,2,,reading
+safe,GRADE2,DESCRIBING,7,A_E,Not in danger.,Not in danger.,The bird is safe in its nest.,no,no,adjective,1,,reading
+smile,GRADE2,FEELINGS,7,I_E,To make a happy face.,To make a happy face.,I smile at my friend.,no,no,verb,1,past=smiled;third_person=smiles,reading
+space,GRADE2,NATURE,7,A_E,Where the stars and planets are.,Where the stars and planets are.,Rockets fly into space.,no,no,noun,1,,reading
+start,GRADE2,ACTIONS,7,ST;AR,To begin.,To begin.,The race will start soon.,no,no,verb,1,past=started;third_person=starts,reading
+tail,GRADE2,BODY,7,AI,The part at the back of an animal.,The part at the back of an animal.,The dog wags its tail.,no,no,noun,1,,reading
+talk,GRADE2,ACTIONS,7,,To say words.,To say words.,We talk at lunch.,no,yes,verb,1,past=talked;third_person=talks,reading
+them,GRADE2,FUNCTION_WORDS,7,TH:TH_VOICED,Those people or things.,Those people or things.,I gave them a hug.,no,no,pronoun,1,,reading
+think,GRADE2,ACTIONS,7,TH:TH_VOICELESS,To use your mind.,To use your mind.,I think it will rain.,no,no,verb,1,past=thought;third_person=thinks,reading
+thunder,GRADE2,WEATHER,7,TH:TH_VOICELESS;ER,The loud noise in a storm.,The loud noise in a storm.,Thunder is very loud.,no,no,noun,2,,reading
+time,GRADE2,FUNCTION_WORDS,7,I_E,When something happens.,When something happens.,It is time for bed.,yes,no,noun,1,,reading
+turn,GRADE2,ACTIONS,7,UR,"To move around, or to change.","To move around, or to change.",The leaves turn red.,no,no,verb,1,past=turned;third_person=turns,reading
+voice,GRADE2,BODY,7,OI,The sound you make when you talk.,The sound you make when you talk.,She has a soft voice.,no,no,noun,1,,reading
+want,GRADE2,FEELINGS,7,,To wish for something.,To wish for something.,I want a drink.,yes,yes,verb,1,past=wanted;third_person=wants,reading
+way,GRADE2,FUNCTION_WORDS,7,AY,How something is done.,How something is done.,This is the way to do it.,no,no,noun,1,,reading
+which,GRADE2,FUNCTION_WORDS,7,WH;CH,A question word for choosing.,A question word for choosing.,Which one do you want?,no,no,pronoun,1,,reading
+worry,GRADE2,FEELINGS,7,,To feel afraid that something bad may happen.,To feel afraid that something bad may happen.,Do not worry.,no,no,verb,2,past=worried;third_person=worries,reading

@@ -875,7 +875,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "readingSkill": "SIGHT_WORD_RECOGNITION"
         }
       ]
     },
@@ -1147,6 +1148,143 @@
               }
             }
           ]
+        }
+      ]
+    },
+    {
+      "code": "kg3-story-time",
+      "subject": "READING",
+      "title": "Story time",
+      "description": "Read short texts with help, then answer questions about them.",
+      "emoji": "📖",
+      "status": "published",
+      "skills": [
+        {
+          "code": "kg3-read-texts",
+          "dimension": "WORD_READING",
+          "title": "Read texts by sounding out",
+          "childTitle": "Read stories",
+          "description": "Read texts using the sounds learned so far.",
+          "readingSkill": "DECODING",
+          "importance": 4,
+          "status": "published",
+          "lessons": [
+            {
+              "code": "kg3-read-the-moth",
+              "title": "The Moth",
+              "childTitle": "The Moth",
+              "description": "A short poem about a moth by a lamp.",
+              "emoji": "🦋",
+              "minutes": 8,
+              "difficulty": 3,
+              "introSpeech": "Let's read The Moth.",
+              "status": "published",
+              "blueprint": {
+                "name": "reading",
+                "story": "the-moth"
+              }
+            },
+            {
+              "code": "kg3-read-sam-and-the-shell",
+              "title": "Sam and the Shell",
+              "childTitle": "Sam and the Shell",
+              "description": "Sam finds a shell on the beach and hears the sea.",
+              "emoji": "🐚",
+              "minutes": 8,
+              "difficulty": 3,
+              "introSpeech": "Let's read Sam and the Shell.",
+              "status": "published",
+              "blueprint": {
+                "name": "reading",
+                "story": "sam-and-the-shell"
+              }
+            },
+            {
+              "code": "kg3-read-pip-the-chick",
+              "title": "Pip the Chick",
+              "childTitle": "Pip the Chick",
+              "description": "A little chick is lost and looks for her mother.",
+              "emoji": "🐤",
+              "minutes": 8,
+              "difficulty": 3,
+              "introSpeech": "Let's read Pip the Chick.",
+              "status": "published",
+              "blueprint": {
+                "name": "reading",
+                "story": "pip-the-chick"
+              }
+            },
+            {
+              "code": "kg3-read-at-the-shop",
+              "title": "At the Shop",
+              "childTitle": "At the Shop",
+              "description": "Tom and his mom talk about what to buy at the shop.",
+              "emoji": "🏪",
+              "minutes": 8,
+              "difficulty": 3,
+              "introSpeech": "Let's read At the Shop.",
+              "status": "published",
+              "blueprint": {
+                "name": "reading",
+                "story": "at-the-shop"
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg3-reading-characters",
+          "dimension": "READING_COMPREHENSION",
+          "title": "Characters",
+          "childTitle": "Who is in the story?",
+          "description": "Identify the characters of a story and what they do.",
+          "readingSkill": "CHARACTER_IDENTIFICATION",
+          "importance": 3,
+          "status": "published",
+          "lessons": []
+        },
+        {
+          "code": "kg3-reading-setting",
+          "dimension": "READING_COMPREHENSION",
+          "title": "Setting",
+          "childTitle": "Where is the story?",
+          "description": "Identify where and when a story happens.",
+          "readingSkill": "SETTING",
+          "importance": 3,
+          "status": "published",
+          "lessons": []
+        },
+        {
+          "code": "kg3-reading-sequencing",
+          "dimension": "READING_COMPREHENSION",
+          "title": "Sequencing",
+          "childTitle": "What happened first?",
+          "description": "Put the events of a story in order.",
+          "readingSkill": "SEQUENCING",
+          "importance": 3,
+          "status": "published",
+          "lessons": []
+        },
+        {
+          "code": "kg3-reading-find-it",
+          "dimension": "READING_COMPREHENSION",
+          "title": "Find information in a text",
+          "childTitle": "Find it in the story",
+          "description": "Find information the text states.",
+          "readingSkill": "FIND_EXPLICIT_INFORMATION",
+          "importance": 3,
+          "status": "published",
+          "lessons": []
+        },
+        {
+          "code": "kg3-reading-word-meaning",
+          "dimension": "VOCABULARY",
+          "title": "Word meanings in a text",
+          "childTitle": "What does it mean?",
+          "description": "Work out what a word means in a text.",
+          "readingSkill": "VOCABULARY_IN_CONTEXT",
+          "importance": 3,
+          "status": "published",
+          "lessons": []
         }
       ]
     }

@@ -107,26 +107,41 @@ separate lesson, activity, attempt, progress, mastery, review or assessment syst
 | Screens       | `/child/spelling` (Learn, Practice, Dictation, My Words, Review), `/parent/spelling`, a dashboard card                                                                                                |
 | Tests         | unit `spelling.test.ts` (+ content files), SQL `008_spelling_engine.sql`, integration `spelling.test.ts`, e2e `spelling.spec.ts` on phone, tablet and desktop                                         |
 
+## Phase 7 — reading engine ✅
+
+Built on the story table, the Phase 5 word bank, the Phase 4 phonics data and the Phase 3
+engine (no separate reading lesson, progress, mastery or review system; ADR-037, ADR-038):
+
+| Area          | Where                                                                                                                                                                                                  |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Model         | migration `20261008100100`: reading skill and content types, skill tagging, story reading metadata and analysis, story ↔ word / pattern / skill links, reading sessions, reading review                |
+| Logic         | `src/lib/learning/reading.ts`: sentences, words, inflections, decodability, difficulty, level fit, session summaries (no speed), comprehension per skill, recommendations, help-word review            |
+| Activities    | `READ_PASSAGE` (guided reading), `SELECT_ALL`, `ORDER_EVENTS`; `READING` for choice / true-false / word meaning with look-back; `MATCH`                                                                |
+| Lessons       | `reading` blueprint: get ready → words → phonics → read → questions → tricky words → read again                                                                                                        |
+| Import / seed | `content/stories.json` (16 texts, 55 questions, every level), 16 reading lessons, 118 high-frequency words; failures on broken references, duplicates and level-inappropriate skills; flags for review |
+| Screens       | `/child/reading`, `/child/reading/words`, `/parent/reading`, dashboard card, `/admin/reading[/:code]` (analysis, preview, publish)                                                                     |
+| Tests         | unit `reading.test.ts`, `reading-ui.test.tsx` (+ content files), SQL `009_reading_engine.sql`, integration `reading.test.ts`, e2e `reading.spec.ts` on phone, tablet and desktop                       |
+
 ## Phases
 
-| #   | Phase                       | Status | Notes / next steps                                                                                                                                                                                                          |
-| --- | --------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | Project foundation          | ✅     | Next 16, TS, Tailwind, lint, tests, docs                                                                                                                                                                                    |
-| 2   | Database and authentication | ✅     | Schema, RLS, email/password auth, password reset, parent profile (name, time zone), levels seeded by migration, DB-enforced family rules                                                                                    |
-| 3   | Multi-child system          | ✅     | Create/edit/archive (max 12), switcher, child mode + grown-up gate, forged child ids rejected                                                                                                                               |
-| 4   | Learning/content engine     | ✅     | Hierarchy, typed questions and activity config, registry (13 renderers), importer, templates, answer keys, engine services (Phase 3)                                                                                        |
-| 5   | Phonics                     | ✅     | Phase 4: phoneme model, word splits, 3 new activity types, blueprints, Phonics screen, Phonics Check. Next: recorded audio, more lessons per pattern, decodable readers                                                     |
-| 6   | Vocabulary                  | ✅     | Phase 5: word model, Word Explorer, My Words, 14 vocabulary activities, word mastery + review, search, parent progress. Next: illustrated pictures, recorded audio, more sets                                               |
-| 7   | Spelling                    | ✅     | Phase 6: spelling targets, checker + error analysis, 9 activities, input methods, dictation, hints, spelling mastery and pattern review, parent report. Next: recorded dictation audio, more lessons, speech input (future) |
-| 8   | Reading                     | 🟡     | READING renderer (passage + comprehension) done. Next: story library screens, read-aloud with optional speech recognition + self-check                                                                                      |
-| 9   | Writing                     | 🟡     | TRACING (canvas, coverage scoring) and WRITING (word bank) done. Next: undo/eraser, stroke order and direction metrics                                                                                                      |
-| 10  | Assessment                  | 🟡     | Phonics Check playable and scored per area; placement config + scoring logic. Next: placement UI, reassessment timeline                                                                                                     |
-| 11  | Adaptive learning           | 🟡     | Mastery bands, prerequisites, review queue, next lesson and recommendations, daily plan. Next: mixed review sessions across skills, SRS                                                                                     |
-| 12  | Parent dashboard            | 🟡     | Stats, activities, average score, learning time, subject progress, skills, recommendations, badges. Next: monthly view, words list                                                                                          |
-| 13  | Games and rewards           | 🟡     | Stars, points, badges, streaks; MATCH, SORT, DRAG_DROP renderers. Next: MEMORY_MATCH, PHONICS_CLASSIFICATION                                                                                                                |
-| 14  | PWA/offline/sync            | 🟡     | Outbox, idempotent sync, SW. Next: fully client-side offline lesson loader from IndexedDB; background sync                                                                                                                  |
-| 15  | Admin CMS                   | 🟡     | Guarded area, overview, word search. Next: reusable Zod-driven edit forms, CSV upload in UI, media upload with type/size validation                                                                                         |
-| 16  | Testing and optimisation    | 🟡     | CI for static checks and build. Next: DB + e2e tests in CI (Supabase CLI), axe accessibility checks, Lighthouse budget                                                                                                      |
+| #   | Phase                       | Status | Notes / next steps                                                                                                                                                                                                                   |
+| --- | --------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Project foundation          | ✅     | Next 16, TS, Tailwind, lint, tests, docs                                                                                                                                                                                             |
+| 2   | Database and authentication | ✅     | Schema, RLS, email/password auth, password reset, parent profile (name, time zone), levels seeded by migration, DB-enforced family rules                                                                                             |
+| 3   | Multi-child system          | ✅     | Create/edit/archive (max 12), switcher, child mode + grown-up gate, forged child ids rejected                                                                                                                                        |
+| 4   | Learning/content engine     | ✅     | Hierarchy, typed questions and activity config, registry (13 renderers), importer, templates, answer keys, engine services (Phase 3)                                                                                                 |
+| 5   | Phonics                     | ✅     | Phase 4: phoneme model, word splits, 3 new activity types, blueprints, Phonics screen, Phonics Check. Next: recorded audio, more lessons per pattern, decodable readers                                                              |
+| 6   | Vocabulary                  | ✅     | Phase 5: word model, Word Explorer, My Words, 14 vocabulary activities, word mastery + review, search, parent progress. Next: illustrated pictures, recorded audio, more sets                                                        |
+| 7   | Spelling                    | ✅     | Phase 6: spelling targets, checker + error analysis, 9 activities, input methods, dictation, hints, spelling mastery and pattern review, parent report. Next: recorded dictation audio, more lessons, speech input (future)          |
+| 8   | Reading                     | ✅     | Phase 7: reading taxonomy, texts with decodability analysis, guided reading, 3 new activity types, reading lessons, sessions + help-word review, parent report, admin preview. Next: recorded story audio, more texts, illustrations |
+| 9   | Writing                     | 🟡     | TRACING (canvas, coverage scoring) and WRITING (word bank) done. Next: undo/eraser, stroke order and direction metrics                                                                                                               |
+| 10  | Assessment                  | 🟡     | Phonics Check playable and scored per area; placement config + scoring logic. Next: placement UI, reassessment timeline                                                                                                              |
+| 11  | Adaptive learning           | 🟡     | Mastery bands, prerequisites, review queue, next lesson and recommendations, daily plan. Next: mixed review sessions across skills, SRS                                                                                              |
+| 12  | Parent dashboard            | 🟡     | Stats, activities, average score, learning time, subject progress, skills, recommendations, badges. Next: monthly view, words list                                                                                                   |
+| 13  | Games and rewards           | 🟡     | Stars, points, badges, streaks; MATCH, SORT, DRAG_DROP renderers. Next: MEMORY_MATCH, PHONICS_CLASSIFICATION                                                                                                                         |
+| 14  | PWA/offline/sync            | 🟡     | Outbox, idempotent sync, SW. Next: fully client-side offline lesson loader from IndexedDB; background sync                                                                                                                           |
+| 15  | Admin CMS                   | 🟡     | Guarded area, overview, word search. Next: reusable Zod-driven edit forms, CSV upload in UI, media upload with type/size validation                                                                                                  |
+| 16  | Testing and optimisation    | 🟡     | CI for static checks and build. Next: DB + e2e tests in CI (Supabase CLI), axe accessibility checks, Lighthouse budget                                                                                                               |
 
 ## Known limitations
 
@@ -173,6 +188,14 @@ separate lesson, activity, attempt, progress, mastery, review or assessment syst
   queue and replays rather than more lessons.
 - Pictures are emoji (render slightly differently per platform); `image_assets` is ready
   for illustrated images.
+
+- Reading: nothing listens to the child read, so there is no words-per-minute, accuracy or
+  pronunciation figure; fluency is shown as re-reads, listens and help taps only.
+  Sentence highlighting follows the speech sequence (one sentence per utterance); word
+  highlighting is word-by-word Slow reading, because browser word-boundary events are
+  unreliable. A recorded whole-text clip plays without highlighting. Inflected forms are
+  matched to their base word and share its decodability. Short written answers are not
+  offered. There are 16 texts; illustrations are emoji until images are uploaded.
 
 ## Future extensions (not in scope yet)
 

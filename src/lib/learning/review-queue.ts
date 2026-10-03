@@ -7,6 +7,7 @@ import { DEFAULT_RULES, type ReviewRules } from "@/lib/learning/rules";
 //   * words: missed, weak or saved-and-due words (deriveWordReview in vocabulary.ts);
 //   * spelling: words missed or weak when spelled and phonics patterns often misspelled
 //     (deriveSpellingReview / derivePatternReview in spelling.ts);
+//   * reading: words a child keeps tapping for help in texts (deriveReadingWordReview);
 //   * items that no longer apply are resolved, not deleted.
 // Priority 0–100 (higher first) reuses the skill's review priority from mastery.ts.
 
@@ -19,7 +20,9 @@ export type ReviewReason =
   // Spelling (spelling.ts): a word missed or weak when spelled, a pattern often misspelled.
   | "missed_spelling"
   | "weak_spelling"
-  | "spelling_pattern";
+  | "spelling_pattern"
+  // Reading (reading.ts): a word the child keeps tapping for help while reading.
+  | "reading_word";
 
 export type SkillReviewInput = {
   skillId: string;

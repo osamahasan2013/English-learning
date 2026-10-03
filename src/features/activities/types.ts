@@ -15,6 +15,21 @@ export type RendererProps<Q extends LessonStep["question"] = LessonStep["questio
   reveal: Reveal | null;
   onAnswer: (response: QuestionResponse) => void;
   speak: SpeakFn;
+  // Reading a text (READ_PASSAGE): how the reading went, reported once when the child
+  // leaves the text. Never scored (src/lib/learning/reading.ts).
+  onReading?: (report: ReadingReport) => void;
+};
+
+export type ReadingReport = {
+  storyId: string;
+  mode: "listen_first" | "read_first" | "reread";
+  startedAt: string;
+  durationMs: number;
+  listens: number;
+  slowListens: number;
+  rereads: number;
+  helpWordIds: string[];
+  selfCheck: "easy" | "ok" | "hard" | null;
 };
 
 // The question type a renderer handles, as the device sees it (no answer).

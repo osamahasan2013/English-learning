@@ -14,13 +14,14 @@ type Item = { question_id: string; stage: number; question_type: string; answer:
 function correctResponse(type: string, a: AnswerSpec): QuestionResponse {
   if ("pairs" in a) return { pairs: a.pairs };
   if ("acceptedSequences" in a) return { sequence: a.acceptedSequences[0] };
+  if ("correct" in a) return { sequence: a.correct };
   if ("minCoverage" in a) return { coverage: a.minCoverage + 10 };
   if (type === "WORD_BUILDER") return { sequence: [...a.accepted[0]] };
   return { value: a.accepted[0] };
 }
 function wrongResponse(type: string, a: AnswerSpec): QuestionResponse {
   if ("pairs" in a) return { pairs: [] };
-  if ("acceptedSequences" in a) return { sequence: ["nope"] };
+  if ("acceptedSequences" in a || "correct" in a) return { sequence: ["nope"] };
   return type === "WORD_BUILDER" ? { sequence: ["z"] } : { value: "definitely-wrong" };
 }
 

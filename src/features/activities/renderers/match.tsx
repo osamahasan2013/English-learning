@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import type { QuestionOf, RendererProps } from "../types";
 import { ResultMark } from "./choice";
 import { PromptHeader } from "./prompt-header";
+import { StoryPanel } from "./reading";
 
 type Item = { id: string; text?: string; emoji?: string; speech?: string };
 
@@ -111,6 +112,7 @@ export function MatchRenderer({
 
   return (
     <div className="flex flex-col items-center gap-6">
+      <StoryPanel step={step} speak={speak} />
       <PromptHeader step={step} speak={speak} />
       <div className="grid w-full max-w-2xl grid-cols-2 gap-6">
         {column(content.left, 0)}

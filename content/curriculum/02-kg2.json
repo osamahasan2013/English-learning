@@ -786,7 +786,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "readingSkill": "SIGHT_WORD_RECOGNITION"
         }
       ]
     },
@@ -1444,6 +1445,95 @@
               }
             }
           ]
+        }
+      ]
+    },
+    {
+      "code": "kg2-story-time",
+      "subject": "READING",
+      "title": "Story time",
+      "description": "Read short texts with help, then answer questions about them.",
+      "emoji": "📖",
+      "status": "published",
+      "skills": [
+        {
+          "code": "kg2-read-texts",
+          "dimension": "WORD_READING",
+          "title": "Read texts by sounding out",
+          "childTitle": "Read stories",
+          "description": "Read texts using the sounds learned so far.",
+          "readingSkill": "DECODING",
+          "importance": 4,
+          "status": "published",
+          "lessons": [
+            {
+              "code": "kg2-read-the-big-cat",
+              "title": "The Big Cat",
+              "childTitle": "The Big Cat",
+              "description": "A big cat looks for a place to nap.",
+              "emoji": "🐱",
+              "minutes": 5,
+              "difficulty": 2,
+              "introSpeech": "Let's read The Big Cat.",
+              "status": "published",
+              "blueprint": {
+                "name": "reading",
+                "story": "the-big-cat"
+              }
+            },
+            {
+              "code": "kg2-read-ben-and-the-hen",
+              "title": "Ben and the Hen",
+              "childTitle": "Ben and the Hen",
+              "description": "Ben's red hen has a surprise for him.",
+              "emoji": "🐔",
+              "minutes": 5,
+              "difficulty": 2,
+              "introSpeech": "Let's read Ben and the Hen.",
+              "status": "published",
+              "blueprint": {
+                "name": "reading",
+                "story": "ben-and-the-hen"
+              }
+            },
+            {
+              "code": "kg2-read-in-the-tub",
+              "title": "In the Tub",
+              "childTitle": "In the Tub",
+              "description": "On a hot day, a child cools off in a tub.",
+              "emoji": "🛁",
+              "minutes": 5,
+              "difficulty": 2,
+              "introSpeech": "Let's read In the Tub.",
+              "status": "published",
+              "blueprint": {
+                "name": "reading",
+                "story": "in-the-tub"
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg2-reading-find-it",
+          "dimension": "READING_COMPREHENSION",
+          "title": "Find information in a text",
+          "childTitle": "Find it in the story",
+          "description": "Find information the text states.",
+          "readingSkill": "FIND_EXPLICIT_INFORMATION",
+          "importance": 3,
+          "status": "published",
+          "lessons": []
+        },
+        {
+          "code": "kg2-reading-word-meaning",
+          "dimension": "VOCABULARY",
+          "title": "Word meanings in a text",
+          "childTitle": "What does it mean?",
+          "description": "Work out what a word means in a text.",
+          "readingSkill": "VOCABULARY_IN_CONTEXT",
+          "importance": 3,
+          "status": "published",
+          "lessons": []
         }
       ]
     }

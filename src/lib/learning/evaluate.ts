@@ -35,6 +35,8 @@ export type ErrorType =
   | "incomplete_trace"
   | "wrong_sounds"
   | "wrong_count"
+  // Select-all: only right options chosen, but not all of them.
+  | "missed_choice"
   | "invalid_response"
   // Spelling answers are classified by the spelling engine (spelling.ts).
   | SpellingErrorType;
@@ -101,6 +103,11 @@ export function sortedLetters(value: string) {
   return [...value.replace(/[^\p{L}]/gu, "")].sort().join("");
 }
 
+// Select-all: the chosen option ids as a set.
+export function canonicalOption(id: string) {
+  return `+${normalizeText(id)}`;
+}
+
 export function isAlmostShare(right: number, total: number) {
   return total >= 2 && right < total && right >= Math.ceil(total * ALMOST_SHARE);
 }
@@ -124,6 +131,19 @@ export function evaluateResponse(
       isCorrect: false,
       almost: response.coverage >= answer.minCoverage - TRACE_ALMOST_MARGIN,
       errorType: "incomplete_trace",
+    };
+  }
+
+  if ("correct" in answer) {
+    if (!("sequence" in response)) return invalid;
+    const expected = new Set(answer.correct.map(canonicalOption));
+    const given = new Set(response.sequence.map(canonicalOption));
+    const wrong = [...given].filter((o) => !expected.has(o)).length;
+    if (wrong === 0 && given.size === expected.size) return correct;
+    return {
+      isCorrect: false,
+      almost: wrong === 0 && given.size > 0,
+      errorType: wrong === 0 && given.size > 0 ? "missed_choice" : "wrong_choice",
     };
   }
 

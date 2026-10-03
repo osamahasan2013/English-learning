@@ -101,11 +101,51 @@ export const referenceFileSchema = z.object({
       }),
     )
     .default([]),
+  // Reading (Phase 7): the reading skill taxonomy and the kinds of reading text, each with
+  // the first level (rank, 1 = KG1) it may appear at. Extensible lists.
+  readingSkills: z
+    .array(
+      z.object({
+        code,
+        name: z.string().min(1).max(80),
+        childName: z.string().max(80).default(""),
+        description: z.string().max(400).default(""),
+        minLevelRank: z.number().int().min(1).max(10),
+        strand: z.enum(["word", "text", "comprehension"]),
+        emoji: z.string().default(""),
+        sortOrder: z.number().int(),
+        status,
+      }),
+    )
+    .default([]),
+  readingContentTypes: z
+    .array(
+      z.object({
+        code,
+        name: z.string().min(1).max(80),
+        childName: z.string().max(80).default(""),
+        description: z.string().max(400).default(""),
+        minLevelRank: z.number().int().min(1).max(10).default(1),
+        emoji: z.string().default(""),
+        sortOrder: z.number().int(),
+        status,
+      }),
+    )
+    .default([]),
   // Overrides of the engine rules (src/lib/learning/rules.ts), validated on import.
   rules: z
     .array(
       z.object({
-        code: z.enum(["mastery", "prerequisites", "review", "player", "scoring", "vocabulary", "spelling"]),
+        code: z.enum([
+          "mastery",
+          "prerequisites",
+          "review",
+          "player",
+          "scoring",
+          "vocabulary",
+          "spelling",
+          "reading",
+        ]),
         description: z.string().default(""),
         config: z.record(z.unknown()),
       }),
@@ -398,22 +438,124 @@ export const sentencesFileSchema = z.object({
   ),
 });
 
-export const storiesFileSchema = z.object({
-  stories: z.array(
-    z.object({
-      code: slug,
-      title: z.string().min(1).max(120),
-      level: code,
-      difficulty,
-      summary: z.string().default(""),
-      coverEmoji: z.string().default(""),
-      pages: z.array(z.object({ text: z.string().min(1), emoji: z.string().optional() })).min(1),
-      isOriginal: z.boolean().default(true),
-      license: z.string().default(""),
-      status,
-    }),
-  ),
+// Reading texts (Phase 7). A text is a story row; its comprehension questions are authored
+// here in a compact form and become ordinary questions of its reading lesson (the `reading`
+// lesson blueprint; src/lib/content/reading-content.ts). Words are matched against the word
+// bank, never copied.
+const optionInput = z.object({
+  id: z.string().regex(/^[a-z0-9-]{1,40}$/),
+  text: z.string().trim().min(1).max(80),
+  emoji: z.string().max(16).optional(),
 });
+// Paragraph and sentence index (0-based) of the sentence that answers a question.
+const refInput = z.tuple([z.number().int().min(0).max(40), z.number().int().min(0).max(40)]);
+const storyQuestionBase = {
+  code: slug.optional(),
+  // A reading skill code (reading_skill_types); must be taught at the text's level.
+  skill: code,
+  prompt: z.string().trim().min(1).max(200),
+  promptSpeech: safeSpeech(300),
+  explanation: z.string().max(300).default(""),
+  difficulty: difficulty.default(1),
+  ref: refInput.optional(),
+};
+export const storyQuestionSchema = z.discriminatedUnion("type", [
+  z.object({
+    ...storyQuestionBase,
+    type: z.literal("CHOICE"),
+    options: z.array(optionInput).min(2).max(4),
+    answer: z.string(),
+  }),
+  z.object({
+    ...storyQuestionBase,
+    type: z.literal("TRUE_FALSE"),
+    answer: z.boolean(),
+  }),
+  z.object({
+    ...storyQuestionBase,
+    type: z.literal("WORD_MEANING"),
+    // The word in the text (must be in the word bank).
+    word: z.string().trim().min(1).max(40),
+    options: z.array(optionInput).min(2).max(4),
+    answer: z.string(),
+  }),
+  z.object({
+    ...storyQuestionBase,
+    type: z.literal("SELECT_ALL"),
+    options: z.array(optionInput).min(3).max(6),
+    answer: z.array(z.string()).min(2).max(5),
+  }),
+  z.object({
+    ...storyQuestionBase,
+    type: z.literal("ORDER"),
+    // In the right order; the importer shuffles them for display.
+    events: z
+      .array(z.object({ text: z.string().trim().min(1).max(120), emoji: z.string().max(16).optional() }))
+      .min(3)
+      .max(6),
+  }),
+  z.object({
+    ...storyQuestionBase,
+    type: z.literal("MATCH"),
+    pairs: z
+      .array(
+        z.object({
+          left: z.object({ text: z.string().trim().min(1).max(80), emoji: z.string().max(16).optional() }),
+          right: z.object({ text: z.string().trim().min(1).max(80), emoji: z.string().max(16).optional() }),
+        }),
+      )
+      .min(2)
+      .max(5),
+  }),
+]);
+export type StoryQuestionInput = z.infer<typeof storyQuestionSchema>;
+
+export const storySchema = z.object({
+  code: slug,
+  title: z.string().min(1).max(120),
+  level: code,
+  // WORD_READING, PHRASE_READING, SENTENCE_READING, SHORT_STORY, POEM… (reading_content_types)
+  contentType: code.default("SHORT_STORY"),
+  difficulty,
+  // A finer band than the level: 1 (first KG1 texts) … 20 (end of Grade 2).
+  readingLevel: z.number().int().min(1).max(20).optional(),
+  genre: z.string().max(40).default(""),
+  topic: z.string().max(60).default(""),
+  tags: z.array(z.string().regex(/^[a-z0-9-]{1,30}$/)).max(10).default([]),
+  summary: z.string().default(""),
+  coverEmoji: z.string().default(""),
+  image: z.string().optional(),
+  audio: z.string().optional(),
+  // Reading skills the text practises (reading_skill_types codes).
+  targetSkills: z.array(code).default([]),
+  // Phonics patterns the text practises (phonics pattern codes).
+  targetPatterns: z.array(code).default([]),
+  // Words taught before reading (must be in the word bank and in the text).
+  focusWords: z.array(z.string().trim().min(1).max(40)).max(6).default([]),
+  // Tricky words practised after reading (word bank, in the text).
+  practiceWords: z.array(z.string().trim().min(1).max(40)).max(4).default([]),
+  // Character and place names: expected outside the word bank.
+  names: z.array(z.string().trim().min(1).max(40)).max(10).default([]),
+  // A second reading at the end of the lesson.
+  reread: z.boolean().default(false),
+  pages: z
+    .array(
+      z.object({
+        text: z.string().min(1).max(600),
+        emoji: z.string().optional(),
+        speaker: z.string().max(40).optional(),
+      }),
+    )
+    .min(1)
+    .max(20),
+  questions: z.array(storyQuestionSchema).max(10).default([]),
+  isOriginal: z.boolean().default(true),
+  license: z.string().default(""),
+  status,
+});
+export type StoryInput = z.infer<typeof storySchema>;
+
+export const storiesFileSchema = z.object({ stories: z.array(storySchema) });
 
 // A question is either raw (type + content + answer, validated by question-schemas.ts)
 // or a template the importer expands using the word bank (see templates.ts).
@@ -494,6 +636,9 @@ const skillInputSchema = z.object({
   prerequisites: z.array(slug).default([]),
   // Phonics stage for grouping phonics progress (LETTER_SOUNDS, DIGRAPHS, ...).
   phonicsStage: code.optional(),
+  // The reading skill this skill teaches (reading_skill_types), so comprehension answers
+  // build ordinary skill mastery.
+  readingSkill: code.optional(),
   status,
   lessons: z.array(lessonInputSchema).default([]),
 });

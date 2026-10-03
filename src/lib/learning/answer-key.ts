@@ -2,6 +2,7 @@ import type { AnswerSpec, QuestionResponse } from "@/lib/content/question-schema
 import type { ClientQuestion } from "@/lib/learning/lesson-payload";
 import {
   canonicalAccepted,
+  canonicalOption,
   canonicalPair,
   canonicalPosition,
   canonicalSequence,
@@ -27,6 +28,8 @@ export type AnswerKey =
   | { mode: "values"; salt: string; digests: string[]; letters: string[]; punctuation?: boolean }
   | { mode: "sequence"; salt: string; digests: string[]; positions: string[] }
   | { mode: "pairs"; salt: string; digests: string[] }
+  // Select-all: one digest per right option; `count` of them.
+  | { mode: "set"; salt: string; digests: string[]; count: number }
   // Tracing is scored on coverage; the threshold is not a secret.
   | { mode: "coverage"; minCoverage: number };
 
@@ -56,6 +59,10 @@ export async function buildAnswerKey(
   if ("minCoverage" in answer) return { mode: "coverage", minCoverage: answer.minCoverage };
   const hash = (values: string[]) => Promise.all([...new Set(values)].map((v) => digest(salt, v)));
   if ("pairs" in answer) return { mode: "pairs", salt, digests: await hash(answer.pairs.map(canonicalPair)) };
+  if ("correct" in answer) {
+    const digests = await hash(answer.correct.map(canonicalOption));
+    return { mode: "set", salt, digests, count: digests.length };
+  }
   if ("acceptedSequences" in answer) {
     return {
       mode: "sequence",
@@ -102,6 +109,14 @@ export async function checkWithKey(
       return right === total && response.pairs.length === total
         ? { isCorrect: true, almost: false }
         : { isCorrect: false, almost: isAlmostShare(right, total) };
+    }
+    case "set": {
+      if (!("sequence" in response)) return no;
+      const given = [...new Set(response.sequence.map(canonicalOption))];
+      const hashes = await Promise.all(given.map((o) => digest(key.salt, o)));
+      const wrong = hashes.filter((h) => !key.digests.includes(h)).length;
+      if (wrong === 0 && given.length === key.count) return { isCorrect: true, almost: false };
+      return { isCorrect: false, almost: wrong === 0 && given.length > 0 };
     }
     case "sequence": {
       if (!("sequence" in response)) return no;
@@ -239,6 +254,32 @@ export async function revealAnswer(question: ClientQuestion, key: AnswerKey): Pr
         .join(" ")
         .replace(/\s+([.,!?])/g, "$1");
       return { text, sequence };
+    }
+    case "SELECT_ALL": {
+      if (key.mode !== "set") return null;
+      const right = [];
+      for (const option of question.content.options)
+        if (key.digests.includes(await digest(key.salt, canonicalOption(option.id)))) right.push(option);
+      return {
+        text: right.map((o) => o.text ?? o.id).join(", "),
+        sequence: right.map((o) => o.id),
+      };
+    }
+    case "ORDER_EVENTS": {
+      if (key.mode !== "sequence") return null;
+      const sequence: string[] = [];
+      for (let i = 0; i < key.positions.length; i++) {
+        let found: string | undefined;
+        for (const event of question.content.events) {
+          if ((await digest(key.salt, canonicalPosition(i, event.id))) === key.positions[i]) {
+            found = event.id;
+            break;
+          }
+        }
+        if (found === undefined) return null;
+        sequence.push(found);
+      }
+      return { text: "", sequence };
     }
     case "MATCH":
     case "SORT": {

@@ -632,7 +632,8 @@
                 }
               ]
             }
-          ]
+          ],
+          "readingSkill": "SENTENCE_READING"
         }
       ]
     },
@@ -1672,6 +1673,172 @@
               }
             }
           ]
+        }
+      ]
+    },
+    {
+      "code": "g2-story-time",
+      "subject": "READING",
+      "title": "Story time",
+      "description": "Read short texts with help, then answer questions about them.",
+      "emoji": "📖",
+      "status": "published",
+      "skills": [
+        {
+          "code": "g2-read-texts",
+          "dimension": "WORD_READING",
+          "title": "Read texts by sounding out",
+          "childTitle": "Read stories",
+          "description": "Read texts using the sounds learned so far.",
+          "readingSkill": "DECODING",
+          "importance": 4,
+          "status": "published",
+          "lessons": [
+            {
+              "code": "g2-read-the-storm-at-the-farm",
+              "title": "The Storm at the Farm",
+              "childTitle": "The Storm at the Farm",
+              "description": "A girl helps her grandfather get the animals safe before a storm.",
+              "emoji": "⛈️",
+              "minutes": 8,
+              "difficulty": 7,
+              "introSpeech": "Let's read The Storm at the Farm.",
+              "status": "published",
+              "blueprint": {
+                "name": "reading",
+                "story": "the-storm-at-the-farm"
+              }
+            },
+            {
+              "code": "g2-read-cats-and-dogs",
+              "title": "Cats and Dogs",
+              "childTitle": "Cats and Dogs",
+              "description": "How cats and dogs are alike and different as pets.",
+              "emoji": "🐾",
+              "minutes": 8,
+              "difficulty": 7,
+              "introSpeech": "Let's read Cats and Dogs.",
+              "status": "published",
+              "blueprint": {
+                "name": "reading",
+                "story": "cats-and-dogs"
+              }
+            },
+            {
+              "code": "g2-read-the-lost-library-book",
+              "title": "The Lost Library Book",
+              "childTitle": "The Lost Library Book",
+              "description": "Omar loses a library book and works out where it went.",
+              "emoji": "📚",
+              "minutes": 8,
+              "difficulty": 8,
+              "introSpeech": "Let's read The Lost Library Book.",
+              "status": "published",
+              "blueprint": {
+                "name": "reading",
+                "story": "the-lost-library-book"
+              }
+            }
+          ]
+        },
+        {
+          "code": "g2-reading-cause-effect",
+          "dimension": "READING_COMPREHENSION",
+          "title": "Cause and effect",
+          "childTitle": "Why did it happen?",
+          "description": "Connect what happened with why it happened.",
+          "readingSkill": "CAUSE_AND_EFFECT",
+          "importance": 3,
+          "status": "published",
+          "lessons": []
+        },
+        {
+          "code": "g2-reading-inference",
+          "dimension": "READING_COMPREHENSION",
+          "title": "Simple inference",
+          "childTitle": "Think it through",
+          "description": "Work out something the text does not say directly.",
+          "readingSkill": "SIMPLE_INFERENCE",
+          "importance": 3,
+          "status": "published",
+          "lessons": []
+        },
+        {
+          "code": "g2-reading-summary",
+          "dimension": "READING_COMPREHENSION",
+          "title": "Summarising",
+          "childTitle": "Tell it short",
+          "description": "Choose the best short retelling of a text.",
+          "readingSkill": "STORY_SUMMARY",
+          "importance": 3,
+          "status": "published",
+          "lessons": []
+        },
+        {
+          "code": "g2-reading-characters",
+          "dimension": "READING_COMPREHENSION",
+          "title": "Characters",
+          "childTitle": "Who is in the story?",
+          "description": "Identify the characters of a story and what they do.",
+          "readingSkill": "CHARACTER_IDENTIFICATION",
+          "importance": 3,
+          "status": "published",
+          "lessons": []
+        },
+        {
+          "code": "g2-reading-main-idea",
+          "dimension": "READING_COMPREHENSION",
+          "title": "Main idea",
+          "childTitle": "What is it about?",
+          "description": "Say what a text is mostly about.",
+          "readingSkill": "MAIN_IDEA",
+          "importance": 3,
+          "status": "published",
+          "lessons": []
+        },
+        {
+          "code": "g2-reading-compare",
+          "dimension": "READING_COMPREHENSION",
+          "title": "Compare and contrast",
+          "childTitle": "Same and different",
+          "description": "Say how two things in a text are alike and different.",
+          "readingSkill": "COMPARE_AND_CONTRAST",
+          "importance": 3,
+          "status": "published",
+          "lessons": []
+        },
+        {
+          "code": "g2-reading-details",
+          "dimension": "READING_COMPREHENSION",
+          "title": "Supporting details",
+          "childTitle": "Find the details",
+          "description": "Find details that support the main idea.",
+          "readingSkill": "SUPPORTING_DETAILS",
+          "importance": 3,
+          "status": "published",
+          "lessons": []
+        },
+        {
+          "code": "g2-reading-sequencing",
+          "dimension": "READING_COMPREHENSION",
+          "title": "Sequencing",
+          "childTitle": "What happened first?",
+          "description": "Put the events of a story in order.",
+          "readingSkill": "SEQUENCING",
+          "importance": 3,
+          "status": "published",
+          "lessons": []
+        },
+        {
+          "code": "g2-reading-prediction",
+          "dimension": "READING_COMPREHENSION",
+          "title": "Prediction",
+          "childTitle": "What will happen?",
+          "description": "Use the text to say what might happen next.",
+          "readingSkill": "PREDICTION",
+          "importance": 3,
+          "status": "published",
+          "lessons": []
         }
       ]
     }

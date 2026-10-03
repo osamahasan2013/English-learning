@@ -1935,6 +1935,95 @@
           ]
         }
       ]
+    },
+    {
+      "code": "kg1-story-time",
+      "subject": "READING",
+      "title": "Story time",
+      "description": "Read short texts with help, then answer questions about them.",
+      "emoji": "📖",
+      "status": "published",
+      "skills": [
+        {
+          "code": "kg1-read-with-me",
+          "dimension": "WORD_READING",
+          "title": "Read familiar words",
+          "childTitle": "Read with me",
+          "description": "Read familiar words and short phrases in a text.",
+          "readingSkill": "WORD_RECOGNITION",
+          "importance": 4,
+          "status": "published",
+          "lessons": [
+            {
+              "code": "kg1-read-my-pets",
+              "title": "My Pets",
+              "childTitle": "My Pets",
+              "description": "Short phrases about three pets.",
+              "emoji": "🐾",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Let's read My Pets.",
+              "status": "published",
+              "blueprint": {
+                "name": "reading",
+                "story": "my-pets"
+              }
+            },
+            {
+              "code": "kg1-read-sun-and-moon",
+              "title": "Sun and Moon",
+              "childTitle": "Sun and Moon",
+              "description": "The sun is up, and then the moon is up.",
+              "emoji": "🌞",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Let's read Sun and Moon.",
+              "status": "published",
+              "blueprint": {
+                "name": "reading",
+                "story": "sun-and-moon"
+              }
+            },
+            {
+              "code": "kg1-read-fox-in-a-box",
+              "title": "Fox in a Box",
+              "childTitle": "Fox in a Box",
+              "description": "A rhyme about a fox that hides in a box.",
+              "emoji": "🦊",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Let's read Fox in a Box.",
+              "status": "published",
+              "blueprint": {
+                "name": "reading",
+                "story": "fox-in-a-box"
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg1-reading-find-it",
+          "dimension": "READING_COMPREHENSION",
+          "title": "Find information in a text",
+          "childTitle": "Find it in the story",
+          "description": "Find information the text states.",
+          "readingSkill": "FIND_EXPLICIT_INFORMATION",
+          "importance": 3,
+          "status": "published",
+          "lessons": []
+        },
+        {
+          "code": "kg1-reading-word-meaning",
+          "dimension": "VOCABULARY",
+          "title": "Word meanings in a text",
+          "childTitle": "What does it mean?",
+          "description": "Work out what a word means in a text.",
+          "readingSkill": "VOCABULARY_IN_CONTEXT",
+          "importance": 3,
+          "status": "published",
+          "lessons": []
+        }
+      ]
     }
   ]
 }

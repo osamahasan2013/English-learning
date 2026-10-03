@@ -15,6 +15,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         { href: "/admin/dashboard", label: "Overview" },
         { href: "/admin/words", label: "Words" },
         { href: "/admin/phonics", label: "Phonics" },
+        { href: "/admin/reading", label: "Reading" },
       ]}
       actions={
         <Link

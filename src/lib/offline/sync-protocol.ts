@@ -48,8 +48,33 @@ export const assessmentRunEventSchema = z.object({
   completedAt: timestamp,
 });
 
+// Reading a text (a story) once: never scored. The server keeps only the help words that
+// belong to the story, takes the word count from the story, and stores the session once.
+export const readingEventSchema = z.object({
+  kind: z.literal("reading"),
+  id: uuid,
+  storyId: uuid,
+  lessonId: uuid.nullable(),
+  lessonRunId: uuid.nullable(),
+  questionId: uuid.nullable(),
+  sessionId: uuid.nullable().optional(),
+  mode: z.enum(["listen_first", "read_first", "reread"]),
+  startedAt: timestamp,
+  durationMs: z.number().int().min(0).max(3_600_000),
+  listens: z.number().int().min(0).max(100),
+  slowListens: z.number().int().min(0).max(100),
+  rereads: z.number().int().min(0).max(20),
+  helpWordIds: z.array(uuid).max(100),
+  selfCheck: z.enum(["easy", "ok", "hard"]).nullable(),
+});
+
 export const syncEventSchema = z
-  .discriminatedUnion("kind", [attemptEventSchema, lessonRunEventSchema, assessmentRunEventSchema])
+  .discriminatedUnion("kind", [
+    attemptEventSchema,
+    lessonRunEventSchema,
+    assessmentRunEventSchema,
+    readingEventSchema,
+  ])
   .refine((e) => e.kind !== "attempt" || !e.assessmentAttemptId || !!e.assessmentId, {
     message: "an assessment answer must name its assessment",
     path: ["assessmentId"],
@@ -62,6 +87,7 @@ export type SyncEvent = z.infer<typeof syncEventSchema>;
 export type AttemptEvent = z.infer<typeof attemptEventSchema>;
 export type LessonRunEvent = z.infer<typeof lessonRunEventSchema>;
 export type AssessmentRunEvent = z.infer<typeof assessmentRunEventSchema>;
+export type ReadingEvent = z.infer<typeof readingEventSchema>;
 
 export const MAX_EVENTS_PER_REQUEST = 200;
 

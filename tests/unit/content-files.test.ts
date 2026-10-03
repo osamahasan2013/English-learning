@@ -25,6 +25,7 @@ import { expandTemplate, type TemplateContext, type TemplateWord } from "@/lib/c
 import { templateSpellingFromInput, templateWordFromInput, type CategoryRef } from "@/lib/content/word-bank";
 import { RENDERABLE_QUESTION_TYPES } from "@/features/activities/supported-types";
 import { expandBlueprint } from "@/lib/content/lesson-blueprints";
+import { baseFormCandidates, paragraphsOf, runningWords } from "@/lib/learning/reading";
 import {
   decomposeWord,
   segmentsUsePattern,
@@ -159,16 +160,61 @@ function expand(q: QuestionInput, seed: string, level?: string) {
   return q as { type: string; content: unknown; answer: unknown; pattern?: string; word?: string };
 }
 
+// Reading: the stories, each level's reading skill → skill code, and for each story the
+// word of the text that the importer would pick to find each target pattern in.
+const stories = storiesFileSchema.parse(json("stories.json")).stories;
+const storyByCode = new Map(stories.map((s) => [s.code, s]));
+const readingSkillsByLevel = new Map(
+  curriculum.map((file) => {
+    const map = new Map<string, string>();
+    for (const unit of file.units)
+      for (const skill of unit.skills)
+        if (skill.readingSkill && !map.has(skill.readingSkill)) map.set(skill.readingSkill, skill.code);
+    return [file.level, map] as const;
+  }),
+);
+function bankKeyFor(word: string) {
+  if (templateBank.has(word)) return word;
+  for (const [key, w] of templateBank) if ((w.forms ?? []).includes(word)) return key;
+  return baseFormCandidates(word).find((b) => templateBank.has(b));
+}
+function patternWordsOf(code: string) {
+  const story = storyByCode.get(code);
+  const out = new Map<string, string>();
+  if (!story) return out;
+  for (const p of story.targetPatterns) {
+    let chosen: { word: string; decodable: boolean } | null = null;
+    for (const running of runningWords(paragraphsOf(story.pages))) {
+      const key = bankKeyFor(running);
+      const w = key ? templateBank.get(key) : undefined;
+      if (!w || w.word.length < 2 || !(w.segments ?? []).some((seg) => seg.patternCode === p)) continue;
+      const decodable = splits.get(key!)?.decodable ?? false;
+      if (!chosen || (decodable && !chosen.decodable)) chosen = { word: w.word, decodable };
+    }
+    if (chosen) out.set(p, chosen.word);
+  }
+  return out;
+}
+
 // Lessons written as a blueprint, expanded the way the importer does.
 function lessonActivities(
   lesson: CurriculumFile["units"][number]["skills"][number]["lessons"][number],
   level: string,
 ) {
   if (!lesson.blueprint) return lesson.activities;
+  const storyCode = typeof lesson.blueprint.story === "string" ? lesson.blueprint.story : "";
   return expandBlueprint({
     levelRank: levelRanks.get(level),
     spellingLevel: rules.spelling.levels[level],
     ...lesson.blueprint,
+    ...(lesson.blueprint.name === "reading"
+      ? {
+          storyData: storyByCode.get(storyCode),
+          readingSkills: readingSkillsByLevel.get(level),
+          readingLevel: rules.reading.levels[level],
+          patternWords: patternWordsOf(storyCode),
+        }
+      : {}),
   }).map((a) => ({
     ...a,
     config: a.config ?? {},
@@ -420,6 +466,7 @@ function correctResponse(type: string, answer: AnswerSpec): QuestionResponse {
   if ("minCoverage" in answer) return { coverage: answer.minCoverage };
   if ("pairs" in answer) return { pairs: answer.pairs };
   if ("acceptedSequences" in answer) return { sequence: answer.acceptedSequences[0] };
+  if ("correct" in answer) return { sequence: answer.correct };
   if (type === "WORD_BUILDER") return { sequence: [...answer.accepted[0]] };
   return { value: answer.accepted[0] };
 }

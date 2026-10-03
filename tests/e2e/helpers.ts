@@ -243,6 +243,32 @@ export async function answerQuestion(page: Page, q: QuestionRow, correct: boolea
       await page.getByRole("button", { name: /Check/ }).click();
       return;
     }
+    case "SELECT_ALL": {
+      const options = content.options as { id: string; text?: string }[];
+      const right = (q.answer as { correct: string[] }).correct;
+      const chosen = correct ? right : [options.find((o) => !right.includes(o.id))!.id];
+      for (const id of chosen) {
+        const option = options.find((o) => o.id === id)!;
+        await page
+          .getByRole("group", { name: "Answers" })
+          .getByRole("button", { name: option.text ?? option.id, exact: true })
+          .click();
+      }
+      await page.getByRole("button", { name: /Check/ }).click();
+      return;
+    }
+    case "ORDER_EVENTS": {
+      const events = content.events as { id: string; text: string }[];
+      const expected = answerSpec.acceptedSequences![0];
+      for (const id of correct ? expected : [...expected].reverse()) {
+        await page
+          .getByRole("list", { name: "Events to place" })
+          .getByRole("button", { name: events.find((e) => e.id === id)!.text, exact: true })
+          .click();
+      }
+      await page.getByRole("button", { name: /Check/ }).click();
+      return;
+    }
     case "SORT": {
       const items = content.items as Item[];
       const groups = content.groups as { id: string; label: string }[];

@@ -2,7 +2,8 @@ import { z } from "zod";
 
 // The engine's tunable numbers. Defaults live here; an admin can override any of them
 // per rule set in the `learning_rules` table (code = mastery | prerequisites | review |
-// player | scoring | vocabulary | spelling), which the server merges over these defaults. Every value is
+// player | scoring | vocabulary | spelling |
+// reading), which the server merges over these defaults. Every value is
 // documented in docs/curriculum.md so parent-facing explanations can quote it.
 
 const statuses = ["NOT_STARTED", "LEARNING", "PRACTICING", "ALMOST_MASTERED", "MASTERED"] as const;
@@ -127,6 +128,63 @@ export const spellingRulesSchema = z.object({
   levels: z.record(z.string().regex(/^[A-Z0-9_]{1,40}$/), spellingLevelRulesSchema),
 });
 
+// Reading (Phase 7): what a text at each level may look like (checked by the importer),
+// how its difficulty is scored, how guided reading starts, which words tapped for help come
+// back for review, and when a text is suggested again. Comprehension mastery is ordinary
+// skill mastery (the `mastery` rules); nothing here scores reading itself.
+export const READING_MODES = ["listen_first", "read_first"] as const;
+export type ReadingMode = (typeof READING_MODES)[number];
+
+const difficultyFactor = (max: number) =>
+  z
+    .object({
+      weight: z.number().min(0).max(10),
+      from: z.number().min(0).max(max),
+      full: z.number().min(1).max(max),
+    })
+    .refine((f) => f.from < f.full, { message: "from must be below full" });
+
+export const readingLevelRulesSchema = z.object({
+  maxParagraphs: z.number().int().min(1).max(20),
+  maxSentences: z.number().int().min(1).max(80),
+  // Words per sentence (a longer one is reported as an error by the importer).
+  maxSentenceWords: z.number().int().min(1).max(40),
+  // Below this share of decodable or sight words the importer flags the text for review.
+  minDecodablePct: z.number().min(0).max(100),
+  // Guided reading at this level starts by listening (KG) or by reading (later).
+  defaultMode: z.enum(READING_MODES),
+  // Highlight each word as it is read (the youngest) or each sentence.
+  highlight: z.enum(["word", "sentence"]),
+  // Comprehension questions per text the importer expects (warning outside the range).
+  minQuestions: z.number().int().min(0).max(20),
+  maxQuestions: z.number().int().min(0).max(20),
+});
+
+export const readingRulesSchema = z.object({
+  defaultLevel: z.string(),
+  levels: z.record(z.string().regex(/^[A-Z0-9_]{1,40}$/), readingLevelRulesSchema),
+  // Difficulty 1–10 from the text's statistics: each factor is scaled 0–1 between its
+  // `from` value (easiest) and its `full` value (hardest) and weighted; the weights are
+  // normalised, so they need not sum to 1.
+  difficulty: z.object({
+    avgSentenceWords: difficultyFactor(40),
+    avgWordLetters: difficultyFactor(15),
+    totalWords: difficultyFactor(2000),
+    nonDecodablePct: difficultyFactor(100),
+  }),
+  // Time on a text counts up to this much (a child who walks away is not reading).
+  maxCountedSeconds: z.number().int().min(30).max(3600),
+  // A word tapped for help in at least this many of the child's last `helpLookbackSessions`
+  // readings that contain it comes back for review (reading:<word id>), until the child
+  // answers a question about it right on the first try or reads it without help again.
+  helpTapsForReview: z.number().int().min(1).max(10),
+  helpLookbackSessions: z.number().int().min(1).max(20),
+  // A text is suggested again when its comprehension first tries fell below this (percent).
+  rereadBelowPercent: z.number().min(0).max(100),
+});
+
+export type ReadingRules = z.infer<typeof readingRulesSchema>;
+export type ReadingLevelRules = z.infer<typeof readingLevelRulesSchema>;
 export type MasteryRules = z.infer<typeof masteryRulesSchema>;
 export type SpellingRules = z.infer<typeof spellingRulesSchema>;
 export type SpellingLevelRules = z.infer<typeof spellingLevelRulesSchema>;
@@ -144,6 +202,7 @@ export type LearningRules = {
   scoring: ScoringRules;
   vocabulary: VocabularyRules;
   spelling: SpellingRules;
+  reading: ReadingRules;
 };
 
 export const DEFAULT_RULES: LearningRules = {
@@ -262,6 +321,71 @@ export const DEFAULT_RULES: LearningRules = {
       },
     },
   },
+  reading: {
+    defaultLevel: "KG3",
+    levels: {
+      KG1: {
+        maxParagraphs: 4,
+        maxSentences: 4,
+        maxSentenceWords: 5,
+        minDecodablePct: 50,
+        defaultMode: "listen_first",
+        highlight: "word",
+        minQuestions: 1,
+        maxQuestions: 3,
+      },
+      KG2: {
+        maxParagraphs: 6,
+        maxSentences: 6,
+        maxSentenceWords: 6,
+        minDecodablePct: 70,
+        defaultMode: "listen_first",
+        highlight: "word",
+        minQuestions: 2,
+        maxQuestions: 4,
+      },
+      KG3: {
+        maxParagraphs: 8,
+        maxSentences: 8,
+        maxSentenceWords: 8,
+        minDecodablePct: 70,
+        defaultMode: "listen_first",
+        highlight: "sentence",
+        minQuestions: 3,
+        maxQuestions: 6,
+      },
+      GRADE1: {
+        maxParagraphs: 6,
+        maxSentences: 16,
+        maxSentenceWords: 12,
+        minDecodablePct: 60,
+        defaultMode: "read_first",
+        highlight: "sentence",
+        minQuestions: 3,
+        maxQuestions: 6,
+      },
+      GRADE2: {
+        maxParagraphs: 8,
+        maxSentences: 28,
+        maxSentenceWords: 16,
+        minDecodablePct: 50,
+        defaultMode: "read_first",
+        highlight: "sentence",
+        minQuestions: 4,
+        maxQuestions: 7,
+      },
+    },
+    difficulty: {
+      avgSentenceWords: { weight: 3, from: 2, full: 10 },
+      avgWordLetters: { weight: 2, from: 2.5, full: 4.5 },
+      totalWords: { weight: 2, from: 10, full: 120 },
+      nonDecodablePct: { weight: 3, from: 0, full: 40 },
+    },
+    maxCountedSeconds: 900,
+    helpTapsForReview: 2,
+    helpLookbackSessions: 5,
+    rereadBelowPercent: 60,
+  },
 };
 
 const schemas = {
@@ -272,6 +396,7 @@ const schemas = {
   scoring: scoringRulesSchema,
   vocabulary: vocabularyRulesSchema,
   spelling: spellingRulesSchema,
+  reading: readingRulesSchema,
 } as const;
 
 // Merges stored overrides over the defaults. An override that fails validation is

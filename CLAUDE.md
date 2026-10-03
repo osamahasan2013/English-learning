@@ -61,7 +61,7 @@ scripts/local-stack/     Docker-free Supabase-compatible stack for dev/tests
 supabase/migrations/     schema, RLS, grants (never edit an applied migration; add one)
 supabase/tests/          SQL-level RLS/constraint tests (npm run test:db)
 src/app/                 routes: (auth), onboarding, parent/*, child/*, admin/*, api/sync
-src/features/            activity renderers + registry, lesson player
+src/features/            activity renderers + registry, lesson player, reading (passage reader)
 src/components/          ui/ primitives (Button, Card, Field, Alert, EmptyState, Spinner, ProgressBar),
                          layout/ (AppShell, NavLink, setup screen, sync, offline, SW), parent/, child/
 public/offline.html      static offline fallback served by the service worker

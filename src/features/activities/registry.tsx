@@ -10,7 +10,10 @@ import { FindPatternRenderer } from "./renderers/find-pattern";
 import { IntroRenderer } from "./renderers/intro";
 import { MatchRenderer } from "./renderers/match";
 import { MissingLetterRenderer } from "./renderers/missing-letter";
+import { OrderEventsRenderer } from "./renderers/order-events";
+import { ReadPassageRenderer } from "./renderers/read-passage";
 import { ReadingRenderer } from "./renderers/reading";
+import { SelectAllRenderer } from "./renderers/select-all";
 import { SegmentWordRenderer } from "./renderers/segment-word";
 import { SentenceDictationRenderer } from "./renderers/sentence-dictation";
 import { SentenceBuilderRenderer } from "./renderers/sentence-builder";
@@ -46,4 +49,7 @@ export const ACTIVITY_RENDERERS: Record<(typeof RENDERABLE_QUESTION_TYPES)[numbe
   SEGMENT_WORD: SegmentWordRenderer,
   FIND_PATTERN: FindPatternRenderer,
   SENTENCE_DICTATION: SentenceDictationRenderer,
+  READ_PASSAGE: ReadPassageRenderer,
+  SELECT_ALL: SelectAllRenderer,
+  ORDER_EVENTS: OrderEventsRenderer,
 };

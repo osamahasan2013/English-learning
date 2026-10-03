@@ -441,3 +441,42 @@ are keyword-only until recordings exist; blending by ear is weaker for those. Ol
 lessons without a sound table do not speak their tokens (silence, not wrong sounds).
 A keyword is never one of the words on screen in a scored question (several keywords per
 sound; the player passes the visible words), so the fallback cannot give the answer away.
+
+## ADR-037 — Reading is texts plus the learning engine; reading itself is never scored
+
+**Context.** Phase 7 asks for a reading progression with fluency and read-aloud, without
+parallel reading lesson / progress / mastery / attempt / review systems and without fake
+features. The app cannot hear the child: there is no speech recognition and no reliable
+way to know whether a child read a text or just looked at it.
+
+**Decision.** A reading text is a `stories` row (extended with reading metadata and the
+importer's analysis) linked to word-bank words (`story_words`), never a copy of them.
+Reading lessons are ordinary lessons built by the `reading` blueprint; comprehension
+answers are ordinary attempts on curriculum skills tagged with a reading skill, so mastery
+is ordinary `skill_mastery`. Reading a text is recorded in `reading_sessions` (a new table
+only because `activity_attempts.is_correct` is required and a reading is not an answer):
+time on text (capped), listens, re-reads, help words, a self-check. No words per minute,
+accuracy or pronunciation score is computed or shown, and read-aloud is Listen / read /
+self-check only. Words tapped repeatedly become ordinary review items (`reading:<word>`).
+
+**Consequences.** Parents see honest reading behaviour (re-reads, help taps, the child's
+own check) next to comprehension mastery. Fluency and accuracy skills exist in the
+taxonomy for tagging texts but no mastery is claimed for them. Adding speech-based
+measures later means adding evidence, not replacing these tables.
+
+## ADR-038 — Reading skills and text kinds are data, checked against the level at import
+
+**Context.** Skills such as inference or summarising must not appear in KG1/KG2, and new
+text kinds (e.g. letters, recipes) should not need schema changes.
+
+**Decision.** `reading_skill_types` (with strand and `min_level_rank`) and
+`reading_content_types` (with `min_level_rank`) are imported from `reference.json`. The
+importer refuses a text, question or curriculum skill that uses a reading skill or text
+kind above its level, and checks each text against configurable per-level limits
+(`rules.reading.levels`: paragraphs, sentences, words per sentence, decodability, question
+count). Text difficulty 1–10 comes from weighted statistics (`rules.reading.difficulty`);
+authors keep their own difficulty and a large disagreement is flagged.
+
+**Consequences.** Level appropriateness is enforced before content reaches a child.
+Changing a level's limits or the difficulty weights is a `learning_rules` override, not a
+code change. A text kind or skill is added as a row.

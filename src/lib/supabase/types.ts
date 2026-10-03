@@ -1773,6 +1773,190 @@ export type Database = {
           },
         ];
       };
+      reading_content_types: {
+        Row: {
+          code: string;
+          name: string;
+          child_name: string;
+          description: string;
+          min_level_rank: number;
+          emoji: string;
+          sort_order: number;
+          status: Database["public"]["Enums"]["content_status"];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          code: string;
+          name: string;
+          child_name?: string;
+          description?: string;
+          min_level_rank?: number;
+          emoji?: string;
+          sort_order?: number;
+          status?: Database["public"]["Enums"]["content_status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          code?: string;
+          name?: string;
+          child_name?: string;
+          description?: string;
+          min_level_rank?: number;
+          emoji?: string;
+          sort_order?: number;
+          status?: Database["public"]["Enums"]["content_status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+
+        ];
+      };
+      reading_sessions: {
+        Row: {
+          id: string;
+          child_id: string;
+          story_id: string;
+          lesson_id: string | null;
+          lesson_run_id: string | null;
+          question_id: string | null;
+          learning_session_id: string | null;
+          mode: string;
+          started_at: string;
+          duration_ms: number;
+          word_count: number;
+          listens: number;
+          slow_listens: number;
+          rereads: number;
+          help_word_ids: string[];
+          self_check: string | null;
+          received_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id: string;
+          child_id: string;
+          story_id: string;
+          lesson_id?: string | null;
+          lesson_run_id?: string | null;
+          question_id?: string | null;
+          learning_session_id?: string | null;
+          mode: string;
+          started_at: string;
+          duration_ms: number;
+          word_count: number;
+          listens?: number;
+          slow_listens?: number;
+          rereads?: number;
+          help_word_ids?: string[];
+          self_check?: string | null;
+          received_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          child_id?: string;
+          story_id?: string;
+          lesson_id?: string | null;
+          lesson_run_id?: string | null;
+          question_id?: string | null;
+          learning_session_id?: string | null;
+          mode?: string;
+          started_at?: string;
+          duration_ms?: number;
+          word_count?: number;
+          listens?: number;
+          slow_listens?: number;
+          rereads?: number;
+          help_word_ids?: string[];
+          self_check?: string | null;
+          received_at?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "reading_sessions_child_id_fkey";
+            columns: ["child_id"];
+            isOneToOne: false;
+            referencedRelation: "children";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "reading_sessions_learning_session_id_fkey";
+            columns: ["learning_session_id"];
+            isOneToOne: false;
+            referencedRelation: "learning_sessions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "reading_sessions_lesson_id_fkey";
+            columns: ["lesson_id"];
+            isOneToOne: false;
+            referencedRelation: "lessons";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "reading_sessions_question_id_fkey";
+            columns: ["question_id"];
+            isOneToOne: false;
+            referencedRelation: "questions";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "reading_sessions_story_id_fkey";
+            columns: ["story_id"];
+            isOneToOne: false;
+            referencedRelation: "stories";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      reading_skill_types: {
+        Row: {
+          code: string;
+          name: string;
+          child_name: string;
+          description: string;
+          min_level_rank: number;
+          strand: string;
+          emoji: string;
+          sort_order: number;
+          status: Database["public"]["Enums"]["content_status"];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          code: string;
+          name: string;
+          child_name?: string;
+          description?: string;
+          min_level_rank: number;
+          strand: string;
+          emoji?: string;
+          sort_order?: number;
+          status?: Database["public"]["Enums"]["content_status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          code?: string;
+          name?: string;
+          child_name?: string;
+          description?: string;
+          min_level_rank?: number;
+          strand?: string;
+          emoji?: string;
+          sort_order?: number;
+          status?: Database["public"]["Enums"]["content_status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+
+        ];
+      };
       review_items: {
         Row: {
           id: string;
@@ -2214,6 +2398,7 @@ export type Database = {
           difficulty: number;
           is_active: boolean;
           phonics_stage_code: string | null;
+          reading_skill_code: string | null;
         };
         Insert: {
           id?: string;
@@ -2233,6 +2418,7 @@ export type Database = {
           difficulty?: number;
           is_active?: boolean;
           phonics_stage_code?: string | null;
+          reading_skill_code?: string | null;
         };
         Update: {
           id?: string;
@@ -2252,6 +2438,7 @@ export type Database = {
           difficulty?: number;
           is_active?: boolean;
           phonics_stage_code?: string | null;
+          reading_skill_code?: string | null;
         };
         Relationships: [
           {
@@ -2273,6 +2460,13 @@ export type Database = {
             columns: ["phonics_stage_code"];
             isOneToOne: false;
             referencedRelation: "phonics_stages";
+            referencedColumns: ["code"];
+          },
+          {
+            foreignKeyName: "skills_reading_skill_code_fkey";
+            columns: ["reading_skill_code"];
+            isOneToOne: false;
+            referencedRelation: "reading_skill_types";
             referencedColumns: ["code"];
           },
           {
@@ -2530,6 +2724,18 @@ export type Database = {
           status: Database["public"]["Enums"]["content_status"];
           created_at: string;
           updated_at: string;
+          content_type_code: string | null;
+          normalized_title: string;
+          genre: string;
+          topic: string;
+          reading_level: number | null;
+          estimated_seconds: number | null;
+          image_asset_id: string | null;
+          audio_asset_id: string | null;
+          tags: string[];
+          text_stats: Json;
+          decodable_pct: number | null;
+          unknown_words: string[];
         };
         Insert: {
           id?: string;
@@ -2547,6 +2753,18 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          content_type_code?: string | null;
+          normalized_title?: string;
+          genre?: string;
+          topic?: string;
+          reading_level?: number | null;
+          estimated_seconds?: number | null;
+          image_asset_id?: string | null;
+          audio_asset_id?: string | null;
+          tags?: string[];
+          text_stats?: Json;
+          decodable_pct?: number | null;
+          unknown_words?: string[];
         };
         Update: {
           id?: string;
@@ -2564,13 +2782,157 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          content_type_code?: string | null;
+          normalized_title?: string;
+          genre?: string;
+          topic?: string;
+          reading_level?: number | null;
+          estimated_seconds?: number | null;
+          image_asset_id?: string | null;
+          audio_asset_id?: string | null;
+          tags?: string[];
+          text_stats?: Json;
+          decodable_pct?: number | null;
+          unknown_words?: string[];
         };
         Relationships: [
+          {
+            foreignKeyName: "stories_audio_asset_id_fkey";
+            columns: ["audio_asset_id"];
+            isOneToOne: false;
+            referencedRelation: "audio_assets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "stories_content_type_code_fkey";
+            columns: ["content_type_code"];
+            isOneToOne: false;
+            referencedRelation: "reading_content_types";
+            referencedColumns: ["code"];
+          },
+          {
+            foreignKeyName: "stories_image_asset_id_fkey";
+            columns: ["image_asset_id"];
+            isOneToOne: false;
+            referencedRelation: "image_assets";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "stories_level_id_fkey";
             columns: ["level_id"];
             isOneToOne: false;
             referencedRelation: "levels";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      story_phonics_patterns: {
+        Row: {
+          story_id: string;
+          pattern_id: string;
+        };
+        Insert: {
+          story_id: string;
+          pattern_id: string;
+        };
+        Update: {
+          story_id?: string;
+          pattern_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "story_phonics_patterns_pattern_id_fkey";
+            columns: ["pattern_id"];
+            isOneToOne: false;
+            referencedRelation: "phonics_patterns";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "story_phonics_patterns_story_id_fkey";
+            columns: ["story_id"];
+            isOneToOne: false;
+            referencedRelation: "stories";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      story_reading_skills: {
+        Row: {
+          story_id: string;
+          reading_skill_code: string;
+        };
+        Insert: {
+          story_id: string;
+          reading_skill_code: string;
+        };
+        Update: {
+          story_id?: string;
+          reading_skill_code?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "story_reading_skills_reading_skill_code_fkey";
+            columns: ["reading_skill_code"];
+            isOneToOne: false;
+            referencedRelation: "reading_skill_types";
+            referencedColumns: ["code"];
+          },
+          {
+            foreignKeyName: "story_reading_skills_story_id_fkey";
+            columns: ["story_id"];
+            isOneToOne: false;
+            referencedRelation: "stories";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      story_words: {
+        Row: {
+          story_id: string;
+          word_id: string;
+          occurrences: number;
+          first_position: number;
+          is_decodable: boolean;
+          is_sight: boolean;
+          is_irregular: boolean;
+          is_target_pattern: boolean;
+          is_focus: boolean;
+        };
+        Insert: {
+          story_id: string;
+          word_id: string;
+          occurrences?: number;
+          first_position?: number;
+          is_decodable?: boolean;
+          is_sight?: boolean;
+          is_irregular?: boolean;
+          is_target_pattern?: boolean;
+          is_focus?: boolean;
+        };
+        Update: {
+          story_id?: string;
+          word_id?: string;
+          occurrences?: number;
+          first_position?: number;
+          is_decodable?: boolean;
+          is_sight?: boolean;
+          is_irregular?: boolean;
+          is_target_pattern?: boolean;
+          is_focus?: boolean;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "story_words_story_id_fkey";
+            columns: ["story_id"];
+            isOneToOne: false;
+            referencedRelation: "stories";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "story_words_word_id_fkey";
+            columns: ["word_id"];
+            isOneToOne: false;
+            referencedRelation: "words";
             referencedColumns: ["id"];
           },
         ];

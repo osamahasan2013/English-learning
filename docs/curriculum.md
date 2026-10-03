@@ -58,6 +58,12 @@ Original, age-appropriate content covering KG1–Grade 2:
   one a word of the bank; 18 high-frequency words were added to the bank for them), 18
   spelling skills and 23 spelling lessons (`spelling_set` blueprint, 456 questions) in one
   SPELLING unit per level, and child-friendly feedback for each spelling error category.
+- Reading (Phase 7): 19 reading skills and 9 reading content types (`reference.json`), 16
+  original texts (3 KG1, 3 KG2, 4 KG3, 3 Grade 1, 3 Grade 2: phrases, sentences, a rhyme,
+  short stories, a story sequence, a dialogue, a poem and two informational texts) with
+  55 comprehension questions, 16 reading lessons (`reading` blueprint, 146 questions) in a
+  "Story time" unit per level, and 118 high-frequency words added to the bank
+  (`content/words/reading-words.csv`) so every text links to bank words (444 word links).
 - 96 lessons / 784 activities / 1,113 lesson questions across 25 units — including 21
   vocabulary sets (407 questions) — the "Find My Level" placement (8 stages) and the
   **Phonics Check** (12 areas, 24 questions).
@@ -175,6 +181,56 @@ Spelling templates (every word must be a spelling target):
 
 Each spelling question carries the word's split, generated progressive hints (listen again → say it slowly → how many sounds? → the tricky part / the pattern / the first letter; authored hints come before the last one; never the whole word) and letter tiles for tile input. Speech input is not implemented (a future
 feature; no third-party service).
+
+### Reading texts and lessons (Phase 7)
+
+`content/stories.json` holds the reading texts. Each text has a `code`, `title`, `level`,
+`contentType` (WORD_READING, PHRASE_READING, SENTENCE_READING, RHYME, SHORT_STORY, POEM,
+STORY_SEQUENCE, DIALOGUE, INFORMATIONAL_TEXT — `reading_content_types`), `difficulty`,
+optional `readingLevel` (band 1–20), `genre`, `topic`, `tags`, `summary`, `coverEmoji`,
+optional `image` / `audio` (storage paths), `targetSkills` (reading skills),
+`targetPatterns` (phonics pattern codes), `focusWords` (taught before reading),
+`practiceWords` (tricky words practised after), `names` (character names, expected outside
+the word bank), `reread`, `pages` (one per paragraph: `text`, optional `emoji`, `speaker`
+for dialogue) and `questions` in a compact form:
+
+| Form           | Becomes                 | Fields                                                      |
+| -------------- | ----------------------- | ----------------------------------------------------------- |
+| `CHOICE`       | `READING`               | `options` (2–4, id + text + emoji), `answer` (an option id) |
+| `TRUE_FALSE`   | `READING` (Yes / No)    | `answer` (true / false)                                     |
+| `WORD_MEANING` | `READING` (word marked) | `word` (in the text and the bank), `options`, `answer`      |
+| `SELECT_ALL`   | `SELECT_ALL`            | `options` (3–6), `answer` (2+ option ids, not all)          |
+| `ORDER`        | `ORDER_EVENTS`          | `events` in the right order (stored shuffled)               |
+| `MATCH`        | `MATCH`                 | `pairs` (left / right, right side shuffled)                 |
+
+Every question names its reading `skill` and may give `ref: [paragraph, sentence]`, the
+sentence pointed at after answering. A curriculum lesson
+`{ "blueprint": { "name": "reading", "story": "<code>" } }` reads the text: get ready →
+words to know → find the target pattern in a word of the text → read (listen first in
+KG1–KG3, read first from Grade 1) → questions (each counted towards the level's skill
+tagged with its reading skill: `"readingSkill"` on a curriculum skill) → tricky words →
+read again. The importer:
+
+- splits sentences and words, matches each written form to a bank word (plural and
+  inflections, then regular endings), and computes decodability against the patterns
+  taught up to the text's level, the text statistics and a difficulty 1–10;
+- **fails** on an unknown level, content type, reading skill, pattern or image; a focus or
+  practice word not in the bank or not in the text; a reading skill or content type above
+  the level (`min_level_rank`: no inference, prediction or summarising before Grade 1, no
+  cause / effect, compare / contrast or summary before Grade 2); too many paragraphs or
+  sentences, or a sentence too long for the level (`rules.reading.levels`); a duplicate
+  title in the level; a question that is not a valid question (or a `ref` outside the text);
+- **flags** for admin review words outside the bank (other than declared names), low
+  decodability, a question count outside the level's range and an authored difficulty
+  three or more away from the measured one.
+
+| Level   | Paragraphs | Sentences | Words per sentence | Decodable or sight | Starts with | Highlight |
+| ------- | ---------- | --------- | ------------------ | ------------------ | ----------- | --------- |
+| KG1     | 4          | 4         | 5                  | 50%+               | listening   | each word |
+| KG2     | 6          | 6         | 6                  | 70%+               | listening   | each word |
+| KG3     | 8          | 8         | 8                  | 70%+               | listening   | sentence  |
+| Grade 1 | 6          | 16        | 12                 | 60%+               | reading     | sentence  |
+| Grade 2 | 8          | 28        | 16                 | 50%+               | reading     | sentence  |
 
 ### Spelling targets (CSV)
 
@@ -336,6 +392,20 @@ answers, accuracy < 70%) or practised but not mastered (at its next review date)
 fish → fis) is one `pattern:` item pointing at that pattern's phonics lesson, resolved
 after two right spellings of words with that pattern. For spelling targets the word's
 vocabulary review ignores spelling answers, so one miss is reviewed once.
+
+### Reading progress
+
+Comprehension is ordinary skill mastery: each comprehension question belongs to the level's
+skill tagged with its reading skill, so the mastery bands, evidence and review rules above
+apply unchanged. Reading itself is not scored. A reading session records time on the text
+(counted up to 15 minutes), listens, re-reads, words tapped for help and the child's own
+"how was it?" — no words per minute, no accuracy and no pronunciation score, because
+nothing listens to the child read. READING_FLUENCY and READING_ACCURACY are taught and
+tagged on texts, but have no mastery claimed from reading sessions. A word tapped for help
+in 2 of the last 5 readings that contain it becomes a review item (`reading:<word>`) until
+it is read without help or answered right first time. Texts are suggested again when their
+questions went below 60% right first time; when every text at the level is read, the first
+text of the next level is offered as a stretch. All numbers are in `rules.reading`.
 
 ## Prerequisites
 

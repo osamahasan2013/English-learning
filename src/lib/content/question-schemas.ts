@@ -177,9 +177,45 @@ export const dragDropContentSchema = z
   })
   .refine((c) => c.parts.some((p) => "blank" in p), { message: "drag-drop content needs a blank" });
 
-// Reading comprehension: the passage lives in the activity config (shared by its
-// questions); each question is a choice about it.
-export const readingContentSchema = choiceContentSchema;
+// Reading comprehension: the passage lives in the activity config (a story, shared by its
+// questions); each question is a choice about it — multiple choice, true/false (two options
+// "yes"/"no") or a word's meaning in the text. `ref` points at the sentence that answers it
+// (paragraph and sentence index), highlighted after answering so the child can look back.
+export const passageRefSchema = z.object({
+  paragraph: z.number().int().min(0).max(40),
+  sentence: z.number().int().min(0).max(40),
+});
+export const readingContentSchema = choiceContentSchema.extend({
+  format: z.enum(["choice", "true_false", "word_meaning"]).default("choice"),
+  // The word asked about in a word-meaning question (highlighted in the text).
+  focusWord: z.string().trim().max(40).optional(),
+  ref: passageRefSchema.optional(),
+});
+
+// Choose every right answer ("Which animals were in the story?"). Two or more are right.
+export const selectAllContentSchema = choiceContentSchema.extend({
+  options: z.array(choiceOptionSchema).min(3).max(6),
+  ref: passageRefSchema.optional(),
+});
+
+// Put the events of a story in order. Events are shown in the stored order (shuffled by
+// the importer so they never start in the right order).
+export const orderEventsContentSchema = z.object({
+  events: z
+    .array(z.object({ id: itemId, text: text(120), emoji: z.string().max(16).optional() }))
+    .min(3)
+    .max(6),
+});
+
+// Read a text (the story in the activity config): listen first or read first, tap a word
+// to hear it, re-read. Unscored; the device reports a reading session instead.
+export const readPassageContentSchema = z.object({
+  mode: z.enum(["listen_first", "read_first", "reread"]).default("read_first"),
+  // Highlight each word (youngest) or each sentence while the text is read aloud.
+  highlight: z.enum(["word", "sentence"]).default("sentence"),
+  // Asked after reading, as the child's own check ("How was that?"). Never scored.
+  selfCheck: z.boolean().default(true),
+});
 
 // Write a word or finish a sentence, with a word bank to copy from.
 export const writingContentSchema = z.object({
@@ -253,6 +289,11 @@ export const pairsAnswerSchema = z.object({
 
 export const coverageAnswerSchema = z.object({
   minCoverage: z.number().int().min(30).max(95),
+});
+
+// Select-all: every right option id (order does not matter).
+export const selectAllAnswerSchema = z.object({
+  correct: z.array(z.string().regex(/^[a-z0-9-]{1,40}$/)).min(2).max(5),
 });
 
 export const valueResponseSchema = z.object({ value: z.string().max(200) });
@@ -334,6 +375,14 @@ export const questionTypeSchemas = {
     answer: sentenceAnswerSchema,
     response: valueResponseSchema,
   },
+  READ_PASSAGE: { content: readPassageContentSchema, answer: null, response: null },
+  // The response is the chosen option ids (`sequence`, any order).
+  SELECT_ALL: { content: selectAllContentSchema, answer: selectAllAnswerSchema, response: sequenceResponseSchema },
+  ORDER_EVENTS: {
+    content: orderEventsContentSchema,
+    answer: sequenceAnswerSchema,
+    response: sequenceResponseSchema,
+  },
 } as const;
 
 export type SupportedQuestionType = keyof typeof questionTypeSchemas;
@@ -358,6 +407,11 @@ export type BlendSoundsContent = z.infer<typeof blendSoundsContentSchema>;
 export type SegmentWordContent = z.infer<typeof segmentWordContentSchema>;
 export type FindPatternContent = z.infer<typeof findPatternContentSchema>;
 export type SentenceDictationContent = z.infer<typeof sentenceDictationContentSchema>;
+export type SelectAllContent = z.infer<typeof selectAllContentSchema>;
+export type OrderEventsContent = z.infer<typeof orderEventsContentSchema>;
+export type ReadPassageContent = z.infer<typeof readPassageContentSchema>;
+export type PassageRef = z.infer<typeof passageRefSchema>;
+export type SelectAllAnswer = z.infer<typeof selectAllAnswerSchema>;
 export type SpellingSegmentContent = z.infer<typeof spellingSegmentSchema>;
 export type SpellingHintContent = z.infer<typeof spellingHintSchema>;
 export type AcceptedAnswer = z.infer<typeof acceptedAnswerSchema>;
@@ -365,7 +419,13 @@ export type SequenceAnswer = z.infer<typeof sequenceAnswerSchema>;
 export type PairsAnswer = z.infer<typeof pairsAnswerSchema>;
 export type CoverageAnswer = z.infer<typeof coverageAnswerSchema>;
 export type SentenceAnswer = z.infer<typeof sentenceAnswerSchema>;
-export type AnswerSpec = AcceptedAnswer | SentenceAnswer | SequenceAnswer | PairsAnswer | CoverageAnswer;
+export type AnswerSpec =
+  | AcceptedAnswer
+  | SentenceAnswer
+  | SequenceAnswer
+  | PairsAnswer
+  | CoverageAnswer
+  | SelectAllAnswer;
 
 export type ParsedQuestion =
   | { type: "INTRO"; content: IntroContent; answer: null }
@@ -387,7 +447,10 @@ export type ParsedQuestion =
   | { type: "BLEND_SOUNDS"; content: BlendSoundsContent; answer: AcceptedAnswer }
   | { type: "SEGMENT_WORD"; content: SegmentWordContent; answer: SequenceAnswer }
   | { type: "FIND_PATTERN"; content: FindPatternContent; answer: AcceptedAnswer }
-  | { type: "SENTENCE_DICTATION"; content: SentenceDictationContent; answer: SentenceAnswer };
+  | { type: "SENTENCE_DICTATION"; content: SentenceDictationContent; answer: SentenceAnswer }
+  | { type: "READ_PASSAGE"; content: ReadPassageContent; answer: null }
+  | { type: "SELECT_ALL"; content: SelectAllContent; answer: SelectAllAnswer }
+  | { type: "ORDER_EVENTS"; content: OrderEventsContent; answer: SequenceAnswer };
 
 export type ParseQuestionResult = { ok: true; question: ParsedQuestion } | { ok: false; error: string };
 
@@ -424,6 +487,8 @@ function checkCrossFields(q: ParsedQuestion): string | null {
       const ids = new Set(q.content.options.map((o) => o.id));
       if (ids.size !== q.content.options.length) return "option ids must be unique";
       if (!q.answer.accepted.every((id) => ids.has(id))) return "answer must reference an option id";
+      if (q.type === "READING" && q.content.format === "true_false" && q.content.options.length !== 2)
+        return "a true/false question has exactly two options";
       return null;
     }
     case "MISSING_LETTER": {
@@ -505,6 +570,23 @@ function checkCrossFields(q: ParsedQuestion): string | null {
         return "the tiles cannot spell the answer";
       if (split && q.content.irregular.some((p) => p >= split.length)) return "irregular position outside the word";
       return null;
+    }
+    case "SELECT_ALL": {
+      const ids = new Set(q.content.options.map((o) => o.id));
+      if (ids.size !== q.content.options.length) return "option ids must be unique";
+      if (new Set(q.answer.correct).size !== q.answer.correct.length) return "an option is listed twice";
+      if (!q.answer.correct.every((id) => ids.has(id))) return "answer must reference option ids";
+      return q.answer.correct.length < q.content.options.length ? null : "at least one option must be wrong";
+    }
+    case "ORDER_EVENTS": {
+      const ids = q.content.events.map((e) => e.id);
+      if (new Set(ids).size !== ids.length) return "event ids must be unique";
+      const sorted = [...ids].sort().join("\u0000");
+      for (const seq of q.answer.acceptedSequences)
+        if ([...seq].sort().join("\u0000") !== sorted) return "each accepted order must use every event once";
+      return q.answer.acceptedSequences.some((seq) => seq.join("\u0000") === ids.join("\u0000"))
+        ? "events must not be stored in the right order"
+        : null;
     }
     case "SENTENCE_DICTATION":
       return q.answer.accepted.every((a) => a.trim().split(/\s+/).length === q.content.wordCount)

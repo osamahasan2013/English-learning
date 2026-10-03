@@ -19,6 +19,11 @@ export const passageSchema = z.object({
 
 const baseConfigSchema = z.object(common).strict();
 
+// A reading text of the story library (stories.code). The lesson loader turns it into the
+// passage the questions are about (lesson-payload.ts → ReadingPassage).
+const storyCode = z.string().regex(/^[a-z0-9-]{2,80}$/);
+const storyConfigSchema = z.object({ ...common, story: storyCode.optional() }).strict();
+
 // Spelling activities can choose their input method, hints and dictation replays; anything
 // left out comes from the level's spelling rules (rules.ts → spelling.levels).
 const spellingConfigSchema = z
@@ -41,11 +46,24 @@ export const activityConfigSchemas = {
   SENTENCE_BUILDER: baseConfigSchema,
   SPELLING: spellingConfigSchema,
   SENTENCE_DICTATION: spellingConfigSchema,
-  MATCH: baseConfigSchema,
+  MATCH: storyConfigSchema,
   SORT: baseConfigSchema,
   DRAG_DROP: baseConfigSchema,
-  // A passage the child reads (and can listen to) before answering its questions.
-  READING: z.object({ ...common, passage: passageSchema, readAloud: z.boolean().default(true) }).strict(),
+  // A passage the child reads (and can listen to) before answering its questions: a short
+  // inline passage, or a story of the library.
+  READING: z
+    .object({
+      ...common,
+      passage: passageSchema.optional(),
+      story: storyCode.optional(),
+      readAloud: z.boolean().default(true),
+    })
+    .strict()
+    .refine((c) => !!c.passage !== !!c.story, { message: "a reading activity needs a passage or a story" }),
+  // Reading a story (guided reading): the text itself, not a question.
+  READ_PASSAGE: z.object({ story: storyCode }).strict(),
+  SELECT_ALL: storyConfigSchema,
+  ORDER_EVENTS: storyConfigSchema,
   WRITING: baseConfigSchema,
   BLEND_SOUNDS: baseConfigSchema,
   SEGMENT_WORD: baseConfigSchema,
@@ -62,6 +80,7 @@ export type ActivityConfig = {
   slowReplay?: boolean;
   maxHints?: number;
   passage?: z.infer<typeof passageSchema>;
+  story?: string;
   readAloud?: boolean;
   showModel?: boolean;
 };

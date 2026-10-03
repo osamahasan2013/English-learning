@@ -5,6 +5,7 @@ import type { FeedbackMessage } from "@/lib/learning/feedback";
 import type { PlayerRules, ScoringRules } from "@/lib/learning/rules";
 import type { SpellingStepSettings } from "@/lib/learning/spelling";
 import type { SoundTable } from "@/lib/audio/pronunciation";
+import type { ReadingParagraph } from "@/lib/learning/reading";
 
 // What the lesson player receives: everything needed to run a lesson offline, already
 // validated. Built on the server by src/lib/server/lesson-loader.ts and cached on the
@@ -28,6 +29,28 @@ export type LessonPattern = {
   sounds: PatternSound[];
 };
 
+// A reading text (story) as the device sees it: split into paragraphs, sentences and words
+// on the server, with the word-bank id of each word it contains (a tapped word is reported
+// as a help word, and links to My Words). Built by src/lib/server/reading.ts.
+export type ReadingPassage = {
+  storyId: string;
+  code: string;
+  title: string;
+  contentType: string;
+  contentTypeName: string;
+  emoji: string;
+  image: { url: string; alt: string } | null;
+  // A recording of the whole text (no sentence highlighting while it plays).
+  audioUrl: string | null;
+  paragraphs: ReadingParagraph[];
+  // normalized word → word id, for the word-bank words of the text.
+  words: Record<string, string>;
+  // Focus vocabulary of the text (normalized), highlighted while reading.
+  focusWords: string[];
+  wordCount: number;
+  estimatedSeconds: number | null;
+};
+
 export type LessonStep = {
   questionId: string;
   questionVersion: number;
@@ -49,6 +72,8 @@ export type LessonStep = {
   explanation: string;
   // Validated activity configuration (e.g. the passage for reading questions).
   activityConfig: ActivityConfig;
+  // The story the activity is about (config.story), for reading and its questions.
+  passage?: ReadingPassage | null;
   pattern: LessonPattern | null;
   // For word building: the sound token for each tile ({/K/}), from the tile's phonics
   // pattern, so blending demos say the sounds, never the letter names.

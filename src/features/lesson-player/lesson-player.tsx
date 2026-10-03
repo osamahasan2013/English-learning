@@ -7,6 +7,7 @@ import { notifyQueued } from "@/components/layout/sync-provider";
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { ACTIVITY_RENDERERS } from "@/features/activities/registry";
+import type { ReadingReport } from "@/features/activities/types";
 import { isRenderableQuestionType } from "@/features/activities/supported-types";
 import { useAudio } from "@/lib/audio/use-audio";
 import type { SpeakFn } from "@/lib/audio/audio-service";
@@ -303,6 +304,29 @@ function LessonRun({
     void speak(mistake ? `${message.speech} ${mistake.speech}` : message.speech);
   }
 
+  // A story was read (READ_PASSAGE): recorded once, like an answer, never scored. A text
+  // revisited after moving on counts as a re-read.
+  function handleReading(report: ReadingReport) {
+    if (!step) return;
+    void recordEvent(childId, {
+      kind: "reading",
+      id: newId(),
+      storyId: report.storyId,
+      lessonId: assessment || practice ? null : payload.lesson.id,
+      lessonRunId: assessment || practice ? null : runId,
+      questionId: step.questionId,
+      sessionId: sessionId(),
+      mode: view.reviewing ? "reread" : report.mode,
+      startedAt: report.startedAt,
+      durationMs: report.durationMs,
+      listens: report.listens,
+      slowListens: report.slowListens,
+      rereads: report.rereads,
+      helpWordIds: report.helpWordIds,
+      selfCheck: report.selfCheck,
+    }).then(() => notifyQueued());
+  }
+
   if (state.screen === "intro") {
     return (
       <LessonIntro
@@ -408,6 +432,7 @@ function LessonRun({
             reveal={reveal}
             onAnswer={(r) => void handleAnswer(r)}
             speak={speak}
+            onReading={handleReading}
           />
         ) : (
           <p className="text-center text-2xl">Let&apos;s skip this one.</p>

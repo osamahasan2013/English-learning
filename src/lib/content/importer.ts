@@ -10,6 +10,7 @@ import type {
   sentencesFileSchema,
   sightWordsFileSchema,
   SpellingWordInput,
+  StoryInput,
   storiesFileSchema,
   vocabularyFileSchema,
   WordInput,
@@ -29,6 +30,18 @@ import { BlueprintError, expandBlueprint } from "@/lib/content/lesson-blueprints
 import { validatePhonicsFile, type ValidationIssue } from "@/lib/content/phonics-validation";
 import { decomposeWord, segmentsUsePattern, type PatternInfo, type PhonemeInfo } from "@/lib/learning/phonics";
 import { parseQuestion } from "@/lib/content/question-schemas";
+import { comprehensionQuestion } from "@/lib/content/reading-content";
+import {
+  analyzeText,
+  baseFormCandidates,
+  checkTextForLevel,
+  estimatedReadingSeconds,
+  normalizeReadingWord,
+  paragraphsOf,
+  readingDifficulty,
+  runningWords,
+  type WordClass,
+} from "@/lib/learning/reading";
 import { DEFAULT_RULES, mergeLearningRules, type LearningRules } from "@/lib/learning/rules";
 import {
   expandTemplate,
@@ -92,6 +105,8 @@ const CODE_KEYED_TABLES = new Set([
   "phonemes",
   "phonics_stages",
   "spelling_types",
+  "reading_skill_types",
+  "reading_content_types",
 ]);
 
 type Flag = { entity: string; entity_key: string; rule: string; severity: "warning" | "error"; message: string };
@@ -165,6 +180,13 @@ export class ContentImporter {
   private learningRules: LearningRules | null = null;
   private currentSpellingLevel: LearningRules["spelling"]["levels"][string] | undefined;
   private pendingSpelling: { input: SpellingWordInput; row: Row }[] = [];
+  // Reading: the reading skill and content type lists (from the reference file of this run,
+  // else the database) and the validated stories, for the `reading` lesson blueprint.
+  private readingRefs: {
+    skills: Map<string, number>;
+    contentTypes: Map<string, number>;
+  } | null = null;
+  private storyBank = new Map<string, { input: StoryInput; levelCode: string; patternWords: Map<string, string> }>();
 
   constructor(
     private readonly db: Db,
@@ -442,6 +464,42 @@ export class ContentImporter {
         status: t.status,
       })),
     );
+    await this.sync(
+      "reading_skill_types",
+      "reading skill types",
+      ["code"],
+      file.readingSkills.map((t) => ({
+        code: t.code,
+        name: t.name,
+        child_name: t.childName,
+        description: t.description,
+        min_level_rank: t.minLevelRank,
+        strand: t.strand,
+        emoji: t.emoji,
+        sort_order: t.sortOrder,
+        status: t.status,
+      })),
+    );
+    await this.sync(
+      "reading_content_types",
+      "reading content types",
+      ["code"],
+      file.readingContentTypes.map((t) => ({
+        code: t.code,
+        name: t.name,
+        child_name: t.childName,
+        description: t.description,
+        min_level_rank: t.minLevelRank,
+        emoji: t.emoji,
+        sort_order: t.sortOrder,
+        status: t.status,
+      })),
+    );
+    if (file.readingSkills.length > 0 || file.readingContentTypes.length > 0)
+      this.readingRefs = {
+        skills: new Map(file.readingSkills.map((t) => [t.code, t.minLevelRank])),
+        contentTypes: new Map(file.readingContentTypes.map((t) => [t.code, t.minLevelRank])),
+      };
     // Rule overrides are validated against the engine's schemas before they are stored.
     const rulesReport = this.entity("learning rules");
     const validRules = file.rules.filter((r) => {
@@ -1322,31 +1380,276 @@ export class ContentImporter {
     ]);
   }
 
+  private async loadReadingRefs() {
+    if (!this.readingRefs) {
+      const [skills, types] = await Promise.all([
+        fetchAll(this.db, "reading_skill_types", "code,min_level_rank"),
+        fetchAll(this.db, "reading_content_types", "code,min_level_rank"),
+      ]);
+      this.readingRefs = {
+        skills: new Map(skills.map((r) => [String(r.code), Number(r.min_level_rank)])),
+        contentTypes: new Map(types.map((r) => [String(r.code), Number(r.min_level_rank)])),
+      };
+    }
+    return this.readingRefs;
+  }
+
+  // The word bank as reading sees it: every written form (plural, -ing, past…) of a
+  // published word → the word, with what decodability needs (its split's patterns and the
+  // level each pattern is taught at, the sight-word and irregular flags).
+  private async loadReadingWordFacts() {
+    const [words, segments, patterns, levels] = await Promise.all([
+      fetchAll(
+        this.db,
+        "words",
+        "id,word,normalized_word,sense,plural,inflections,decodable,is_sight_word,is_irregular,status",
+        [{ op: "eq", column: "status", value: "published" }],
+      ),
+      fetchAll(this.db, "word_segments", "word_id,pattern_id"),
+      fetchAll(this.db, "phonics_patterns", "id,code,level_id"),
+      fetchAll(this.db, "levels", "id,code"),
+    ]);
+    const ranks = (await this.loadVocabularyRefs()).levelRanks;
+    const levelCode = new Map(levels.map((l) => [String(l.id), String(l.code)]));
+    const patternInfo = new Map(
+      patterns.map((p) => [String(p.id), { code: String(p.code), rank: ranks.get(levelCode.get(String(p.level_id)) ?? "") ?? 99 }]),
+    );
+    const patternsOf = new Map<string, { code: string; rank: number }[]>();
+    for (const seg of segments) {
+      if (!seg.pattern_id) continue;
+      const info = patternInfo.get(String(seg.pattern_id));
+      if (!info) continue;
+      const list = patternsOf.get(String(seg.word_id)) ?? [];
+      list.push(info);
+      patternsOf.set(String(seg.word_id), list);
+    }
+    type Fact = {
+      id: string;
+      word: string;
+      decodable: boolean;
+      sight: boolean;
+      irregular: boolean;
+      patterns: { code: string; rank: number }[];
+    };
+    const byForm = new Map<string, Fact>();
+    const bases: [Row, Fact][] = [];
+    for (const w of words.filter((w) => Number(w.sense) === 1)) {
+      const fact: Fact = {
+        id: String(w.id),
+        word: String(w.word),
+        decodable: w.decodable === true,
+        sight: w.is_sight_word === true,
+        irregular: w.is_irregular === true,
+        patterns: patternsOf.get(String(w.id)) ?? [],
+      };
+      byForm.set(normalizeReadingWord(String(w.normalized_word)), fact);
+      bases.push([w, fact]);
+    }
+    // Forms never shadow a base word ("saw" the tool vs "saw" the past of "see").
+    for (const [w, fact] of bases)
+      for (const form of wordForms({
+        plural: String(w.plural ?? ""),
+        inflections: (w.inflections ?? {}) as Record<string, string>,
+      })) {
+        const key = normalizeReadingWord(form);
+        if (!byForm.has(key)) byForm.set(key, fact);
+      }
+    return byForm;
+  }
+
   async importStories(file: z.infer<typeof storiesFileSchema>) {
-    await this.loadIds("levels", ["code"]);
+    await Promise.all([
+      this.loadIds("levels", ["code"]),
+      this.loadIds("phonics_patterns", ["code"]),
+      this.loadIds("image_assets", ["storage_path"]),
+      this.loadIds("audio_assets", ["storage_path"]),
+    ]);
     const report = this.entity("stories");
+    this.flagScopes.add("story");
+    const refs = await this.loadReadingRefs();
+    const ranks = (await this.loadVocabularyRefs()).levelRanks;
+    const facts = await this.loadReadingWordFacts();
+    const rules = (await this.rules()).reading;
+    const knownPhonemes = this.phonemeInfo ? new Set(this.phonemeInfo.keys()) : undefined;
+
     const rows: Row[] = [];
+    const links: { code: string; words: Row[]; patterns: string[]; skills: string[] }[] = [];
+    const titles = new Set<string>();
     for (const s of file.stories) {
       try {
+        const levelId = this.lookup("levels", s.level, "level");
+        const levelRank = ranks.get(s.level);
+        if (levelRank === undefined) throw new Error(`level ${s.level} has no rank`);
+        const normalizedTitle = s.title.trim().replace(/\s+/g, " ").toLowerCase();
+        const titleKey = `${s.level}|${normalizedTitle}`;
+        if (titles.has(titleKey)) {
+          report.duplicate++;
+          throw new Error(`another ${s.level} text is already called "${s.title}"`);
+        }
+        titles.add(titleKey);
+        for (const p of s.targetPatterns) this.lookup("phonics_patterns", p, "phonics pattern");
+        const names = new Set(s.names.map(normalizeReadingWord));
+        const factOf = (word: string) =>
+          facts.get(word) ??
+          baseFormCandidates(word)
+            .map((b) => facts.get(b))
+            .find(Boolean);
+        const classify = (word: string): WordClass | null => {
+          const fact = factOf(word);
+          if (fact)
+            return {
+              decodable: fact.decodable && fact.patterns.every((p) => p.rank <= levelRank),
+              sight: fact.sight,
+              irregular: fact.irregular,
+              patterns: fact.patterns.map((p) => p.code),
+            };
+          // A name, or a name's possessive (Lee's).
+          return names.has(word) || names.has(word.replace(/'s$/, ""))
+            ? { decodable: true, sight: false, irregular: false, patterns: [] }
+            : null;
+        };
+        const paragraphs = paragraphsOf(s.pages);
+        const running = new Set(runningWords(paragraphs));
+        const inText = (word: string) => {
+          const fact = facts.get(normalizeReadingWord(word));
+          if (!fact) throw new Error(`"${word}" is not in the word bank`);
+          if (![...running].some((w) => factOf(w)?.id === fact.id)) throw new Error(`"${word}" is not in the text`);
+          return fact;
+        };
+        const focusIds = new Set(s.focusWords.map((w) => inText(w).id));
+        for (const w of s.practiceWords) inText(w);
+        const analysis = analyzeText({
+          paragraphs,
+          classify,
+          targetPatterns: s.targetPatterns,
+          focusWords: s.focusWords,
+        });
+        // Skills the text and its questions claim, checked against the level.
+        const skillCodes = [...new Set([...s.targetSkills, ...s.questions.map((q) => q.skill)])];
+        const issues = checkTextForLevel({
+          levelCode: s.level,
+          levelRank,
+          analysis: { ...analysis, unknownWords: [] },
+          contentType: refs.contentTypes.has(s.contentType)
+            ? { code: s.contentType, minLevelRank: refs.contentTypes.get(s.contentType)! }
+            : null,
+          skills: skillCodes.map((c) => (refs.skills.has(c) ? { code: c, minLevelRank: refs.skills.get(c)! } : null)),
+          skillCodes,
+          questionCount: s.questions.length,
+          rules,
+        });
+        const errors = issues.filter((i) => i.severity === "error");
+        if (errors.length) throw new Error(errors.map((e) => e.message).join("; "));
+        for (const i of issues)
+          this.flag({ entity: "story", entity_key: s.code, rule: i.rule, severity: "warning", message: i.message });
+        // Words outside the word bank (other than declared names) are reported, never added.
+        if (analysis.unknownWords.length)
+          this.flag({
+            entity: "story",
+            entity_key: s.code,
+            rule: "unknown_words",
+            severity: "warning",
+            message: `not in the word bank: ${analysis.unknownWords.join(", ")}`,
+          });
+        const computed = readingDifficulty(analysis, rules.difficulty);
+        if (Math.abs(computed - s.difficulty) >= 3)
+          this.flag({
+            entity: "story",
+            entity_key: s.code,
+            rule: "difficulty_mismatch",
+            severity: "warning",
+            message: `difficulty ${s.difficulty}, but the text measures ${computed}`,
+          });
+        // Every comprehension question must be a valid question (and safe to speak).
+        s.questions.forEach((q, i) => {
+          const raw = comprehensionQuestion(s, q, i, undefined, paragraphs);
+          const parsed = parseQuestion(raw.type, raw.content, raw.answer);
+          if (!parsed.ok) throw new Error(`question ${i + 1}: ${parsed.error}`);
+          const speech = speechProblems(raw.promptSpeech, raw.content, knownPhonemes);
+          if (speech.length) throw new Error(`question ${i + 1}: speech: ${speech.join("; ")}`);
+        });
+
+        // Word links, merged per word (forms of one word count together).
+        const byWord = new Map<string, Row>();
+        const patternWords = new Map<string, string>();
+        for (const w of analysis.words) {
+          const fact = factOf(w.normalized);
+          if (!fact) continue;
+          const row = byWord.get(fact.id);
+          if (row) {
+            row.occurrences = Number(row.occurrences) + w.occurrences;
+            row.first_position = Math.min(Number(row.first_position), w.firstPosition);
+          } else
+            byWord.set(fact.id, {
+              word_id: fact.id,
+              occurrences: w.occurrences,
+              first_position: w.firstPosition,
+              is_decodable: w.isDecodable,
+              is_sight: w.isSight,
+              is_irregular: w.isIrregular,
+              is_target_pattern: w.isTargetPattern,
+              is_focus: focusIds.has(fact.id),
+            });
+          // A word to find the pattern in: a real word of the text (two letters or more),
+          // a decodable one when there is one.
+          for (const p of s.targetPatterns) {
+            if (fact.word.length < 2 || !fact.patterns.some((x) => x.code === p)) continue;
+            const current = patternWords.get(p);
+            const currentDecodable = current ? facts.get(normalizeReadingWord(current))?.decodable : false;
+            if (!current || (fact.decodable && !currentDecodable)) patternWords.set(p, fact.word);
+          }
+        }
+        for (const p of s.targetPatterns)
+          if (!patternWords.has(p)) throw new Error(`no word of the text uses target pattern ${p}`);
+
         rows.push({
           code: s.code,
           title: s.title,
-          level_id: this.lookup("levels", s.level, "level"),
+          normalized_title: normalizedTitle,
+          level_id: levelId,
+          content_type_code: s.contentType,
           difficulty: s.difficulty,
+          reading_level: s.readingLevel ?? null,
+          genre: s.genre,
+          topic: s.topic,
+          tags: s.tags,
           summary: s.summary,
           cover_emoji: s.coverEmoji,
+          image_asset_id: s.image ? this.lookup("image_assets", s.image, "image") : null,
+          audio_asset_id: s.audio ? this.lookup("audio_assets", s.audio, "audio recording") : null,
           pages: s.pages,
-          word_count: s.pages.reduce((n, p) => n + p.text.split(/\s+/).length, 0),
+          word_count: analysis.stats.words,
+          estimated_seconds: estimatedReadingSeconds(analysis.stats.words, levelRank),
+          text_stats: analysis.stats,
+          decodable_pct: analysis.decodablePct,
+          unknown_words: analysis.unknownWords,
           is_original: s.isOriginal,
           license: s.license,
           status: s.status,
         });
+        links.push({ code: s.code, words: [...byWord.values()], patterns: s.targetPatterns, skills: s.targetSkills });
+        this.storyBank.set(s.code, { input: s, levelCode: s.level, patternWords });
       } catch (error) {
         report.invalid++;
         report.errors.push(`story ${s.code}: ${(error as Error).message}`);
       }
     }
-    await this.sync("stories", "stories", ["code"], rows);
+    const ids = await this.sync("stories", "stories", ["code"], rows);
+    const storyIds = links.map((l) => ids.get(l.code)!).filter(Boolean);
+    const wordRows: Row[] = [];
+    const patternRows: Row[] = [];
+    const skillRows: Row[] = [];
+    for (const l of links) {
+      const storyId = ids.get(l.code);
+      if (!storyId) continue;
+      for (const w of l.words) wordRows.push({ story_id: storyId, ...w });
+      for (const p of l.patterns)
+        patternRows.push({ story_id: storyId, pattern_id: this.lookup("phonics_patterns", p, "phonics pattern") });
+      for (const code of l.skills) skillRows.push({ story_id: storyId, reading_skill_code: code });
+    }
+    await this.syncLinks("story_words", "story_id", storyIds, wordRows, ["story_id", "word_id"]);
+    await this.syncLinks("story_phonics_patterns", "story_id", storyIds, patternRows, ["story_id", "pattern_id"]);
+    await this.syncLinks("story_reading_skills", "story_id", storyIds, skillRows, ["story_id", "reading_skill_code"]);
   }
 
   // Expands and validates one question; returns a row or null (reported invalid).
@@ -1476,6 +1779,28 @@ export class ContentImporter {
     const spellingRules = (await this.rules()).spelling;
     this.currentSpellingLevel = spellingRules.levels[file.level] ?? spellingRules.levels[spellingRules.defaultLevel];
 
+    // Reading skills of this level: reading skill → the skill (code) tagged with it. A skill
+    // may only teach a reading skill taught at this level (no inference in KG1).
+    const readingRules = (await this.rules()).reading;
+    const readingLevel = readingRules.levels[file.level] ?? readingRules.levels[readingRules.defaultLevel];
+    const readingSkills = new Map<string, string>();
+    const readingRefs = await this.loadReadingRefs();
+    for (const unit of file.units)
+      for (const skill of unit.skills) {
+        if (!skill.readingSkill) continue;
+        const minRank = readingRefs.skills.get(skill.readingSkill);
+        const report = this.entity("skills");
+        if (minRank === undefined) {
+          report.errors.push(`skill ${skill.code}: unknown reading skill "${skill.readingSkill}"`);
+          report.invalid++;
+          skill.readingSkill = undefined;
+        } else if (this.currentLevelRank !== undefined && minRank > this.currentLevelRank) {
+          report.errors.push(`skill ${skill.code}: ${skill.readingSkill} is not taught at ${file.level}`);
+          report.invalid++;
+          skill.readingSkill = undefined;
+        } else if (!readingSkills.has(skill.readingSkill)) readingSkills.set(skill.readingSkill, skill.code);
+      }
+
     // Lessons written as a blueprint become ordinary activities here, before anything else
     // sees them (src/lib/content/lesson-blueprints.ts).
     for (const unit of file.units) {
@@ -1483,15 +1808,27 @@ export class ContentImporter {
         skill.lessons = skill.lessons.filter((lesson) => {
           if (!lesson.blueprint) return true;
           try {
+            const storyCode = typeof lesson.blueprint.story === "string" ? lesson.blueprint.story : null;
+            const story = storyCode ? this.storyBank.get(storyCode) : undefined;
+            if (story && story.levelCode !== file.level)
+              throw new BlueprintError(`story ${storyCode} is a ${story.levelCode} text, not ${file.level}`);
             lesson.activities = expandBlueprint({
               levelRank: this.currentLevelRank,
               spellingLevel: this.currentSpellingLevel,
               ...lesson.blueprint,
+              ...(lesson.blueprint.name === "reading"
+                ? {
+                    storyData: story?.input,
+                    readingSkills,
+                    readingLevel,
+                    patternWords: story?.patternWords,
+                  }
+                : {}),
             }).map((a) => ({
               ...a,
               config: a.config ?? {},
               status: lesson.status,
-              questions: a.questions.map((q) => ({ difficulty: 1, explanation: "", ...q })),
+              questions: a.questions.map((q) => ({ difficulty: 1, explanation: "", ...q }) as QuestionInput),
             }));
             return true;
           } catch (error) {
@@ -1541,6 +1878,7 @@ export class ContentImporter {
         importance: skill.importance,
         difficulty: skill.difficulty,
         is_active: skill.active,
+        reading_skill_code: skill.readingSkill ?? null,
         phonics_stage_code: skill.phonicsStage
           ? (this.lookup("phonics_stages", skill.phonicsStage, "phonics stage"), skill.phonicsStage)
           : null,

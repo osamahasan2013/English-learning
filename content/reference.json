@@ -362,6 +362,24 @@
       "name": "Sentence dictation",
       "description": "Hear a sentence and write it; checked word by word (and for capitals and end marks where the level asks).",
       "isScored": true
+    },
+    {
+      "code": "READ_PASSAGE",
+      "name": "Read a text",
+      "description": "Guided reading of a story: listen first or read first, tap a word to hear it, read again. Not scored; recorded as a reading session.",
+      "isScored": false
+    },
+    {
+      "code": "SELECT_ALL",
+      "name": "Choose all",
+      "description": "Choose every right answer about a text.",
+      "isScored": true
+    },
+    {
+      "code": "ORDER_EVENTS",
+      "name": "Put events in order",
+      "description": "Put the events of a story in the order they happened.",
+      "isScored": true
     }
   ],
   "wordCategories": [
@@ -1062,6 +1080,309 @@
       "description": "Examples: rabbit, picnic.",
       "emoji": "🐇",
       "sortOrder": 14,
+      "status": "published"
+    }
+  ],
+  "readingSkills": [
+    {
+      "code": "LETTER_RECOGNITION",
+      "name": "Letter recognition",
+      "childName": "Know the letters",
+      "description": "Recognise letters by shape, in words and texts.",
+      "minLevelRank": 1,
+      "strand": "word",
+      "emoji": "🔤",
+      "sortOrder": 1,
+      "status": "published"
+    },
+    {
+      "code": "WORD_RECOGNITION",
+      "name": "Word recognition",
+      "childName": "Know the words",
+      "description": "Recognise familiar written words.",
+      "minLevelRank": 1,
+      "strand": "word",
+      "emoji": "👀",
+      "sortOrder": 2,
+      "status": "published"
+    },
+    {
+      "code": "DECODING",
+      "name": "Decoding",
+      "childName": "Sound it out",
+      "description": "Read a word by turning its letters into sounds and blending them.",
+      "minLevelRank": 2,
+      "strand": "word",
+      "emoji": "🧩",
+      "sortOrder": 3,
+      "status": "published"
+    },
+    {
+      "code": "SIGHT_WORD_RECOGNITION",
+      "name": "Sight words",
+      "childName": "Tricky words",
+      "description": "Read common words that cannot (yet) be sounded out, at a glance.",
+      "minLevelRank": 2,
+      "strand": "word",
+      "emoji": "⭐",
+      "sortOrder": 4,
+      "status": "published"
+    },
+    {
+      "code": "SENTENCE_READING",
+      "name": "Sentence reading",
+      "childName": "Read sentences",
+      "description": "Read a phrase or sentence and understand it.",
+      "minLevelRank": 1,
+      "strand": "text",
+      "emoji": "📝",
+      "sortOrder": 5,
+      "status": "published"
+    },
+    {
+      "code": "READING_ACCURACY",
+      "name": "Reading accuracy",
+      "childName": "Read carefully",
+      "description": "Read the words of a text as written. Tracked through word checks and the child's own check; nothing listens to the child read.",
+      "minLevelRank": 2,
+      "strand": "text",
+      "emoji": "🎯",
+      "sortOrder": 6,
+      "status": "published"
+    },
+    {
+      "code": "READING_FLUENCY",
+      "name": "Reading fluency",
+      "childName": "Read smoothly",
+      "description": "Read a text smoothly through re-reading. Tracked as time, re-reads and help taps — no speed or pronunciation score.",
+      "minLevelRank": 3,
+      "strand": "text",
+      "emoji": "🌊",
+      "sortOrder": 7,
+      "status": "published"
+    },
+    {
+      "code": "VOCABULARY_IN_CONTEXT",
+      "name": "Vocabulary in context",
+      "childName": "Word meanings",
+      "description": "Work out what a word means from the text around it.",
+      "minLevelRank": 1,
+      "strand": "comprehension",
+      "emoji": "💬",
+      "sortOrder": 8,
+      "status": "published"
+    },
+    {
+      "code": "FIND_EXPLICIT_INFORMATION",
+      "name": "Finding information",
+      "childName": "Find it in the text",
+      "description": "Find information that the text states.",
+      "minLevelRank": 1,
+      "strand": "comprehension",
+      "emoji": "🔍",
+      "sortOrder": 9,
+      "status": "published"
+    },
+    {
+      "code": "SEQUENCING",
+      "name": "Sequencing",
+      "childName": "What happened first?",
+      "description": "Put the events of a story in order.",
+      "minLevelRank": 3,
+      "strand": "comprehension",
+      "emoji": "🔢",
+      "sortOrder": 10,
+      "status": "published"
+    },
+    {
+      "code": "CHARACTER_IDENTIFICATION",
+      "name": "Characters",
+      "childName": "Who is in the story?",
+      "description": "Identify the characters and what they do.",
+      "minLevelRank": 3,
+      "strand": "comprehension",
+      "emoji": "🧒",
+      "sortOrder": 11,
+      "status": "published"
+    },
+    {
+      "code": "SETTING",
+      "name": "Setting",
+      "childName": "Where and when?",
+      "description": "Identify where and when a story happens.",
+      "minLevelRank": 3,
+      "strand": "comprehension",
+      "emoji": "🏞️",
+      "sortOrder": 12,
+      "status": "published"
+    },
+    {
+      "code": "MAIN_IDEA",
+      "name": "Main idea",
+      "childName": "What is it about?",
+      "description": "Say what a paragraph or text is mostly about.",
+      "minLevelRank": 4,
+      "strand": "comprehension",
+      "emoji": "💡",
+      "sortOrder": 13,
+      "status": "published"
+    },
+    {
+      "code": "SUPPORTING_DETAILS",
+      "name": "Supporting details",
+      "childName": "Details",
+      "description": "Find details that support the main idea.",
+      "minLevelRank": 4,
+      "strand": "comprehension",
+      "emoji": "🧷",
+      "sortOrder": 14,
+      "status": "published"
+    },
+    {
+      "code": "CAUSE_AND_EFFECT",
+      "name": "Cause and effect",
+      "childName": "Why did it happen?",
+      "description": "Connect what happened with why it happened.",
+      "minLevelRank": 5,
+      "strand": "comprehension",
+      "emoji": "➡️",
+      "sortOrder": 15,
+      "status": "published"
+    },
+    {
+      "code": "COMPARE_AND_CONTRAST",
+      "name": "Compare and contrast",
+      "childName": "Same and different",
+      "description": "Say how two things in a text are alike and different.",
+      "minLevelRank": 5,
+      "strand": "comprehension",
+      "emoji": "⚖️",
+      "sortOrder": 16,
+      "status": "published"
+    },
+    {
+      "code": "PREDICTION",
+      "name": "Prediction",
+      "childName": "What will happen?",
+      "description": "Use the text to say what might happen next.",
+      "minLevelRank": 4,
+      "strand": "comprehension",
+      "emoji": "🔮",
+      "sortOrder": 17,
+      "status": "published"
+    },
+    {
+      "code": "SIMPLE_INFERENCE",
+      "name": "Simple inference",
+      "childName": "Think and work it out",
+      "description": "Work out something the text does not say directly.",
+      "minLevelRank": 4,
+      "strand": "comprehension",
+      "emoji": "🤔",
+      "sortOrder": 18,
+      "status": "published"
+    },
+    {
+      "code": "STORY_SUMMARY",
+      "name": "Summarising",
+      "childName": "Tell it short",
+      "description": "Choose the best short retelling of a text.",
+      "minLevelRank": 5,
+      "strand": "comprehension",
+      "emoji": "📋",
+      "sortOrder": 19,
+      "status": "published"
+    }
+  ],
+  "readingContentTypes": [
+    {
+      "code": "WORD_READING",
+      "name": "Word reading",
+      "childName": "Words",
+      "description": "Single words with pictures.",
+      "minLevelRank": 1,
+      "emoji": "🔤",
+      "sortOrder": 1,
+      "status": "published"
+    },
+    {
+      "code": "PHRASE_READING",
+      "name": "Phrase reading",
+      "childName": "Phrases",
+      "description": "Very short phrases (a red hat).",
+      "minLevelRank": 1,
+      "emoji": "🧢",
+      "sortOrder": 2,
+      "status": "published"
+    },
+    {
+      "code": "SENTENCE_READING",
+      "name": "Sentence reading",
+      "childName": "Sentences",
+      "description": "A few short sentences.",
+      "minLevelRank": 1,
+      "emoji": "📝",
+      "sortOrder": 3,
+      "status": "published"
+    },
+    {
+      "code": "RHYME",
+      "name": "Rhyme",
+      "childName": "Rhymes",
+      "description": "A short rhyme to read and say.",
+      "minLevelRank": 1,
+      "emoji": "🎵",
+      "sortOrder": 4,
+      "status": "published"
+    },
+    {
+      "code": "SHORT_STORY",
+      "name": "Short story",
+      "childName": "Stories",
+      "description": "A short story with characters and events.",
+      "minLevelRank": 2,
+      "emoji": "📖",
+      "sortOrder": 5,
+      "status": "published"
+    },
+    {
+      "code": "POEM",
+      "name": "Poem",
+      "childName": "Poems",
+      "description": "A short poem.",
+      "minLevelRank": 2,
+      "emoji": "🌸",
+      "sortOrder": 6,
+      "status": "published"
+    },
+    {
+      "code": "STORY_SEQUENCE",
+      "name": "Story sequence",
+      "childName": "Story steps",
+      "description": "A story told in clear steps, for ordering events.",
+      "minLevelRank": 3,
+      "emoji": "🔢",
+      "sortOrder": 7,
+      "status": "published"
+    },
+    {
+      "code": "DIALOGUE",
+      "name": "Dialogue",
+      "childName": "Talking",
+      "description": "A conversation between characters.",
+      "minLevelRank": 3,
+      "emoji": "💬",
+      "sortOrder": 8,
+      "status": "published"
+    },
+    {
+      "code": "INFORMATIONAL_TEXT",
+      "name": "Informational text",
+      "childName": "Facts",
+      "description": "A text that explains real things.",
+      "minLevelRank": 4,
+      "emoji": "🔬",
+      "sortOrder": 9,
       "status": "published"
     }
   ]

@@ -18,6 +18,7 @@ import type { FeedbackKind, FeedbackMessage } from "@/lib/learning/feedback";
 import type { ClientQuestion, LessonPattern, LessonPayload, LessonStep } from "@/lib/learning/lesson-payload";
 import { logger } from "@/lib/logging";
 import { loadLearningRules } from "@/lib/server/learning-rules";
+import { loadPassages } from "@/lib/server/reading";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -467,6 +468,8 @@ type QuestionSupport = {
   answers: Map<string, unknown>;
   patterns: Map<string, LessonPattern>;
   tileSounds: Record<string, string>;
+  // Published story passages by code (loaded once per payload, on first use).
+  passage: (code: string) => Promise<LessonStep["passage"]>;
 };
 
 // Answers (service role, for exactly these RLS-visible question ids), phonics patterns and
@@ -534,7 +537,17 @@ async function loadQuestionSupport(supabase: Supabase, questions: QuestionRow[])
     }
   }
 
-  return { answers, patterns, tileSounds };
+  const passages = new Map<string, Promise<LessonStep["passage"]>>();
+  const passage = (code: string) => {
+    if (!passages.has(code))
+      passages.set(
+        code,
+        loadPassages(supabase, [code]).then((m) => m.get(code) ?? null),
+      );
+    return passages.get(code)!;
+  };
+
+  return { answers, patterns, tileSounds, passage };
 }
 
 async function buildStep(
@@ -566,6 +579,12 @@ async function buildStep(
     return null;
   }
   const { config, levelCode, rules, ...rest } = context;
+  // A story the activity is about: without it (a draft story) the text step cannot run.
+  const passage = config.story ? await support.passage(config.story) : null;
+  if (config.story && !passage) {
+    logger.warn("lesson.story_unavailable", { lessonId: ownerId, questionId: q.id, reason: config.story });
+    if (q.question_type === "READ_PASSAGE") return null;
+  }
   const activity = spellingActivityOf(q.metadata);
   const spelling =
     activity || SPELLING_ANALYSIS_TYPES.has(q.question_type)
@@ -584,6 +603,7 @@ async function buildStep(
     question: toClientQuestion(parsed.question),
     answerKey: await buildAnswerKey(q.question_type, parsed.question.answer, crypto.randomUUID()),
     activityConfig: config,
+    passage,
     pattern: q.phonics_pattern_id ? (support.patterns.get(q.phonics_pattern_id) ?? null) : null,
     tileSounds: q.question_type === "WORD_BUILDER" ? support.tileSounds : {},
   };

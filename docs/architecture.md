@@ -43,18 +43,21 @@ Service worker (Serwist): app shell + visited pages     re-evaluate, store once,
 | `/parent/phonics`                                                       | parent                | Phonics pattern search (filters, pages)      |
 | `/parent/words[?child=]`                                                | parent                | Vocabulary progress + word bank search       |
 | `/parent/spelling[?child=&page=]`                                       | parent                | Spelling progress and error analysis         |
+| `/parent/reading[?child=]`                                              | parent                | Reading progress and comprehension           |
 | `/child/home`, `/child/learn/:lessonId`, `/child/rewards`               | parent + active child | Child area                                   |
 | `/child/phonics[?show=…]`, `/child/check/:code`                         | parent + active child | Phonics screen; skill checks (Sound Check)   |
 | `/child/words`, `/child/words/category/:code`, `/child/words/find`      | parent + active child | Vocabulary home, categories, word search     |
 | `/child/words/:wordId[/practice]`, `/child/words/mine`, `…/practice`    | parent + active child | Word Explorer, word practice, My Words       |
 | `/child/spelling`, `…/practice[?review=1]`, `…/dictation`               | parent + active child | Spelling home (Learn), practice, dictation   |
 | `/child/spelling/words[?page=]`, `/child/spelling/review`               | parent + active child | My spelling words, spelling review           |
+| `/child/reading`, `/child/reading/words`                                | parent + active child | Reading home, story shelf, tricky words      |
 | `/admin/dashboard`, `/admin/words[/:id]`, `/admin/phonics`              | admin                 | Content admin, word pictures, review flags   |
+| `/admin/reading[/:code]`                                                | admin                 | Reading texts: analysis, preview, publish    |
 | `/api/sync`                                                             | parent (POST)         | Progress sync                                |
 | `/manifest.webmanifest`, `/sw.js`, `/offline.html`                      | public                | PWA                                          |
 
-Routes from the product brief that are not built yet (`/child/reading`,
-`/child/writing`, `/parent/assessments`, `/admin/lessons`, …) are deliberately absent until
+Routes from the product brief that are not built yet (`/child/writing`,
+`/parent/assessments`, `/admin/lessons`, …) are deliberately absent until
 their phase: there are no placeholder pages. `src/proxy.ts` redirects signed-out visitors
 away from `/parent`, `/child`, `/admin`, `/onboarding` and `/update-password` (UX only;
 pages re-check).
@@ -348,6 +351,67 @@ ADR-035): no separate lesson, activity, attempt, mastery, review or assessment s
   phonics patterns behind mistakes, improvement per week and average answer time, recommended practice, spelling types, word families, words to practise, the
   latest answers as written, paginated) and a Spelling card on the dashboard. Counts come
   from the `spelling_error_counts` / `spelling_pattern_errors` views (security invoker).
+
+## Reading engine (Phase 7)
+
+Reading reuses the story table, the word bank, the phonics data and the learning engine
+(ADR-037, ADR-038): reading lessons are ordinary lessons, comprehension answers are ordinary
+attempts on ordinary skills, difficult words go into the ordinary review queue. The only new
+history table is `reading_sessions`, because reading a text is not a question answer.
+
+- **Taxonomy (data).** `reading_skill_types` (19 skills: LETTER_RECOGNITION … STORY_SUMMARY,
+  each with a strand and the first level it may appear at) and `reading_content_types`
+  (WORD_READING, PHRASE_READING, SENTENCE_READING, RHYME, SHORT_STORY, POEM, STORY_SEQUENCE,
+  DIALOGUE, INFORMATIONAL_TEXT; more are rows, not code). A curriculum skill is tagged with
+  the reading skill it teaches (`skills.reading_skill_code`), so comprehension mastery is
+  the ordinary `skill_mastery` of tagged skills. The importer refuses a skill or text that
+  claims a reading skill above its level (no inference or summarising in KG1/KG2).
+- **Texts.** `stories` gained the reading metadata (content type, genre, topic, reading
+  band 1–20, estimated time, image, recording, tags) and the importer's analysis
+  (`text_stats`, `decodable_pct`, `unknown_words`; one title per level). `story_words` links
+  the text to word-bank words with decodable / sight / irregular / target-pattern / focus
+  flags — the word itself stays in `words`. `story_phonics_patterns` and
+  `story_reading_skills` record what the text practises.
+- **Analysis** (`src/lib/learning/reading.ts`, pure): sentence splitting that keeps dialogue
+  together, tokenizing, matching written forms to bank words (explicit plural/inflections,
+  then regular endings), decodability against the patterns taught up to the text's level,
+  difficulty 1–10 from configurable weights (`rules.reading.difficulty`), level fit
+  (`rules.reading.levels`: paragraphs, sentences, words per sentence, decodability,
+  question count), session summaries, comprehension per skill and per text,
+  recommendations and help-word review.
+- **Question types.** `READ_PASSAGE` (unscored: the text with listen first / read first /
+  read again, tap-a-word help, "I read it" and a self-check), `SELECT_ALL` (a set of option
+  ids; answer key: one digest per right option) and `ORDER_EVENTS` (sequence of event ids,
+  stored shuffled). Multiple choice, true/false and word-in-context are `READING` (content
+  `format`, optional `ref` to the answering sentence); matching is `MATCH`. Short written
+  answers are not offered (no safe automatic marking for young children).
+- **Lessons.** A story's compact authored questions (`content/stories.json`) become
+  ordinary questions through `src/lib/content/reading-content.ts`; the `reading` lesson
+  blueprint builds get ready → words to know → the phonics pattern → read → questions
+  (grouped by type) → tricky words → read again, each step only when the text has what it
+  needs. Activities carry `config.story`; the lesson loader attaches the published
+  passage (`step.passage`: paragraphs, sentences, words → word ids, focus words, image,
+  recording). A draft story removes its reading step.
+- **Reader** (`src/features/reading/passage-view.tsx`): large type, 34–42 character lines,
+  generous spacing, speaker names for dialogue. Listen reads sentence by sentence and
+  highlights the sentence (speech sequence + `onItem`); for the youngest levels Slow reads
+  word by word and points at each word; a whole-text recording plays without highlighting.
+  Highlights are underlined and bold as well as coloured. Questions show the text in a
+  collapsible look-back panel and point at the answering sentence after answering.
+- **Progress.** The device reports one reading per text visit (sync event `reading`: time on
+  text, listens, slow listens, re-reads, help word ids, self-check, mode). The writer
+  stores it once, takes the word count from the story, keeps only help words of that story,
+  drops a lesson/question id that is not a published reading step, and recomputes
+  `reading:<word>` review items: a word tapped in 2 of the last 5 readings that contain it
+  is reviewed until the child reads it unaided or answers a question about it right first
+  time. Nothing is scored from reading itself: no words per minute, no accuracy, no
+  pronunciation (nothing listens to the child read).
+- **Screens.** `/child/reading` (For you, tricky words from reading, the story shelf by
+  level), `/child/reading/words` (practise those words), `/parent/reading` (lessons
+  completed, reading skills learning / mastered, comprehension per skill, difficult words,
+  recent reading, read next) and a Reading card on the dashboard; `/admin/reading` (every
+  text with its analysis and flags) and `/admin/reading/[code]` (preview as children see
+  it, words with their decodability, questions with reading skills, publish/unpublish).
 
 ## Progress pipeline
 
