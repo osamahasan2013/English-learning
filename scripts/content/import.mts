@@ -3,6 +3,7 @@
 //   npm run content:import                      # everything in ./content
 //   npm run content:import -- --dry-run         # validate + report, write nothing
 //   npm run content:import -- --words new.csv   # just a vocabulary CSV
+//   npm run content:import -- --spelling new.csv  # just spelling targets (words must exist)
 //
 // Needs NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (read from .env.local if
 // present). Exits non-zero when any file or row is invalid, so CI can gate content.
@@ -20,7 +21,7 @@ import {
   storiesFileSchema,
   vocabularyFileSchema,
 } from "@/lib/content/content-schemas";
-import { parseWordsCsv } from "@/lib/content/csv";
+import { parseSpellingCsv, parseWordsCsv } from "@/lib/content/csv";
 import { ContentImporter, type ImportBundle } from "@/lib/content/importer";
 
 const args = process.argv.slice(2);
@@ -33,7 +34,9 @@ const option = (name: string) => {
 const dryRun = flag("--dry-run");
 const contentDir = path.resolve(option("--dir") ?? "content");
 const wordsOnly = option("--words");
+const spellingOnly = option("--spelling");
 let fileErrors = 0;
+let spellingCsvInvalid = 0;
 
 function readJson<S extends ZodTypeAny>(file: string, schema: S): z.infer<S> | undefined {
   const full = path.join(contentDir, file);
@@ -62,9 +65,25 @@ function readWords(file: string) {
   return rows.flatMap((r) => (r.ok ? [r.word] : []));
 }
 
+function readSpelling(file: string) {
+  const { rows, missingColumns } = parseSpellingCsv(readFileSync(file, "utf8"));
+  if (missingColumns.length) {
+    fileErrors++;
+    console.error(`✗ ${file} is missing required columns: ${missingColumns.join(", ")}`);
+    return [];
+  }
+  const invalid = rows.filter((r) => !r.ok);
+  for (const r of invalid) if (!r.ok) console.error(`✗ ${path.basename(file)} line ${r.line}: ${r.error}`);
+  fileErrors += invalid.length;
+  spellingCsvInvalid += invalid.length;
+  return rows.flatMap((r) => (r.ok ? [r.word] : []));
+}
+
 const bundle: ImportBundle = {};
 if (wordsOnly) {
   bundle.words = readWords(path.resolve(wordsOnly));
+} else if (spellingOnly) {
+  bundle.spelling = readSpelling(path.resolve(spellingOnly));
 } else {
   bundle.reference = readJson("reference.json", referenceFileSchema);
   bundle.phonics = readJson("phonics.json", phonicsFileSchema);
@@ -79,6 +98,14 @@ if (wordsOnly) {
   bundle.sentences = readJson("sentences.json", sentencesFileSchema);
   bundle.vocabulary = readJson("vocabulary.json", vocabularyFileSchema);
   bundle.stories = readJson("stories.json", storiesFileSchema);
+  const spellingDir = path.join(contentDir, "spelling");
+  if (existsSync(spellingDir)) {
+    bundle.spelling = readdirSync(spellingDir)
+      .filter((f) => f.endsWith(".csv"))
+      .sort()
+      .flatMap((f) => readSpelling(path.join(spellingDir, f)));
+    bundle.spellingComplete = true;
+  }
   const curriculumDir = path.join(contentDir, "curriculum");
   if (existsSync(curriculumDir)) {
     bundle.curriculum = readdirSync(curriculumDir)
@@ -117,6 +144,13 @@ try {
       ]),
     ),
   );
+  const spelling = report["spelling words"];
+  if (spelling) {
+    console.log(
+      `Spelling words — Created: ${spelling.added}, Updated: ${spelling.updated}, Skipped: ${spelling.skipped}, ` +
+        `Invalid: ${spelling.invalid + spellingCsvInvalid}, Duplicates: ${spelling.duplicate}, Archived: ${spelling.archived}`,
+    );
+  }
   const problems = Object.entries(report).flatMap(([entity, r]) => r.errors.map((e) => `${entity}: ${e}`));
   for (const p of problems) console.warn(`! ${p}`);
   const invalid = Object.values(report).reduce((n, r) => n + r.invalid, 0);

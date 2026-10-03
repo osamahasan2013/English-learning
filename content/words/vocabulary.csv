@@ -18,7 +18,7 @@ eye,KG1,,BODY,,1,,,The part of the body used for seeing.,The part of your face y
 ear,KG1,,BODY,,1,,ear=[IH+R],The part of the body used for hearing.,The part of your head you hear with.,I hear with my ear.,,no,👂,noun,1,no,,,,,ears,body
 carrot,KG2,,FOOD,VEGETABLES,2,,c a rr=[R] o=[AH] t,A long orange root vegetable.,An orange vegetable that rabbits love.,The rabbit eats a carrot.,,no,🥕,noun,2,no,,,,,carrots,food
 rice,KG2,,FOOD,,2,I_E,,"Small grains from a plant, cooked and eaten as food.",Small white grains that we cook and eat.,We eat rice for dinner.,,no,🍚,noun,1,no,,,,,,food
-water,KG1,,FOOD,,1,,,A clear liquid that falls as rain and that people drink.,The clear drink that comes from the tap and rain.,I drink water.,,no,🚰,noun,2,yes,Water says 'waw-ter': the a does not make its short sound.,,,,,drink
+water,KG1,,FOOD,,1,,w a=[AO] t er,A clear liquid that falls as rain and that people drink.,The clear drink that comes from the tap and rain.,I drink water.,,no,🚰,noun,2,yes,Water says 'waw-ter': the a does not make its short sound.,,,,,drink
 soup,KG2,,FOOD,,2,,s ou=[UW] p,A liquid food made by cooking vegetables or meat in water.,A hot food you eat with a spoon.,The soup is hot.,,no,🍜,noun,1,no,,,,,soups,food
 doll,KG2,,TOYS,,1,,,A toy in the shape of a person.,A toy that looks like a small person.,The doll has a red hat.,,no,🪆,noun,1,no,,,,,dolls,toy
 puzzle,KG2,,TOYS,,2,,p u zz=[Z] le=[AH+L],A game or toy with pieces you fit together to make a picture.,A game where you fit pieces together.,We do a puzzle.,,no,🧩,noun,2,no,,,,,puzzles,toy
@@ -71,7 +71,7 @@ keyboard,GRADE2,,TECHNOLOGY,,4,,k ey=[IY] b oar=[AO+R] d,A set of keys for typin
 battery,GRADE2,,TECHNOLOGY,,4,,b a tt=[T] er y=[IY],A device that stores electricity.,It gives power to toys and phones.,The toy needs a new battery.,,no,🔋,noun,3,no,,,,,batteries,technology
 screen,GRADE2,,TECHNOLOGY,,3,EE,,The flat surface where pictures appear on a device.,The flat part of a computer or TV where you see pictures.,Look at the screen.,,no,🖥️,noun,1,no,,,,,screens,technology
 hospital,GRADE2,,COMMUNITY,,4,,,A building where sick or hurt people are cared for.,A place where doctors and nurses help sick people.,The nurse works at the hospital.,,no,🏥,noun,3,no,,,,,hospitals,place
-school,GRADE2,KG3,COMMUNITY,,2,,,A place where children are taught.,A place where children go to learn.,I go to school by bus.,,no,🏫,noun,1,yes,"In school, ch says /k/.",,,,schools,place
+school,GRADE2,KG3,COMMUNITY,,2,,s ch=[K] oo=[UW] l,A place where children are taught.,A place where children go to learn.,I go to school by bus.,,no,🏫,noun,1,yes,"In school, ch says /k/.",,,,schools,place
 market,GRADE2,,COMMUNITY,,3,AR,,A place where goods are bought and sold.,A place where people buy and sell food and things.,We buy apples at the market.,,no,🛒,noun,2,no,,shop,,,markets,place
 bank,GRADE2,,COMMUNITY,,3,,,A place where people keep and borrow money.,A place that keeps money safe.,Dad puts money in the bank.,,no,🏦,noun,1,no,,,,,banks,place
 library,GRADE2,,COMMUNITY,,4,,l i=[AY] b r ar=[EH+R] y=[IY],A building with books people can borrow.,A place full of books you can borrow.,We get books at the library.,,no,📚,noun,3,no,,,,,libraries,place

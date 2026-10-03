@@ -4,6 +4,7 @@ import {
   type AnswerSpec,
 } from "@/lib/content/question-schemas";
 import { evaluateResponse } from "@/lib/learning/evaluate";
+import { analyzeAnswer, type AnswerAnalysis } from "@/lib/learning/spelling";
 import { masteryRank, type MasteryStatus } from "@/lib/learning/mastery";
 import { DEFAULT_RULES, type ScoringRules } from "@/lib/learning/rules";
 import { attemptScore, percentage, scoreLesson, type LessonScore } from "@/lib/learning/scoring";
@@ -21,6 +22,8 @@ export type StoredQuestion = {
   activity_id: string | null;
   lesson_id: string | null;
   word_id: string | null;
+  // The question's content: spelling answers are analysed against its grapheme split.
+  content?: unknown;
 };
 
 // Device clocks can be wrong. Keep the child's timestamp when plausible, otherwise clamp
@@ -60,7 +63,11 @@ export type AttemptRowResult =
         error_type: string | null;
         response_time_ms: number;
         attempted_at: string;
+        hints_used: number;
+        spelling_analysis: AnswerAnalysis | null;
       };
+      // The phonics pattern the spelling mistake was in (resolved to an id by the writer).
+      errorPatternCode: string | null;
     }
   | { ok: false; reason: string };
 
@@ -100,8 +107,21 @@ export function buildAttemptRow(
   if (!response.success) return { ok: false, reason: "response_shape_invalid" };
 
   const result = evaluateResponse(question.question_type, answer.data, response.data);
+  // Spelling answers: the server's own analysis (normalised answer, letter diff, category,
+  // pattern) from the stored answer and the question's grapheme split. The verdict stays
+  // the evaluator's; the child's text stays as typed in `response`.
+  const analysis = analyzeAnswer(
+    { type: question.question_type, content: question.content ?? {} },
+    response.data as { value?: string; sequence?: string[] },
+    {
+      expected: "accepted" in answer.data ? answer.data.accepted : undefined,
+      requirePunctuation: "requirePunctuation" in answer.data && answer.data.requirePunctuation === true,
+    },
+  );
+  const errorType = result.isCorrect ? null : (analysis?.category ?? result.errorType);
   return {
     ok: true,
+    errorPatternCode: result.isCorrect ? null : (analysis?.patternCode ?? null),
     row: {
       id: event.id,
       child_id: childId,
@@ -120,9 +140,11 @@ export function buildAttemptRow(
       correct_answer: answer.data,
       is_correct: result.isCorrect,
       score: attemptScore(result.isCorrect, event.attemptNumber, scoring),
-      error_type: result.errorType,
+      error_type: errorType,
       response_time_ms: event.responseTimeMs,
       attempted_at: clampTimestamp(event.attemptedAt, now),
+      hints_used: Math.min(5, Math.max(0, event.hintsUsed ?? 0)),
+      spelling_analysis: analysis,
     },
   };
 }

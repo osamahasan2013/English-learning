@@ -1326,6 +1326,126 @@
           ]
         }
       ]
+    },
+    {
+      "code": "kg2-spelling",
+      "subject": "SPELLING",
+      "title": "Spelling Words",
+      "emoji": "✏️",
+      "description": "Spell CVC words and the words we use all the time.",
+      "skills": [
+        {
+          "code": "kg2-spell-cvc",
+          "dimension": "SPELLING",
+          "title": "Spelling CVC words",
+          "childTitle": "Short words",
+          "importance": 4,
+          "lessons": [
+            {
+              "code": "kg2-spell-cvc-1",
+              "title": "Short vowel words",
+              "childTitle": "Short vowel words",
+              "description": "Spell: bag, bed, big, hot, mug, pen.",
+              "emoji": "🎒",
+              "minutes": 8,
+              "introSpeech": "Let's spell! Short vowel words.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "bag",
+                  "bed",
+                  "big",
+                  "hot",
+                  "mug",
+                  "pen"
+                ]
+              }
+            },
+            {
+              "code": "kg2-spell-cvc-2",
+              "title": "More short vowel words",
+              "childTitle": "More short vowel words",
+              "description": "Spell: map, leg, pot, run, ten, zip.",
+              "emoji": "🗺️",
+              "minutes": 8,
+              "introSpeech": "Let's spell! More short vowel words.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "map",
+                  "leg",
+                  "pot",
+                  "run",
+                  "ten",
+                  "zip"
+                ]
+              }
+            }
+          ],
+          "prerequisites": [
+            "kg1-spell-cvc"
+          ]
+        },
+        {
+          "code": "kg2-spell-tricky",
+          "dimension": "SPELLING",
+          "title": "Spelling first tricky words",
+          "childTitle": "Tricky words",
+          "importance": 5,
+          "lessons": [
+            {
+              "code": "kg2-spell-tricky-1",
+              "title": "The, and, is",
+              "childTitle": "The, and, is",
+              "description": "Spell: the, and, is, see, go, my.",
+              "emoji": "🧩",
+              "minutes": 8,
+              "introSpeech": "Let's spell! The, and, is.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "the",
+                  "and",
+                  "is",
+                  "see",
+                  "go",
+                  "my"
+                ],
+                "tricky": true
+              }
+            }
+          ]
+        },
+        {
+          "code": "kg2-spell-hf",
+          "dimension": "SPELLING",
+          "title": "Spelling everyday words",
+          "childTitle": "Everyday words",
+          "importance": 5,
+          "lessons": [
+            {
+              "code": "kg2-spell-hf-1",
+              "title": "In, at, he, me",
+              "childTitle": "In, at, he, me",
+              "description": "Spell: in, at, he, me, no, so.",
+              "emoji": "🔁",
+              "minutes": 8,
+              "introSpeech": "Let's spell! In, at, he, me.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "in",
+                  "at",
+                  "he",
+                  "me",
+                  "no",
+                  "so"
+                ]
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

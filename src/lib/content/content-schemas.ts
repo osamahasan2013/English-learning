@@ -80,6 +80,22 @@ export const referenceFileSchema = z.object({
         text: z.string().min(1).max(120),
         speech: z.string().max(200).default(""),
         emoji: z.string().default(""),
+        // Said after a spelling mistake of this category (spelling.ts).
+        errorCategory: code.optional(),
+        status,
+      }),
+    )
+    .default([]),
+  // Spelling types (CVC, DIGRAPH, HIGH_FREQUENCY …) — an extensible list.
+  spellingTypes: z
+    .array(
+      z.object({
+        code,
+        name: z.string().min(1).max(80),
+        childName: z.string().max(80).default(""),
+        description: z.string().max(400).default(""),
+        emoji: z.string().default(""),
+        sortOrder: z.number().int(),
         status,
       }),
     )
@@ -88,7 +104,7 @@ export const referenceFileSchema = z.object({
   rules: z
     .array(
       z.object({
-        code: z.enum(["mastery", "prerequisites", "review", "player", "scoring", "vocabulary"]),
+        code: z.enum(["mastery", "prerequisites", "review", "player", "scoring", "vocabulary", "spelling"]),
         description: z.string().default(""),
         config: z.record(z.unknown()),
       }),
@@ -257,6 +273,39 @@ export const wordSchema = z.object({
   status,
 });
 export type WordInput = z.infer<typeof wordSchema>;
+
+// A spelling target: the spelling view of a word of the word bank (content/spelling/*.csv).
+// The word itself (text, split, meaning, syllables) is never repeated here.
+export const spellingWordSchema = z.object({
+  word: z
+    .string()
+    .trim()
+    .min(1)
+    .max(40)
+    .regex(/^[A-Za-z][A-Za-z']*$/, "a word uses letters (and apostrophes) only"),
+  sense: z.number().int().min(1).max(9).default(1),
+  // The level at which the word is a spelling target.
+  level: code,
+  // The spelling skill it belongs to (a skill code from the curriculum), optional.
+  skill: slug.optional(),
+  spellingType: code,
+  difficulty,
+  // The phonics pattern the word practises when spelled (SH for ship).
+  phonicsPattern: code.optional(),
+  // Storage path of a recording for dictation (audio_assets).
+  audio: z.string().trim().max(200).optional(),
+  // A dictation / "use it" sentence; default the word's example sentence.
+  exampleSentence: z.string().trim().max(300).optional(),
+  isHighFrequency: z.boolean().default(false),
+  isIrregular: z.boolean().default(false),
+  // The irregular part as written ("ai" in said); needs isIrregular.
+  irregularPart: z.string().regex(/^[a-z]{1,8}$/).optional(),
+  hints: z.array(z.string().trim().min(2).max(120)).max(3).default([]),
+  commonErrors: z.array(z.string().regex(/^[a-z']{1,40}$/)).max(6).default([]),
+  tags: z.array(z.string().min(1).max(40)).default([]),
+  status,
+});
+export type SpellingWordInput = z.infer<typeof spellingWordSchema>;
 
 // content/vocabulary.json: word families. Members are found in the word bank from each
 // word's grapheme split (src/lib/content/vocabulary.ts → familyMembers); `words` adds

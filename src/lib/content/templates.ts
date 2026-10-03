@@ -17,6 +17,7 @@ import {
   type DistractorStrategy,
 } from "@/lib/content/vocabulary";
 import type { WordArea } from "@/lib/learning/vocabulary";
+import { buildSpellingHints, type SpellingActivity, type SpellingSegment } from "@/lib/learning/spelling";
 
 export type TemplateSegment = {
   grapheme: string;
@@ -48,6 +49,22 @@ export type TemplateWord = {
   synonyms?: string[];
   // Other written forms that count as the word (plural, -ing, past…).
   forms?: string[];
+  // Set when the word is a spelling target (spelling_words).
+  spelling?: TemplateSpelling;
+};
+
+export type TemplateSpelling = {
+  type: string;
+  level: string;
+  // The phonics pattern the word practises when spelled (SH for ship).
+  focusPattern: string | null;
+  // Grapheme positions of the irregular part ("ai" in said = [1]).
+  irregularPositions: number[];
+  hints: string[];
+  // A dictation sentence (else the word's example sentence).
+  sentence: string | null;
+  commonErrors: string[];
+  highFrequency: boolean;
 };
 
 export type TemplatePattern = {
@@ -73,6 +90,8 @@ export type TemplateContext = {
   // rank (1 = KG1), which sets how many and how close the distractors are.
   words?: () => TemplateWord[];
   levelRank?: number;
+  // The level's spelling settings (rules.ts → spelling.levels), for spelling templates.
+  spellingLevel?: { sentencePunctuation: boolean; maxWordLength: number };
 };
 
 export type ExpandedQuestion = {
@@ -87,6 +106,8 @@ export type ExpandedQuestion = {
   area?: WordArea;
   // A sentence of the sentence bank the question is built on (linked as sentence_id).
   sentence?: string;
+  // The spelling activity it plays (stored as metadata.spellingActivity).
+  spellingActivity?: SpellingActivity;
 };
 
 type Params = Record<string, unknown>;
@@ -237,6 +258,81 @@ function sameTopCategory(words: TemplateWord[]) {
 }
 const CONSONANT_TILES = ["b", "d", "f", "g", "h", "k", "l", "m", "n", "p", "r", "s", "t", "w"];
 const VOWEL_TILES = ["a", "e", "i", "o", "u"];
+
+// ---- Spelling helpers (Phase 6) ----------------------------------------------------------
+
+function needSpelling(word: TemplateWord) {
+  if (!word.spelling) throw new TemplateError(`word "${word.word}" is not a spelling target (content/spelling)`);
+  return word.spelling;
+}
+// The word's grapheme split with each grapheme's pattern type, as the spelling engine
+// reads it. Only a split that really spells the word is used.
+function spellingSplit(word: TemplateWord, ctx: TemplateContext): SpellingSegment[] | undefined {
+  const segments = word.segments ?? [];
+  if (segments.length === 0 || segments.map((g) => g.grapheme).join("") !== word.word.toLowerCase()) return undefined;
+  return segments.map((g) => ({
+    grapheme: g.grapheme,
+    phonemes: g.phonemes,
+    patternCode: g.patternCode,
+    patternType: g.patternCode ? (ctx.pattern(g.patternCode)?.type ?? null) : null,
+  }));
+}
+function spellingHints(word: TemplateWord, ctx: TemplateContext, split = spellingSplit(word, ctx)) {
+  const spelling = needSpelling(word);
+  return buildSpellingHints({
+    word: word.word,
+    split,
+    focusPattern: spelling.focusPattern,
+    irregularPositions: spelling.irregularPositions,
+    authored: spelling.hints.map((text) => ({ text })),
+    max: 4,
+  });
+}
+function spellingWordText(word: TemplateWord, ctx: TemplateContext) {
+  const text = word.word.toLowerCase();
+  if (!/^[a-z']+$/.test(text)) throw new TemplateError(`"${word.word}" has characters that are not letters`);
+  const max = ctx.spellingLevel?.maxWordLength;
+  if (max && text.length > max + 3) throw new TemplateError(`"${word.word}" is too long to spell at this level`);
+  return text;
+}
+// Graphemes that are easily confused with a grapheme (sh / s / ch, ai / a / ay …): the
+// wrong choices for "which letters make the sound?" and the extra tiles for building.
+const CONFUSABLE: Record<string, string[]> = {
+  sh: ["s", "ch"], ch: ["sh", "c"], th: ["t", "f"], wh: ["w", "h"], ph: ["f", "p"], ck: ["k", "c"], ng: ["n", "nk"],
+  ai: ["a", "ay"], ay: ["ai", "a"], ee: ["e", "ea"], ea: ["ee", "e"], oa: ["o", "ow"], ow: ["o", "ou"],
+  oo: ["u", "o"], ou: ["ow", "o"], oi: ["oy", "o"], oy: ["oi", "y"], ar: ["a", "or"], or: ["ar", "o"],
+  er: ["ur", "r"], ir: ["ur", "er"], ur: ["ir", "er"], ing: ["in", "ink"], ed: ["d", "t"], es: ["s", "is"],
+  st: ["s", "t"], fr: ["f", "r"], tr: ["t", "ch"], bl: ["b", "l"], cl: ["c", "l"], fl: ["f", "l"], gr: ["g", "r"], sn: ["s", "n"],
+};
+function confusables(grapheme: string, seed: string, count: number) {
+  const listed = CONFUSABLE[grapheme] ?? [];
+  const pool = VOWEL_TILES.includes(grapheme)
+    ? VOWEL_TILES
+    : grapheme.length === 1
+      ? CONSONANT_TILES
+      : [...VOWEL_TILES, ...CONSONANT_TILES];
+  const extra = seededShuffle(pool.filter((g) => g !== grapheme && !listed.includes(g)), seed);
+  return [...listed, ...extra].slice(0, count);
+}
+// The word's letters plus a few others, mixed up (letter-tile input).
+function letterTiles(text: string, seed: string, extras: number) {
+  const letters = [...text];
+  const others = seededShuffle(
+    [...VOWEL_TILES, ...CONSONANT_TILES].filter((l) => !letters.includes(l)),
+    `${seed}-tiles`,
+  ).slice(0, extras);
+  return seededShuffle([...letters, ...others], seed, true);
+}
+function spellingSentence(word: TemplateWord, preferred?: string) {
+  const candidates = [preferred, word.spelling?.sentence ?? undefined, ...(word.examples ?? [])].filter(
+    (x): x is string => !!x,
+  );
+  for (const sentence of candidates) {
+    const found = findWordInSentence(sentence, word.word);
+    if (found) return sentence;
+  }
+  throw new TemplateError(`word "${word.word}" has no sentence that uses it`);
+}
 
 type Expander = (params: Params, ctx: TemplateContext) => ExpandedQuestion;
 
@@ -1094,6 +1190,328 @@ export const TEMPLATES: Record<string, Expander> = {
     };
   },
 };
+
+// ---- Spelling (Phase 6). Every word must be a spelling target (content/spelling). ---------
+// Each question records its spelling activity (metadata.spellingActivity).
+Object.assign(TEMPLATES, {
+  // Listen and look: the word, its graphemes (sh · i · p), the tricky part or the pattern.
+  spelling_intro(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    const spelling = needSpelling(target);
+    const split = spellingSplit(target, ctx);
+    const graphemes = split?.map((g) => g.grapheme) ?? [...target.word.toLowerCase()];
+    const tricky = spelling.irregularPositions.map((p) => graphemes[p]).filter(Boolean).join("");
+    const focus = split?.find((g) => g.patternCode && g.patternCode === spelling.focusPattern && g.grapheme.length > 1);
+    const sounds = (target.segments ?? []).map((g) => g.sayAs).filter(Boolean);
+    return {
+      type: "INTRO",
+      prompt: "",
+      promptSpeech: "",
+      word: target.word,
+      pattern: spelling.focusPattern ?? undefined,
+      content: {
+        heading: target.word,
+        display: graphemes.join(" · "),
+        body: tricky
+          ? `Tricky part: “${tricky}”. Say it, then spell it.`
+          : focus
+            ? `Listen for “${focus.grapheme}”.`
+            : "Say each sound, then spell it.",
+        speech: tricky
+          ? `${target.word}. The tricky part is spelled ${[...tricky].join(" ")}. ${target.word}.`
+          : `${target.word}. ${sounds.join(", ")}. ${target.word}.`,
+        examples: [
+          {
+            text: target.word,
+            emoji: target.emoji || undefined,
+            highlight: tricky || focus?.grapheme || undefined,
+          },
+        ],
+      },
+      answer: null,
+    };
+  },
+
+  // LISTEN_AND_TYPE: hear the word (picture too), write it.
+  listen_and_type(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    const spelling = needSpelling(target);
+    const text = spellingWordText(target, ctx);
+    const split = spellingSplit(target, ctx);
+    return {
+      type: "SPELLING",
+      prompt: "Listen. Write the word.",
+      promptSpeech: target.word,
+      word: target.word,
+      area: "spelling",
+      spellingActivity: "LISTEN_AND_TYPE",
+      pattern: optStr(params, "pattern"),
+      content: {
+        mode: "listen",
+        emoji: target.emoji || undefined,
+        speech: target.word,
+        tiles: letterTiles(text, ctx.seed, text.length > 4 ? 3 : 2),
+        split,
+        irregular: spelling.irregularPositions,
+        hints: spellingHints(target, ctx, split),
+      },
+      answer: { accepted: [text] },
+    };
+  },
+
+  // DICTATION: the word only (no picture), limited replays.
+  dictation_word(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    const spelling = needSpelling(target);
+    const text = spellingWordText(target, ctx);
+    const split = spellingSplit(target, ctx);
+    return {
+      type: "SPELLING",
+      prompt: "Write the word you hear.",
+      promptSpeech: target.word,
+      word: target.word,
+      area: "spelling",
+      spellingActivity: "DICTATION",
+      content: {
+        mode: "dictation",
+        speech: target.word,
+        tiles: letterTiles(text, ctx.seed, 2),
+        split,
+        irregular: spelling.irregularPositions,
+        hints: spellingHints(target, ctx, split),
+      },
+      answer: { accepted: [text] },
+    };
+  },
+
+  // SOUND_TO_WORD: hear the sounds (/k/ /a/ /t/ — phonemes, never letters), then either
+  // choose the word they make among others (younger levels, or choose: true; a listening
+  // and blending step) or write it (Grade 1+, counted as spelling).
+  sound_to_word(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    const spelling = needSpelling(target);
+    if (spelling.irregularPositions.length > 0)
+      throw new TemplateError(`"${target.word}" is irregular: its sounds do not spell it`);
+    const text = spellingWordText(target, ctx);
+    const segments = needSegments(target);
+    const sounds = segments
+      .filter((g) => g.phonemes.length > 0)
+      .map((g) => ({ label: soundLabelFor(ctx, g.phonemes, g.grapheme), sayAs: g.sayAs || g.grapheme }));
+    if (sounds.length < 2) throw new TemplateError(`"${target.word}" has fewer than two sounds`);
+    const choose = typeof params.choose === "boolean" ? params.choose : (ctx.levelRank ?? 1) <= 3;
+    if (choose) {
+      const others = strList(params, "distractors").filter((w) => w.toLowerCase() !== target.word.toLowerCase());
+      if (others.length < 1) throw new TemplateError("sound_to_word needs other words to choose from");
+      const words = seededShuffle([target.word, ...others.slice(0, 3)], ctx.seed);
+      return {
+        type: "BLEND_SOUNDS",
+        prompt: "Which word do the sounds make?",
+        promptSpeech: "Listen to the sounds. Which word do they make?",
+        word: target.word,
+        area: "listening",
+        spellingActivity: "SOUND_TO_WORD",
+        content: {
+          units: sounds.map((x) => ({ grapheme: `/${x.label}/`.slice(0, 6), sayAs: x.sayAs })),
+          options: wordOptions(ctx, words, pictures(ctx)),
+        },
+        answer: { accepted: [optionId(target.word)] },
+      };
+    }
+    const split = spellingSplit(target, ctx);
+    return {
+      type: "SPELLING",
+      prompt: "What word do the sounds make?",
+      promptSpeech: "Listen to the sounds. Write the word they make.",
+      word: target.word,
+      area: "spelling",
+      spellingActivity: "SOUND_TO_WORD",
+      content: {
+        mode: "sounds",
+        speech: target.word,
+        sounds,
+        tiles: letterTiles(text, ctx.seed, 2),
+        split,
+        irregular: [],
+        hints: spellingHints(target, ctx, split).filter((h) => h.kind !== "listen" && h.kind !== "listen_slow"),
+      },
+      answer: { accepted: [text] },
+    };
+  },
+
+  // BUILD_THE_WORD: hear it, build it from grapheme tiles (sh · i · p) plus look-alikes.
+  build_the_word(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    needSpelling(target);
+    const text = spellingWordText(target, ctx);
+    const split = spellingSplit(target, ctx);
+    const graphemes = split?.map((g) => g.grapheme) ?? [...text];
+    if (graphemes.length > 10) throw new TemplateError(`"${target.word}" is too long to build`);
+    const focus = graphemes.find((g) => g.length > 1) ?? graphemes.find((g) => VOWEL_TILES.includes(g)) ?? graphemes[0];
+    const extra = confusables(focus, ctx.seed, (ctx.levelRank ?? 1) <= 1 ? 1 : 2).filter((g) => !graphemes.includes(g));
+    return {
+      type: "WORD_BUILDER",
+      prompt: "Build the word",
+      promptSpeech: target.word,
+      word: target.word,
+      area: "spelling",
+      spellingActivity: "BUILD_THE_WORD",
+      content: {
+        mode: "build",
+        emoji: target.emoji || undefined,
+        speech: target.word,
+        tiles: seededShuffle([...graphemes, ...extra], ctx.seed, true),
+        slots: graphemes.length,
+        demonstrateBlend: false,
+        split,
+        hints: spellingHints(target, ctx, split),
+      },
+      answer: { accepted: [text] },
+    };
+  },
+
+  // SCRAMBLED_WORD: the word's own letters, mixed up; put them back in order.
+  scrambled_word(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    needSpelling(target);
+    const text = spellingWordText(target, ctx);
+    if (new Set(text).size < 2) throw new TemplateError(`"${target.word}" cannot be scrambled`);
+    if (text.length > 10) throw new TemplateError(`"${target.word}" is too long to unscramble`);
+    const split = spellingSplit(target, ctx);
+    return {
+      type: "WORD_BUILDER",
+      prompt: "Unscramble the word",
+      promptSpeech: `Unscramble the letters to spell ${target.word}.`,
+      word: target.word,
+      area: "spelling",
+      spellingActivity: "SCRAMBLED_WORD",
+      content: {
+        mode: "scrambled",
+        emoji: target.emoji || undefined,
+        speech: target.word,
+        tiles: seededShuffle([...text], ctx.seed, true),
+        slots: text.length,
+        demonstrateBlend: false,
+        split,
+        hints: spellingHints(target, ctx, split),
+      },
+      answer: { accepted: [text] },
+    };
+  },
+
+  // MISSING_LETTER: one letter is missing (a vowel by default); choose it.
+  spelling_missing_letter(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    needSpelling(target);
+    const split = spellingSplit(target, ctx);
+    const base = TEMPLATES.word_missing_letter(params, ctx);
+    return {
+      ...base,
+      area: "spelling",
+      spellingActivity: "MISSING_LETTER",
+      content: { ...base.content, mode: "letter", split, hints: spellingHints(target, ctx, split).slice(0, 2) },
+    };
+  },
+
+  // MISSING_SOUND: the letters of one sound are missing (the focus pattern, or the tricky
+  // part of an irregular word); hear that sound and choose its letters (_ip: sh / ch / s).
+  missing_sound(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    const spelling = needSpelling(target);
+    const segments = needSegments(target);
+    const split = spellingSplit(target, ctx);
+    const tricky = spelling.irregularPositions;
+    const position = optStr(params, "position");
+    const sounding = segments.map((g, i) => (g.phonemes.length > 0 ? i : -1)).filter((i) => i >= 0);
+    let index =
+      position === "first"
+        ? (sounding[0] ?? -1)
+        : position === "last"
+          ? (sounding.at(-1) ?? -1)
+          : tricky.length === 1
+            ? tricky[0]
+            : segments.findIndex((g) => g.patternCode === spelling.focusPattern);
+    if (index < 0) index = segments.findIndex((g) => g.grapheme.length > 1 && g.phonemes.length > 0);
+    if (index < 0) index = segments.findIndex((g) => VOWEL_TILES.includes(g.grapheme));
+    if (index < 0) throw new TemplateError(`"${target.word}" has no sound to leave out`);
+    const missing = segments[index];
+    const before = segments.slice(0, index).map((g) => g.grapheme).join("");
+    const after = segments.slice(index + 1).map((g) => g.grapheme).join("");
+    const choices = seededShuffle([missing.grapheme, ...confusables(missing.grapheme, ctx.seed, 2)], ctx.seed);
+    const label = soundLabelFor(ctx, missing.phonemes, missing.grapheme);
+    const where = position === "first" ? "first" : position === "last" ? "last" : "missing";
+    return {
+      type: "MISSING_LETTER",
+      prompt: where === "missing" ? "Which letters make the missing sound?" : `Which letter makes the ${where} sound?`,
+      promptSpeech:
+        where === "missing"
+          ? `${target.word}. Which letters make the missing sound?`
+          : `${target.word}. Which letter makes the ${where} sound in ${target.word}?`,
+      word: target.word,
+      area: "spelling",
+      spellingActivity: "MISSING_SOUND",
+      content: {
+        word: target.word,
+        emoji: target.emoji || undefined,
+        mode: "sound",
+        ...(missing.phonemes.length > 0 && tricky.length === 0 ? { sound: { label, sayAs: missing.sayAs || label } } : {}),
+        parts: [...(before ? [{ text: before }] : []), { blank: true }, ...(after ? [{ text: after }] : [])],
+        choices,
+        split,
+        hints: spellingHints(target, ctx, split).slice(0, 2),
+      },
+      answer: { accepted: [missing.grapheme] },
+    };
+  },
+
+  // WORD_TO_SOUNDS: break the word into its sounds (segment_word, recorded as spelling).
+  word_to_sounds(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    const spelling = needSpelling(target);
+    if (spelling.irregularPositions.length > 0)
+      throw new TemplateError(`"${target.word}" is irregular: use it for tricky-part practice`);
+    return { ...TEMPLATES.segment_word({ word: target.word }, ctx), spellingActivity: "WORD_TO_SOUNDS" };
+  },
+
+  // SENTENCE_DICTATION: hear a sentence with the word, write it. Capitals and the end mark
+  // are checked when the level asks for them (spelling rules: sentencePunctuation).
+  sentence_dictation(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    needSpelling(target);
+    const sentence = spellingSentence(target, optStr(params, "sentence"));
+    const words = sentence.trim().split(/\s+/);
+    if (words.length > 12) throw new TemplateError("a dictation sentence has at most 12 words");
+    const requirePunctuation =
+      typeof params.requirePunctuation === "boolean"
+        ? params.requirePunctuation
+        : (ctx.spellingLevel?.sentencePunctuation ?? false);
+    return {
+      type: "SENTENCE_DICTATION",
+      prompt: "Write the sentence you hear.",
+      promptSpeech: sentence,
+      sentence,
+      spellingActivity: "SENTENCE_DICTATION",
+      content: {
+        speech: sentence,
+        emoji: target.emoji || undefined,
+        wordCount: words.length,
+        hints: [
+          { kind: "first_sound", text: `It starts with “${words[0]}”.`, speech: `It starts with ${words[0]}.` },
+          { kind: "letters", text: `It has ${words.length} words.`, speech: `It has ${words.length} words.` },
+          ...(requirePunctuation
+            ? [
+                {
+                  kind: "custom",
+                  text: "Start with a capital letter. End with a full stop.",
+                  speech: "Start with a capital letter, and end with a full stop.",
+                },
+              ]
+            : []),
+        ],
+      },
+      answer: { accepted: [sentence], requirePunctuation },
+    };
+  },
+} satisfies Record<string, Expander>);
 
 export function expandTemplate(name: string, params: Params, ctx: TemplateContext): ExpandedQuestion {
   const expander = TEMPLATES[name];

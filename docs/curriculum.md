@@ -41,6 +41,10 @@ Original, age-appropriate content covering KG1–Grade 2:
   into graphemes and phonemes (1,422 segments), 20 extra word levels, 393 curated example
   sentences, 41 typed relations, 13 word families (-at, -an, -ap, -ip, -in, -ig, -op, -ot,
   -og, -ug, -et, -en, -ed; 47 members), 25 sight words, 21 sentences, 4 original stories.
+- Spelling (Phase 6): 14 spelling types, 136 spelling targets across KG1–Grade 2 (every
+  one a word of the bank; 18 high-frequency words were added to the bank for them), 18
+  spelling skills and 23 spelling lessons (`spelling_set` blueprint, 456 questions) in one
+  SPELLING unit per level, and child-friendly feedback for each spelling error category.
 - 96 lessons / 784 activities / 1,113 lesson questions across 25 units — including 21
   vocabulary sets (407 questions) — the "Find My Level" placement (8 stages) and the
   **Phonics Check** (12 areas, 24 questions).
@@ -69,6 +73,7 @@ Files in `content/`:
 | `vocabulary.json`                                    | word families (rime, level, vowel pattern; members found in the word bank)                                                           |
 | `phonics.json`                                       | phonemes, phonics stages, patterns with their sounds (as phonemes) and relations                                                     |
 | `words/*.csv`                                        | the word bank (same format as bulk imports, below)                                                                                   |
+| `spelling/*.csv`                                     | spelling targets: which words are spelled at which level, and their spelling data (below)                                            |
 | `sight-words.json`, `sentences.json`, `stories.json` | lists by level                                                                                                                       |
 | `curriculum/*.json`                                  | one file per level: units → skills → lessons → activities → questions                                                                |
 | `assessments.json`                                   | assessments by stage                                                                                                                 |
@@ -115,6 +120,68 @@ never the word, a synonym, a word with the same picture or a word above the chil
 and the same category from Grade 1 (harder); look-alike spellings for recognition; another
 part of speech for "which sentence makes sense?" ("The girl is table."). A question that
 cannot get suitable distractors is reported invalid — never filled with random words.
+
+### Spelling sets (Phase 6)
+
+A spelling lesson is one `spelling_set` blueprint with 3–8 spelling targets (words listed
+in `content/spelling/*.csv`). It follows the spelling flow **Listen → Look → Segment →
+Build → Spell → Check → Understand the mistake → Retry → Use it in a sentence → Mini
+assessment**; check / understand / retry happen inside every spelling step (up to three
+tries: the mistake is named, the child's letters are marked, hints can be opened):
+
+| Level | Activities                                                                                                                                                                          |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| KG1   | getting ready to spell: listen & look → first sound (tap its letter) → sounds to word (choose) → build with letter tiles → check — no typing yet                                    |
+| KG2   | listen & look → sound it out (WORD_TO_SOUNDS) → build → middle vowel and last sound → spell each word → sounds to word (choose) → fix the jumble (SCRAMBLED_WORD) → dictation check |
+| KG3+  | missing sound (the pattern) instead of missing letter; sounds to word is written from Grade 1; sentence dictation where the level's rules say so                                    |
+
+The check at the end is dictation with one try. `"tricky": true` (irregular and
+high-frequency words) leaves out the activities built on a word's sounds and practises the
+tricky part instead ("s\_\_d": ai / ay / e). Which activities a level gets, its input method
+(letter tiles for KG1–KG2, the child keyboard for KG3–Grade 1, the keyboard for Grade 2),
+hints per question (4 for KG1–KG3, 3 later), dictation replays (no limit → 5 → 4 → 3), sentence dictation and
+whether capitals and full stops are checked (Grade 2) are spelling rules
+(`src/lib/learning/rules.ts` → `spelling.levels`, overridable in `learning_rules`), not
+code in the screens. An activity's config (`input`, `maxHints`, `replayLimit`,
+`slowReplay`, `maxTries`) wins over the level.
+
+Spelling templates (every word must be a spelling target):
+
+| Template                  | Activity           | Produces                                                                                                       |
+| ------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `spelling_intro`          | (listen & look)    | INTRO: the word, its graphemes (sh · i · p), the pattern or the tricky part                                    |
+| `listen_and_type`         | LISTEN_AND_TYPE    | SPELLING, mode listen: picture + word to hear, write it                                                        |
+| `dictation_word`          | DICTATION          | SPELLING, mode dictation: the word only, limited replays                                                       |
+| `sound_to_word`           | SOUND_TO_WORD      | hear the phonemes, then choose the word (BLEND_SOUNDS, up to KG3) or write it (SPELLING mode sounds, Grade 1+) |
+| `build_the_word`          | BUILD_THE_WORD     | WORD_BUILDER from grapheme tiles plus look-alikes (sh / s / ch)                                                |
+| `scrambled_word`          | SCRAMBLED_WORD     | WORD_BUILDER, mode scrambled: the word's letters mixed up                                                      |
+| `spelling_missing_letter` | MISSING_LETTER     | MISSING_LETTER: one letter missing                                                                             |
+| `missing_sound`           | MISSING_SOUND      | MISSING_LETTER, mode sound: the letters of one sound (or the tricky part)                                      |
+| `word_to_sounds`          | WORD_TO_SOUNDS     | SEGMENT_WORD                                                                                                   |
+| `sentence_dictation`      | SENTENCE_DICTATION | SENTENCE_DICTATION: hear the word's sentence, write it                                                         |
+
+Each spelling question carries the word's split, generated progressive hints (listen again → say it slowly → how many sounds? → the tricky part / the pattern / the first letter; authored hints come before the last one; never the whole word) and letter tiles for tile input. Speech input is not implemented (a future
+feature; no third-party service).
+
+### Spelling targets (CSV)
+
+`content/spelling/*.csv` — required `word, level, spelling_type, difficulty`; optional
+`skill` (a spelling skill code), `phonics_pattern` (the focus pattern), `audio` (a
+recording's storage path), `example_sentence` (for dictation; default the word's own),
+`is_high_frequency`, `is_irregular`, `irregular_part` (the part that breaks the rule, as
+written: `ai` in said), `hints` (`|`), `common_errors` (`;`), `tags` (`;`), `sense`, `status`.
+The word must already be in the word bank — spelling data never creates or copies a word,
+and not every vocabulary word is a spelling target. The importer refuses unknown words,
+levels, types, patterns and skills and an irregular part that is not in the word, and
+flags (for admin review) a focus pattern the word's split does not use, a type or length
+outside the level's spelling progression and a sentence without the word.
+
+```
+npm run content:import -- --spelling path/to/spelling.csv [--dry-run]
+```
+
+The report lists **Created, Updated, Skipped, Invalid, Duplicates** (and Archived on a full
+import of `content/`).
 
 ### Question templates
 
@@ -232,6 +299,30 @@ first try (14 days) and saved words at their review date are review items. Child
 0–3 stars per word; parents see words learned (≥ 2 first-try right answers), practised and
 mastered, weak areas and categories (only with ≥ 6 answers), words to practise and recent
 words.
+
+### Spelling mastery and mistakes
+
+Spelling a word is tracked apart from knowing it: `spelling_progress` uses the same
+mastery model on the word's spelling first tries (build, type, dictation, missing
+letter/sound, scrambled, sounds to word) with a spelling evidence target
+(`spelling.fullEvidenceAttempts` = 4); only answers right **without a hint** count as
+independent spelling, so MASTERED means spelled alone, several times, on two days. Every
+wrong spelling gets one category, decided by fixed rules in this order: empty → UNKNOWN;
+two letters swapped or the right letters in another order → TRANSPOSITION; only the
+irregular part wrong → PHONETIC_APPROXIMATION ("sed"); one doubled / undoubled letter →
+EXTRA / MISSING_LETTER; same sounds by the taught spellings ("kat", "fone", "bote") →
+PHONETIC_APPROXIMATION; more than half the word changed → UNKNOWN; every change in one kind
+of grapheme → WRONG_ENDING / WRONG_DIGRAPH / WRONG_BLEND (neighbouring consonants: st, fr,
+mp) / WRONG_VOWEL (vowel letters, vowel teams, r-controlled vowels, magic e); otherwise
+MISSING / EXTRA / SUBSTITUTED_LETTER by the kind of change, or UNKNOWN. Sentence dictation
+adds WORD_ORDER, MISSING_WORD, EXTRA_WORD and PUNCTUATION.
+
+Review: a spelling target missed on its latest spelling first try (14 days), weak (≥ 3
+answers, accuracy < 70%) or practised but not mastered (at its next review date) is a
+`spelling:` review item; a phonics pattern misspelled at least twice in 14 days (ship → sip,
+fish → fis) is one `pattern:` item pointing at that pattern's phonics lesson, resolved
+after two right spellings of words with that pattern. For spelling targets the word's
+vocabulary review ignores spelling answers, so one miss is reviewed once.
 
 ## Prerequisites
 

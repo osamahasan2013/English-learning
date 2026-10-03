@@ -1,0 +1,137 @@
+word,level,skill,spelling_type,difficulty,phonics_pattern,is_high_frequency,is_irregular,irregular_part,hints,common_errors,example_sentence,tags
+cat,KG1,kg1-spell-cvc,CVC,1,LETTER_A,no,no,,,kat;ct,,cvc;short-a
+hat,KG1,kg1-spell-cvc,CVC,1,LETTER_A,no,no,,,ht,,cvc;short-a
+dog,KG1,kg1-spell-cvc,CVC,1,LETTER_O,no,no,,,dg;dug,,cvc;short-o
+sun,KG1,kg1-spell-cvc,CVC,1,LETTER_U,no,no,,,sn;son,,cvc;short-u
+pig,KG1,kg1-spell-cvc,CVC,1,LETTER_I,no,no,,,pg;peg,,cvc;short-i
+cup,KG1,kg1-spell-cvc,CVC,1,LETTER_U,no,no,,,kup;cp,,cvc;short-u
+net,KG1,kg1-spell-cvc,CVC,1,LETTER_E,no,no,,,nt;nit,,cvc;short-e
+bus,KG1,kg1-spell-cvc,CVC,1,LETTER_U,no,no,,,bs;buz,,cvc;short-u
+bag,KG2,kg2-spell-cvc,CVC,1,LETTER_A,no,no,,,bg;beg,,cvc;short-a
+bed,KG2,kg2-spell-cvc,CVC,1,LETTER_E,no,no,,,bd;bid,,cvc;short-e
+big,KG2,kg2-spell-cvc,CVC,1,LETTER_I,no,no,,,bg;beg,,cvc;short-i
+hot,KG2,kg2-spell-cvc,CVC,1,LETTER_O,no,no,,,ht;hut,,cvc;short-o
+mug,KG2,kg2-spell-cvc,CVC,1,LETTER_U,no,no,,,mg;mog,,cvc;short-u
+pen,KG2,kg2-spell-cvc,CVC,1,LETTER_E,no,no,,,pn;pin,,cvc;short-e
+map,KG2,kg2-spell-cvc,CVC,2,LETTER_A,no,no,,,mp;mop,,cvc;short-a
+leg,KG2,kg2-spell-cvc,CVC,2,LETTER_E,no,no,,,lg;lig,,cvc;short-e
+pot,KG2,kg2-spell-cvc,CVC,2,LETTER_O,no,no,,,pt;put,,cvc;short-o
+run,KG2,kg2-spell-cvc,CVC,2,LETTER_U,no,no,,,rn;ran,,cvc;short-u
+ten,KG2,kg2-spell-cvc,CVC,2,LETTER_E,no,no,,,tn;tin,,cvc;short-e
+zip,KG2,kg2-spell-cvc,CVC,2,LETTER_I,no,no,,,zp;sip,,cvc;short-i
+the,KG2,kg2-spell-tricky,HIGH_FREQUENCY,1,TH,yes,yes,e,The e here says uh.,thu;da,,tricky
+and,KG2,kg2-spell-tricky,HIGH_FREQUENCY,1,,yes,no,,,an;nd,,
+is,KG2,kg2-spell-tricky,HIGH_FREQUENCY,1,,yes,yes,s,The s here says z.,iz,,tricky
+see,KG2,kg2-spell-tricky,HIGH_FREQUENCY,1,EE,yes,no,,Two e letters say ee.,se;sea,,
+go,KG2,kg2-spell-tricky,HIGH_FREQUENCY,1,,yes,no,,,goe,,
+my,KG2,kg2-spell-tricky,HIGH_FREQUENCY,1,LETTER_Y,yes,no,,The y here says eye.,mi;mie,,
+in,KG2,kg2-spell-hf,HIGH_FREQUENCY,1,LETTER_I,yes,no,,,en,,
+at,KG2,kg2-spell-hf,HIGH_FREQUENCY,1,LETTER_A,yes,no,,,et,,
+he,KG2,kg2-spell-hf,HIGH_FREQUENCY,1,,yes,no,,,hee,,
+me,KG2,kg2-spell-hf,HIGH_FREQUENCY,1,,yes,no,,,mee,,
+no,KG2,kg2-spell-hf,HIGH_FREQUENCY,1,,yes,no,,,noe;know,,
+so,KG2,kg2-spell-hf,HIGH_FREQUENCY,1,,yes,no,,,soe;sow,,
+ship,KG3,kg3-spell-digraphs,DIGRAPH,2,SH,no,no,,,sip;chip,,digraph;sh
+shop,KG3,kg3-spell-digraphs,DIGRAPH,2,SH,no,no,,,sop;chop,,digraph;sh
+fish,KG3,kg3-spell-digraphs,DIGRAPH,2,SH,no,no,,,fis;fich,,digraph;sh
+dish,KG3,kg3-spell-digraphs,DIGRAPH,2,SH,no,no,,,dis;dich,,digraph;sh
+chip,KG3,kg3-spell-digraphs,DIGRAPH,2,CH,no,no,,,ship;cip,,digraph;ch
+chin,KG3,kg3-spell-digraphs,DIGRAPH,2,CH,no,no,,,shin;cin,,digraph;ch
+thin,KG3,kg3-spell-digraphs,DIGRAPH,3,TH,no,no,,,fin;tin,,digraph;th
+bath,KG3,kg3-spell-digraphs,DIGRAPH,3,TH,no,no,,,baf;bat,,digraph;th
+this,KG3,kg3-spell-digraphs,DIGRAPH,3,TH,yes,no,,,dis;thiz,,digraph;th
+whip,KG3,kg3-spell-digraphs,DIGRAPH,3,WH,no,no,,,wip,,digraph;wh
+rock,KG3,kg3-spell-digraphs,DIGRAPH,3,CK,no,no,,,rok;rokc,,digraph;ck
+ring,KG3,kg3-spell-digraphs,DIGRAPH,3,NG,no,no,,,rin;ringk,,digraph;ng
+bat,KG3,kg3-spell-families,CVC,2,LETTER_A,no,no,,,bt;bet,,family;-at
+rat,KG3,kg3-spell-families,CVC,2,LETTER_A,no,no,,,rt;rot,,family;-at
+bug,KG3,kg3-spell-families,CVC,2,LETTER_U,no,no,,,bg;bag,,family;-ug
+hug,KG3,kg3-spell-families,CVC,2,LETTER_U,no,no,,,hg;hog,,family;-ug
+jet,KG3,kg3-spell-families,CVC,2,LETTER_E,no,no,,,jt;jit,,family;-et
+wet,KG3,kg3-spell-families,CVC,2,LETTER_E,no,no,,,wt;wit,,family;-et
+frog,KG3,kg3-spell-blends,CCVC,3,FR,no,no,,,fog;forg,,blend
+stop,KG3,kg3-spell-blends,CCVC,3,ST,no,no,,,sop;sotp,,blend
+clap,KG3,kg3-spell-blends,CCVC,3,CL,no,no,,,cap;klap,,blend
+flag,KG3,kg3-spell-blends,CCVC,3,FL,no,no,,,fag;falg,,blend
+grass,KG3,kg3-spell-blends,CCVC,3,GR,no,no,,,gras;gass,,blend
+clock,KG3,kg3-spell-blends,CCVC,3,CL,no,no,,,klok;cock,,blend
+lamp,KG3,kg3-spell-blends,CVCC,3,,no,no,,,lap;lamb,,blend;final-blend
+hand,KG3,kg3-spell-blends,CVCC,3,,no,no,,,han;had,,blend;final-blend
+tent,KG3,kg3-spell-blends,CVCC,3,,no,no,,,tet;ten,,blend;final-blend
+milk,KG3,kg3-spell-blends,CVCC,3,,no,no,,,mik;mil,,blend;final-blend
+desk,KG3,kg3-spell-blends,CVCC,3,,no,no,,,des;dek,,blend;final-blend
+fast,KG3,kg3-spell-blends,CVCC,3,,no,no,,,fas;fat,,blend;final-blend
+said,KG3,kg3-spell-tricky,IRREGULAR,3,,yes,yes,ai,Say it in a funny way: s-ai-d.,sed;siad,,tricky
+was,KG3,kg3-spell-tricky,IRREGULAR,3,,yes,yes,as,,wuz;woz,,tricky
+they,KG3,kg3-spell-tricky,IRREGULAR,3,,yes,yes,ey,,thay;thei,,tricky
+have,KG3,kg3-spell-tricky,IRREGULAR,3,,yes,yes,e,Have ends with a silent e.,hav,,tricky
+come,KG3,kg3-spell-tricky,IRREGULAR,3,,yes,yes,ome,,cum;kum,,tricky
+are,KG3,kg3-spell-tricky,IRREGULAR,3,,yes,yes,e,Are ends with a silent e.,ar,,tricky
+cake,GRADE1,g1-spell-magic-e,LONG_VOWEL,3,A_E,no,no,,,cak;caek,,magic-e
+gate,GRADE1,g1-spell-magic-e,LONG_VOWEL,3,A_E,no,no,,,gat;gait,,magic-e
+bike,GRADE1,g1-spell-magic-e,LONG_VOWEL,3,I_E,no,no,,,bik;bicke,,magic-e
+home,GRADE1,g1-spell-magic-e,LONG_VOWEL,3,O_E,no,no,,,hom;hoam,,magic-e
+nose,GRADE1,g1-spell-magic-e,LONG_VOWEL,3,O_E,no,no,,,nos;noze,,magic-e
+cube,GRADE1,g1-spell-magic-e,LONG_VOWEL,3,U_E,no,no,,,cub;kube,,magic-e
+rain,GRADE1,g1-spell-vowel-teams,VOWEL_TEAM,4,AI,no,no,,,ran;rane,,vowel-team
+mail,GRADE1,g1-spell-vowel-teams,VOWEL_TEAM,4,AI,no,no,,,mal;male,,vowel-team
+play,GRADE1,g1-spell-vowel-teams,VOWEL_TEAM,4,AY,no,no,,,pla;plai,,vowel-team
+feet,GRADE1,g1-spell-vowel-teams,VOWEL_TEAM,4,EE,no,no,,,fet;feat,,vowel-team
+seed,GRADE1,g1-spell-vowel-teams,VOWEL_TEAM,4,EE,no,no,,,sed;sead,,vowel-team
+sleep,GRADE1,g1-spell-vowel-teams,VOWEL_TEAM,4,EE,no,no,,,slep;seep,,vowel-team
+boat,GRADE1,g1-spell-vowel-teams,VOWEL_TEAM,4,OA,no,no,,,bot;bote,,vowel-team
+soap,GRADE1,g1-spell-vowel-teams,VOWEL_TEAM,4,OA,no,no,,,sop;sope,,vowel-team
+leaf,GRADE1,g1-spell-vowel-teams,VOWEL_TEAM,4,EA,no,no,,,lef;leef,,vowel-team
+moon,GRADE1,g1-spell-vowel-teams,VOWEL_TEAM,4,OO,no,no,,,mon;mune,,vowel-team
+coin,GRADE1,g1-spell-vowel-teams,VOWEL_TEAM,4,OI,no,no,,,con;coyn,,vowel-team
+boy,GRADE1,g1-spell-vowel-teams,VOWEL_TEAM,4,OY,no,no,,,boi;by,,vowel-team
+star,GRADE1,g1-spell-r-controlled,R_CONTROLLED,4,AR,no,no,,,sar;stor,,r-controlled
+car,GRADE1,g1-spell-r-controlled,R_CONTROLLED,4,AR,no,no,,,kar;cr,,r-controlled
+horn,GRADE1,g1-spell-r-controlled,R_CONTROLLED,4,OR,no,no,,,hon;harn,,r-controlled
+short,GRADE1,g1-spell-r-controlled,R_CONTROLLED,4,OR,no,no,,,sort;shot,,r-controlled
+fern,GRADE1,g1-spell-r-controlled,R_CONTROLLED,4,ER,no,no,,,furn;fen,,r-controlled
+surf,GRADE1,g1-spell-r-controlled,R_CONTROLLED,4,UR,no,no,,,serf;suf,,r-controlled
+fishing,GRADE1,g1-spell-endings,WORD_ENDING,5,ING,no,no,,,fishin;fising,,ending
+kicking,GRADE1,g1-spell-endings,WORD_ENDING,5,ING,no,no,,,kickin;kiking,,ending
+helped,GRADE1,g1-spell-endings,WORD_ENDING,5,ED,no,no,,,helpt;help,,ending
+rained,GRADE1,g1-spell-endings,WORD_ENDING,5,ED,no,no,,,raind;ranned,,ending
+dishes,GRADE1,g1-spell-endings,WORD_ENDING,5,ES,no,no,,,dishs;dishis,,ending
+foxes,GRADE1,g1-spell-endings,WORD_ENDING,5,ES,no,no,,,foxs;foxis,,ending
+what,GRADE1,g1-spell-tricky,HIGH_FREQUENCY,4,WH,yes,yes,a,,wot;wat,,tricky
+where,GRADE1,g1-spell-tricky,HIGH_FREQUENCY,4,WH,yes,yes,ere,Where has here inside it.,wer;wear,,tricky
+there,GRADE1,g1-spell-tricky,HIGH_FREQUENCY,4,TH,yes,yes,ere,There has here inside it.,ther;thair,,tricky
+were,GRADE1,g1-spell-tricky,HIGH_FREQUENCY,4,,yes,yes,ere,,wer;wur,,tricky
+she,GRADE1,g1-spell-tricky,HIGH_FREQUENCY,3,SH,yes,no,,,shee;se,,
+of,GRADE1,g1-spell-tricky,IRREGULAR,4,,yes,yes,of,Of is spelled o-f but says uv.,uv;ov,,tricky
+do,GRADE1,g1-spell-tricky,IRREGULAR,3,,yes,yes,o,,doo;du,,tricky
+some,GRADE1,g1-spell-tricky,IRREGULAR,4,,yes,yes,ome,Some ends with a silent e.,sum;som,,tricky
+rabbit,GRADE2,g2-spell-multisyllable,MULTISYLLABIC,5,,no,no,,Two parts: rab and bit.,rabit;rabbet,,two-syllables
+kitten,GRADE2,g2-spell-multisyllable,MULTISYLLABIC,5,,no,no,,Two parts: kit and ten.,kiten;kittin,,two-syllables
+picnic,GRADE2,g2-spell-multisyllable,MULTISYLLABIC,5,,no,no,,Two parts: pic and nic.,picnik;piknik,,two-syllables
+napkin,GRADE2,g2-spell-multisyllable,MULTISYLLABIC,5,,no,no,,Two parts: nap and kin.,napken;nabkin,,two-syllables
+sunset,GRADE2,g2-spell-multisyllable,MULTISYLLABIC,5,,no,no,,Two parts: sun and set.,sunsit;sunet,,two-syllables
+pumpkin,GRADE2,g2-spell-multisyllable,MULTISYLLABIC,6,,no,no,,Two parts: pump and kin.,pumkin;punkin,,two-syllables
+helpful,GRADE2,g2-spell-suffixes,WORD_ENDING,6,FUL,no,no,,,helpfull;helpfl,,suffix
+playful,GRADE2,g2-spell-suffixes,WORD_ENDING,6,FUL,no,no,,,playfull;plaful,,suffix
+sadness,GRADE2,g2-spell-suffixes,WORD_ENDING,6,NESS,no,no,,,sadnes;sadniss,,suffix
+kindness,GRADE2,g2-spell-suffixes,WORD_ENDING,6,NESS,no,no,,,kindnes;kinness,,suffix
+action,GRADE2,g2-spell-suffixes,WORD_ENDING,6,TION,no,no,,,akshun;acshon,,suffix
+station,GRADE2,g2-spell-suffixes,WORD_ENDING,6,TION,no,no,,,stashun;stasion,,suffix
+jumped,GRADE2,g2-spell-endings,WORD_ENDING,5,ED,no,no,,,jumpt;jumpd,,ending
+jumping,GRADE2,g2-spell-endings,WORD_ENDING,5,ING,no,no,,,jumpin;jumpping,,ending
+played,GRADE2,g2-spell-endings,WORD_ENDING,5,ED,no,no,,,plaid;playd,,ending
+painted,GRADE2,g2-spell-endings,WORD_ENDING,5,ED,no,no,,,paintid;panted,,ending
+singing,GRADE2,g2-spell-endings,WORD_ENDING,5,ING,no,no,,,singin;sining,,ending
+boxes,GRADE2,g2-spell-endings,WORD_ENDING,5,ES,no,no,,,boxs;boxis,,ending
+bird,GRADE2,g2-spell-r-controlled,R_CONTROLLED,5,IR,no,no,,,burd;berd,,r-controlled
+girl,GRADE2,g2-spell-r-controlled,R_CONTROLLED,5,IR,no,no,,,gurl;gerl,,r-controlled
+shirt,GRADE2,g2-spell-r-controlled,R_CONTROLLED,5,IR,no,no,,,shurt;shert,,r-controlled
+fork,GRADE2,g2-spell-r-controlled,R_CONTROLLED,5,OR,no,no,,,fok;fark,,r-controlled
+corn,GRADE2,g2-spell-r-controlled,R_CONTROLLED,5,OR,no,no,,,con;korn,,r-controlled
+storm,GRADE2,g2-spell-r-controlled,R_CONTROLLED,5,OR,no,no,,,stom;sturm,,r-controlled
+because,GRADE2,g2-spell-tricky,IRREGULAR,7,,yes,yes,au,Be + cause: the au says aw.,becos;becuz,,tricky
+friend,GRADE2,g2-spell-tricky,IRREGULAR,6,FR,yes,yes,ie,A friend is with you to the end: fri + end.,frend;freind,,tricky
+could,GRADE2,g2-spell-tricky,IRREGULAR,6,,yes,yes,oul,,cud;coud,,tricky
+would,GRADE2,g2-spell-tricky,IRREGULAR,6,,yes,yes,oul,,wud;woud,,tricky
+school,GRADE2,g2-spell-tricky,IRREGULAR,6,,yes,yes,ch,The ch in school says k.,skool;scool,,tricky
+water,GRADE2,g2-spell-tricky,IRREGULAR,5,,yes,yes,a,,woter;wotter,,tricky

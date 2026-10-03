@@ -31,6 +31,13 @@ import { recordEvent } from "@/lib/offline/outbox";
 import { currentSessionId } from "@/lib/offline/session-store";
 import { cn } from "@/lib/utils";
 import { newId } from "@/lib/uuid";
+import {
+  analyzeStepAnswer,
+  HintBox,
+  SpellingMistake,
+  spellingErrorMessage,
+  stepHints,
+} from "./spelling-help";
 
 // The reusable lesson player: Intro → Activities → Summary for any lesson, whatever its
 // activity types (each step is drawn by the renderer registered for its type).
@@ -138,6 +145,8 @@ function LessonRun({
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [confirmExit, setConfirmExit] = useState(false);
   const [checking, setChecking] = useState(false);
+  // Spelling hints opened per question (reported with each answer as hintsUsed).
+  const [hintsShown, setHintsShown] = useState<Record<string, number>>({});
   const shownAt = useRef(0);
   const runRecorded = useRef(false);
   const { speak: play, supported: audioSupported } = useAudio();
@@ -240,6 +249,7 @@ function LessonRun({
       attemptNumber,
       response,
       responseTimeMs,
+      hintsUsed: hintsShown[step.questionId] ?? 0,
       attemptedAt: new Date().toISOString(),
     }).then(() => notifyQueued());
     const result = await checkWithKey(step.question.type, step.answerKey, response);
@@ -263,7 +273,15 @@ function LessonRun({
       pickFeedback(payload.feedback, kind, state.index + attemptNumber, { hasAnswer: !!answer }),
       { answer },
     );
-    void speak(message.speech);
+    // A spelling mistake is also named ("Two letters make that sound!").
+    const mistake = result.isCorrect
+      ? null
+      : spellingErrorMessage(
+          analyzeStepAnswer(step, response),
+          payload.feedback,
+          state.index + attemptNumber,
+        );
+    void speak(mistake ? `${message.speech} ${mistake.speech}` : message.speech);
   }
 
   if (state.screen === "intro") {
@@ -377,12 +395,23 @@ function LessonRun({
         )}
       </section>
 
+      {step.scored && view.phase === "answering" && !view.reviewing && stepHints(step).length > 0 ? (
+        <HintBox
+          key={step.questionId}
+          step={step}
+          shown={hintsShown[step.questionId] ?? 0}
+          onShow={(count) => setHintsShown((all) => ({ ...all, [step.questionId]: count }))}
+          speak={speak}
+        />
+      ) : null}
+
       <FeedbackBar
         step={step}
         payload={payload}
         seed={state.index + view.attemptNumber}
         phase={view.phase}
         feedback={view.feedback}
+        response={view.response}
         reveal={reveal}
         reviewing={view.reviewing}
         canGoBack={canGoBack(state)}
@@ -498,6 +527,7 @@ function FeedbackBar({
   seed,
   phase,
   feedback,
+  response,
   reveal,
   reviewing,
   canGoBack: back,
@@ -511,6 +541,7 @@ function FeedbackBar({
   seed: number;
   phase: string;
   feedback: FeedbackKind | null;
+  response: QuestionResponse | null;
   reveal: Reveal | null;
   reviewing: boolean;
   canGoBack: boolean;
@@ -526,8 +557,11 @@ function FeedbackBar({
   ) : null;
 
   if (!step.scored || (phase === "answering" && !feedback)) {
+    // Only a bar with "Next" stays pinned; while answering, Back must not cover the
+    // answer area (the child keyboard's Delete and Check keys on a phone).
+    const pinned = !step.scored || reviewing;
     return (
-      <div className="sticky bottom-4 flex justify-center gap-3">
+      <div className={cn("flex justify-center gap-3", pinned && "sticky bottom-4")}>
         {previous}
         {!step.scored || reviewing ? (
           <Button size="xl" onClick={onNext}>
@@ -550,6 +584,13 @@ function FeedbackBar({
         ? "bg-warning-soft text-warning"
         : "bg-accent-soft text-accent";
   const showExplanation = step.explanation && (kind === "CORRECT" || kind === "INCORRECT");
+  // Spelling: name the mistake and show the child's letters (the right word only once the
+  // answer is revealed).
+  const analysis =
+    kind !== "CORRECT" && (phase === "retry" || phase === "reveal")
+      ? analyzeStepAnswer(step, response)
+      : null;
+  const mistake = analysis && !analysis.correct ? analysis : null;
 
   return (
     <div
@@ -586,6 +627,16 @@ function FeedbackBar({
           )}
         </div>
       </div>
+      {mistake ? (
+        <div className="bg-surface text-foreground rounded-3xl p-4">
+          <SpellingMistake
+            step={step}
+            analysis={mistake}
+            message={spellingErrorMessage(mistake, payload.feedback, seed)}
+            revealed={phase === "reveal"}
+          />
+        </div>
+      ) : null}
       {showExplanation ? <p className="text-xl font-semibold">{step.explanation}</p> : null}
     </div>
   );
@@ -696,8 +747,10 @@ function LessonSummary({
             href={practice.returnHref}
             className="bg-accent inline-flex min-h-20 items-center gap-2 rounded-3xl px-8 text-2xl font-semibold text-white"
           >
-            <span aria-hidden>{practice.kind === "word" ? "🔙" : "📚"}</span>{" "}
-            {practice.kind === "word" ? "Back to the word" : "My Words"}
+            <span aria-hidden>
+              {practice.kind === "word" ? "🔙" : practice.kind === "my_words" ? "📚" : "✏️"}
+            </span>{" "}
+            {practice.returnLabel ?? (practice.kind === "word" ? "Back to the word" : "My Words")}
           </Link>
         ) : null}
         <Button size="xl" variant="secondary" onClick={onPlayAgain}>

@@ -23,6 +23,8 @@ export const attemptEventSchema = z.object({
   sessionId: uuid.nullable().optional(),
   attemptNumber: z.number().int().min(1).max(5),
   response: responseSchema,
+  // Hints opened before answering (spelling). Optional so older queued events still sync.
+  hintsUsed: z.number().int().min(0).max(5).optional(),
   responseTimeMs: z.number().int().min(0).max(3_600_000),
   attemptedAt: timestamp,
 });

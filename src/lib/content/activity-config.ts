@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { INPUT_METHODS, type InputMethod } from "@/lib/learning/rules";
 
 // Structured configuration for an activity (activities.config). Every activity type has
 // a strict schema: unknown keys and wrong values are rejected by the importer before
@@ -18,15 +19,28 @@ export const passageSchema = z.object({
 
 const baseConfigSchema = z.object(common).strict();
 
+// Spelling activities can choose their input method, hints and dictation replays; anything
+// left out comes from the level's spelling rules (rules.ts → spelling.levels).
+const spellingConfigSchema = z
+  .object({
+    ...common,
+    input: z.enum(INPUT_METHODS).optional(),
+    replayLimit: z.number().int().min(1).max(10).optional(),
+    slowReplay: z.boolean().optional(),
+    maxHints: z.number().int().min(0).max(4).optional(),
+  })
+  .strict();
+
 export const activityConfigSchemas = {
   INTRO: z.object({}).strict(),
   MULTIPLE_CHOICE: baseConfigSchema,
   LISTEN_AND_CHOOSE: baseConfigSchema,
   PICTURE_MATCH: baseConfigSchema,
-  MISSING_LETTER: baseConfigSchema,
-  WORD_BUILDER: baseConfigSchema,
+  MISSING_LETTER: spellingConfigSchema,
+  WORD_BUILDER: spellingConfigSchema,
   SENTENCE_BUILDER: baseConfigSchema,
-  SPELLING: baseConfigSchema,
+  SPELLING: spellingConfigSchema,
+  SENTENCE_DICTATION: spellingConfigSchema,
   MATCH: baseConfigSchema,
   SORT: baseConfigSchema,
   DRAG_DROP: baseConfigSchema,
@@ -43,6 +57,10 @@ export const activityConfigSchemas = {
 export type ActivityConfigType = keyof typeof activityConfigSchemas;
 export type ActivityConfig = {
   maxTries?: number;
+  input?: InputMethod;
+  replayLimit?: number;
+  slowReplay?: boolean;
+  maxHints?: number;
   passage?: z.infer<typeof passageSchema>;
   readAloud?: boolean;
   showModel?: boolean;

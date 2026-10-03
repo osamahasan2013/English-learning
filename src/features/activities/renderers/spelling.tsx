@@ -1,61 +1,86 @@
 "use client";
 
-import { useState } from "react";
 import { AudioControls } from "@/components/child/audio-controls";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import type { QuestionOf, RendererProps } from "../types";
+import { DictationControls } from "./dictation-controls";
+import { SpellingInput } from "./spelling-input";
 
-// Type the word you hear.
+// Write a word. Three ways to hear it (content.mode):
+//   listen    — the picture and the word (Listen / Slow / Again): LISTEN_AND_TYPE
+//   dictation — the word only, with the level's replay limit: DICTATION
+//   sounds    — tap each sound, then write the word they make: SOUND_TO_WORD
+// The input method (keyboard, child keyboard, letter tiles, drag and drop) comes from the
+// step's spelling settings. Hints and the explanation of a mistake are shown by the player.
 export function SpellingRenderer({ step, phase, onAnswer, speak }: RendererProps<QuestionOf<"SPELLING">>) {
   const { content } = step.question;
-  const [value, setValue] = useState("");
   const locked = phase !== "answering";
   // The loader always fills in the word to say (the child has to hear it).
   const word = content.speech ?? "";
+  const settings = step.spelling;
+  const mode = content.mode ?? "listen";
+  const letters = content.split ? content.split.reduce((n, g) => n + g.grapheme.length, 0) : word.length;
+  const state = phase === "correct" ? "right" : phase === "retry" || phase === "reveal" ? "wrong" : "none";
+  const heard = step.promptSpeech.trim().toLowerCase() === word.trim().toLowerCase();
+
+  async function playSounds() {
+    for (const sound of content.sounds ?? []) await speak(sound.sayAs, "slow");
+  }
 
   return (
-    <form
-      className="flex flex-col items-center gap-6"
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (value.trim()) onAnswer({ value });
-      }}
-    >
-      {content.emoji ? (
+    <div className="flex flex-col items-center gap-6">
+      {mode === "listen" && content.emoji ? (
         <span className="text-8xl" aria-hidden>
           {content.emoji}
         </span>
       ) : null}
-      <p className="text-3xl font-extrabold">{step.prompt || "Type the word you hear"}</p>
-      <AudioControls text={word} speak={speak} />
+      <p className="text-center text-3xl font-extrabold">
+        {step.prompt || (mode === "sounds" ? "What word do the sounds make?" : "Type the word you hear")}
+      </p>
+      {mode === "dictation" ? (
+        <DictationControls
+          text={word}
+          speak={speak}
+          limit={settings?.replayLimit ?? null}
+          slow={settings?.slowReplay ?? true}
+          alreadyPlayed={heard ? 1 : 0}
+        />
+      ) : mode === "sounds" ? (
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex flex-wrap justify-center gap-2" role="group" aria-label="Sounds">
+            {(content.sounds ?? []).map((sound, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => void speak(sound.sayAs, "slow")}
+                className="bg-accent-soft text-accent min-h-16 min-w-16 rounded-2xl px-4 text-3xl font-extrabold shadow-sm"
+                aria-label={`Sound ${i + 1}: ${sound.label}`}
+              >
+                /{sound.label}/
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => void playSounds()}
+            className="bg-accent flex min-h-14 items-center gap-2 rounded-2xl px-5 text-xl font-bold text-white shadow-sm"
+          >
+            <span aria-hidden>🔗</span> All the sounds
+          </button>
+          {locked ? <AudioControls text={word} speak={speak} /> : null}
+        </div>
+      ) : (
+        <AudioControls text={word} speak={speak} />
+      )}
       {content.hint ? <p className="text-muted text-xl">{content.hint}</p> : null}
-      <label htmlFor={`spell-${step.questionId}`} className="sr-only">
-        Type the word
-      </label>
-      <input
+      <SpellingInput
         id={`spell-${step.questionId}`}
-        value={value}
-        onChange={(e) => setValue(e.target.value.slice(0, 40))}
-        disabled={locked}
-        autoComplete="off"
-        autoCapitalize="none"
-        autoCorrect="off"
-        spellCheck={false}
-        className={cn(
-          "bg-surface min-h-20 w-full max-w-md rounded-3xl border-4 px-6 text-center text-5xl font-extrabold tracking-widest",
-          phase === "correct"
-            ? "border-success bg-success-soft"
-            : phase === "retry" || phase === "reveal"
-              ? "animate-wiggle border-danger"
-              : "border-primary/40",
-        )}
+        method={settings?.input ?? "KEYBOARD"}
+        tiles={content.tiles}
+        slots={letters}
+        locked={locked}
+        state={state}
+        onSubmit={(value) => onAnswer({ value })}
       />
-      {!locked ? (
-        <Button type="submit" variant="success" size="xl" disabled={!value.trim()}>
-          <span aria-hidden>✓</span> Check
-        </Button>
-      ) : null}
-    </form>
+    </div>
   );
 }

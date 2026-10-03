@@ -33,7 +33,7 @@ describe("evaluateResponse", () => {
     expect(evaluateResponse("WORD_BUILDER", { accepted: ["ship"] }, { sequence: ["p", "i", "sh"] })).toEqual({
       isCorrect: false,
       almost: true,
-      errorType: "wrong_order",
+      errorType: "TRANSPOSITION",
     });
   });
 

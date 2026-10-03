@@ -3,6 +3,7 @@ import Link from "next/link";
 import { WordsHeader } from "@/components/vocabulary/child-header";
 import { LessonPlayer } from "@/features/lesson-player/lesson-player";
 import { requireActiveChild } from "@/lib/auth/session";
+import { levelCodeOf } from "@/lib/server/spelling";
 import { loadWordPracticePayload } from "@/lib/server/lesson-loader";
 import { wordsToPractise } from "@/lib/server/vocabulary";
 
@@ -20,6 +21,7 @@ export default async function PractiseMyWordsPage() {
         title: "My Words",
         emoji: "⭐",
         returnHref: "/child/words/mine",
+        levelCode: await levelCodeOf(child.current_level_id),
       })
     : null;
   if (!payload) {

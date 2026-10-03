@@ -7,7 +7,9 @@ import { cn } from "@/lib/utils";
 import type { QuestionOf, RendererProps } from "../types";
 import { TileBoard } from "./tile-board";
 
-// Blending: hear the word, see it blended sound by sound (c → a → t → cat), then build it.
+// Build the word: hear it, see it blended sound by sound (c → a → t → cat), then build it
+// from sound tiles (BUILD_THE_WORD). In "scrambled" mode the tiles are the word's own
+// letters, mixed up, and the child puts them back in order (SCRAMBLED_WORD).
 export function WordBuilderRenderer({
   step,
   phase,
@@ -21,6 +23,7 @@ export function WordBuilderRenderer({
   const chunks = segmentWord(word, content.tiles);
   const [blendIndex, setBlendIndex] = useState<number | null>(null);
   const built = lastResponse && "sequence" in lastResponse ? lastResponse.sequence.join("") : null;
+  const scrambled = content.mode === "scrambled";
 
   async function demonstrate() {
     for (let i = 0; i < chunks.length; i++) {
@@ -39,18 +42,22 @@ export function WordBuilderRenderer({
           {content.emoji}
         </span>
       ) : null}
-      <p className="text-3xl font-extrabold">{step.prompt || "Build the word"}</p>
+      <p className="text-3xl font-extrabold">
+        {step.prompt || (scrambled ? "Unscramble the word" : "Build the word")}
+      </p>
       <div className="flex flex-wrap justify-center gap-2">
         <AudioControls text={word} speak={speak} />
-        <button
-          type="button"
-          onClick={() => void demonstrate()}
-          className="bg-accent flex min-h-16 items-center gap-2 rounded-2xl px-5 text-xl font-bold text-white shadow-sm"
-        >
-          <span aria-hidden>🔗</span> Blend
-        </button>
+        {!scrambled ? (
+          <button
+            type="button"
+            onClick={() => void demonstrate()}
+            className="bg-accent flex min-h-16 items-center gap-2 rounded-2xl px-5 text-xl font-bold text-white shadow-sm"
+          >
+            <span aria-hidden>🔗</span> Blend
+          </button>
+        ) : null}
       </div>
-      {blendIndex !== null || content.demonstrateBlend ? (
+      {!scrambled && (blendIndex !== null || content.demonstrateBlend) ? (
         <p className="flex items-center gap-2 text-4xl font-extrabold" aria-live="polite">
           {chunks.map((chunk, i) => (
             <span key={i} className="flex items-center gap-2">

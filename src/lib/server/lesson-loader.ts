@@ -5,6 +5,13 @@ import { parseQuestion, type ParsedQuestion } from "@/lib/content/question-schem
 import { isRenderableQuestionType } from "@/features/activities/supported-types";
 import { buildAnswerKey } from "@/lib/learning/answer-key";
 import { pickPracticeQuestions, wordAreaFor, type WordArea } from "@/lib/learning/vocabulary";
+import {
+  resolveSpellingSettings,
+  spellingActivityOf,
+  SPELLING_ANALYSIS_TYPES,
+  type SpellingActivity,
+} from "@/lib/learning/spelling";
+import type { LearningRules } from "@/lib/learning/rules";
 import type { FeedbackKind, FeedbackMessage } from "@/lib/learning/feedback";
 import type { ClientQuestion, LessonPattern, LessonPayload, LessonStep } from "@/lib/learning/lesson-payload";
 import { logger } from "@/lib/logging";
@@ -29,7 +36,7 @@ export async function loadLessonPayload(lessonId: string): Promise<LessonPayload
   const { data: lesson } = await supabase
     .from("lessons")
     .select(
-      "id, code, title, child_title, description, emoji, version, skill_id, status, estimated_minutes, difficulty, intro_speech, skills(title, child_title, units(subjects(name), levels(name)))",
+      "id, code, title, child_title, description, emoji, version, skill_id, status, estimated_minutes, difficulty, intro_speech, skills(title, child_title, units(subjects(name), levels(name, code)))",
     )
     .eq("id", lessonId)
     .eq("status", "published")
@@ -55,7 +62,7 @@ export async function loadLessonPayload(lessonId: string): Promise<LessonPayload
       .order("sort_order"),
     supabase
       .from("feedback_messages")
-      .select("kind, text, speech, emoji")
+      .select("kind, text, speech, emoji, error_category")
       .eq("status", "published")
       .order("sort_order"),
     loadLearningRules(supabase),
@@ -64,6 +71,7 @@ export async function loadLessonPayload(lessonId: string): Promise<LessonPayload
   if (feedbackRows.error) throw feedbackRows.error;
 
   const support = await loadQuestionSupport(supabase, questions ?? []);
+  const levelCode = one(one(one(lesson.skills)?.units)?.levels)?.code ?? null;
 
   const steps: LessonStep[] = [];
   for (const activity of activities ?? []) {
@@ -82,6 +90,8 @@ export async function loadLessonPayload(lessonId: string): Promise<LessonPayload
         config: config.config,
         maxTries: config.config.maxTries ?? rules.player.maxTries,
         explanation: q.explanation,
+        levelCode,
+        rules,
       });
       if (step) steps.push(step);
     }
@@ -147,7 +157,7 @@ export async function loadAssessmentPayload(code: string): Promise<LessonPayload
       .eq("status", "published"),
     supabase
       .from("feedback_messages")
-      .select("kind, text, speech, emoji")
+      .select("kind, text, speech, emoji, error_category")
       .eq("status", "published")
       .order("sort_order"),
     loadLearningRules(supabase),
@@ -173,6 +183,8 @@ export async function loadAssessmentPayload(code: string): Promise<LessonPayload
       config: config.config,
       maxTries: 1,
       explanation: "",
+      levelCode: null,
+      rules,
     });
     if (!step) continue;
     steps.push(step);
@@ -219,6 +231,8 @@ export async function loadWordPracticePayload(args: {
   title: string;
   emoji: string;
   returnHref: string;
+  // The child's level: spelling steps take its input method and hints.
+  levelCode?: string | null;
 }): Promise<LessonPayload | null> {
   const wordIds = args.wordIds.filter((id) => /^[0-9a-f-]{36}$/i.test(id)).slice(0, 50);
   if (wordIds.length === 0) return null;
@@ -238,7 +252,7 @@ export async function loadWordPracticePayload(args: {
       .limit(400),
     supabase
       .from("feedback_messages")
-      .select("kind, text, speech, emoji")
+      .select("kind, text, speech, emoji, error_category")
       .eq("status", "published")
       .order("sort_order"),
     loadLearningRules(supabase),
@@ -274,6 +288,8 @@ export async function loadWordPracticePayload(args: {
       config: config.config,
       maxTries: config.config.maxTries ?? rules.player.maxTries,
       explanation: q.explanation,
+      levelCode: args.levelCode ?? null,
+      rules,
     });
     if (step) steps.push(step);
   }
@@ -305,8 +321,125 @@ export async function loadWordPracticePayload(args: {
   };
 }
 
+// Spelling practice, dictation and spelling review: published spelling questions from
+// published lessons — about the chosen words (most urgent first), or, for dictation, from
+// the lessons of the given spelling skills — at most `spelling.practiceQuestions` long and
+// varied by activity. Played in the ordinary lesson player with no lesson run, like word
+// practice; answers become digest keys as for lessons.
+export async function loadSpellingPracticePayload(args: {
+  wordIds?: string[];
+  skillIds?: string[];
+  activities?: SpellingActivity[];
+  kind: "spelling" | "dictation";
+  title: string;
+  emoji: string;
+  returnHref: string;
+  returnLabel: string;
+  levelCode: string | null;
+  now?: Date;
+}): Promise<LessonPayload | null> {
+  const isId = (id: string) => /^[0-9a-f-]{36}$/i.test(id);
+  const wordIds = (args.wordIds ?? []).filter(isId).slice(0, 50);
+  const skillIds = (args.skillIds ?? []).filter(isId).slice(0, 100);
+  if (wordIds.length === 0 && skillIds.length === 0) return null;
+  const supabase = await createClient();
+  let query = supabase
+    .from("questions")
+    .select(
+      `${QUESTION_COLUMNS}, activities!inner(id, title, instructions, instructions_speech, stage, activity_type, config, status, lessons!inner(status))`,
+    )
+    .eq("status", "published")
+    .eq("activities.status", "published")
+    .eq("activities.lessons.status", "published")
+    .neq("question_type", "INTRO");
+  query = wordIds.length > 0 ? query.in("word_id", wordIds) : query.in("skill_id", skillIds);
+  if (args.activities?.length) query = query.in("metadata->>spellingActivity", args.activities);
+  const [{ data: rows, error }, feedbackRows, rules] = await Promise.all([
+    query.order("sort_order").limit(400),
+    supabase
+      .from("feedback_messages")
+      .select("kind, text, speech, emoji, error_category")
+      .eq("status", "published")
+      .order("sort_order"),
+    loadLearningRules(supabase),
+  ]);
+  if (error) throw error;
+  if (feedbackRows.error) throw feedbackRows.error;
+  const candidates = (rows ?? [])
+    .map((q) => ({ ...q, wordId: q.word_id, activity: spellingActivityOf(q.metadata) }))
+    .filter((q) => q.activity !== null || wordAreaFor(q.question_type, q.metadata) === "spelling");
+  const limit = rules.spelling.practiceQuestions;
+  let picked: typeof candidates;
+  if (wordIds.length > 0) {
+    picked = pickPracticeQuestions(
+      candidates.map((q) => ({ ...q, area: (q.activity ?? "spelling") as WordArea })),
+      wordIds,
+      limit,
+      Math.max(2, Math.ceil(limit / wordIds.length)),
+    );
+  } else {
+    // A different selection each day, the same all day (a reload does not reshuffle).
+    const day = (args.now ?? new Date()).toISOString().slice(0, 10);
+    const rank = (id: string) => {
+      let h = 2166136261;
+      for (const ch of `${day}:${id}`) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+      return h >>> 0;
+    };
+    picked = [...candidates].sort((a, b) => rank(a.id) - rank(b.id)).slice(0, limit);
+  }
+  if (picked.length === 0) return null;
+
+  const support = await loadQuestionSupport(supabase, picked);
+  const steps: LessonStep[] = [];
+  for (const q of picked) {
+    const activity = one(q.activities);
+    if (!activity) continue;
+    const config = parseActivityConfig(activity.activity_type, activity.config);
+    if (!config.ok) continue;
+    const step = await buildStep(q, support, `${args.kind}-practice`, {
+      activityId: activity.id,
+      activityTitle: activity.title,
+      instructions: activity.instructions,
+      instructionsSpeech: activity.instructions_speech,
+      stage: activity.stage,
+      config: config.config,
+      maxTries: config.config.maxTries ?? rules.player.maxTries,
+      explanation: q.explanation,
+      levelCode: args.levelCode,
+      rules,
+    });
+    if (step) steps.push(step);
+  }
+  if (steps.length === 0) return null;
+
+  const key = `practice-${args.kind}-${wordIds.length === 1 ? wordIds[0] : wordIds.length > 0 ? "words" : "level"}`;
+  return {
+    lesson: {
+      id: key,
+      code: key,
+      title: args.title,
+      childTitle: args.title,
+      emoji: args.emoji,
+      version: 1,
+      skillId: steps[0].skillId,
+      skillTitle: "",
+      description: args.kind === "dictation" ? "Listen carefully, then write." : "Practice your spelling.",
+      introSpeech: `${args.title}. ${args.kind === "dictation" ? "Listen carefully, then write." : "Let's practice spelling!"}`,
+      estimatedMinutes: Math.max(2, Math.round(steps.length / 2)),
+      difficulty: 1,
+      subjectName: "Spelling",
+      levelName: "",
+    },
+    practice: { kind: args.kind, returnHref: args.returnHref, returnLabel: args.returnLabel, wordIds },
+    steps,
+    feedback: toFeedback(feedbackRows.data ?? []),
+    rules: { player: rules.player, scoring: rules.scoring },
+    loadedAt: new Date().toISOString(),
+  };
+}
+
 const QUESTION_COLUMNS =
-  "id, activity_id, skill_id, question_type, prompt, prompt_speech, content, explanation, word_id, phonics_pattern_id, version, sort_order";
+  "id, activity_id, skill_id, question_type, prompt, prompt_speech, content, explanation, word_id, phonics_pattern_id, version, sort_order, metadata";
 
 type QuestionRow = {
   id: string;
@@ -319,6 +452,7 @@ type QuestionRow = {
   word_id: string | null;
   phonics_pattern_id: string | null;
   version: number;
+  metadata?: unknown;
 };
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
@@ -410,7 +544,7 @@ async function buildStep(
     | "stage"
     | "maxTries"
     | "explanation"
-  > & { config: LessonStep["activityConfig"] },
+  > & { config: LessonStep["activityConfig"]; levelCode: string | null; rules: LearningRules },
 ): Promise<LessonStep | null> {
   if (!isRenderableQuestionType(q.question_type)) {
     logger.warn("lesson.question_skipped", {
@@ -425,9 +559,15 @@ async function buildStep(
     logger.warn("lesson.question_invalid", { lessonId: ownerId, questionId: q.id, reason: parsed.error });
     return null;
   }
-  const { config, ...rest } = context;
+  const { config, levelCode, rules, ...rest } = context;
+  const activity = spellingActivityOf(q.metadata);
+  const spelling =
+    activity || SPELLING_ANALYSIS_TYPES.has(q.question_type)
+      ? resolveSpellingSettings({ config, levelCode, activity, rules })
+      : null;
   return {
     ...rest,
+    spelling,
     questionId: q.id,
     questionVersion: q.version,
     prompt: q.prompt,
@@ -444,9 +584,15 @@ async function buildStep(
 }
 
 function toFeedback(
-  rows: { kind: string; text: string; speech: string; emoji: string }[],
+  rows: { kind: string; text: string; speech: string; emoji: string; error_category?: string | null }[],
 ): FeedbackMessage[] {
-  return rows.map((m) => ({ kind: m.kind as FeedbackKind, text: m.text, speech: m.speech, emoji: m.emoji }));
+  return rows.map((m) => ({
+    kind: m.kind as FeedbackKind,
+    text: m.text,
+    speech: m.speech,
+    emoji: m.emoji,
+    errorCategory: m.error_category ?? null,
+  }));
 }
 
 // Drops the answer. Listening types need the spoken word itself (the child has to hear

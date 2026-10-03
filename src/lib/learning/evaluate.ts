@@ -1,4 +1,11 @@
 import type { AnswerSpec, QuestionResponse } from "@/lib/content/question-schemas";
+import {
+  analyzeSentence,
+  analyzeSpelling,
+  canonicalSentence,
+  punctuationCheck,
+  type SpellingErrorType,
+} from "@/lib/learning/spelling";
 
 // Answer checking. The server evaluates every synced answer against the stored question
 // (authoritative; the device's verdict is never sent). The device gives instant feedback
@@ -28,7 +35,9 @@ export type ErrorType =
   | "incomplete_trace"
   | "wrong_sounds"
   | "wrong_count"
-  | "invalid_response";
+  | "invalid_response"
+  // Spelling answers are classified by the spelling engine (spelling.ts).
+  | SpellingErrorType;
 
 export function normalizeText(value: string) {
   return value.normalize("NFKC").toLowerCase().replace(/[‘’]/g, "'").replace(/\s+/g, " ").trim();
@@ -59,13 +68,19 @@ export const TRACE_ALMOST_MARGIN = 15;
 
 // ---- Canonical forms (shared with answer-key.ts) --------------------------------------
 
+function canonicalText(questionType: string, value: string) {
+  if (questionType === "WRITING") return normalizeWriting(value);
+  // Sentence dictation compares the words; capitals and the end mark are checked apart.
+  if (questionType === "SENTENCE_DICTATION") return canonicalSentence(value);
+  return normalizeText(value);
+}
+
 export function canonicalAccepted(questionType: string, accepted: string[]) {
-  return accepted.map((a) => (questionType === "WRITING" ? normalizeWriting(a) : normalizeText(a)));
+  return accepted.map((a) => canonicalText(questionType, a));
 }
 
 export function canonicalValue(questionType: string, response: QuestionResponse): string | null {
-  if ("value" in response)
-    return questionType === "WRITING" ? normalizeWriting(response.value) : normalizeText(response.value);
+  if ("value" in response) return canonicalText(questionType, response.value);
   if ("sequence" in response) return normalizeText(response.sequence.join(""));
   return null;
 }
@@ -150,6 +165,21 @@ export function evaluateResponse(
   const value = canonicalValue(questionType, response);
   if (value === null) return invalid;
   const accepted = canonicalAccepted(questionType, answer.accepted);
+
+  if (questionType === "SENTENCE_DICTATION" && "value" in response) {
+    const requirePunctuation = "requirePunctuation" in answer && answer.requirePunctuation === true;
+    if (accepted.includes(value)) {
+      const marks = punctuationCheck(response.value);
+      if (!requirePunctuation || (marks.capital && marks.end)) return correct;
+      return { isCorrect: false, almost: true, errorType: "PUNCTUATION" };
+    }
+    const analysis = analyzeSentence({
+      expected: answer.accepted[0],
+      actual: response.value,
+      requirePunctuation,
+    });
+    return { isCorrect: false, almost: analysis.almost, errorType: analysis.category ?? "UNKNOWN" };
+  }
   if (accepted.includes(value)) return correct;
 
   const almost =
@@ -166,7 +196,11 @@ export function evaluateResponse(
     case "MISSING_LETTER":
       return { isCorrect: false, almost: false, errorType: "wrong_pattern" };
     case "WORD_BUILDER":
-    case "SPELLING":
+    case "SPELLING": {
+      // The progress writer refines this with the word's grapheme split (spelling.ts).
+      const analysis = analyzeSpelling({ expected: answer.accepted, actual: value });
+      return { isCorrect: false, almost, errorType: analysis.category ?? "UNKNOWN" };
+    }
     case "WRITING":
       return { isCorrect: false, almost, errorType: classifySpellingError(accepted[0], value) };
     default:

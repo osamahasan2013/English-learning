@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // The engine's tunable numbers. Defaults live here; an admin can override any of them
 // per rule set in the `learning_rules` table (code = mastery | prerequisites | review |
-// player | scoring | vocabulary), which the server merges over these defaults. Every value is
+// player | scoring | vocabulary | spelling), which the server merges over these defaults. Every value is
 // documented in docs/curriculum.md so parent-facing explanations can quote it.
 
 const statuses = ["NOT_STARTED", "LEARNING", "PRACTICING", "ALMOST_MASTERED", "MASTERED"] as const;
@@ -86,7 +86,50 @@ export const vocabularyRulesSchema = z.object({
   practiceQuestions: z.number().int().min(2).max(20),
 });
 
+// Spelling (Phase 6): word spelling mastery, review, and the progression per level — which
+// input method a child uses, how many hints and dictation replays they get, whether sentence
+// dictation checks capitals and full stops. Read by the lesson loader and the progress
+// writer; React components only display what they are given.
+export const INPUT_METHODS = ["KEYBOARD", "ON_SCREEN_KEYBOARD", "LETTER_TILES", "DRAG_DROP"] as const;
+export type InputMethod = (typeof INPUT_METHODS)[number];
+
+export const spellingLevelRulesSchema = z.object({
+  // Spelling types taught at this level (codes of spelling_types).
+  spellingTypes: z.array(z.string().regex(/^[A-Z][A-Z0-9_]{1,39}$/)).min(1),
+  // Default input for typing activities (an activity's config.input wins).
+  inputMethod: z.enum(INPUT_METHODS),
+  maxWordLength: z.number().int().min(1).max(20),
+  // Hints a child can open per question (0 = none).
+  maxHints: z.number().int().min(0).max(4),
+  // Dictation: plays of the word allowed (null = no limit) and the "Slow" button.
+  dictationReplayLimit: z.number().int().min(1).max(10).nullable(),
+  slowReplay: z.boolean(),
+  sentenceDictation: z.boolean(),
+  // Sentence dictation also asks for a capital letter and an end mark.
+  sentencePunctuation: z.boolean(),
+});
+
+export const spellingRulesSchema = z.object({
+  // Evidence for one word's spelling: the score is scaled by min(1, first tries / this).
+  fullEvidenceAttempts: z.number().int().min(1).max(50),
+  // A word with at least minAttempts spelling first tries and accuracy below this is weak.
+  minAttempts: z.number().int().min(1).max(50),
+  weakBelowAccuracy: z.number().min(1).max(100),
+  // Only answers right without a hint count as independent spelling for word mastery.
+  requireIndependent: z.boolean(),
+  // A phonics pattern misspelled this often within the lookback becomes a review item.
+  patternErrorsForReview: z.number().int().min(1).max(20),
+  patternLookbackDays: z.number().int().min(1).max(90),
+  // Questions in one spelling practice or dictation session.
+  practiceQuestions: z.number().int().min(2).max(20),
+  // Used for a level without its own settings.
+  defaultLevel: z.string(),
+  levels: z.record(z.string().regex(/^[A-Z0-9_]{1,40}$/), spellingLevelRulesSchema),
+});
+
 export type MasteryRules = z.infer<typeof masteryRulesSchema>;
+export type SpellingRules = z.infer<typeof spellingRulesSchema>;
+export type SpellingLevelRules = z.infer<typeof spellingLevelRulesSchema>;
 export type VocabularyRules = z.infer<typeof vocabularyRulesSchema>;
 export type PrerequisiteRules = z.infer<typeof prerequisiteRulesSchema>;
 export type ReviewRules = z.infer<typeof reviewRulesSchema>;
@@ -100,6 +143,7 @@ export type LearningRules = {
   player: PlayerRules;
   scoring: ScoringRules;
   vocabulary: VocabularyRules;
+  spelling: SpellingRules;
 };
 
 export const DEFAULT_RULES: LearningRules = {
@@ -132,6 +176,92 @@ export const DEFAULT_RULES: LearningRules = {
     reviewSavedWords: true,
     practiceQuestions: 6,
   },
+  spelling: {
+    fullEvidenceAttempts: 4,
+    minAttempts: 3,
+    weakBelowAccuracy: 70,
+    requireIndependent: true,
+    patternErrorsForReview: 2,
+    patternLookbackDays: 14,
+    practiceQuestions: 8,
+    defaultLevel: "KG3",
+    levels: {
+      KG1: {
+        spellingTypes: ["CVC"],
+        inputMethod: "LETTER_TILES",
+        maxWordLength: 3,
+        maxHints: 4,
+        dictationReplayLimit: null,
+        slowReplay: true,
+        sentenceDictation: false,
+        sentencePunctuation: false,
+      },
+      KG2: {
+        spellingTypes: ["CVC", "HIGH_FREQUENCY", "SIGHT_WORD"],
+        inputMethod: "LETTER_TILES",
+        maxWordLength: 4,
+        maxHints: 4,
+        dictationReplayLimit: null,
+        slowReplay: true,
+        sentenceDictation: false,
+        sentencePunctuation: false,
+      },
+      KG3: {
+        spellingTypes: [
+          "CVC",
+          "CVCC",
+          "CCVC",
+          "DIGRAPH",
+          "BLEND",
+          "SIGHT_WORD",
+          "HIGH_FREQUENCY",
+          "IRREGULAR",
+        ],
+        inputMethod: "ON_SCREEN_KEYBOARD",
+        maxWordLength: 5,
+        maxHints: 4,
+        dictationReplayLimit: 5,
+        slowReplay: true,
+        sentenceDictation: true,
+        sentencePunctuation: false,
+      },
+      GRADE1: {
+        spellingTypes: [
+          "CCVCC",
+          "LONG_VOWEL",
+          "VOWEL_TEAM",
+          "R_CONTROLLED",
+          "WORD_ENDING",
+          "HIGH_FREQUENCY",
+          "IRREGULAR",
+        ],
+        inputMethod: "ON_SCREEN_KEYBOARD",
+        maxWordLength: 7,
+        maxHints: 3,
+        dictationReplayLimit: 4,
+        slowReplay: true,
+        sentenceDictation: true,
+        sentencePunctuation: false,
+      },
+      GRADE2: {
+        spellingTypes: [
+          "WORD_ENDING",
+          "MULTISYLLABIC",
+          "IRREGULAR",
+          "HIGH_FREQUENCY",
+          "VOWEL_TEAM",
+          "R_CONTROLLED",
+        ],
+        inputMethod: "KEYBOARD",
+        maxWordLength: 10,
+        maxHints: 3,
+        dictationReplayLimit: 3,
+        slowReplay: true,
+        sentenceDictation: true,
+        sentencePunctuation: true,
+      },
+    },
+  },
 };
 
 const schemas = {
@@ -141,6 +271,7 @@ const schemas = {
   player: playerRulesSchema,
   scoring: scoringRulesSchema,
   vocabulary: vocabularyRulesSchema,
+  spelling: spellingRulesSchema,
 } as const;
 
 // Merges stored overrides over the defaults. An override that fails validation is

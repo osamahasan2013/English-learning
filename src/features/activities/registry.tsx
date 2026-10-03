@@ -12,6 +12,7 @@ import { MatchRenderer } from "./renderers/match";
 import { MissingLetterRenderer } from "./renderers/missing-letter";
 import { ReadingRenderer } from "./renderers/reading";
 import { SegmentWordRenderer } from "./renderers/segment-word";
+import { SentenceDictationRenderer } from "./renderers/sentence-dictation";
 import { SentenceBuilderRenderer } from "./renderers/sentence-builder";
 import { SortRenderer } from "./renderers/sort";
 import { SpellingRenderer } from "./renderers/spelling";
@@ -44,4 +45,5 @@ export const ACTIVITY_RENDERERS: Record<(typeof RENDERABLE_QUESTION_TYPES)[numbe
   BLEND_SOUNDS: BlendSoundsRenderer,
   SEGMENT_WORD: SegmentWordRenderer,
   FIND_PATTERN: FindPatternRenderer,
+  SENTENCE_DICTATION: SentenceDictationRenderer,
 };

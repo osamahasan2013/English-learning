@@ -12,15 +12,16 @@ import {
   storiesFileSchema,
   type QuestionInput,
 } from "@/lib/content/content-schemas";
-import { normalizeWord, parseWordsCsv } from "@/lib/content/csv";
+import { normalizeWord, parseSpellingCsv, parseWordsCsv } from "@/lib/content/csv";
 import { parseActivityConfig } from "@/lib/content/activity-config";
 import { parseQuestion, type AnswerSpec, type QuestionResponse } from "@/lib/content/question-schemas";
 import { buildAnswerKey, checkWithKey, revealAnswer } from "@/lib/learning/answer-key";
 import { evaluateResponse } from "@/lib/learning/evaluate";
 import type { ClientQuestion } from "@/lib/learning/lesson-payload";
 import { mergeLearningRules } from "@/lib/learning/rules";
+import { SPELLING_ACTIVITIES, spellingActivityOf } from "@/lib/learning/spelling";
 import { expandTemplate, type TemplateContext, type TemplateWord } from "@/lib/content/templates";
-import { templateWordFromInput, type CategoryRef } from "@/lib/content/word-bank";
+import { templateSpellingFromInput, templateWordFromInput, type CategoryRef } from "@/lib/content/word-bank";
 import { RENDERABLE_QUESTION_TYPES } from "@/features/activities/supported-types";
 import { expandBlueprint } from "@/lib/content/lesson-blueprints";
 import {
@@ -44,6 +45,10 @@ const curriculum = readdirSync(path.join(dir, "curriculum")).map((f) =>
   curriculumFileSchema.parse(json(path.join("curriculum", f))),
 );
 const assessments = assessmentsFileSchema.parse(json("assessments.json"));
+const spellingRows = readdirSync(path.join(dir, "spelling")).flatMap(
+  (f) => parseSpellingCsv(readFileSync(path.join(dir, "spelling", f), "utf8")).rows,
+);
+const rules = mergeLearningRules(reference.rules).rules;
 
 const levelCodes = new Set(reference.levels.map((l) => l.code));
 const wordBank = new Map(words.flatMap((r) => (r.ok ? [[normalizeWord(r.word.word), r.word] as const] : [])));
@@ -103,6 +108,12 @@ const templateBank = new Map<string, TemplateWord>(
     ),
   ]),
 );
+// Spelling facts on the spelling targets, as the importer attaches them.
+for (const r of spellingRows) {
+  if (!r.ok) continue;
+  const w = templateBank.get(normalizeWord(r.word.word));
+  if (w) w.spelling = templateSpellingFromInput(r.word, w.segments ?? []);
+}
 const publishedWords = [...templateBank.values()].filter((w) => w.published !== false);
 
 function expand(q: QuestionInput, seed: string, level?: string) {
@@ -112,6 +123,7 @@ function expand(q: QuestionInput, seed: string, level?: string) {
       seed,
       words: () => publishedWords,
       levelRank: level ? levelRanks.get(level) : undefined,
+      spellingLevel: level ? rules.spelling.levels[level] : undefined,
       word: (t) => templateBank.get(normalizeWord(t)),
       pattern: (code) => {
         const p = patterns.get(code);
@@ -144,9 +156,13 @@ function lessonActivities(
   level: string,
 ) {
   if (!lesson.blueprint) return lesson.activities;
-  return expandBlueprint({ levelRank: levelRanks.get(level), ...lesson.blueprint }).map((a) => ({
+  return expandBlueprint({
+    levelRank: levelRanks.get(level),
+    spellingLevel: rules.spelling.levels[level],
+    ...lesson.blueprint,
+  }).map((a) => ({
     ...a,
-    config: {},
+    config: a.config ?? {},
     questions: a.questions.map((q) => ({ difficulty: 1, explanation: "", ...q }) as QuestionInput),
   }));
 }
@@ -262,6 +278,7 @@ describe("shipped content", () => {
       "BLEND_SOUNDS",
       "SEGMENT_WORD",
       "FIND_PATTERN",
+      "SENTENCE_DICTATION",
     ])
       expect(types.has(required), required).toBe(true);
 
@@ -284,6 +301,71 @@ describe("shipped content", () => {
     const kinds = new Set(reference.feedback.map((f) => f.kind));
     expect(kinds).toEqual(new Set(["CORRECT", "INCORRECT", "TRY_AGAIN", "ALMOST_CORRECT", "COMPLETED"]));
     expect(mergeLearningRules(reference.rules).errors).toEqual([]);
+  });
+
+  it("has valid spelling targets: words of the bank, known types, levels, skills and patterns", () => {
+    expect(spellingRows.filter((r) => !r.ok)).toEqual([]);
+    const types = new Set(reference.spellingTypes.map((t) => t.code));
+    const skills = new Set(curriculum.flatMap((f) => f.units.flatMap((u) => u.skills.map((s) => s.code))));
+    const seen = new Set<string>();
+    for (const r of spellingRows) {
+      if (!r.ok) continue;
+      const s = r.word;
+      expect(seen.has(s.word), `${s.word} listed twice`).toBe(false);
+      seen.add(s.word);
+      expect(wordBank.has(normalizeWord(s.word)), `${s.word} is in the word bank`).toBe(true);
+      expect(types.has(s.spellingType), `${s.word} → ${s.spellingType}`).toBe(true);
+      expect(levelCodes.has(s.level), `${s.word} → ${s.level}`).toBe(true);
+      if (s.skill) expect(skills.has(s.skill), `${s.word} → ${s.skill}`).toBe(true);
+      if (s.phonicsPattern)
+        expect(patterns.has(s.phonicsPattern), `${s.word} → ${s.phonicsPattern}`).toBe(true);
+      expect(templateBank.get(normalizeWord(s.word))?.spelling, s.word).toBeDefined();
+      // The level's spelling progression (rules → spelling.levels).
+      const level = rules.spelling.levels[s.level];
+      expect(level.spellingTypes, `${s.word}: ${s.spellingType} at ${s.level}`).toContain(s.spellingType);
+      expect(s.word.length, `${s.word} is short enough for ${s.level}`).toBeLessThanOrEqual(
+        level.maxWordLength,
+      );
+    }
+    // Every level teaches spelling, and only some vocabulary words are spelling targets.
+    for (const level of levelCodes)
+      expect(
+        [...spellingRows].some((r) => r.ok && r.word.level === level),
+        level,
+      ).toBe(true);
+    expect(seen.size).toBeLessThan(wordBank.size);
+    // Irregular words name their irregular part, and it is in the word.
+    for (const r of spellingRows)
+      if (r.ok && r.word.irregularPart)
+        expect(r.word.word.includes(r.word.irregularPart), r.word.word).toBe(true);
+  });
+
+  it("uses every spelling activity in the spelling lessons", () => {
+    const used = new Set<string>();
+    for (const file of curriculum)
+      for (const unit of file.units)
+        for (const skill of unit.skills)
+          for (const lesson of skill.lessons)
+            lessonActivities(lesson, file.level).forEach((activity, a) =>
+              activity.questions.forEach((q, i) => {
+                const e = expand(q, `${lesson.code}-a${a + 1}-q${i + 1}`, file.level) as {
+                  spellingActivity?: string;
+                };
+                const activityCode = spellingActivityOf({ spellingActivity: e.spellingActivity });
+                if (activityCode) used.add(activityCode);
+              }),
+            );
+    expect([...used].sort()).toEqual([...SPELLING_ACTIVITIES].sort());
+    const categories = new Set(reference.feedback.flatMap((f) => (f.errorCategory ? [f.errorCategory] : [])));
+    for (const c of [
+      "MISSING_LETTER",
+      "WRONG_VOWEL",
+      "WRONG_DIGRAPH",
+      "WRONG_BLEND",
+      "WRONG_ENDING",
+      "PUNCTUATION",
+    ])
+      expect(categories.has(c), c).toBe(true);
   });
 
   it("checks every shipped question the same way on the device and on the server", async () => {

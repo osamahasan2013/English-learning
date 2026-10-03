@@ -25,6 +25,15 @@ export function MissingLetterRenderer({
         </span>
       ) : null}
       <PromptHeader step={step} speak={speak} />
+      {content.mode === "sound" && content.sound ? (
+        <button
+          type="button"
+          onClick={() => void speak(content.sound!.sayAs, "slow")}
+          className="bg-accent-soft text-accent flex min-h-16 items-center gap-2 rounded-2xl px-5 text-2xl font-extrabold shadow-sm"
+        >
+          <span aria-hidden>🔉</span> /{content.sound.label}/
+        </button>
+      ) : null}
       <p
         className="flex items-end gap-1 text-7xl font-extrabold"
         aria-label={

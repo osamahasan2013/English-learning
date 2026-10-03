@@ -11,6 +11,7 @@ import {
   TRACE_ALMOST_MARGIN,
 } from "@/lib/learning/evaluate";
 import { sha256 } from "@/lib/learning/sha256";
+import { punctuationCheck } from "@/lib/learning/spelling";
 
 // Correct answers never travel to the device in plain text. The lesson loader turns each
 // question's answer into an AnswerKey of salted SHA-256 digests of the answer's canonical
@@ -21,7 +22,9 @@ import { sha256 } from "@/lib/learning/sha256";
 
 export type AnswerKey =
   | { mode: "none" }
-  | { mode: "values"; salt: string; digests: string[]; letters: string[] }
+  // `punctuation`: sentence dictation also needs a capital letter and an end mark (not a
+  // secret: it is a rule about the answer's form, checked on the device as on the server).
+  | { mode: "values"; salt: string; digests: string[]; letters: string[]; punctuation?: boolean }
   | { mode: "sequence"; salt: string; digests: string[]; positions: string[] }
   | { mode: "pairs"; salt: string; digests: string[] }
   // Tracing is scored on coverage; the threshold is not a secret.
@@ -70,6 +73,7 @@ export async function buildAnswerKey(
     salt,
     digests: await hash(accepted),
     letters: LETTER_TYPES.has(questionType) ? await hash(accepted.map((a) => `~${sortedLetters(a)}`)) : [],
+    ...("requirePunctuation" in answer && answer.requirePunctuation ? { punctuation: true } : {}),
   };
 }
 
@@ -114,7 +118,13 @@ export async function checkWithKey(
     case "values": {
       const value = canonicalValue(questionType, response);
       if (value === null) return no;
-      if (key.digests.includes(await digest(key.salt, value))) return { isCorrect: true, almost: false };
+      if (key.digests.includes(await digest(key.salt, value))) {
+        if (key.punctuation && "value" in response) {
+          const marks = punctuationCheck(response.value);
+          if (!marks.capital || !marks.end) return { isCorrect: false, almost: true };
+        }
+        return { isCorrect: true, almost: false };
+      }
       const almost =
         key.letters.length > 0 && key.letters.includes(await digest(key.salt, `~${sortedLetters(value)}`));
       return { isCorrect: false, almost };
@@ -164,6 +174,8 @@ export async function revealAnswer(question: ClientQuestion, key: AnswerKey): Pr
     case "WORD_BUILDER":
     case "SPELLING":
       return question.content.speech ? { text: question.content.speech } : null;
+    case "SENTENCE_DICTATION":
+      return { text: question.content.speech };
     case "WRITING": {
       const starter = question.content.starter?.trim();
       for (const word of question.content.wordBank) {

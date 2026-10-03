@@ -1704,6 +1704,189 @@
           ]
         }
       ]
+    },
+    {
+      "code": "g1-spelling",
+      "subject": "SPELLING",
+      "title": "Spelling Patterns",
+      "emoji": "✏️",
+      "description": "Spell magic e words, vowel teams, bossy r and endings.",
+      "skills": [
+        {
+          "code": "g1-spell-magic-e",
+          "dimension": "SPELLING",
+          "title": "Spelling magic e words",
+          "childTitle": "Magic e",
+          "importance": 4,
+          "lessons": [
+            {
+              "code": "g1-spell-magic-e-1",
+              "title": "Spell magic e words",
+              "childTitle": "Spell magic e words",
+              "description": "Spell: cake, gate, bike, home, nose, cube.",
+              "emoji": "🎂",
+              "minutes": 8,
+              "introSpeech": "Let's spell! Spell magic e words.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "cake",
+                  "gate",
+                  "bike",
+                  "home",
+                  "nose",
+                  "cube"
+                ]
+              }
+            }
+          ],
+          "prerequisites": [
+            "kg3-spell-digraphs"
+          ]
+        },
+        {
+          "code": "g1-spell-vowel-teams",
+          "dimension": "SPELLING",
+          "title": "Spelling vowel teams",
+          "childTitle": "Vowel teams",
+          "importance": 4,
+          "lessons": [
+            {
+              "code": "g1-spell-ai-ee",
+              "title": "Spell ai, ay and ee words",
+              "childTitle": "Spell ai, ay and ee words",
+              "description": "Spell: rain, mail, play, feet, seed, sleep.",
+              "emoji": "🌧️",
+              "minutes": 8,
+              "introSpeech": "Let's spell! Spell ai, ay and ee words.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "rain",
+                  "mail",
+                  "play",
+                  "feet",
+                  "seed",
+                  "sleep"
+                ]
+              }
+            },
+            {
+              "code": "g1-spell-oa-oo",
+              "title": "Spell oa, ea, oo, oi and oy words",
+              "childTitle": "Spell oa, ea, oo, oi and oy words",
+              "description": "Spell: boat, soap, leaf, moon, coin, boy.",
+              "emoji": "⛵",
+              "minutes": 8,
+              "introSpeech": "Let's spell! Spell oa, ea, oo, oi and oy words.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "boat",
+                  "soap",
+                  "leaf",
+                  "moon",
+                  "coin",
+                  "boy"
+                ]
+              }
+            }
+          ],
+          "prerequisites": [
+            "g1-spell-magic-e"
+          ]
+        },
+        {
+          "code": "g1-spell-r-controlled",
+          "dimension": "SPELLING",
+          "title": "Spelling r-controlled vowels",
+          "childTitle": "Bossy r",
+          "importance": 4,
+          "lessons": [
+            {
+              "code": "g1-spell-r-1",
+              "title": "Spell ar, or, er and ur words",
+              "childTitle": "Spell ar, or, er and ur words",
+              "description": "Spell: star, car, horn, short, fern, surf.",
+              "emoji": "⭐",
+              "minutes": 8,
+              "introSpeech": "Let's spell! Spell ar, or, er and ur words.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "star",
+                  "car",
+                  "horn",
+                  "short",
+                  "fern",
+                  "surf"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "g1-spell-endings",
+          "dimension": "SPELLING",
+          "title": "Spelling word endings",
+          "childTitle": "Endings",
+          "importance": 4,
+          "lessons": [
+            {
+              "code": "g1-spell-endings-1",
+              "title": "Spell -ing, -ed and -es words",
+              "childTitle": "Spell -ing, -ed and -es words",
+              "description": "Spell: fishing, kicking, helped, rained, dishes, foxes.",
+              "emoji": "🎣",
+              "minutes": 8,
+              "introSpeech": "Let's spell! Spell -ing, -ed and -es words.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "fishing",
+                  "kicking",
+                  "helped",
+                  "rained",
+                  "dishes",
+                  "foxes"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "g1-spell-tricky",
+          "dimension": "SPELLING",
+          "title": "Spelling high-frequency words",
+          "childTitle": "Everyday tricky words",
+          "importance": 5,
+          "lessons": [
+            {
+              "code": "g1-spell-tricky-1",
+              "title": "What, where, there",
+              "childTitle": "What, where, there",
+              "description": "Spell: what, where, there, were, she, of, do, some.",
+              "emoji": "🧩",
+              "minutes": 10,
+              "introSpeech": "Let's spell! What, where, there.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "what",
+                  "where",
+                  "there",
+                  "were",
+                  "she",
+                  "of",
+                  "do",
+                  "some"
+                ],
+                "tricky": true
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

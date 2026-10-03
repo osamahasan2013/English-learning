@@ -363,3 +363,56 @@ family's own choice (`saved_source = 'manual'`).
 write progress figures or another family's rows.
 **Consequences.** Saving needs a connection (it is not an outbox event); answers still go
 through the offline outbox.
+
+## ADR-033 — Spelling is the spelling view of the word bank on the learning engine
+
+**Decision.** Phase 6 adds no lesson, activity, attempt, progress, mastery, review or
+assessment system. A spelling target is a `spelling_words` row pointing at a word of the
+bank (one per word) with only spelling facts (spelling level, skill, type, focus pattern,
+difficulty, irregular part, hints, common errors, a dictation sentence); the text, split,
+phonemes and meaning stay in `words` / `word_segments`. Spelling lessons are ordinary
+lessons expanded from a `spelling_set` blueprint; spelling skills are ordinary skills;
+answers are ordinary attempts with three extra columns (`hints_used`,
+`spelling_analysis`, `error_pattern_id`) and the category in `error_type`. Spelling
+mastery is the mastery algorithm with a spelling rule set, stored in `spelling_progress`
+next to (never instead of) vocabulary `word_progress`; only answers right without a hint
+count as independent. Review items are ordinary `review_items`: `spelling:<word>` and,
+for a phonics pattern misspelled again and again, `pattern:<pattern>` pointing at the
+pattern's phonics lesson (no separate phonics mastery). For spelling targets the word's
+vocabulary review ignores spelling answers so one miss is not queued twice.
+**Why.** The brief requires reusing the existing infrastructure, a separate spelling
+mastery that does not overwrite vocabulary mastery, and phonics-aware review.
+**Consequences.** Not every vocabulary word is spelled; the importer refuses spelling rows
+for words that are not in the bank. A saved word can still have its own vocabulary
+review besides a spelling review (different practice).
+
+## ADR-034 — Spelling mistakes are classified by fixed rules from the grapheme split
+
+**Decision.** `analyzeSpelling` normalises only case, surrounding and repeated spaces
+(no autocorrect, the raw text is kept), aligns the answer with the word (insert, delete,
+substitute, adjacent swap) and assigns one category by an ordered rule list using the
+word's grapheme split and pattern types: transposition, irregular part, doubled letter,
+same sounds by the taught spellings (a small sound-alike key), far off, then the kind of
+grapheme every change falls in (ending, digraph, blend, vowel), then the kind of change.
+The pattern of a digraph / blend / vowel / ending mistake is stored for review. Sentence
+dictation compares words (LCS) and checks capitals and end marks only where the level's
+rules ask. The device runs the same function for instant feedback (against the spoken
+word it already has); the server's analysis of the stored answer is authoritative.
+**Why.** Deterministic, explainable to parents, testable, and free of external services.
+**Consequences.** Categories are heuristics: an answer can fit two descriptions and gets
+the first in the list. Irregular words need their irregular part authored.
+
+## ADR-035 — Spelling input, hints and dictation limits are per-level rules
+
+**Decision.** Input method (keyboard, child keyboard, letter tiles, drag and drop), hints
+per question, dictation replays and slow replay, sentence dictation and punctuation
+checks come from `rules.spelling.levels[level]` (defaults in code, overridable in
+`learning_rules`), resolved by the lesson loader into `step.spelling`; an activity's config
+wins. The blueprint reads the same rules at import for structure (sentence dictation).
+Hints are generated at import into the question (authored hints first). The child
+keyboard is plain buttons (no form submit, no links; Backspace does not navigate) and also
+accepts a physical keyboard.
+**Why.** The brief asks for progression configurable per level and not hard-coded in
+React; young children cannot type on a device keyboard.
+**Consequences.** Changing a level's input or limits is a data change; changing which
+activities a level's lessons contain needs a re-import.

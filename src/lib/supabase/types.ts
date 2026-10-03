@@ -136,6 +136,9 @@ export type Database = {
           received_at: string;
           score: number;
           learning_session_id: string | null;
+          hints_used: number;
+          spelling_analysis: Json | null;
+          error_pattern_id: string | null;
         };
         Insert: {
           id: string;
@@ -159,6 +162,9 @@ export type Database = {
           received_at?: string;
           score?: number;
           learning_session_id?: string | null;
+          hints_used?: number;
+          spelling_analysis?: Json | null;
+          error_pattern_id?: string | null;
         };
         Update: {
           id?: string;
@@ -182,6 +188,9 @@ export type Database = {
           received_at?: string;
           score?: number;
           learning_session_id?: string | null;
+          hints_used?: number;
+          spelling_analysis?: Json | null;
+          error_pattern_id?: string | null;
         };
         Relationships: [
           {
@@ -203,6 +212,13 @@ export type Database = {
             columns: ["child_id"];
             isOneToOne: false;
             referencedRelation: "children";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "activity_attempts_error_pattern_id_fkey";
+            columns: ["error_pattern_id"];
+            isOneToOne: false;
+            referencedRelation: "phonics_patterns";
             referencedColumns: ["id"];
           },
           {
@@ -734,6 +750,7 @@ export type Database = {
           status: Database["public"]["Enums"]["content_status"];
           created_at: string;
           updated_at: string;
+          error_category: string | null;
         };
         Insert: {
           id?: string;
@@ -746,6 +763,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          error_category?: string | null;
         };
         Update: {
           id?: string;
@@ -758,6 +776,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          error_category?: string | null;
         };
         Relationships: [
 
@@ -2238,6 +2257,235 @@ export type Database = {
           },
         ];
       };
+      spelling_progress: {
+        Row: {
+          child_id: string;
+          word_id: string;
+          attempts_count: number;
+          correct_count: number;
+          hinted_count: number;
+          accuracy: number;
+          status: Database["public"]["Enums"]["mastery_status"];
+          mastery_score: number;
+          practice_days: number;
+          review_priority: number;
+          next_review_at: string | null;
+          first_practiced_at: string | null;
+          last_practiced_at: string | null;
+          last_error_type: string | null;
+          error_counts: Json;
+          updated_at: string;
+        };
+        Insert: {
+          child_id: string;
+          word_id: string;
+          attempts_count?: number;
+          correct_count?: number;
+          hinted_count?: number;
+          accuracy?: number;
+          status?: Database["public"]["Enums"]["mastery_status"];
+          mastery_score?: number;
+          practice_days?: number;
+          review_priority?: number;
+          next_review_at?: string | null;
+          first_practiced_at?: string | null;
+          last_practiced_at?: string | null;
+          last_error_type?: string | null;
+          error_counts?: Json;
+          updated_at?: string;
+        };
+        Update: {
+          child_id?: string;
+          word_id?: string;
+          attempts_count?: number;
+          correct_count?: number;
+          hinted_count?: number;
+          accuracy?: number;
+          status?: Database["public"]["Enums"]["mastery_status"];
+          mastery_score?: number;
+          practice_days?: number;
+          review_priority?: number;
+          next_review_at?: string | null;
+          first_practiced_at?: string | null;
+          last_practiced_at?: string | null;
+          last_error_type?: string | null;
+          error_counts?: Json;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "spelling_progress_child_id_fkey";
+            columns: ["child_id"];
+            isOneToOne: false;
+            referencedRelation: "children";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "spelling_progress_word_id_fkey";
+            columns: ["word_id"];
+            isOneToOne: false;
+            referencedRelation: "words";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      spelling_types: {
+        Row: {
+          code: string;
+          name: string;
+          child_name: string;
+          description: string;
+          emoji: string;
+          sort_order: number;
+          status: Database["public"]["Enums"]["content_status"];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          code: string;
+          name: string;
+          child_name?: string;
+          description?: string;
+          emoji?: string;
+          sort_order?: number;
+          status?: Database["public"]["Enums"]["content_status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          code?: string;
+          name?: string;
+          child_name?: string;
+          description?: string;
+          emoji?: string;
+          sort_order?: number;
+          status?: Database["public"]["Enums"]["content_status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+
+        ];
+      };
+      spelling_words: {
+        Row: {
+          id: string;
+          word_id: string;
+          level_id: string;
+          skill_id: string | null;
+          spelling_type_code: string;
+          phonics_pattern_id: string | null;
+          difficulty: number;
+          is_high_frequency: boolean;
+          is_irregular: boolean;
+          irregular_part: string;
+          irregular_positions: number[];
+          hints: Json;
+          common_errors: Json;
+          sentence_id: string | null;
+          audio_asset_id: string | null;
+          tags: string[];
+          sort_order: number;
+          status: Database["public"]["Enums"]["content_status"];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          word_id: string;
+          level_id: string;
+          skill_id?: string | null;
+          spelling_type_code: string;
+          phonics_pattern_id?: string | null;
+          difficulty: number;
+          is_high_frequency?: boolean;
+          is_irregular?: boolean;
+          irregular_part?: string;
+          irregular_positions?: number[];
+          hints?: Json;
+          common_errors?: Json;
+          sentence_id?: string | null;
+          audio_asset_id?: string | null;
+          tags?: string[];
+          sort_order?: number;
+          status?: Database["public"]["Enums"]["content_status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          word_id?: string;
+          level_id?: string;
+          skill_id?: string | null;
+          spelling_type_code?: string;
+          phonics_pattern_id?: string | null;
+          difficulty?: number;
+          is_high_frequency?: boolean;
+          is_irregular?: boolean;
+          irregular_part?: string;
+          irregular_positions?: number[];
+          hints?: Json;
+          common_errors?: Json;
+          sentence_id?: string | null;
+          audio_asset_id?: string | null;
+          tags?: string[];
+          sort_order?: number;
+          status?: Database["public"]["Enums"]["content_status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "spelling_words_audio_asset_id_fkey";
+            columns: ["audio_asset_id"];
+            isOneToOne: false;
+            referencedRelation: "audio_assets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "spelling_words_level_id_fkey";
+            columns: ["level_id"];
+            isOneToOne: false;
+            referencedRelation: "levels";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "spelling_words_phonics_pattern_id_fkey";
+            columns: ["phonics_pattern_id"];
+            isOneToOne: false;
+            referencedRelation: "phonics_patterns";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "spelling_words_sentence_id_fkey";
+            columns: ["sentence_id"];
+            isOneToOne: false;
+            referencedRelation: "sentences";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "spelling_words_skill_id_fkey";
+            columns: ["skill_id"];
+            isOneToOne: false;
+            referencedRelation: "skills";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "spelling_words_spelling_type_code_fkey";
+            columns: ["spelling_type_code"];
+            isOneToOne: false;
+            referencedRelation: "spelling_types";
+            referencedColumns: ["code"];
+          },
+          {
+            foreignKeyName: "spelling_words_word_id_fkey";
+            columns: ["word_id"];
+            isOneToOne: true;
+            referencedRelation: "words";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       stories: {
         Row: {
           id: string;
@@ -3096,6 +3344,24 @@ export type Database = {
           level_code: string | null;
           level_name: string | null;
           level_order: number | null;
+        };
+        Relationships: [];
+      };
+      spelling_error_counts: {
+        Row: {
+          child_id: string | null;
+          error_type: string | null;
+          attempts: number | null;
+          last_attempt_at: string | null;
+        };
+        Relationships: [];
+      };
+      spelling_pattern_errors: {
+        Row: {
+          child_id: string | null;
+          error_pattern_id: string | null;
+          attempts: number | null;
+          last_attempt_at: string | null;
         };
         Relationships: [];
       };

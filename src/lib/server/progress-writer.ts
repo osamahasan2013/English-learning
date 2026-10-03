@@ -30,6 +30,14 @@ import {
   wordAreaFor,
 } from "@/lib/learning/vocabulary";
 import { deriveSkillReviewItem, skillKey, wordKey, type ReviewItemRow } from "@/lib/learning/review-queue";
+import {
+  computeSpellingProgress,
+  derivePatternReview,
+  deriveSpellingReview,
+  isSpellingEvidence,
+  patternKey,
+  spellingKey,
+} from "@/lib/learning/spelling";
 import type { LearningRules } from "@/lib/learning/rules";
 import { scoreLesson } from "@/lib/learning/scoring";
 import type { MasteryStatus } from "@/lib/learning/mastery";
@@ -85,8 +93,15 @@ export async function processSyncBatch(
   if (stored.newSkillIds.size > 0)
     await recomputeSkillMastery(db, childId, [...stored.newSkillIds], now, rules);
   if (assessed.skillIds.size > 0) await markAssessed(db, childId, assessed, now);
-  if (stored.newWordIds.size > 0)
+  if (stored.newWordIds.size > 0) {
     await recomputeWordProgress(db, childId, [...stored.newWordIds], now, rules);
+    // Spelling mastery and review for the words that are spelling targets, then the phonics
+    // patterns misspelled (or now spelled right) in this batch.
+    const focusPatterns = await recomputeSpellingProgress(db, childId, [...stored.newWordIds], now, rules);
+    for (const id of focusPatterns) stored.errorPatternIds.add(id);
+  }
+  if (stored.errorPatternIds.size > 0)
+    await recomputePatternReviews(db, childId, [...stored.errorPatternIds], now, rules);
   if (lessonIds.size > 0 || stored.newSkillIds.size > 0)
     await recomputeLevelRollups(db, childId, [...lessonIds]);
   const sessionIds = new Set([...stored.sessionIds, ...newRuns.sessionIds]);
@@ -391,7 +406,9 @@ async function storeAttempts(
   const newWordIds = new Set<string>();
   const lessonIds = new Set<string>();
   const sessionIds = new Set<string>();
-  if (attempts.length === 0) return { newSkillIds, newWordIds, lessonIds, sessionIds };
+  // Phonics patterns of spelling mistakes in this batch (ship → sip: SH).
+  const errorPatternIds = new Set<string>();
+  if (attempts.length === 0) return { newSkillIds, newWordIds, lessonIds, sessionIds, errorPatternIds };
 
   const already = await existingIds(
     db,
@@ -405,13 +422,13 @@ async function storeAttempts(
     }
     return true;
   });
-  if (pending.length === 0) return { newSkillIds, newWordIds, lessonIds, sessionIds };
+  if (pending.length === 0) return { newSkillIds, newWordIds, lessonIds, sessionIds, errorPatternIds };
 
   const questionIds = [...new Set(pending.map((a) => a.questionId))];
   const { data: questionRows, error } = await db
     .from("questions")
     .select(
-      "id, skill_id, question_type, answer, version, activity_id, word_id, status, activities(lesson_id, status, config, lessons(status))",
+      "id, skill_id, question_type, answer, content, version, activity_id, word_id, status, activities(lesson_id, status, config, lessons(status))",
     )
     .in("id", questionIds);
   if (error) throw error;
@@ -435,6 +452,7 @@ async function storeAttempts(
       activity_id: q.activity_id,
       word_id: q.word_id,
       lesson_id: activity?.lesson_id ?? null,
+      content: q.content,
     });
     const configTries = (activity?.config as { maxTries?: unknown } | null)?.maxTries;
     eligibility.set(q.id, {
@@ -469,7 +487,10 @@ async function storeAttempts(
     for (const i of items ?? []) assessmentQuestions.add(`${i.assessment_id}:${i.question_id}`);
   }
 
+  // Phonics pattern codes of spelling mistakes → ids.
+  const patternIdByCode = new Map<string, string>();
   const rows = [];
+  const errorPatternCodes = new Map<string, string>();
   for (const attempt of pending) {
     const question = questions.get(attempt.questionId);
     if (!question) {
@@ -496,7 +517,20 @@ async function storeAttempts(
       continue;
     }
     if (key) takenFirstTries.add(key);
-    rows.push(built.row);
+    if (built.errorPatternCode) errorPatternCodes.set(built.row.id, built.errorPatternCode);
+    rows.push({ ...built.row, error_pattern_id: null as string | null });
+  }
+  if (errorPatternCodes.size > 0) {
+    const { data: patternRows, error: patternError } = await db
+      .from("phonics_patterns")
+      .select("id, code")
+      .in("code", [...new Set(errorPatternCodes.values())]);
+    if (patternError) throw patternError;
+    for (const p of patternRows ?? []) patternIdByCode.set(p.code, p.id);
+    for (const row of rows) {
+      const code = errorPatternCodes.get(row.id);
+      row.error_pattern_id = code ? (patternIdByCode.get(code) ?? null) : null;
+    }
   }
   if (rows.length > 0) {
     // ignoreDuplicates: a concurrent request that stored the same id first wins silently.
@@ -512,9 +546,10 @@ async function storeAttempts(
     if (row.attempt_number === 1) {
       newSkillIds.add(row.skill_id);
       if (row.word_id) newWordIds.add(row.word_id);
+      if (row.error_pattern_id) errorPatternIds.add(row.error_pattern_id);
     }
   }
-  return { newSkillIds, newWordIds, lessonIds, sessionIds };
+  return { newSkillIds, newWordIds, lessonIds, sessionIds, errorPatternIds };
 }
 
 // First tries already stored for the runs and sittings these answers name, as
@@ -1006,6 +1041,10 @@ async function recomputeWordProgress(
     familyTimeZone(db, childId),
   ]);
   if (error || existingError) throw error ?? existingError;
+  // Spelling targets: their spelling answers are reviewed by the spelling queue
+  // (spelling:<id>), so the word's own review item looks at the other areas only — one
+  // missed spelling makes one review item, not two.
+  const spellingTargets = await publishedSpellingTargets(db, wordIds);
   const wordAttempts = (attempts ?? []).filter(
     (a): a is typeof a & { word_id: string } => a.word_id !== null,
   );
@@ -1077,18 +1116,35 @@ async function recomputeWordProgress(
         last_practiced_at: area.lastPracticedAt,
         updated_at: now.toISOString(),
       });
-    const item = deriveWordReview(
-      {
-        wordId,
-        skillId: mine[0].skill_id,
-        lessonId: mine[0].lesson_id,
-        saved: saved.isSaved,
-        attempts: mine.map((a) => ({ isCorrect: a.is_correct, attemptedAt: a.attempted_at })),
-        progress,
-      },
-      now,
-      rules,
-    );
+    const forReview = spellingTargets.has(wordId)
+      ? mine.filter((a) => wordAreaFor(a.question_type, metadata.get(a.question_id)) !== "spelling")
+      : mine;
+    const item =
+      forReview.length === 0
+        ? null
+        : deriveWordReview(
+            {
+              wordId,
+              skillId: forReview[0].skill_id,
+              lessonId: forReview[0].lesson_id,
+              saved: saved.isSaved,
+              attempts: forReview.map((a) => ({ isCorrect: a.is_correct, attemptedAt: a.attempted_at })),
+              progress:
+                forReview === mine
+                  ? progress
+                  : computeWordProgress(
+                      forReview.map((a) => ({
+                        id: a.id,
+                        isCorrect: a.is_correct,
+                        attemptedAt: a.attempted_at,
+                        area: wordAreaFor(a.question_type, metadata.get(a.question_id)),
+                      })),
+                      { now, timeZone, rules },
+                    ),
+            },
+            now,
+            rules,
+          );
     if (item) reviewRows.push(item);
   }
   if (progressRows.length > 0) {
@@ -1104,6 +1160,227 @@ async function recomputeWordProgress(
     if (areaError) throw areaError;
   }
   await syncReviewItems(db, childId, wordIds.map(wordKey), reviewRows, now);
+}
+
+// Published spelling targets among these words: word id → its spelling skill and focus
+// pattern.
+async function publishedSpellingTargets(db: Db, wordIds: string[]) {
+  const targets = new Map<string, { skillId: string | null; patternId: string | null }>();
+  if (wordIds.length === 0) return targets;
+  const { data, error } = await db
+    .from("spelling_words")
+    .select("word_id, skill_id, phonics_pattern_id, words!inner(status)")
+    .in("word_id", wordIds)
+    .eq("status", "published")
+    .eq("words.status", "published");
+  if (error) throw error;
+  for (const r of data ?? [])
+    targets.set(r.word_id, { skillId: r.skill_id, patternId: r.phonics_pattern_id });
+  return targets;
+}
+
+// The first published lesson of each skill (where a review item sends the child).
+async function firstLessons(db: Db, skillIds: string[]) {
+  const first = new Map<string, string>();
+  if (skillIds.length === 0) return first;
+  const { data, error } = await db
+    .from("lessons")
+    .select("id, skill_id, sort_order")
+    .in("skill_id", skillIds)
+    .eq("status", "published")
+    .order("sort_order");
+  if (error) throw error;
+  for (const l of data ?? []) if (!first.has(l.skill_id)) first.set(l.skill_id, l.id);
+  return first;
+}
+
+// Spelling progress (separate from vocabulary word mastery) and spelling review items for
+// the words among `wordIds` that are spelling targets, recomputed from all of the child's
+// spelling first tries on them (src/lib/learning/spelling.ts). Returns the focus patterns
+// of those words, whose pattern review may change too.
+async function recomputeSpellingProgress(
+  db: Db,
+  childId: string,
+  wordIds: string[],
+  now: Date,
+  rules: LearningRules,
+) {
+  const targets = await publishedSpellingTargets(db, wordIds);
+  const focusPatterns = new Set<string>();
+  if (targets.size === 0) return focusPatterns;
+  const ids = [...targets.keys()];
+  const [{ data: attempts, error }, timeZone] = await Promise.all([
+    db
+      .from("activity_attempts")
+      .select(
+        "id, word_id, question_id, question_type, is_correct, hints_used, error_type, attempted_at, lesson_id",
+      )
+      .eq("child_id", childId)
+      .eq("attempt_number", 1)
+      .in("word_id", ids),
+    familyTimeZone(db, childId),
+  ]);
+  if (error) throw error;
+  const questionIds = [...new Set((attempts ?? []).map((a) => a.question_id))];
+  const metadata = new Map<string, unknown>();
+  if (questionIds.length > 0) {
+    const { data: questions, error: questionsError } = await db
+      .from("questions")
+      .select("id, metadata")
+      .in("id", questionIds);
+    if (questionsError) throw questionsError;
+    for (const q of questions ?? []) metadata.set(q.id, q.metadata);
+  }
+  const lessons = await firstLessons(db, [
+    ...new Set([...targets.values()].map((t) => t.skillId).filter((id): id is string => !!id)),
+  ]);
+
+  const progressRows = [];
+  const reviewRows: ReviewItemRow[] = [];
+  for (const wordId of ids) {
+    const target = targets.get(wordId)!;
+    if (target.patternId) focusPatterns.add(target.patternId);
+    const mine = (attempts ?? []).filter(
+      (a) =>
+        a.word_id === wordId &&
+        isSpellingEvidence(
+          metadata.get(a.question_id),
+          wordAreaFor(a.question_type, metadata.get(a.question_id)),
+        ),
+    );
+    if (mine.length === 0) continue;
+    const progress = computeSpellingProgress(
+      mine.map((a) => ({
+        id: a.id,
+        isCorrect: a.is_correct,
+        hintsUsed: a.hints_used,
+        attemptedAt: a.attempted_at,
+        errorType: a.error_type,
+      })),
+      { now, timeZone, rules },
+    );
+    progressRows.push({
+      child_id: childId,
+      word_id: wordId,
+      attempts_count: progress.attempts,
+      correct_count: progress.correct,
+      hinted_count: progress.hinted,
+      accuracy: progress.accuracy,
+      status: progress.status,
+      mastery_score: progress.masteryScore,
+      practice_days: progress.practiceDays,
+      review_priority: progress.reviewPriority,
+      next_review_at: progress.nextReviewAt,
+      first_practiced_at: progress.firstPracticedAt,
+      last_practiced_at: progress.lastPracticedAt,
+      last_error_type: progress.lastErrorType,
+      error_counts: progress.errorCounts,
+      updated_at: now.toISOString(),
+    });
+    const latestLesson = [...mine].sort((a, b) => b.attempted_at.localeCompare(a.attempted_at))[0].lesson_id;
+    const item = deriveSpellingReview(
+      {
+        wordId,
+        skillId: target.skillId,
+        lessonId: (target.skillId ? lessons.get(target.skillId) : undefined) ?? latestLesson,
+        attempts: mine.map((a) => ({ isCorrect: a.is_correct, attemptedAt: a.attempted_at })),
+        progress,
+      },
+      now,
+      rules,
+    );
+    if (item) reviewRows.push(item);
+  }
+  if (progressRows.length > 0) {
+    const { error: upsertError } = await db
+      .from("spelling_progress")
+      .upsert(progressRows, { onConflict: "child_id,word_id" });
+    if (upsertError) throw upsertError;
+  }
+  await syncReviewItems(db, childId, ids.map(spellingKey), reviewRows, now);
+  return focusPatterns;
+}
+
+// One review item per phonics pattern the child keeps misspelling (pattern:<id>), pointing
+// at the pattern's phonics lesson — the phonics engine's own skill and lessons, no separate
+// phonics mastery. Resolved once the mistakes age out or two words with that pattern are
+// spelled right after the latest mistake.
+async function recomputePatternReviews(
+  db: Db,
+  childId: string,
+  patternIds: string[],
+  now: Date,
+  rules: LearningRules,
+) {
+  const since = new Date(
+    now.getTime() - rules.spelling.patternLookbackDays * 24 * 60 * 60 * 1000,
+  ).toISOString();
+  const [
+    { data: errors, error },
+    { data: focusWords, error: wordsError },
+    { data: skills, error: skillsError },
+  ] = await Promise.all([
+    db
+      .from("activity_attempts")
+      .select("error_pattern_id, attempted_at")
+      .eq("child_id", childId)
+      .eq("attempt_number", 1)
+      .in("error_pattern_id", patternIds)
+      .gte("attempted_at", since),
+    db.from("spelling_words").select("word_id, phonics_pattern_id").in("phonics_pattern_id", patternIds),
+    db
+      .from("skills")
+      .select("id, phonics_pattern_id, sort_order, units!inner(subject_id, subjects!inner(code))")
+      .in("phonics_pattern_id", patternIds)
+      .eq("status", "published")
+      .eq("units.subjects.code", "PHONICS")
+      .order("sort_order"),
+  ]);
+  if (error || wordsError || skillsError) throw error ?? wordsError ?? skillsError;
+  const skillOf = new Map<string, string>();
+  for (const sk of skills ?? [])
+    if (sk.phonics_pattern_id && !skillOf.has(sk.phonics_pattern_id))
+      skillOf.set(sk.phonics_pattern_id, sk.id);
+  const lessons = await firstLessons(db, [...new Set(skillOf.values())]);
+
+  const rows: ReviewItemRow[] = [];
+  for (const patternId of patternIds) {
+    const times = (errors ?? []).filter((e) => e.error_pattern_id === patternId).map((e) => e.attempted_at);
+    let correctSince = 0;
+    const lastError = times.sort().at(-1);
+    if (lastError) {
+      const words = (focusWords ?? [])
+        .filter((w) => w.phonics_pattern_id === patternId)
+        .map((w) => w.word_id);
+      if (words.length > 0) {
+        const { count, error: countError } = await db
+          .from("activity_attempts")
+          .select("id", { count: "exact", head: true })
+          .eq("child_id", childId)
+          .eq("attempt_number", 1)
+          .eq("is_correct", true)
+          .not("spelling_analysis", "is", null)
+          .in("word_id", words)
+          .gt("attempted_at", lastError);
+        if (countError) throw countError;
+        correctSince = count ?? 0;
+      }
+    }
+    const skillId = skillOf.get(patternId) ?? null;
+    const item = derivePatternReview(
+      {
+        patternId,
+        skillId,
+        lessonId: skillId ? (lessons.get(skillId) ?? null) : null,
+        errorTimes: times,
+        correctSinceLastError: correctSince,
+      },
+      now,
+      rules,
+    );
+    if (item) rows.push(item);
+  }
+  await syncReviewItems(db, childId, patternIds.map(patternKey), rows, now);
 }
 
 async function recomputeSessions(db: Db, childId: string, sessionIds: string[]) {

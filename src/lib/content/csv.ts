@@ -1,4 +1,9 @@
-import { wordSchema, type WordInput } from "@/lib/content/content-schemas";
+import {
+  spellingWordSchema,
+  wordSchema,
+  type SpellingWordInput,
+  type WordInput,
+} from "@/lib/content/content-schemas";
 
 // RFC 4180 CSV parsing (quoted fields, escaped quotes, CRLF/LF, embedded newlines) and
 // the words.csv row format. Kept dependency-free; imports are small enough to parse in
@@ -159,4 +164,67 @@ export function parseWordsCsv(input: string): {
 
 export function normalizeWord(word: string) {
   return word.normalize("NFKC").trim().toLowerCase();
+}
+
+// Spelling targets (content/spelling/*.csv). Required: word, level, spelling_type,
+// difficulty. Optional: skill, phonics_pattern, audio, example_sentence, is_high_frequency,
+// is_irregular, irregular_part, hints (separated by |), common_errors (;), tags (;), sense,
+// status.
+export const SPELLING_CSV_REQUIRED_COLUMNS = ["word", "level", "spelling_type", "difficulty"] as const;
+
+export type SpellingCsvRowResult =
+  { ok: true; line: number; word: SpellingWordInput } | { ok: false; line: number; raw: string; error: string };
+
+export function parseSpellingCsv(input: string): {
+  header: string[];
+  rows: SpellingCsvRowResult[];
+  missingColumns: string[];
+} {
+  const [headerRow, ...dataRows] = parseCsv(input);
+  const header = (headerRow ?? []).map((h) => h.trim().toLowerCase());
+  const missingColumns = SPELLING_CSV_REQUIRED_COLUMNS.filter((c) => !header.includes(c));
+  if (missingColumns.length > 0) return { header, rows: [], missingColumns };
+  const rows = dataRows
+    .map((cells, i) => ({ cells, line: i + 2 }))
+    .filter(({ cells }) => cells.some((c) => c.trim() !== ""))
+    .map(({ cells, line }): SpellingCsvRowResult => {
+      const get = (name: string) => {
+        const index = header.indexOf(name);
+        return index === -1 ? undefined : cells[index]?.trim() || undefined;
+      };
+      const candidate = {
+        word: get("word"),
+        sense: get("sense") ? Number(get("sense")) : undefined,
+        level: get("level")?.toUpperCase(),
+        skill: get("skill"),
+        spellingType: get("spelling_type")?.toUpperCase(),
+        difficulty: Number(get("difficulty")),
+        phonicsPattern: get("phonics_pattern")?.toUpperCase(),
+        audio: get("audio"),
+        exampleSentence: get("example_sentence"),
+        isHighFrequency: truthy(get("is_high_frequency")),
+        isIrregular: truthy(get("is_irregular")),
+        irregularPart: get("irregular_part")?.toLowerCase(),
+        hints: (get("hints") ?? "")
+          .split("|")
+          .map((h) => h.trim())
+          .filter(Boolean),
+        commonErrors: list(get("common_errors")).map((e) => e.toLowerCase()),
+        tags: list(get("tags")),
+        status: get("status"),
+      };
+      const parsed = spellingWordSchema.safeParse(candidate);
+      if (!parsed.success) {
+        return {
+          ok: false,
+          line,
+          raw: cells.join(","),
+          error: parsed.error.issues.map((issue) => `${issue.path.join(".")}: ${issue.message}`).join("; "),
+        };
+      }
+      if (parsed.data.irregularPart && !parsed.data.isIrregular)
+        return { ok: false, line, raw: cells.join(","), error: "irregular_part needs is_irregular=yes" };
+      return { ok: true, line, word: parsed.data };
+    });
+  return { header, rows, missingColumns };
 }

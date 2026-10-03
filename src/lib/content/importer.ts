@@ -8,19 +8,27 @@ import type {
   ReferenceFile,
   sentencesFileSchema,
   sightWordsFileSchema,
+  SpellingWordInput,
   storiesFileSchema,
   vocabularyFileSchema,
   WordInput,
 } from "@/lib/content/content-schemas";
-import { exampleSentenceIssues, familyMembers } from "@/lib/content/vocabulary";
-import { categoryFacts, templateWordFromInput, wordForms, type CategoryRef } from "@/lib/content/word-bank";
+import { exampleSentenceIssues, familyMembers, findWordInSentence } from "@/lib/content/vocabulary";
+import {
+  categoryFacts,
+  irregularPositions,
+  templateSpellingFromInput,
+  templateWordFromInput,
+  wordForms,
+  type CategoryRef,
+} from "@/lib/content/word-bank";
 import { normalizeWord } from "@/lib/content/csv";
 import { parseActivityConfig } from "@/lib/content/activity-config";
 import { BlueprintError, expandBlueprint } from "@/lib/content/lesson-blueprints";
 import { validatePhonicsFile, type ValidationIssue } from "@/lib/content/phonics-validation";
 import { decomposeWord, segmentsUsePattern, type PatternInfo, type PhonemeInfo } from "@/lib/learning/phonics";
 import { parseQuestion } from "@/lib/content/question-schemas";
-import { mergeLearningRules } from "@/lib/learning/rules";
+import { DEFAULT_RULES, mergeLearningRules, type LearningRules } from "@/lib/learning/rules";
 import {
   expandTemplate,
   TemplateError,
@@ -48,6 +56,11 @@ export type ImportBundle = {
   stories?: z.infer<typeof storiesFileSchema>;
   curriculum?: CurriculumFile[];
   assessments?: z.infer<typeof assessmentsFileSchema>;
+  // Spelling targets (content/spelling/*.csv): words of the bank with their spelling data.
+  spelling?: SpellingWordInput[];
+  // True when `spelling` is the whole list (the content folder): targets missing from it are
+  // archived. A single CSV (--spelling) only adds and updates.
+  spellingComplete?: boolean;
 };
 
 export type EntityReport = {
@@ -66,6 +79,9 @@ type Row = Record<string, unknown>;
 type Db = SupabaseClient;
 
 const BATCH_SIZE = 500;
+// Ids per filter in a request URL (`id=in.(…)`): 36-character uuids, kept well under the
+// URL length limits of the API gateway.
+const ID_BATCH_SIZE = 150;
 const EXAMPLE_EXTRA_WORDS = 3;
 // Tables whose primary key is their code (no uuid id column).
 const CODE_KEYED_TABLES = new Set([
@@ -74,6 +90,7 @@ const CODE_KEYED_TABLES = new Set([
   "learning_rules",
   "phonemes",
   "phonics_stages",
+  "spelling_types",
 ]);
 
 type Flag = { entity: string; entity_key: string; rule: string; severity: "warning" | "error"; message: string };
@@ -141,6 +158,12 @@ export class ContentImporter {
   private sentenceFileTexts = new Set<string>();
   // The level rank of the curriculum file being imported (template distractor difficulty).
   private currentLevelRank: number | undefined;
+  // Spelling: the engine rules (stored overrides merged over the defaults), the level's
+  // spelling settings for the curriculum file being imported, and the validated spelling
+  // rows waiting for their skills (written after the curriculum).
+  private learningRules: LearningRules | null = null;
+  private currentSpellingLevel: LearningRules["spelling"]["levels"][string] | undefined;
+  private pendingSpelling: { input: SpellingWordInput; row: Row }[] = [];
 
   constructor(
     private readonly db: Db,
@@ -240,11 +263,11 @@ export class ContentImporter {
   ) {
     if (this.options.dryRun || parentIds.length === 0) return;
     const realParents = parentIds.filter((id) => !id.startsWith("dry-run:"));
-    for (let i = 0; i < realParents.length; i += BATCH_SIZE) {
+    for (let i = 0; i < realParents.length; i += ID_BATCH_SIZE) {
       const { error } = await this.db
         .from(table)
         .delete()
-        .in(parentColumn, realParents.slice(i, i + BATCH_SIZE));
+        .in(parentColumn, realParents.slice(i, i + ID_BATCH_SIZE));
       if (error) throw new Error(`clearing ${table}: ${error.message}`);
     }
     const unique = new Map(rows.map((r) => [keyColumns.map((c) => String(r[c])).join("|"), r]));
@@ -399,8 +422,23 @@ export class ContentImporter {
         text: f.text,
         speech: f.speech,
         emoji: f.emoji,
+        error_category: f.errorCategory ?? null,
         sort_order: i,
         status: f.status,
+      })),
+    );
+    await this.sync(
+      "spelling_types",
+      "spelling types",
+      ["code"],
+      file.spellingTypes.map((t) => ({
+        code: t.code,
+        name: t.name,
+        child_name: t.childName,
+        description: t.description,
+        emoji: t.emoji,
+        sort_order: t.sortOrder,
+        status: t.status,
       })),
     );
     // Rule overrides are validated against the engine's schemas before they are stored.
@@ -418,6 +456,16 @@ export class ContentImporter {
       ["code"],
       validRules.map((r) => ({ code: r.code, description: r.description, config: r.config })),
     );
+    this.learningRules = mergeLearningRules(validRules).rules;
+  }
+
+  // The engine rules as stored (or as just imported), for spelling progression checks.
+  private async rules() {
+    if (!this.learningRules) {
+      const rows = await fetchAll(this.db, "learning_rules", "code,config");
+      this.learningRules = mergeLearningRules(rows.map((r) => ({ code: String(r.code), config: r.config }))).rules;
+    }
+    return this.learningRules ?? DEFAULT_RULES;
   }
 
   private flag(issue: ValidationIssue | Flag, severity: "warning" | "error" = "warning") {
@@ -1119,6 +1167,40 @@ export class ContentImporter {
         });
       }
     }
+    // Spelling facts of stored spelling targets (a curriculum-only import still needs them).
+    if (![...this.wordBank.values()].some((w) => w.spelling)) {
+      const [spellingRows, wordRows, levelRows, patternRows] = await Promise.all([
+        fetchAll(
+          this.db,
+          "spelling_words",
+          "word_id,level_id,spelling_type_code,phonics_pattern_id,irregular_positions,hints,common_errors,is_high_frequency,sentences(text)",
+          [{ op: "neq", column: "status", value: "archived" }],
+        ),
+        fetchAll(this.db, "words", "id,word,sense"),
+        fetchAll(this.db, "levels", "id,code"),
+        fetchAll(this.db, "phonics_patterns", "id,code"),
+      ]);
+      const wordById = new Map(wordRows.map((w) => [String(w.id), w]));
+      const levelCodeById = new Map(levelRows.map((l) => [String(l.id), String(l.code)]));
+      const patternCodeById = new Map(patternRows.map((p) => [String(p.id), String(p.code)]));
+      for (const r of spellingRows) {
+        const w = wordById.get(String(r.word_id));
+        if (!w || Number(w.sense) !== 1) continue;
+        const bankWord = this.wordBank.get(normalizeWord(String(w.word)));
+        if (!bankWord) continue;
+        const sentence = Array.isArray(r.sentences) ? r.sentences[0] : (r.sentences as Row | null);
+        bankWord.spelling = {
+          type: String(r.spelling_type_code),
+          level: levelCodeById.get(String(r.level_id)) ?? "",
+          focusPattern: r.phonics_pattern_id ? (patternCodeById.get(String(r.phonics_pattern_id)) ?? null) : null,
+          irregularPositions: ((r.irregular_positions as number[]) ?? []).map(Number),
+          hints: ((r.hints as { text?: string }[]) ?? []).map((h) => String(h.text ?? "")).filter(Boolean),
+          sentence: sentence?.text ? String(sentence.text) : null,
+          commonErrors: ((r.common_errors as { spelling?: string }[]) ?? []).map((e) => String(e.spelling ?? "")),
+          highFrequency: Boolean(r.is_high_frequency),
+        };
+      }
+    }
     if (this.patternBank.size === 0) {
       const [patterns, sounds] = await Promise.all([
         fetchAll(
@@ -1277,6 +1359,7 @@ export class ContentImporter {
         story?: string;
         area?: string;
         sentence?: string;
+        spellingActivity?: string;
       };
       if ("template" in input && typeof input.template === "string") {
         const {
@@ -1292,6 +1375,7 @@ export class ContentImporter {
           word: (text) => this.wordBank.get(normalizeWord(text)),
           words: () => this.publishedBank(),
           levelRank: this.currentLevelRank,
+          spellingLevel: this.currentSpellingLevel,
           pattern: (patternCode) => this.patternBank.get(patternCode),
           phoneme: (phonemeCode) => {
             const p = this.phonemeInfo?.get(phonemeCode);
@@ -1334,6 +1418,7 @@ export class ContentImporter {
         metadata: {
           ...("metadata" in input && input.metadata ? input.metadata : {}),
           ...(expanded.area ? { wordArea: expanded.area } : {}),
+          ...(expanded.spellingActivity ? { spellingActivity: expanded.spellingActivity } : {}),
         },
         sentence_id: expanded.sentence ? (this.idMap("sentences").get(expanded.sentence) ?? null) : null,
         word_id: expanded.word ? this.lookup("words", `${normalizeWord(expanded.word)}|1`, "word") : null,
@@ -1369,6 +1454,8 @@ export class ContentImporter {
     this.flagScopes.add("question");
     const levelId = this.lookup("levels", file.level, "level");
     this.currentLevelRank = (await this.loadVocabularyRefs()).levelRanks.get(file.level);
+    const spellingRules = (await this.rules()).spelling;
+    this.currentSpellingLevel = spellingRules.levels[file.level] ?? spellingRules.levels[spellingRules.defaultLevel];
 
     // Lessons written as a blueprint become ordinary activities here, before anything else
     // sees them (src/lib/content/lesson-blueprints.ts).
@@ -1377,9 +1464,13 @@ export class ContentImporter {
         skill.lessons = skill.lessons.filter((lesson) => {
           if (!lesson.blueprint) return true;
           try {
-            lesson.activities = expandBlueprint({ levelRank: this.currentLevelRank, ...lesson.blueprint }).map((a) => ({
+            lesson.activities = expandBlueprint({
+              levelRank: this.currentLevelRank,
+              spellingLevel: this.currentSpellingLevel,
+              ...lesson.blueprint,
+            }).map((a) => ({
               ...a,
-              config: {},
+              config: a.config ?? {},
               status: lesson.status,
               questions: a.questions.map((q) => ({ difficulty: 1, explanation: "", ...q })),
             }));
@@ -1657,6 +1748,159 @@ export class ContentImporter {
   }
 
   // Replaces the review flags of every kind of content this run checked.
+  // Spelling targets, step 1: every row must name a word of the bank (spelling data never
+  // creates or copies a word), a known level, spelling type and pattern, and an irregular
+  // part that is in the word. Doubtful rows are flagged: a focus pattern the word's split
+  // does not use, a type or length outside the level's spelling progression, a sentence
+  // without the word. Dictation sentences go into the sentence bank. The spelling facts
+  // are attached to the word bank for the templates.
+  async prepareSpelling(words: SpellingWordInput[]) {
+    await Promise.all([
+      this.loadIds("words", ["normalized_word", "sense"]),
+      this.loadIds("levels", ["code"]),
+      this.loadIds("phonics_patterns", ["code"]),
+      this.loadIds("spelling_types", ["code"]),
+      this.loadIds("audio_assets", ["storage_path"]),
+      this.loadIds("sentences", ["text"]),
+    ]);
+    await this.loadBanksFromDatabase();
+    const rules = (await this.rules()).spelling;
+    const types = new Map([...this.patternBank.values()].map((p) => [p.code, { type: p.type }]));
+    this.flagScopes.add("spelling_word");
+    const report = this.entity("spelling words");
+    const seen = new Set<string>();
+    const sentences = new Map<string, Row>();
+    words.forEach((s, index) => {
+      const key = `${normalizeWord(s.word)}|${s.sense}`;
+      try {
+        if (seen.has(key)) {
+          report.duplicate++;
+          report.errors.push(`spelling word "${s.word}" appears more than once; kept the first`);
+          return;
+        }
+        seen.add(key);
+        const wordId = this.idMap("words").get(key);
+        const bankWord = this.wordBank.get(normalizeWord(s.word));
+        if (!wordId || !bankWord) throw new Error("is not in the word bank (add it to content/words first)");
+        const levelId = this.lookup("levels", s.level, "level");
+        this.lookup("spelling_types", s.spellingType, "spelling type");
+        const segments = bankWord.segments ?? [];
+        const positions = irregularPositions(s.word, segments, s.irregularPart);
+        if (s.phonicsPattern) {
+          this.lookup("phonics_patterns", s.phonicsPattern, "phonics pattern");
+          const pattern = this.patternBank.get(s.phonicsPattern);
+          if (segments.length && pattern && !segmentsUsePattern(segments, pattern, types))
+            this.flag({
+              entity: "spelling_word",
+              entity_key: s.word,
+              rule: "word_not_using_pattern",
+              severity: "warning",
+              message: `"${s.word}" is a spelling word for ${s.phonicsPattern} but its split does not use it`,
+            });
+        }
+        const level = rules.levels[s.level];
+        if (level && !level.spellingTypes.includes(s.spellingType))
+          this.flag({
+            entity: "spelling_word",
+            entity_key: s.word,
+            rule: "spelling_progression",
+            severity: "warning",
+            message: `${s.spellingType} is not in ${s.level}'s spelling progression (${level.spellingTypes.join(", ")})`,
+          });
+        if (level && s.word.length > level.maxWordLength)
+          this.flag({
+            entity: "spelling_word",
+            entity_key: s.word,
+            rule: "spelling_progression",
+            severity: "warning",
+            message: `"${s.word}" is longer than ${s.level}'s ${level.maxWordLength} letters`,
+          });
+        if (s.exampleSentence) {
+          if (!findWordInSentence(s.exampleSentence, s.word))
+            this.flag({
+              entity: "spelling_word",
+              entity_key: s.word,
+              rule: "example_sentence",
+              severity: "warning",
+              message: `"${s.exampleSentence}" does not use "${s.word}"`,
+            });
+          if (!sentences.has(s.exampleSentence))
+            sentences.set(s.exampleSentence, {
+              text: s.exampleSentence,
+              level_id: levelId,
+              difficulty: s.difficulty,
+              grammar_complexity: 1,
+              word_count: s.exampleSentence.split(/\s+/).length,
+              status: "published",
+            });
+        }
+        bankWord.spelling = templateSpellingFromInput(s, segments);
+        this.pendingSpelling.push({
+          input: s,
+          row: {
+            word_id: wordId,
+            level_id: levelId,
+            spelling_type_code: s.spellingType,
+            phonics_pattern_id: s.phonicsPattern ? this.lookup("phonics_patterns", s.phonicsPattern, "phonics pattern") : null,
+            difficulty: s.difficulty,
+            is_high_frequency: s.isHighFrequency,
+            is_irregular: s.isIrregular,
+            irregular_part: s.irregularPart ?? "",
+            irregular_positions: positions,
+            hints: s.hints.map((text) => ({ text })),
+            common_errors: s.commonErrors.map((spelling) => ({ spelling })),
+            audio_asset_id: s.audio ? this.lookup("audio_assets", s.audio, "audio recording") : null,
+            tags: s.tags,
+            sort_order: index,
+            status: s.status,
+          },
+        });
+      } catch (error) {
+        report.invalid++;
+        report.errors.push(`spelling word "${s.word}": ${(error as Error).message}`);
+      }
+    });
+    // Only sentences not already in the bank are added (existing rows are left as they are).
+    const fresh = [...sentences.values()].filter((r) => !this.idMap("sentences").has(String(r.text)));
+    if (fresh.length > 0) await this.sync("sentences", "example sentences", ["text"], fresh);
+  }
+
+  // Spelling targets, step 2 (after the curriculum, so skills exist): write the rows and, for
+  // a full import, archive published spelling targets that are no longer in the files.
+  async importSpellingWords(archiveMissing: boolean) {
+    await Promise.all([this.loadIds("skills", ["code"]), this.loadIds("sentences", ["text"])]);
+    const report = this.entity("spelling words");
+    const rows: Row[] = [];
+    for (const { input, row } of this.pendingSpelling) {
+      try {
+        rows.push({
+          ...row,
+          skill_id: input.skill ? this.lookup("skills", input.skill, "skill") : null,
+          sentence_id: input.exampleSentence ? (this.idMap("sentences").get(input.exampleSentence) ?? null) : null,
+        });
+      } catch (error) {
+        report.invalid++;
+        report.errors.push(`spelling word "${input.word}": ${(error as Error).message}`);
+      }
+    }
+    const ids = await this.sync("spelling_words", "spelling words", ["word_id"], rows);
+    if (!archiveMissing) {
+      this.pendingSpelling = [];
+      return;
+    }
+    const kept = new Set(rows.map((r) => ids.get(String(r.word_id))).filter(Boolean));
+    const existing = await fetchAll(this.db, "spelling_words", "id,status", [
+      { op: "neq", column: "status", value: "archived" },
+    ]);
+    const stale = existing.map((r) => String(r.id)).filter((id) => !kept.has(id));
+    report.archived += stale.length;
+    if (!this.options.dryRun && stale.length > 0) {
+      const { error } = await this.db.from("spelling_words").update({ status: "archived" }).in("id", stale);
+      if (error) throw new Error(`archiving spelling_words: ${error.message}`);
+    }
+    this.pendingSpelling = [];
+  }
+
   async writeFlags() {
     const report = this.entity("review flags");
     const unique = new Map(this.flags.map((f) => [`${f.entity}|${f.entity_key}|${f.rule}`, f]));
@@ -1683,7 +1927,11 @@ export class ContentImporter {
     await this.importWordExamples();
     if (bundle.vocabulary) await this.importFamilies(bundle.vocabulary);
     if (bundle.stories) await this.importStories(bundle.stories);
+    // Spelling targets are checked (and their sentences stored) before the curriculum, whose
+    // spelling templates read them; their rows are written after it, once skills exist.
+    if (bundle.spelling) await this.prepareSpelling(bundle.spelling);
     for (const file of bundle.curriculum ?? []) await this.importCurriculum(file);
+    if (bundle.spelling) await this.importSpellingWords(bundle.spellingComplete === true);
     if (bundle.assessments) await this.importAssessments(bundle.assessments);
     await this.writeFlags();
     return this.report;

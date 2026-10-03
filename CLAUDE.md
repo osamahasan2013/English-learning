@@ -52,7 +52,7 @@ globals, `proxy.ts` instead of `middleware.ts`).
 ## Folder structure
 
 ```
-content/                 curriculum as data (JSON + words CSV) → npm run content:import
+content/                 curriculum as data (JSON + words / spelling CSV) → npm run content:import
 scripts/content/         import CLI            scripts/db/     type generator, SQL test runner
 scripts/local-stack/     Docker-free Supabase-compatible stack for dev/tests
 supabase/migrations/     schema, RLS, grants (never edit an applied migration; add one)
@@ -63,7 +63,8 @@ src/components/          ui/ primitives (Button, Card, Field, Alert, EmptyState,
                          layout/ (AppShell, NavLink, setup screen, sync, offline, SW), parent/, child/
 public/offline.html      static offline fallback served by the service worker
 src/lib/learning/        pure domain logic: evaluate, mastery, scoring, daily plan, placement,
-                         phonics (word split), phonics-progress (stars), assessment-scoring…
+                         phonics (word split), phonics-progress (stars), assessment-scoring,
+                         spelling (checker, error categories, hints, spelling mastery)…
 src/lib/content/         content schemas, CSV, templates, lesson blueprints, phonics validation, importer
 src/lib/offline/         Dexie DB, outbox, sync protocol, lesson cache
 src/lib/server/          server-only loaders, progress writer, rate limit

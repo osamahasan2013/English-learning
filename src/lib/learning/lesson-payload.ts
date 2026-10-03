@@ -3,6 +3,7 @@ import type { ParsedQuestion } from "@/lib/content/question-schemas";
 import type { AnswerKey } from "@/lib/learning/answer-key";
 import type { FeedbackMessage } from "@/lib/learning/feedback";
 import type { PlayerRules, ScoringRules } from "@/lib/learning/rules";
+import type { SpellingStepSettings } from "@/lib/learning/spelling";
 
 // What the lesson player receives: everything needed to run a lesson offline, already
 // validated. Built on the server by src/lib/server/lesson-loader.ts and cached on the
@@ -51,6 +52,9 @@ export type LessonStep = {
   // For word building: what speech synthesis should say for each tile's sound (from the
   // tile's phonics pattern), so blending demos say "kuh… aa… tuh", not letter names.
   tileSounds: Record<string, string>;
+  // Spelling steps: the activity, input method, hints and dictation replays, resolved on the
+  // server from the activity config and the level's spelling rules. null otherwise.
+  spelling: SpellingStepSettings | null;
 };
 
 export type LessonPayload = {
@@ -77,7 +81,13 @@ export type LessonPayload = {
   // Set when this payload is word practice (Word Explorer, My Words): published questions
   // about the chosen words, taken from their lessons. Answers count like any answers, but
   // no lesson run is recorded — the lessons themselves are not "completed" by practice.
-  practice?: { kind: "word" | "my_words"; returnHref: string; wordIds: string[] };
+  practice?: {
+    kind: "word" | "my_words" | "spelling" | "dictation";
+    returnHref: string;
+    // What the "back" button on the summary says (defaults by kind).
+    returnLabel?: string;
+    wordIds: string[];
+  };
   steps: LessonStep[];
   feedback: FeedbackMessage[];
   rules: { player: PlayerRules; scoring: ScoringRules };

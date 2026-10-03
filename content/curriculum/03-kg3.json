@@ -971,6 +971,181 @@
           ]
         }
       ]
+    },
+    {
+      "code": "kg3-spelling",
+      "subject": "SPELLING",
+      "title": "Spelling Sounds",
+      "emoji": "✏️",
+      "description": "Spell digraphs, blends and tricky words.",
+      "skills": [
+        {
+          "code": "kg3-spell-families",
+          "dimension": "SPELLING",
+          "title": "Spelling word families",
+          "childTitle": "Word families",
+          "importance": 4,
+          "lessons": [
+            {
+              "code": "kg3-spell-families-1",
+              "title": "Word families: -at, -ug, -et",
+              "childTitle": "Word families: -at, -ug, -et",
+              "description": "Spell: bat, rat, bug, hug, jet, wet.",
+              "emoji": "🦇",
+              "minutes": 8,
+              "introSpeech": "Let's spell! Word families: words that end the same way.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "bat",
+                  "rat",
+                  "bug",
+                  "hug",
+                  "jet",
+                  "wet"
+                ]
+              }
+            }
+          ],
+          "prerequisites": [
+            "kg2-spell-cvc"
+          ]
+        },
+        {
+          "code": "kg3-spell-digraphs",
+          "dimension": "SPELLING",
+          "title": "Spelling digraphs",
+          "childTitle": "Two letters, one sound",
+          "importance": 4,
+          "lessons": [
+            {
+              "code": "kg3-spell-sh-ch",
+              "title": "Spell sh and ch words",
+              "childTitle": "Spell sh and ch words",
+              "description": "Spell: ship, shop, fish, dish, chip, chin.",
+              "emoji": "🚢",
+              "minutes": 8,
+              "introSpeech": "Let's spell! Spell sh and ch words.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "ship",
+                  "shop",
+                  "fish",
+                  "dish",
+                  "chip",
+                  "chin"
+                ]
+              }
+            },
+            {
+              "code": "kg3-spell-th-wh",
+              "title": "Spell th, wh, ck and ng words",
+              "childTitle": "Spell th, wh, ck and ng words",
+              "description": "Spell: thin, bath, this, whip, rock, ring.",
+              "emoji": "💍",
+              "minutes": 8,
+              "introSpeech": "Let's spell! Spell th, wh, ck and ng words.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "thin",
+                  "bath",
+                  "this",
+                  "whip",
+                  "rock",
+                  "ring"
+                ]
+              }
+            }
+          ],
+          "prerequisites": [
+            "kg2-spell-cvc"
+          ]
+        },
+        {
+          "code": "kg3-spell-blends",
+          "dimension": "SPELLING",
+          "title": "Spelling blends",
+          "childTitle": "Blends",
+          "importance": 4,
+          "lessons": [
+            {
+              "code": "kg3-spell-blends-1",
+              "title": "Spell words that start with a blend",
+              "childTitle": "Spell words that start with a blend",
+              "description": "Spell: frog, stop, clap, flag, grass, clock.",
+              "emoji": "🐸",
+              "minutes": 8,
+              "introSpeech": "Let's spell! Spell words that start with a blend.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "frog",
+                  "stop",
+                  "clap",
+                  "flag",
+                  "grass",
+                  "clock"
+                ]
+              }
+            },
+            {
+              "code": "kg3-spell-blends-2",
+              "title": "Spell words that end with a blend",
+              "childTitle": "Spell words that end with a blend",
+              "description": "Spell: lamp, hand, tent, milk, desk, fast.",
+              "emoji": "⛺",
+              "minutes": 8,
+              "introSpeech": "Let's spell! Spell words that end with a blend.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "lamp",
+                  "hand",
+                  "tent",
+                  "milk",
+                  "desk",
+                  "fast"
+                ]
+              }
+            }
+          ],
+          "prerequisites": [
+            "kg2-spell-cvc"
+          ]
+        },
+        {
+          "code": "kg3-spell-tricky",
+          "dimension": "SPELLING",
+          "title": "Spelling tricky words",
+          "childTitle": "Tricky words",
+          "importance": 5,
+          "lessons": [
+            {
+              "code": "kg3-spell-tricky-1",
+              "title": "Said, was, they",
+              "childTitle": "Said, was, they",
+              "description": "Spell: said, was, they, have, come, are.",
+              "emoji": "🧩",
+              "minutes": 8,
+              "introSpeech": "Let's spell! Said, was, they.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "said",
+                  "was",
+                  "they",
+                  "have",
+                  "come",
+                  "are"
+                ],
+                "tricky": true
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

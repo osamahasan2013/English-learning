@@ -1513,6 +1513,167 @@
           ]
         }
       ]
+    },
+    {
+      "code": "g2-spelling",
+      "subject": "SPELLING",
+      "title": "Spelling Longer Words",
+      "emoji": "✏️",
+      "description": "Spell longer words, suffixes, endings and tricky words.",
+      "skills": [
+        {
+          "code": "g2-spell-multisyllable",
+          "dimension": "SPELLING",
+          "title": "Spelling words with two syllables",
+          "childTitle": "Long words",
+          "importance": 4,
+          "lessons": [
+            {
+              "code": "g2-spell-two-parts",
+              "title": "Spell words in two parts",
+              "childTitle": "Spell words in two parts",
+              "description": "Spell: rabbit, kitten, picnic, napkin, sunset, pumpkin.",
+              "emoji": "🐇",
+              "minutes": 8,
+              "introSpeech": "Let's spell! Spell words in two parts.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "rabbit",
+                  "kitten",
+                  "picnic",
+                  "napkin",
+                  "sunset",
+                  "pumpkin"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "g2-spell-suffixes",
+          "dimension": "SPELLING",
+          "title": "Spelling suffixes",
+          "childTitle": "Suffixes",
+          "importance": 4,
+          "lessons": [
+            {
+              "code": "g2-spell-suffixes-1",
+              "title": "Spell -ful, -ness and -tion words",
+              "childTitle": "Spell -ful, -ness and -tion words",
+              "description": "Spell: helpful, playful, sadness, kindness, action, station.",
+              "emoji": "🤝",
+              "minutes": 8,
+              "introSpeech": "Let's spell! Spell -ful, -ness and -tion words.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "helpful",
+                  "playful",
+                  "sadness",
+                  "kindness",
+                  "action",
+                  "station"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "code": "g2-spell-endings",
+          "dimension": "SPELLING",
+          "title": "Spelling endings",
+          "childTitle": "Endings",
+          "importance": 4,
+          "lessons": [
+            {
+              "code": "g2-spell-endings-1",
+              "title": "Spell -ed, -ing and -es words",
+              "childTitle": "Spell -ed, -ing and -es words",
+              "description": "Spell: jumped, jumping, played, painted, singing, boxes.",
+              "emoji": "🦘",
+              "minutes": 8,
+              "introSpeech": "Let's spell! Spell -ed, -ing and -es words.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "jumped",
+                  "jumping",
+                  "played",
+                  "painted",
+                  "singing",
+                  "boxes"
+                ]
+              }
+            }
+          ],
+          "prerequisites": [
+            "g1-spell-endings"
+          ]
+        },
+        {
+          "code": "g2-spell-r-controlled",
+          "dimension": "SPELLING",
+          "title": "Spelling ir and or words",
+          "childTitle": "Bossy r",
+          "importance": 4,
+          "lessons": [
+            {
+              "code": "g2-spell-ir-or",
+              "title": "Spell ir and or words",
+              "childTitle": "Spell ir and or words",
+              "description": "Spell: bird, girl, shirt, fork, corn, storm.",
+              "emoji": "🐦",
+              "minutes": 8,
+              "introSpeech": "Let's spell! Spell ir and or words.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "bird",
+                  "girl",
+                  "shirt",
+                  "fork",
+                  "corn",
+                  "storm"
+                ]
+              }
+            }
+          ],
+          "prerequisites": [
+            "g1-spell-r-controlled"
+          ]
+        },
+        {
+          "code": "g2-spell-tricky",
+          "dimension": "SPELLING",
+          "title": "Spelling tricky words",
+          "childTitle": "Tricky words",
+          "importance": 5,
+          "lessons": [
+            {
+              "code": "g2-spell-tricky-1",
+              "title": "Because, friend, could",
+              "childTitle": "Because, friend, could",
+              "description": "Spell: because, friend, could, would, school, water.",
+              "emoji": "🧩",
+              "minutes": 8,
+              "introSpeech": "Let's spell! Because, friend, could.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "because",
+                  "friend",
+                  "could",
+                  "would",
+                  "school",
+                  "water"
+                ],
+                "tricky": true
+              }
+            }
+          ]
+        }
+      ]
     }
   ]
 }

@@ -356,6 +356,12 @@
       "name": "Find the pattern",
       "description": "Tap the letters that make a sound in a word.",
       "isScored": true
+    },
+    {
+      "code": "SENTENCE_DICTATION",
+      "name": "Sentence dictation",
+      "description": "Hear a sentence and write it; checked word by word (and for capitals and end marks where the level asks).",
+      "isScored": true
     }
   ],
   "wordCategories": [
@@ -709,6 +715,195 @@
       "text": "Amazing! Three stars!",
       "speech": "Amazing! Three stars!",
       "emoji": "🏆"
+    },
+    {
+      "code": "spelling-missing-letter-1",
+      "kind": "TRY_AGAIN",
+      "text": "A letter is missing. Listen again!",
+      "speech": "A letter is missing. Listen again, and say each sound.",
+      "emoji": "🔍",
+      "errorCategory": "MISSING_LETTER",
+      "status": "published"
+    },
+    {
+      "code": "spelling-missing-letter-2",
+      "kind": "TRY_AGAIN",
+      "text": "Almost! One letter went missing.",
+      "speech": "Almost! One letter went missing. Say the word slowly.",
+      "emoji": "🔍",
+      "errorCategory": "MISSING_LETTER",
+      "status": "published"
+    },
+    {
+      "code": "spelling-extra-letter-1",
+      "kind": "TRY_AGAIN",
+      "text": "There is an extra letter.",
+      "speech": "There is an extra letter. Check each one.",
+      "emoji": "✂️",
+      "errorCategory": "EXTRA_LETTER",
+      "status": "published"
+    },
+    {
+      "code": "spelling-substituted-letter-1",
+      "kind": "TRY_AGAIN",
+      "text": "One letter is not right.",
+      "speech": "One letter is not right. Listen to each sound.",
+      "emoji": "🔁",
+      "errorCategory": "SUBSTITUTED_LETTER",
+      "status": "published"
+    },
+    {
+      "code": "spelling-transposition-1",
+      "kind": "TRY_AGAIN",
+      "text": "Two letters swapped places!",
+      "speech": "Two letters swapped places. Check the order.",
+      "emoji": "🔀",
+      "errorCategory": "TRANSPOSITION",
+      "status": "published"
+    },
+    {
+      "code": "spelling-wrong-vowel-1",
+      "kind": "TRY_AGAIN",
+      "text": "Listen to the middle sound.",
+      "speech": "Listen to the vowel sound in the middle.",
+      "emoji": "👂",
+      "errorCategory": "WRONG_VOWEL",
+      "status": "published"
+    },
+    {
+      "code": "spelling-wrong-vowel-2",
+      "kind": "TRY_AGAIN",
+      "text": "Check the vowel sound.",
+      "speech": "Check the vowel sound. Which letters make it?",
+      "emoji": "👂",
+      "errorCategory": "WRONG_VOWEL",
+      "status": "published"
+    },
+    {
+      "code": "spelling-wrong-digraph-1",
+      "kind": "TRY_AGAIN",
+      "text": "Two letters make that sound!",
+      "speech": "Two letters work together to make that sound.",
+      "emoji": "🤝",
+      "errorCategory": "WRONG_DIGRAPH",
+      "status": "published"
+    },
+    {
+      "code": "spelling-wrong-digraph-2",
+      "kind": "TRY_AGAIN",
+      "text": "Listen for the two-letter sound.",
+      "speech": "Listen for the sound that two letters make together.",
+      "emoji": "🤝",
+      "errorCategory": "WRONG_DIGRAPH",
+      "status": "published"
+    },
+    {
+      "code": "spelling-wrong-blend-1",
+      "kind": "TRY_AGAIN",
+      "text": "Listen for both sounds.",
+      "speech": "Listen for both sounds side by side.",
+      "emoji": "🧩",
+      "errorCategory": "WRONG_BLEND",
+      "status": "published"
+    },
+    {
+      "code": "spelling-wrong-ending-1",
+      "kind": "TRY_AGAIN",
+      "text": "Check the ending.",
+      "speech": "Listen to the end of the word.",
+      "emoji": "🔚",
+      "errorCategory": "WRONG_ENDING",
+      "status": "published"
+    },
+    {
+      "code": "spelling-phonetic-approximation-1",
+      "kind": "TRY_AGAIN",
+      "text": "Good listening! It is spelled another way.",
+      "speech": "Good listening! That sounds right, but this word is spelled another way.",
+      "emoji": "⭐",
+      "errorCategory": "PHONETIC_APPROXIMATION",
+      "status": "published"
+    },
+    {
+      "code": "spelling-unknown-1",
+      "kind": "TRY_AGAIN",
+      "text": "Listen again and try once more.",
+      "speech": "Listen to the word again, and try once more.",
+      "emoji": "👂",
+      "errorCategory": "UNKNOWN",
+      "status": "published"
+    },
+    {
+      "code": "spelling-word-order-1",
+      "kind": "TRY_AGAIN",
+      "text": "Check the order of the words.",
+      "speech": "The words are right. Check their order.",
+      "emoji": "🔀",
+      "errorCategory": "WORD_ORDER",
+      "status": "published"
+    },
+    {
+      "code": "spelling-missing-word-1",
+      "kind": "TRY_AGAIN",
+      "text": "A word is missing.",
+      "speech": "A word is missing. Listen to the sentence again.",
+      "emoji": "🕳️",
+      "errorCategory": "MISSING_WORD",
+      "status": "published"
+    },
+    {
+      "code": "spelling-extra-word-1",
+      "kind": "TRY_AGAIN",
+      "text": "There is an extra word.",
+      "speech": "There is an extra word in your sentence.",
+      "emoji": "✂️",
+      "errorCategory": "EXTRA_WORD",
+      "status": "published"
+    },
+    {
+      "code": "spelling-punctuation-1",
+      "kind": "TRY_AGAIN",
+      "text": "Capital letter and full stop!",
+      "speech": "Start with a capital letter, and end with a full stop.",
+      "emoji": "✒️",
+      "errorCategory": "PUNCTUATION",
+      "status": "published"
+    },
+    {
+      "code": "spelling-wrong-digraph-3",
+      "kind": "TRY_AGAIN",
+      "text": "Remember: {pattern} makes one sound.",
+      "speech": "Remember: {pattern} makes one sound.",
+      "emoji": "🤝",
+      "errorCategory": "WRONG_DIGRAPH",
+      "status": "published"
+    },
+    {
+      "code": "spelling-wrong-vowel-3",
+      "kind": "TRY_AGAIN",
+      "text": "Look carefully at the middle sound.",
+      "speech": "Look carefully at the middle sound.",
+      "emoji": "👀",
+      "errorCategory": "WRONG_VOWEL",
+      "status": "published"
+    },
+    {
+      "code": "spelling-missing-letter-3",
+      "kind": "TRY_AGAIN",
+      "text": "Almost! Listen to the word again.",
+      "speech": "Almost! Listen to the word again.",
+      "emoji": "👂",
+      "errorCategory": "MISSING_LETTER",
+      "status": "published"
+    },
+    {
+      "code": "spelling-wrong-blend-2",
+      "kind": "TRY_AGAIN",
+      "text": "Remember: {pattern} has two sounds.",
+      "speech": "Remember: {pattern} has two sounds side by side.",
+      "emoji": "🧩",
+      "errorCategory": "WRONG_BLEND",
+      "status": "published"
     }
   ],
   "rules": [
@@ -740,6 +935,134 @@
         "minStatus": "PRACTICING",
         "previewSteps": 3
       }
+    }
+  ],
+  "spellingTypes": [
+    {
+      "code": "CVC",
+      "name": "Consonant-vowel-consonant",
+      "childName": "Short words",
+      "description": "Examples: cat, sun, pig.",
+      "emoji": "🐱",
+      "sortOrder": 1,
+      "status": "published"
+    },
+    {
+      "code": "CVCC",
+      "name": "Ending blends",
+      "childName": "Words that end with two sounds",
+      "description": "Examples: lamp, hand, milk.",
+      "emoji": "🪔",
+      "sortOrder": 2,
+      "status": "published"
+    },
+    {
+      "code": "CCVC",
+      "name": "Starting blends",
+      "childName": "Words that start with two sounds",
+      "description": "Examples: frog, stop, flag.",
+      "emoji": "🐸",
+      "sortOrder": 3,
+      "status": "published"
+    },
+    {
+      "code": "CCVCC",
+      "name": "Blends at both ends",
+      "childName": "Longer blend words",
+      "description": "Examples: stamp, crust.",
+      "emoji": "🧱",
+      "sortOrder": 4,
+      "status": "published"
+    },
+    {
+      "code": "DIGRAPH",
+      "name": "Digraphs",
+      "childName": "Two letters, one sound",
+      "description": "Examples: ship, chip, thin.",
+      "emoji": "🚢",
+      "sortOrder": 5,
+      "status": "published"
+    },
+    {
+      "code": "BLEND",
+      "name": "Consonant blends",
+      "childName": "Sounds side by side",
+      "description": "Examples: grass, clock.",
+      "emoji": "🌱",
+      "sortOrder": 6,
+      "status": "published"
+    },
+    {
+      "code": "LONG_VOWEL",
+      "name": "Long vowels (magic e)",
+      "childName": "Magic e words",
+      "description": "Examples: cake, bike, home.",
+      "emoji": "🎂",
+      "sortOrder": 7,
+      "status": "published"
+    },
+    {
+      "code": "VOWEL_TEAM",
+      "name": "Vowel teams",
+      "childName": "Two vowels together",
+      "description": "Examples: rain, boat, feet.",
+      "emoji": "🌧️",
+      "sortOrder": 8,
+      "status": "published"
+    },
+    {
+      "code": "R_CONTROLLED",
+      "name": "R-controlled vowels",
+      "childName": "Bossy r words",
+      "description": "Examples: star, bird, fork.",
+      "emoji": "⭐",
+      "sortOrder": 9,
+      "status": "published"
+    },
+    {
+      "code": "WORD_ENDING",
+      "name": "Word endings",
+      "childName": "Endings and suffixes",
+      "description": "Examples: jumping, helped, kindness.",
+      "emoji": "🔚",
+      "sortOrder": 10,
+      "status": "published"
+    },
+    {
+      "code": "SIGHT_WORD",
+      "name": "Sight words",
+      "childName": "Words to know by sight",
+      "description": "Examples: look, like.",
+      "emoji": "👀",
+      "sortOrder": 11,
+      "status": "published"
+    },
+    {
+      "code": "HIGH_FREQUENCY",
+      "name": "High-frequency words",
+      "childName": "Words we use all the time",
+      "description": "Examples: the, and, she.",
+      "emoji": "🔁",
+      "sortOrder": 12,
+      "status": "published"
+    },
+    {
+      "code": "IRREGULAR",
+      "name": "Irregular words",
+      "childName": "Tricky words",
+      "description": "Examples: said, was, because.",
+      "emoji": "🧩",
+      "sortOrder": 13,
+      "status": "published"
+    },
+    {
+      "code": "MULTISYLLABIC",
+      "name": "Multisyllabic words",
+      "childName": "Longer words in parts",
+      "description": "Examples: rabbit, picnic.",
+      "emoji": "🐇",
+      "sortOrder": 14,
+      "status": "published"
     }
   ]
 }

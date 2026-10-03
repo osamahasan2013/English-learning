@@ -5,10 +5,21 @@ import { DEFAULT_RULES, type ReviewRules } from "@/lib/learning/rules";
 //   * every practised, active skill has one open item, due at its next review date;
 //     weak skills and skills with recent mistakes are due now;
 //   * words: missed, weak or saved-and-due words (deriveWordReview in vocabulary.ts);
+//   * spelling: words missed or weak when spelled and phonics patterns often misspelled
+//     (deriveSpellingReview / derivePatternReview in spelling.ts);
 //   * items that no longer apply are resolved, not deleted.
 // Priority 0–100 (higher first) reuses the skill's review priority from mastery.ts.
 
-export type ReviewReason = "weak_skill" | "due_review" | "recent_errors" | "missed_word" | "weak_word";
+export type ReviewReason =
+  | "weak_skill"
+  | "due_review"
+  | "recent_errors"
+  | "missed_word"
+  | "weak_word"
+  // Spelling (spelling.ts): a word missed or weak when spelled, a pattern often misspelled.
+  | "missed_spelling"
+  | "weak_spelling"
+  | "spelling_pattern";
 
 export type SkillReviewInput = {
   skillId: string;

@@ -208,10 +208,20 @@ export async function answerQuestion(page: Page, q: QuestionRow, correct: boolea
       await page.getByRole("button", { name: /Check/ }).click();
       return;
     }
-    case "SPELLING":
-      await page.getByLabel("Type the word").fill(correct ? answerSpec.accepted![0] : "zzz");
-      await page.getByRole("button", { name: /Check/ }).click();
+    case "SPELLING": {
+      const target = answerSpec.accepted![0];
+      await writeSpelling(
+        page,
+        correct ? target : wrongSpelling(target),
+        content.tiles as string[] | undefined,
+      );
       return;
+    }
+    case "SENTENCE_DICTATION": {
+      const sentence = answerSpec.accepted![0];
+      await writeSpelling(page, correct ? sentence : sentence.split(" ").slice(1).join(" "), undefined, true);
+      return;
+    }
     case "MATCH": {
       const left = content.left as Item[];
       const right = content.right as Item[];
@@ -337,3 +347,53 @@ export async function waitForSynced(page: Page) {
 type Item = { id: string; text?: string; emoji?: string; speech?: string };
 const itemLabel = (item: Item) => item.text ?? item.speech ?? item.emoji ?? item.id;
 const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+// A wrong spelling the child could have written: the letters reversed (or rotated).
+export function wrongSpelling(word: string) {
+  const reversed = [...word].reverse().join("");
+  return reversed !== word ? reversed : word.slice(1) + word[0] + "x";
+}
+
+// Writes a spelling with whatever input the step offers (spelling.ts → input methods):
+// the device keyboard, the child's on-screen keyboard, or letter tiles.
+export async function writeSpelling(page: Page, text: string, tiles?: string[], sentence = false) {
+  const section = page.locator("section[data-question-id]");
+  const method = await section.locator("[data-input-method]").first().getAttribute("data-input-method");
+  if (method === "KEYBOARD") {
+    await section.getByLabel(sentence ? "Write the sentence" : "Type the word").fill(text);
+  } else if (method === "ON_SCREEN_KEYBOARD") {
+    const keyboard = section.getByRole("group", { name: "Keyboard" });
+    for (const ch of text) {
+      if (/[A-Z]/.test(ch)) await keyboard.getByRole("button", { name: "Capital letter next" }).click();
+      const name =
+        ch === " "
+          ? "space"
+          : ch === "'"
+            ? "apostrophe"
+            : ch === "."
+              ? "full stop"
+              : ch === "?"
+                ? "question mark"
+                : ch === "!"
+                  ? "exclamation mark"
+                  : ch === ","
+                    ? "comma"
+                    : ch.toLowerCase();
+      await keyboard.getByRole("button", { name, exact: true }).click();
+    }
+  } else {
+    // Letter tiles: wrong answers use the word's own tiles in another order.
+    const pool = [...(tiles ?? [])];
+    for (const ch of text) {
+      const i = pool.indexOf(ch);
+      if (i === -1) continue;
+      pool.splice(i, 1);
+      await section
+        .getByRole("group", { name: "Tiles" })
+        .getByRole("button", { name: ch, exact: true })
+        .first()
+        .click();
+    }
+  }
+  await section.getByRole("button", { name: /Check/ }).click();
+}

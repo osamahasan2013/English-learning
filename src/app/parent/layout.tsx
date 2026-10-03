@@ -10,6 +10,7 @@ const NAV: NavItem[] = [
   { href: "/parent/children", label: "Children" },
   { href: "/parent/phonics", label: "Phonics" },
   { href: "/parent/words", label: "Words" },
+  { href: "/parent/spelling", label: "Spelling" },
   { href: "/parent/settings", label: "Settings" },
 ];
 

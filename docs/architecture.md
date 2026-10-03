@@ -42,10 +42,13 @@ Service worker (Serwist): app shell + visited pages     re-evaluate, store once,
 | `/parent/dashboard`, `/parent/children[/new\|/:id]`, `/parent/settings` | parent                | Family area                                  |
 | `/parent/phonics`                                                       | parent                | Phonics pattern search (filters, pages)      |
 | `/parent/words[?child=]`                                                | parent                | Vocabulary progress + word bank search       |
+| `/parent/spelling[?child=&page=]`                                       | parent                | Spelling progress and error analysis         |
 | `/child/home`, `/child/learn/:lessonId`, `/child/rewards`               | parent + active child | Child area                                   |
 | `/child/phonics[?show=…]`, `/child/check/:code`                         | parent + active child | Phonics screen; skill checks (Sound Check)   |
 | `/child/words`, `/child/words/category/:code`, `/child/words/find`      | parent + active child | Vocabulary home, categories, word search     |
 | `/child/words/:wordId[/practice]`, `/child/words/mine`, `…/practice`    | parent + active child | Word Explorer, word practice, My Words       |
+| `/child/spelling`, `…/practice[?review=1]`, `…/dictation`               | parent + active child | Spelling home (Learn), practice, dictation   |
+| `/child/spelling/words[?page=]`, `/child/spelling/review`               | parent + active child | My spelling words, spelling review           |
 | `/admin/dashboard`, `/admin/words[/:id]`, `/admin/phonics`              | admin                 | Content admin, word pictures, review flags   |
 | `/api/sync`                                                             | parent (POST)         | Progress sync                                |
 | `/manifest.webmanifest`, `/sw.js`, `/offline.html`                      | public                | PWA                                          |
@@ -291,6 +294,61 @@ Vocabulary is content and word-level views of the learning engine (ADR-029 – A
   `/admin/words/:id` (details and picture upload). Searches run in the database with
   pagination (`searchWords`); category totals come from the `word_category_stats` view.
 
+## Spelling engine (Phase 6)
+
+Spelling reuses the word bank, the phonics data and the learning engine (ADR-033 –
+ADR-035): no separate lesson, activity, attempt, mastery, review or assessment system.
+
+- **Model.** `spelling_words` marks which words of the bank are spelling targets and holds
+  only the spelling view of them: spelling level and skill, spelling type
+  (`spelling_types`, an extensible list: CVC … MULTISYLLABIC), focus phonics pattern,
+  difficulty, high-frequency flag, irregular flag + irregular part (and its grapheme
+  positions), authored hints, common errors, a dictation sentence (a sentence-bank row) and
+  an optional recording. Text, grapheme split, phonemes, syllables and meaning stay in
+  `words` / `word_segments`. Spelling skills are ordinary skills in SPELLING units.
+- **Checker** (`src/lib/learning/spelling.ts`, pure, deterministic, no external AI).
+  `normalizeSpelling` trims, lower-cases and collapses spaces — nothing is autocorrected
+  and the child's text is stored as typed. `analyzeSpelling` returns correct / exact /
+  normalised text / the letter diff (insert, delete, substitute, swap) / one error category
+  (MISSING_LETTER, EXTRA_LETTER, SUBSTITUTED_LETTER, TRANSPOSITION, WRONG_VOWEL,
+  WRONG_DIGRAPH, WRONG_BLEND, WRONG_ENDING, PHONETIC_APPROXIMATION, UNKNOWN) and the
+  grapheme and phonics pattern the mistake is in, using the word's split (ship → sip is a
+  wrong digraph in SH). `analyzeSentence` adds word order, missing / extra words and
+  capitals / end marks for sentence dictation.
+- **Activities.** Nine spelling activities run on four renderers, recorded per question as
+  `metadata.spellingActivity`: LISTEN_AND_TYPE, DICTATION and SOUND_TO_WORD (`SPELLING`,
+  content `mode` listen / dictation / sounds), BUILD_THE_WORD and SCRAMBLED_WORD
+  (`WORD_BUILDER`, mode build / scrambled), MISSING_LETTER and MISSING_SOUND
+  (`MISSING_LETTER`, mode letter / sound), WORD_TO_SOUNDS (`SEGMENT_WORD`) and the new type
+  `SENTENCE_DICTATION`. The `spelling_set` blueprint builds a spelling lesson: listen & look
+  → segment → build → missing letter/sound → spell (check → mistake explained → retry, up
+  to three tries) → sounds to word / scrambled → sentence dictation → one-try check.
+- **Input and settings.** Each typing step gets `step.spelling` from the lesson loader:
+  input method (KEYBOARD, ON_SCREEN_KEYBOARD — the child keyboard, LETTER_TILES, DRAG_DROP),
+  hints allowed and dictation replays / slow replay — from the activity config, else the
+  level's spelling rules (`rules.spelling.levels`, overridable in `learning_rules`). React
+  components only render what they are given. Speech input is not implemented (future).
+- **Feedback.** Before answering, the player offers progressive hints (listen again → say it slowly → how many sounds? → the tricky part / the pattern / the first letter; generated at import, authored hints before the last) and reports how many were opened (`hintsUsed`). After a wrong
+  answer it names the mistake with the error category's `feedback_messages` row (which may name the pattern: "Remember: SH makes one sound.") and marks
+  the child's letters ✓ / ✗ / + / _ (never by colour alone); the right word is shown only
+  once it is revealed. The device's analysis uses the spoken word the question carries;
+  the server stores its own from the real answer.
+- **Progress.** The writer stores `hints_used`, `spelling_analysis` and `error_pattern_id`
+  on the attempt and the category in `error_type`, then recomputes `spelling_progress`
+  (mastery algorithm, spelling evidence target, only answers right without a hint count as
+  independent) for answered spelling targets, their review item (`spelling:<word>`:
+  `missed_spelling`, `weak_spelling`, `due_review`) and the review item of each phonics
+  pattern misspelled at least twice in 14 days (`pattern:<pattern>`, `spelling_pattern`,
+  sent to the pattern's phonics lesson and offering the spelling targets with that pattern for practice, resolved after two right spellings). For spelling
+  targets the vocabulary queue ignores spelling answers, so one miss makes one item;
+  vocabulary word mastery is not changed by the spelling model.
+- **Screens.** `/child/spelling` (Learn: the level's spelling lessons with stars, words mastered, word families to practise; Practice (`?review=1`, `?pattern=`, `?family=`);
+  Dictation; My spelling words; Review — words and sounds), `/parent/spelling` (words
+  spelled / mastered, first-try accuracy, hinted answers, mistake kinds with meanings,
+  phonics patterns behind mistakes, improvement per week and average answer time, recommended practice, spelling types, word families, words to practise, the
+  latest answers as written, paginated) and a Spelling card on the dashboard. Counts come
+  from the `spelling_error_counts` / `spelling_pattern_errors` views (security invoker).
+
 ## Progress pipeline
 
 1. The child answers. The player writes an `attempt` event (device-generated UUID, the
@@ -312,7 +370,8 @@ Vocabulary is content and word-level views of the learning engine (ADR-029 – A
 nothing`, scores a run only from first tries at that (published) lesson's own questions
    and only when at least half of them were answered (ADR-028), then recomputes from history:
    activity progress → lesson progress → skill mastery and the review queue → My Words →
-   subject and level progress → session totals → rewards and achievements. Every step is
+   spelling progress and spelling / pattern review items → subject and level progress →
+   session totals → rewards and achievements. Every step is
    idempotent, so retries and duplicates converge.
 5. The device removes only events the server confirmed (`stored`/`duplicate`). Rejected
    events are kept as `failed` with a reason and shown in parent Settings, where they can be

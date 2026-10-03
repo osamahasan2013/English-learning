@@ -12,6 +12,8 @@ export type FeedbackMessage = {
   // What is said aloud (defaults to `text`). `{answer}` is replaced by the answer.
   speech: string;
   emoji: string;
+  // Set for words about one spelling error category ("Two letters make that sound!").
+  errorCategory?: string | null;
 };
 
 export const FALLBACK_FEEDBACK: Record<FeedbackKind, FeedbackMessage> = {
@@ -50,17 +52,36 @@ export function pickFeedback(
 ): FeedbackMessage {
   const hasAnswer = options.hasAnswer ?? true;
   const usable = (m: FeedbackMessage) => hasAnswer || !`${m.text} ${m.speech}`.includes("{answer}");
-  const pool = messages.filter((m) => m.kind === kind && usable(m));
+  const pool = messages.filter((m) => m.kind === kind && !m.errorCategory && usable(m));
   if (pool.length > 0) return pool[Math.abs(Math.trunc(seed)) % pool.length];
   return usable(FALLBACK_FEEDBACK[kind]) ? FALLBACK_FEEDBACK[kind] : NO_ANSWER_FALLBACK;
 }
 
-export function renderFeedback(message: FeedbackMessage, vars: { answer?: string } = {}) {
+export function renderFeedback(message: FeedbackMessage, vars: { answer?: string; pattern?: string } = {}) {
   const fill = (s: string) =>
     s
       .replace(/\{answer\}/g, vars.answer ?? "")
+      .replace(/\{pattern\}/g, (vars.pattern ?? "").toUpperCase())
       .replace(/\s+([.!?])/g, "$1")
       .trim();
   const text = fill(message.text);
   return { text, speech: message.speech ? fill(message.speech) : text, emoji: message.emoji };
+}
+
+// The words for one spelling error category (feedback_messages.error_category), rotated
+// like the others; null when there are none, so the general message stands alone.
+// A message may name the letters of the pattern the mistake was in ("Remember: {pattern}
+// makes one sound."); without a pattern such messages are skipped.
+export function pickErrorFeedback(
+  messages: FeedbackMessage[],
+  category: string | null | undefined,
+  seed: number,
+  options: { pattern?: string | null } = {},
+): FeedbackMessage | null {
+  if (!category) return null;
+  const pool = messages.filter(
+    (m) =>
+      m.errorCategory === category && (!!options.pattern || !`${m.text} ${m.speech}`.includes("{pattern}")),
+  );
+  return pool.length > 0 ? pool[Math.abs(Math.trunc(seed)) % pool.length] : null;
 }

@@ -1878,6 +1878,63 @@
           ]
         }
       ]
+    },
+    {
+      "code": "kg1-spelling",
+      "subject": "SPELLING",
+      "title": "First Spelling",
+      "emoji": "✏️",
+      "description": "Build and spell short words from their sounds.",
+      "skills": [
+        {
+          "code": "kg1-spell-cvc",
+          "dimension": "SPELLING",
+          "title": "Spelling CVC words",
+          "childTitle": "Spell short words",
+          "importance": 4,
+          "lessons": [
+            {
+              "code": "kg1-spell-cvc-1",
+              "title": "Spell cat, hat, dog, sun",
+              "childTitle": "Spell cat, hat, dog, sun",
+              "description": "Spell: cat, hat, dog, sun.",
+              "emoji": "🐱",
+              "minutes": 8,
+              "introSpeech": "Let's spell! Spell cat, hat, dog, sun.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "cat",
+                  "hat",
+                  "dog",
+                  "sun"
+                ]
+              }
+            },
+            {
+              "code": "kg1-spell-cvc-2",
+              "title": "Spell pig, cup, net, bus",
+              "childTitle": "Spell pig, cup, net, bus",
+              "description": "Spell: pig, cup, net, bus.",
+              "emoji": "🐷",
+              "minutes": 8,
+              "introSpeech": "Let's spell! Spell pig, cup, net, bus.",
+              "blueprint": {
+                "name": "spelling_set",
+                "words": [
+                  "pig",
+                  "cup",
+                  "net",
+                  "bus"
+                ]
+              }
+            }
+          ],
+          "prerequisites": [
+            "kg1-beginning-sounds"
+          ]
+        }
+      ]
     }
   ]
 }

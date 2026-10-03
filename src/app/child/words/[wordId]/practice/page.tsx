@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { WordsHeader } from "@/components/vocabulary/child-header";
 import { LessonPlayer } from "@/features/lesson-player/lesson-player";
 import { requireActiveChild } from "@/lib/auth/session";
+import { levelCodeOf } from "@/lib/server/spelling";
 import { isWordArea } from "@/lib/learning/vocabulary";
 import { loadWordPracticePayload } from "@/lib/server/lesson-loader";
 import { loadWordDetail } from "@/lib/server/vocabulary";
@@ -25,6 +26,7 @@ export default async function WordPracticePage(props: PageProps<"/child/words/[w
     title: word.word,
     emoji: word.emoji || "📖",
     returnHref: `/child/words/${word.id}`,
+    levelCode: await levelCodeOf(child.current_level_id),
   });
   if (!payload) {
     return (

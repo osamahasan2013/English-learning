@@ -20,6 +20,8 @@ export type BlueprintActivity = {
   instructions: string;
   instructionsSpeech: string;
   questions: Question[];
+  // Activity config (validated like a hand-written activity's), e.g. { maxTries: 3 }.
+  config?: Record<string, unknown>;
 };
 
 export class BlueprintError extends Error {}
@@ -45,8 +47,9 @@ function activity(
   title: string,
   instructions: string,
   questions: Question[],
+  config?: Record<string, unknown>,
 ): BlueprintActivity {
-  return { type, stage, title, instructions, instructionsSpeech: instructions, questions };
+  return { type, stage, title, instructions, instructionsSpeech: instructions, questions, ...(config ? { config } : {}) };
 }
 
 export const BLUEPRINTS: Record<string, (p: Params) => BlueprintActivity[]> = {
@@ -311,6 +314,168 @@ export const BLUEPRINTS: Record<string, (p: Params) => BlueprintActivity[]> = {
     }
     return out;
   },
+};
+
+// A spelling set (Phase 6): 3–8 spelling targets, in the spelling flow
+//   Listen → Look → Segment → Build → Spell → Check → Understand the mistake → Retry →
+//   Use it in a sentence → Mini assessment.
+// Check / understand / retry happen inside every spelling step (up to three tries, with the
+// mistake named and the child's letters marked); the lesson then practises the same words
+// again in other forms (sounds to word, scrambled) before a one-try check. The structure
+// grows with the level (levelRank, and the level's spelling rules passed in by the
+// importer as `spellingLevel`):
+//   KG1      getting ready: listen & look → first sound → sounds to word (choose) →
+//            build with tiles → check (no typing yet)
+//   KG2      listen & look → sound it out → build → middle vowel / last sound → spell →
+//            sounds to word (choose) → scrambled → dictation check
+//   KG3+     missing sound (the pattern) instead; sounds to word written from Grade 1;
+//            sentence dictation where the level's rules turn it on
+// `tricky: true` (irregular / high-frequency words) leaves out the activities built on a
+// word's sounds and practises the tricky part instead.
+//   words[3..8], tricky
+const SPELL_TRIES = { maxTries: 3 };
+BLUEPRINTS.spelling_set = (p) => {
+  const words = list(p, "words", 3);
+  if (words.length > 8) throw new BlueprintError("a spelling set has at most 8 words");
+  const rank = typeof p.levelRank === "number" ? p.levelRank : 1;
+  const tricky = p.tricky === true;
+  const level = (p.spellingLevel ?? {}) as { sentenceDictation?: boolean };
+  const at = (i: number) => words[i % words.length];
+  const others = (word: string) => words.filter((w) => w !== word).slice(0, 3);
+  const soundsToWord = (word: string): Question => ({ template: "sound_to_word", word, distractors: others(word) });
+  const out: BlueprintActivity[] = [
+    activity(
+      "INTRO",
+      "explanation",
+      "Listen and look",
+      "Listen to each word. Look at its letters.",
+      words.map((word) => ({ template: "spelling_intro", word })),
+    ),
+  ];
+
+  // KG1: getting ready to spell — first sounds, sounds to word and building with tiles.
+  if (rank <= 1) {
+    out.push(
+      activity(
+        "MISSING_LETTER",
+        "guided_practice",
+        "First sound",
+        "What sound does it start with? Tap its letter.",
+        [at(0), at(1)].map((word) => ({ template: "missing_sound", word, position: "first" })),
+        SPELL_TRIES,
+      ),
+      activity("BLEND_SOUNDS", "guided_practice", "Sounds to word", "Listen to the sounds. Tap the word.", [
+        soundsToWord(at(2)),
+      ]),
+      activity(
+        "WORD_BUILDER",
+        "independent_practice",
+        "Build it",
+        "Listen, then build the word.",
+        [at(3), at(0)].map((word) => ({ template: "build_the_word", word })),
+        SPELL_TRIES,
+      ),
+      activity("MISSING_LETTER", "review", "Quick check", "What sound does it start with? One try!", [
+        { template: "missing_sound", word: at(2), position: "first" },
+      ], { maxTries: 1 }),
+    );
+    return out;
+  }
+
+  if (!tricky) {
+    out.push(
+      activity("SEGMENT_WORD", "demonstration", "Sound it out", "How many sounds? Tap them in order.", [
+        { template: "word_to_sounds", word: at(0) },
+      ]),
+    );
+  }
+  out.push(
+    activity(
+      "WORD_BUILDER",
+      "guided_practice",
+      "Build it",
+      "Listen, then build the word.",
+      [at(1), at(2)].map((word) => ({ template: "build_the_word", word })),
+      SPELL_TRIES,
+    ),
+  );
+  if (rank === 2 && !tricky) {
+    // KG2: middle vowel and ending sound.
+    out.push(
+      activity(
+        "MISSING_LETTER",
+        "guided_practice",
+        "Missing letter",
+        "Which letter is missing?",
+        [
+          { template: "spelling_missing_letter", word: at(2) },
+          { template: "missing_sound", word: at(3), position: "last" },
+        ],
+        SPELL_TRIES,
+      ),
+    );
+  } else {
+    out.push(
+      activity(
+        "MISSING_LETTER",
+        "guided_practice",
+        tricky ? "Tricky part" : "Missing sound",
+        tricky ? "Which letters finish the word?" : "Which letters make the missing sound?",
+        [{ template: "missing_sound", word: at(2) }],
+        SPELL_TRIES,
+      ),
+    );
+  }
+  out.push(
+    activity(
+      "SPELLING",
+      "independent_practice",
+      "Spell it",
+      "Listen, then write the word.",
+      words.map((word) => ({ template: "listen_and_type", word })),
+      SPELL_TRIES,
+    ),
+  );
+  // Same words, another way: sounds to word (chosen up to KG3, written from Grade 1) and
+  // a scrambled word built from its own letters.
+  if (!tricky)
+    out.push(
+      rank <= 3
+        ? activity("BLEND_SOUNDS", "independent_practice", "Sounds to word", "Listen to the sounds. Tap the word.", [
+            soundsToWord(at(3)),
+          ])
+        : activity(
+            "SPELLING",
+            "independent_practice",
+            "Sounds to word",
+            "Tap the sounds, then write the word.",
+            [soundsToWord(at(3))],
+            SPELL_TRIES,
+          ),
+    );
+  out.push(
+    activity("WORD_BUILDER", "independent_practice", "Fix the jumble", "Put the letters in order.", [
+      { template: "scrambled_word", word: at(4) },
+    ], SPELL_TRIES),
+  );
+  if (level.sentenceDictation) {
+    out.push(
+      activity("SENTENCE_DICTATION", "review", "Use it", "Listen to the sentence, then write it.", [
+        { template: "sentence_dictation", word: at(0) },
+      ]),
+    );
+  }
+  out.push(
+    activity(
+      "SPELLING",
+      "review",
+      "Quick check",
+      "Write the word you hear. One try!",
+      [at(1), at(3)].filter((w, i, all) => all.indexOf(w) === i).map((word) => ({ template: "dictation_word", word })),
+      { maxTries: 1 },
+    ),
+  );
+  return out;
 };
 
 export function expandBlueprint(blueprint: Params): BlueprintActivity[] {
