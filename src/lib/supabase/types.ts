@@ -1320,6 +1320,10 @@ export type Database = {
           sort_order: number;
           created_at: string;
           label: string;
+          tts_quality: string;
+          keyword: string;
+          keyword_position: string;
+          audio_asset_id: string | null;
         };
         Insert: {
           code: string;
@@ -1332,6 +1336,10 @@ export type Database = {
           sort_order?: number;
           created_at?: string;
           label: string;
+          tts_quality?: string;
+          keyword?: string;
+          keyword_position?: string;
+          audio_asset_id?: string | null;
         };
         Update: {
           code?: string;
@@ -1344,9 +1352,19 @@ export type Database = {
           sort_order?: number;
           created_at?: string;
           label?: string;
+          tts_quality?: string;
+          keyword?: string;
+          keyword_position?: string;
+          audio_asset_id?: string | null;
         };
         Relationships: [
-
+          {
+            foreignKeyName: "phonemes_audio_asset_id_fkey";
+            columns: ["audio_asset_id"];
+            isOneToOne: false;
+            referencedRelation: "audio_assets";
+            referencedColumns: ["id"];
+          },
         ];
       };
       phonics_pattern_relations: {
@@ -1398,6 +1416,9 @@ export type Database = {
           audio_asset_id: string | null;
           created_at: string;
           phonemes: string[];
+          tts_quality: string;
+          keyword: string;
+          keyword_position: string;
         };
         Insert: {
           id?: string;
@@ -1411,6 +1432,9 @@ export type Database = {
           audio_asset_id?: string | null;
           created_at?: string;
           phonemes?: string[];
+          tts_quality?: string;
+          keyword?: string;
+          keyword_position?: string;
         };
         Update: {
           id?: string;
@@ -1424,6 +1448,9 @@ export type Database = {
           audio_asset_id?: string | null;
           created_at?: string;
           phonemes?: string[];
+          tts_quality?: string;
+          keyword?: string;
+          keyword_position?: string;
         };
         Relationships: [
           {

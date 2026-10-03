@@ -9,7 +9,7 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { ACTIVITY_RENDERERS } from "@/features/activities/registry";
 import { isRenderableQuestionType } from "@/features/activities/supported-types";
 import { useAudio } from "@/lib/audio/use-audio";
-import type { AudioSpeed } from "@/lib/audio/audio-service";
+import type { SpeakFn } from "@/lib/audio/audio-service";
 import type { QuestionResponse } from "@/lib/content/question-schemas";
 import { checkWithKey, revealAnswer, type Reveal } from "@/lib/learning/answer-key";
 import { pickFeedback, renderFeedback, type FeedbackKind } from "@/lib/learning/feedback";
@@ -149,9 +149,14 @@ function LessonRun({
   const [hintsShown, setHintsShown] = useState<Record<string, number>>({});
   const shownAt = useRef(0);
   const runRecorded = useRef(false);
-  const { speak: play, supported: audioSupported } = useAudio();
+  // The lesson carries its own sound table (phonics sounds, letter names, recorded clips),
+  // so its audio also works when the lesson is played offline.
+  const { speak: play, supported: audioSupported } = useAudio(payload.sounds);
 
-  const speak = useCallback((text: string, speed: AudioSpeed = "normal") => play({ text, speed }), [play]);
+  const speak: SpeakFn = useCallback(
+    (text, speed = "normal", options) => play(typeof text === "string" ? { text, speed } : text, options),
+    [play],
+  );
   const step: LessonStep | undefined = steps[state.index];
   const view = currentView(state);
   const sessionId = () => currentSessionId(childId, payload.rules.player.sessionTimeoutMinutes);
@@ -439,7 +444,7 @@ function LessonIntro({
   readiness: PrerequisiteCheck | null;
   resumable: SavedRun | null;
   stepCount: number;
-  speak: (text: string) => Promise<unknown>;
+  speak: SpeakFn;
   onStart: (preview: boolean) => void;
   onResume: () => void;
 }) {
@@ -548,7 +553,7 @@ function FeedbackBar({
   onPrevious: () => void;
   onNext: () => void;
   onRetry: () => void;
-  speak: (text: string) => Promise<unknown>;
+  speak: SpeakFn;
 }) {
   const previous = back ? (
     <Button variant="secondary" size="lg" onClick={onPrevious}>
@@ -693,7 +698,7 @@ function LessonSummary({
   practice: LessonPayload["practice"] | null;
   recommendation: { lessonId: string; title: string } | null;
   onPlayAgain: () => void;
-  speak: (text: string) => Promise<unknown>;
+  speak: SpeakFn;
 }) {
   const completed = renderFeedback(pickFeedback(payload.feedback, "COMPLETED", score.stars));
   const [minutes] = useState(() => Math.max(1, Math.round((Date.now() - Date.parse(startedAt)) / 60000)));

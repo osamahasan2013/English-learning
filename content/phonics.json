@@ -15,7 +15,6 @@
           "code": "A_SHORT",
           "ipa": "/æ/",
           "label": "a as in apple",
-          "sayAs": "aa",
           "primary": true,
           "phonemes": [
             "AE"
@@ -25,7 +24,6 @@
           "code": "A_LONG",
           "ipa": "/eɪ/",
           "label": "a as in cake",
-          "sayAs": "ay",
           "primary": false,
           "phonemes": [
             "EY"
@@ -36,7 +34,7 @@
       "position": "any",
       "uppercase": "A",
       "letterName": "ay",
-      "letterNameSayAs": "ay",
+      "letterNameSayAs": "A",
       "relations": []
     },
     {
@@ -54,7 +52,6 @@
           "code": "B",
           "ipa": "/b/",
           "label": "b as in ball",
-          "sayAs": "buh",
           "primary": true,
           "phonemes": [
             "B"
@@ -83,7 +80,6 @@
           "code": "C_HARD",
           "ipa": "/k/",
           "label": "c as in cat",
-          "sayAs": "kuh",
           "primary": true,
           "phonemes": [
             "K"
@@ -93,7 +89,6 @@
           "code": "C_SOFT",
           "ipa": "/s/",
           "label": "c as in city",
-          "sayAs": "sss",
           "primary": false,
           "phonemes": [
             "S"
@@ -122,7 +117,6 @@
           "code": "D",
           "ipa": "/d/",
           "label": "d as in dog",
-          "sayAs": "duh",
           "primary": true,
           "phonemes": [
             "D"
@@ -151,7 +145,6 @@
           "code": "E_SHORT",
           "ipa": "/ɛ/",
           "label": "e as in egg",
-          "sayAs": "eh",
           "primary": true,
           "phonemes": [
             "EH"
@@ -161,7 +154,6 @@
           "code": "E_LONG",
           "ipa": "/iː/",
           "label": "e as in me",
-          "sayAs": "ee",
           "primary": false,
           "phonemes": [
             "IY"
@@ -190,7 +182,6 @@
           "code": "F",
           "ipa": "/f/",
           "label": "f as in fish",
-          "sayAs": "fff",
           "primary": true,
           "phonemes": [
             "F"
@@ -219,7 +210,6 @@
           "code": "G_HARD",
           "ipa": "/ɡ/",
           "label": "g as in goat",
-          "sayAs": "guh",
           "primary": true,
           "phonemes": [
             "G"
@@ -229,7 +219,6 @@
           "code": "G_SOFT",
           "ipa": "/dʒ/",
           "label": "g as in giraffe",
-          "sayAs": "juh",
           "primary": false,
           "phonemes": [
             "JH"
@@ -258,7 +247,6 @@
           "code": "H",
           "ipa": "/h/",
           "label": "h as in hat",
-          "sayAs": "hh",
           "primary": true,
           "phonemes": [
             "HH"
@@ -287,7 +275,6 @@
           "code": "I_SHORT",
           "ipa": "/ɪ/",
           "label": "i as in insect",
-          "sayAs": "ih",
           "primary": true,
           "phonemes": [
             "IH"
@@ -297,7 +284,6 @@
           "code": "I_LONG",
           "ipa": "/aɪ/",
           "label": "i as in kite",
-          "sayAs": "eye",
           "primary": false,
           "phonemes": [
             "AY"
@@ -326,7 +312,6 @@
           "code": "J",
           "ipa": "/dʒ/",
           "label": "j as in jam",
-          "sayAs": "juh",
           "primary": true,
           "phonemes": [
             "JH"
@@ -355,7 +340,6 @@
           "code": "K",
           "ipa": "/k/",
           "label": "k as in kite",
-          "sayAs": "kuh",
           "primary": true,
           "phonemes": [
             "K"
@@ -384,7 +368,6 @@
           "code": "L",
           "ipa": "/l/",
           "label": "l as in lion",
-          "sayAs": "lll",
           "primary": true,
           "phonemes": [
             "L"
@@ -413,7 +396,6 @@
           "code": "M",
           "ipa": "/m/",
           "label": "m as in moon",
-          "sayAs": "mmm",
           "primary": true,
           "phonemes": [
             "M"
@@ -442,7 +424,6 @@
           "code": "N",
           "ipa": "/n/",
           "label": "n as in net",
-          "sayAs": "nnn",
           "primary": true,
           "phonemes": [
             "N"
@@ -471,7 +452,6 @@
           "code": "O_SHORT",
           "ipa": "/ɑ/",
           "label": "o as in octopus",
-          "sayAs": "ah",
           "primary": true,
           "phonemes": [
             "AA"
@@ -481,7 +461,6 @@
           "code": "O_LONG",
           "ipa": "/oʊ/",
           "label": "o as in go",
-          "sayAs": "oh",
           "primary": false,
           "phonemes": [
             "OW"
@@ -510,7 +489,6 @@
           "code": "P",
           "ipa": "/p/",
           "label": "p as in pig",
-          "sayAs": "puh",
           "primary": true,
           "phonemes": [
             "P"
@@ -540,6 +518,7 @@
           "ipa": "/kw/",
           "label": "qu as in queen",
           "sayAs": "kwuh",
+          "ttsQuality": "approximate",
           "primary": true,
           "phonemes": [
             "K",
@@ -569,7 +548,6 @@
           "code": "R",
           "ipa": "/ɹ/",
           "label": "r as in rabbit",
-          "sayAs": "rrr",
           "primary": true,
           "phonemes": [
             "R"
@@ -598,7 +576,6 @@
           "code": "S",
           "ipa": "/s/",
           "label": "s as in sun",
-          "sayAs": "sss",
           "primary": true,
           "phonemes": [
             "S"
@@ -608,7 +585,6 @@
           "code": "S_Z",
           "ipa": "/z/",
           "label": "s as in is",
-          "sayAs": "zzz",
           "primary": false,
           "phonemes": [
             "Z"
@@ -637,7 +613,6 @@
           "code": "T",
           "ipa": "/t/",
           "label": "t as in tiger",
-          "sayAs": "tuh",
           "primary": true,
           "phonemes": [
             "T"
@@ -666,7 +641,6 @@
           "code": "U_SHORT",
           "ipa": "/ʌ/",
           "label": "u as in umbrella",
-          "sayAs": "uh",
           "primary": true,
           "phonemes": [
             "AH"
@@ -677,6 +651,7 @@
           "ipa": "/juː/",
           "label": "u as in unicorn",
           "sayAs": "you",
+          "ttsQuality": "pure",
           "primary": false,
           "phonemes": [
             "Y",
@@ -706,7 +681,6 @@
           "code": "V",
           "ipa": "/v/",
           "label": "v as in van",
-          "sayAs": "vvv",
           "primary": true,
           "phonemes": [
             "V"
@@ -735,7 +709,6 @@
           "code": "W",
           "ipa": "/w/",
           "label": "w as in web",
-          "sayAs": "wuh",
           "primary": true,
           "phonemes": [
             "W"
@@ -764,7 +737,9 @@
           "code": "X",
           "ipa": "/ks/",
           "label": "x as in box",
-          "sayAs": "ks",
+          "ttsQuality": "keyword",
+          "keyword": "box",
+          "keywordPosition": "last",
           "primary": true,
           "phonemes": [
             "K",
@@ -794,7 +769,6 @@
           "code": "Y",
           "ipa": "/j/",
           "label": "y as in yes",
-          "sayAs": "yuh",
           "primary": true,
           "phonemes": [
             "Y"
@@ -804,7 +778,6 @@
           "code": "Y_LONG_I",
           "ipa": "/aɪ/",
           "label": "y as in my",
-          "sayAs": "eye",
           "primary": false,
           "phonemes": [
             "AY"
@@ -814,7 +787,6 @@
           "code": "Y_LONG_E",
           "ipa": "/i/",
           "label": "y as in happy",
-          "sayAs": "ee",
           "primary": false,
           "phonemes": [
             "IY"
@@ -843,7 +815,6 @@
           "code": "Z",
           "ipa": "/z/",
           "label": "z as in zebra",
-          "sayAs": "zzz",
           "primary": true,
           "phonemes": [
             "Z"
@@ -872,7 +843,6 @@
           "code": "SH",
           "ipa": "/ʃ/",
           "label": "sh as in ship",
-          "sayAs": "shh",
           "primary": true,
           "phonemes": [
             "SH"
@@ -907,7 +877,6 @@
           "code": "CH",
           "ipa": "/tʃ/",
           "label": "ch as in chick",
-          "sayAs": "chuh",
           "primary": true,
           "phonemes": [
             "CH"
@@ -938,7 +907,6 @@
           "code": "TH_VOICELESS",
           "ipa": "/θ/",
           "label": "th as in thumb",
-          "sayAs": "th, as in thumb",
           "primary": true,
           "phonemes": [
             "TH"
@@ -948,7 +916,6 @@
           "code": "TH_VOICED",
           "ipa": "/ð/",
           "label": "th as in this",
-          "sayAs": "th, as in this",
           "primary": false,
           "phonemes": [
             "DH"
@@ -983,7 +950,6 @@
           "code": "PH",
           "ipa": "/f/",
           "label": "ph as in phone",
-          "sayAs": "fff",
           "primary": true,
           "phonemes": [
             "F"
@@ -1014,7 +980,6 @@
           "code": "WH",
           "ipa": "/w/",
           "label": "wh as in whale",
-          "sayAs": "wuh",
           "primary": true,
           "phonemes": [
             "W"
@@ -1045,7 +1010,6 @@
           "code": "CK",
           "ipa": "/k/",
           "label": "ck as in duck",
-          "sayAs": "kuh",
           "primary": true,
           "phonemes": [
             "K"
@@ -1080,7 +1044,6 @@
           "code": "NG",
           "ipa": "/ŋ/",
           "label": "ng as in ring",
-          "sayAs": "ng, as in ring",
           "primary": true,
           "phonemes": [
             "NG"
@@ -1111,7 +1074,6 @@
           "code": "EE",
           "ipa": "/iː/",
           "label": "ee as in bee",
-          "sayAs": "ee",
           "primary": true,
           "phonemes": [
             "IY"
@@ -1142,7 +1104,6 @@
           "code": "EA_LONG_E",
           "ipa": "/iː/",
           "label": "ea as in leaf",
-          "sayAs": "ee, as in leaf",
           "primary": true,
           "phonemes": [
             "IY"
@@ -1152,7 +1113,6 @@
           "code": "EA_SHORT_E",
           "ipa": "/ɛ/",
           "label": "ea as in bread",
-          "sayAs": "eh, as in bread",
           "primary": false,
           "phonemes": [
             "EH"
@@ -1183,7 +1143,6 @@
           "code": "AI",
           "ipa": "/eɪ/",
           "label": "ai as in rain",
-          "sayAs": "ay, as in rain",
           "primary": true,
           "phonemes": [
             "EY"
@@ -1218,7 +1177,6 @@
           "code": "AY",
           "ipa": "/eɪ/",
           "label": "ay as in play",
-          "sayAs": "ay, as in play",
           "primary": true,
           "phonemes": [
             "EY"
@@ -1249,7 +1207,6 @@
           "code": "OA",
           "ipa": "/oʊ/",
           "label": "oa as in boat",
-          "sayAs": "oh, as in boat",
           "primary": true,
           "phonemes": [
             "OW"
@@ -1284,7 +1241,6 @@
           "code": "OW_LONG_O",
           "ipa": "/oʊ/",
           "label": "ow as in snow",
-          "sayAs": "oh, as in snow",
           "primary": true,
           "phonemes": [
             "OW"
@@ -1294,7 +1250,6 @@
           "code": "OW_OU",
           "ipa": "/aʊ/",
           "label": "ow as in cow",
-          "sayAs": "ow, as in cow",
           "primary": false,
           "phonemes": [
             "AW"
@@ -1329,7 +1284,6 @@
           "code": "OO_LONG",
           "ipa": "/uː/",
           "label": "oo as in moon",
-          "sayAs": "oo, as in moon",
           "primary": true,
           "phonemes": [
             "UW"
@@ -1339,7 +1293,6 @@
           "code": "OO_SHORT",
           "ipa": "/ʊ/",
           "label": "oo as in book",
-          "sayAs": "oo, as in book",
           "primary": false,
           "phonemes": [
             "UH"
@@ -1370,7 +1323,6 @@
           "code": "OU",
           "ipa": "/aʊ/",
           "label": "ou as in out",
-          "sayAs": "ow, as in out",
           "primary": true,
           "phonemes": [
             "AW"
@@ -1401,7 +1353,6 @@
           "code": "OI",
           "ipa": "/ɔɪ/",
           "label": "oi as in coin",
-          "sayAs": "oy, as in coin",
           "primary": true,
           "phonemes": [
             "OY"
@@ -1432,7 +1383,6 @@
           "code": "OY",
           "ipa": "/ɔɪ/",
           "label": "oy as in boy",
-          "sayAs": "oy, as in boy",
           "primary": true,
           "phonemes": [
             "OY"
@@ -1463,7 +1413,8 @@
           "code": "AR",
           "ipa": "/ɑɹ/",
           "label": "ar as in car",
-          "sayAs": "ar, as in car",
+          "sayAs": "ar",
+          "ttsQuality": "pure",
           "primary": true,
           "phonemes": [
             "AA",
@@ -1495,7 +1446,6 @@
           "code": "ER",
           "ipa": "/ɝ/",
           "label": "er as in her",
-          "sayAs": "er, as in her",
           "primary": true,
           "phonemes": [
             "ER"
@@ -1530,7 +1480,6 @@
           "code": "IR",
           "ipa": "/ɝ/",
           "label": "ir as in bird",
-          "sayAs": "er, as in bird",
           "primary": true,
           "phonemes": [
             "ER"
@@ -1565,7 +1514,8 @@
           "code": "OR",
           "ipa": "/ɔɹ/",
           "label": "or as in fork",
-          "sayAs": "or, as in fork",
+          "sayAs": "or",
+          "ttsQuality": "pure",
           "primary": true,
           "phonemes": [
             "AO",
@@ -1597,7 +1547,6 @@
           "code": "UR",
           "ipa": "/ɝ/",
           "label": "ur as in nurse",
-          "sayAs": "er, as in nurse",
           "primary": true,
           "phonemes": [
             "ER"
@@ -1632,7 +1581,8 @@
           "code": "ING",
           "ipa": "/ɪŋ/",
           "label": "ing as in jumping",
-          "sayAs": "ing, as in jumping",
+          "sayAs": "ing",
+          "ttsQuality": "pure",
           "primary": true,
           "phonemes": [
             "IH",
@@ -1664,7 +1614,6 @@
           "code": "ED_T",
           "ipa": "/t/",
           "label": "ed as in jumped",
-          "sayAs": "t, as in jumped",
           "primary": true,
           "phonemes": [
             "T"
@@ -1674,7 +1623,6 @@
           "code": "ED_D",
           "ipa": "/d/",
           "label": "ed as in played",
-          "sayAs": "d, as in played",
           "primary": false,
           "phonemes": [
             "D"
@@ -1684,7 +1632,9 @@
           "code": "ED_ID",
           "ipa": "/ɪd/",
           "label": "ed as in painted",
-          "sayAs": "id, as in painted",
+          "ttsQuality": "keyword",
+          "keyword": "painted",
+          "keywordPosition": "last",
           "primary": false,
           "phonemes": [
             "IH",
@@ -1716,7 +1666,6 @@
           "code": "ENDING_S_S",
           "ipa": "/s/",
           "label": "s as in cats",
-          "sayAs": "sss, as in cats",
           "primary": true,
           "phonemes": [
             "S"
@@ -1726,7 +1675,6 @@
           "code": "ENDING_S_Z",
           "ipa": "/z/",
           "label": "s as in dogs",
-          "sayAs": "zzz, as in dogs",
           "primary": false,
           "phonemes": [
             "Z"
@@ -1757,7 +1705,8 @@
           "code": "ES",
           "ipa": "/ɪz/",
           "label": "es as in boxes",
-          "sayAs": "iz, as in boxes",
+          "sayAs": "iz",
+          "ttsQuality": "pure",
           "primary": true,
           "phonemes": [
             "IH",
@@ -1789,7 +1738,8 @@
           "code": "TION",
           "ipa": "/ʃən/",
           "label": "tion as in station",
-          "sayAs": "shun, as in station",
+          "sayAs": "shun",
+          "ttsQuality": "pure",
           "primary": true,
           "phonemes": [
             "SH",
@@ -1826,7 +1776,8 @@
           "code": "SION_ZHUN",
           "ipa": "/ʒən/",
           "label": "sion as in television",
-          "sayAs": "zhun, as in television",
+          "sayAs": "zhun",
+          "ttsQuality": "pure",
           "primary": true,
           "phonemes": [
             "ZH",
@@ -1838,7 +1789,8 @@
           "code": "SION_SHUN",
           "ipa": "/ʃən/",
           "label": "sion as in mansion",
-          "sayAs": "shun, as in mansion",
+          "sayAs": "shun",
+          "ttsQuality": "pure",
           "primary": false,
           "phonemes": [
             "SH",
@@ -1871,7 +1823,8 @@
           "code": "MENT",
           "ipa": "/mənt/",
           "label": "ment as in payment",
-          "sayAs": "ment, as in payment",
+          "sayAs": "ment",
+          "ttsQuality": "approximate",
           "primary": true,
           "phonemes": [
             "M",
@@ -1900,7 +1853,8 @@
           "code": "NESS",
           "ipa": "/nəs/",
           "label": "ness as in kindness",
-          "sayAs": "ness, as in kindness",
+          "sayAs": "ness",
+          "ttsQuality": "approximate",
           "primary": true,
           "phonemes": [
             "N",
@@ -1928,7 +1882,8 @@
           "code": "FUL",
           "ipa": "/fəl/",
           "label": "ful as in helpful",
-          "sayAs": "ful, as in helpful",
+          "sayAs": "ful",
+          "ttsQuality": "pure",
           "primary": true,
           "phonemes": [
             "F",
@@ -1956,7 +1911,8 @@
           "code": "LESS",
           "ipa": "/ləs/",
           "label": "less as in helpless",
-          "sayAs": "less, as in helpless",
+          "sayAs": "less",
+          "ttsQuality": "approximate",
           "primary": true,
           "phonemes": [
             "L",
@@ -1987,7 +1943,8 @@
           "code": "BL",
           "ipa": "/bl/",
           "label": "bl as in block",
-          "sayAs": "bl, as in block",
+          "sayAs": "bluh",
+          "ttsQuality": "approximate",
           "primary": true,
           "phonemes": [
             "B",
@@ -2014,7 +1971,8 @@
           "code": "CL",
           "ipa": "/kl/",
           "label": "cl as in clap",
-          "sayAs": "cl, as in clap",
+          "sayAs": "cluh",
+          "ttsQuality": "approximate",
           "primary": true,
           "phonemes": [
             "K",
@@ -2041,7 +1999,8 @@
           "code": "FL",
           "ipa": "/fl/",
           "label": "fl as in flag",
-          "sayAs": "fl, as in flag",
+          "sayAs": "fluh",
+          "ttsQuality": "approximate",
           "primary": true,
           "phonemes": [
             "F",
@@ -2068,7 +2027,8 @@
           "code": "FR",
           "ipa": "/fɹ/",
           "label": "fr as in frog",
-          "sayAs": "fr, as in frog",
+          "sayAs": "fruh",
+          "ttsQuality": "approximate",
           "primary": true,
           "phonemes": [
             "F",
@@ -2095,7 +2055,8 @@
           "code": "GR",
           "ipa": "/ɡɹ/",
           "label": "gr as in grin",
-          "sayAs": "gr, as in grin",
+          "sayAs": "gruh",
+          "ttsQuality": "approximate",
           "primary": true,
           "phonemes": [
             "G",
@@ -2122,7 +2083,8 @@
           "code": "TR",
           "ipa": "/tɹ/",
           "label": "tr as in tree",
-          "sayAs": "tr, as in tree",
+          "sayAs": "truh",
+          "ttsQuality": "approximate",
           "primary": true,
           "phonemes": [
             "T",
@@ -2149,7 +2111,8 @@
           "code": "ST",
           "ipa": "/st/",
           "label": "st as in star",
-          "sayAs": "st, as in star",
+          "sayAs": "stuh",
+          "ttsQuality": "approximate",
           "primary": true,
           "phonemes": [
             "S",
@@ -2176,7 +2139,8 @@
           "code": "SN",
           "ipa": "/sn/",
           "label": "sn as in snail",
-          "sayAs": "sn, as in snail",
+          "sayAs": "snuh",
+          "ttsQuality": "approximate",
           "primary": true,
           "phonemes": [
             "S",
@@ -2212,7 +2176,6 @@
           "code": "A_E",
           "ipa": "/eɪ/",
           "label": "a_e as in cake",
-          "sayAs": "ay, as in cake",
           "primary": true,
           "phonemes": [
             "EY"
@@ -2243,7 +2206,6 @@
           "code": "I_E",
           "ipa": "/aɪ/",
           "label": "i_e as in kite",
-          "sayAs": "eye, as in kite",
           "primary": true,
           "phonemes": [
             "AY"
@@ -2278,7 +2240,6 @@
           "code": "O_E",
           "ipa": "/oʊ/",
           "label": "o_e as in bone",
-          "sayAs": "oh, as in bone",
           "primary": true,
           "phonemes": [
             "OW"
@@ -2309,7 +2270,8 @@
           "code": "U_E",
           "ipa": "/juː/",
           "label": "u_e as in cube",
-          "sayAs": "you, as in cube",
+          "sayAs": "you",
+          "ttsQuality": "pure",
           "primary": true,
           "phonemes": [
             "Y",
@@ -2341,7 +2303,8 @@
           "code": "AIR",
           "ipa": "/ɛɹ/",
           "label": "air as in chair",
-          "sayAs": "air, as in chair",
+          "sayAs": "air",
+          "ttsQuality": "pure",
           "primary": true,
           "phonemes": [
             "EH",
@@ -2357,6 +2320,9 @@
       "ipa": "/b/",
       "label": "b",
       "sayAs": "buh",
+      "ttsQuality": "approximate",
+      "keyword": "bat",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": true,
       "example": "bat"
@@ -2366,6 +2332,9 @@
       "ipa": "/tʃ/",
       "label": "ch",
       "sayAs": "chuh",
+      "ttsQuality": "approximate",
+      "keyword": "chip",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": false,
       "example": "chip"
@@ -2375,6 +2344,9 @@
       "ipa": "/d/",
       "label": "d",
       "sayAs": "duh",
+      "ttsQuality": "approximate",
+      "keyword": "dog",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": true,
       "example": "dog"
@@ -2383,7 +2355,10 @@
       "code": "DH",
       "ipa": "/ð/",
       "label": "th",
-      "sayAs": "th, as in this",
+      "sayAs": "the",
+      "ttsQuality": "approximate",
+      "keyword": "this",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": true,
       "example": "this"
@@ -2392,7 +2367,10 @@
       "code": "F",
       "ipa": "/f/",
       "label": "f",
-      "sayAs": "fff",
+      "sayAs": "fuh",
+      "ttsQuality": "approximate",
+      "keyword": "fish",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": false,
       "example": "fish"
@@ -2402,6 +2380,9 @@
       "ipa": "/ɡ/",
       "label": "g",
       "sayAs": "guh",
+      "ttsQuality": "approximate",
+      "keyword": "goat",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": true,
       "example": "goat"
@@ -2410,7 +2391,10 @@
       "code": "HH",
       "ipa": "/h/",
       "label": "h",
-      "sayAs": "hh",
+      "sayAs": "huh",
+      "ttsQuality": "approximate",
+      "keyword": "hat",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": false,
       "example": "hat"
@@ -2420,6 +2404,9 @@
       "ipa": "/dʒ/",
       "label": "j",
       "sayAs": "juh",
+      "ttsQuality": "approximate",
+      "keyword": "jam",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": true,
       "example": "jam"
@@ -2429,6 +2416,9 @@
       "ipa": "/k/",
       "label": "k",
       "sayAs": "kuh",
+      "ttsQuality": "approximate",
+      "keyword": "cat",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": false,
       "example": "cat"
@@ -2437,7 +2427,10 @@
       "code": "L",
       "ipa": "/l/",
       "label": "l",
-      "sayAs": "lll",
+      "sayAs": "luh",
+      "ttsQuality": "approximate",
+      "keyword": "leg",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": true,
       "example": "leg"
@@ -2446,7 +2439,10 @@
       "code": "M",
       "ipa": "/m/",
       "label": "m",
-      "sayAs": "mmm",
+      "sayAs": "muh",
+      "ttsQuality": "approximate",
+      "keyword": "man",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": true,
       "example": "man"
@@ -2455,7 +2451,10 @@
       "code": "N",
       "ipa": "/n/",
       "label": "n",
-      "sayAs": "nnn",
+      "sayAs": "nuh",
+      "ttsQuality": "approximate",
+      "keyword": "net",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": true,
       "example": "net"
@@ -2464,7 +2463,10 @@
       "code": "NG",
       "ipa": "/ŋ/",
       "label": "ng",
-      "sayAs": "ng, as in ring",
+      "sayAs": "ung",
+      "ttsQuality": "approximate",
+      "keyword": "ring",
+      "keywordPosition": "last",
       "kind": "consonant",
       "voiced": true,
       "example": "ring"
@@ -2474,6 +2476,9 @@
       "ipa": "/p/",
       "label": "p",
       "sayAs": "puh",
+      "ttsQuality": "approximate",
+      "keyword": "pig",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": false,
       "example": "pig"
@@ -2482,7 +2487,10 @@
       "code": "R",
       "ipa": "/ɹ/",
       "label": "r",
-      "sayAs": "rrr",
+      "sayAs": "ruh",
+      "ttsQuality": "approximate",
+      "keyword": "red",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": true,
       "example": "red"
@@ -2491,7 +2499,10 @@
       "code": "S",
       "ipa": "/s/",
       "label": "s",
-      "sayAs": "sss",
+      "sayAs": "suh",
+      "ttsQuality": "approximate",
+      "keyword": "sun",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": false,
       "example": "sun"
@@ -2500,7 +2511,10 @@
       "code": "SH",
       "ipa": "/ʃ/",
       "label": "sh",
-      "sayAs": "shh",
+      "sayAs": "shuh",
+      "ttsQuality": "approximate",
+      "keyword": "ship",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": false,
       "example": "ship"
@@ -2510,6 +2524,9 @@
       "ipa": "/t/",
       "label": "t",
       "sayAs": "tuh",
+      "ttsQuality": "approximate",
+      "keyword": "top",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": false,
       "example": "top"
@@ -2518,7 +2535,10 @@
       "code": "TH",
       "ipa": "/θ/",
       "label": "th",
-      "sayAs": "th, as in thin",
+      "sayAs": "thuh",
+      "ttsQuality": "approximate",
+      "keyword": "thin",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": false,
       "example": "thin"
@@ -2527,7 +2547,10 @@
       "code": "V",
       "ipa": "/v/",
       "label": "v",
-      "sayAs": "vvv",
+      "sayAs": "vuh",
+      "ttsQuality": "approximate",
+      "keyword": "van",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": true,
       "example": "van"
@@ -2537,6 +2560,9 @@
       "ipa": "/w/",
       "label": "w",
       "sayAs": "wuh",
+      "ttsQuality": "approximate",
+      "keyword": "web",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": true,
       "example": "web"
@@ -2546,6 +2572,9 @@
       "ipa": "/j/",
       "label": "y",
       "sayAs": "yuh",
+      "ttsQuality": "approximate",
+      "keyword": "yes",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": true,
       "example": "yes"
@@ -2554,7 +2583,10 @@
       "code": "Z",
       "ipa": "/z/",
       "label": "z",
-      "sayAs": "zzz",
+      "sayAs": "zuh",
+      "ttsQuality": "approximate",
+      "keyword": "zip",
+      "keywordPosition": "first",
       "kind": "consonant",
       "voiced": true,
       "example": "zip"
@@ -2563,7 +2595,10 @@
       "code": "ZH",
       "ipa": "/ʒ/",
       "label": "zh",
-      "sayAs": "zh, as in vision",
+      "sayAs": "zhuh",
+      "ttsQuality": "approximate",
+      "keyword": "vision",
+      "keywordPosition": "middle",
       "kind": "consonant",
       "voiced": true,
       "example": "vision"
@@ -2572,7 +2607,10 @@
       "code": "AE",
       "ipa": "/æ/",
       "label": "a",
-      "sayAs": "aa, as in cat",
+      "sayAs": "",
+      "ttsQuality": "keyword",
+      "keyword": "apple",
+      "keywordPosition": "first",
       "kind": "vowel",
       "voiced": true,
       "example": "cat"
@@ -2581,7 +2619,10 @@
       "code": "EH",
       "ipa": "/ɛ/",
       "label": "e",
-      "sayAs": "eh, as in bed",
+      "sayAs": "",
+      "ttsQuality": "keyword",
+      "keyword": "egg",
+      "keywordPosition": "first",
       "kind": "vowel",
       "voiced": true,
       "example": "bed"
@@ -2590,7 +2631,10 @@
       "code": "IH",
       "ipa": "/ɪ/",
       "label": "i",
-      "sayAs": "ih, as in pig",
+      "sayAs": "",
+      "ttsQuality": "keyword",
+      "keyword": "itch",
+      "keywordPosition": "first",
       "kind": "vowel",
       "voiced": true,
       "example": "pig"
@@ -2599,7 +2643,10 @@
       "code": "AA",
       "ipa": "/ɑ/",
       "label": "o",
-      "sayAs": "ah, as in hot",
+      "sayAs": "ah",
+      "ttsQuality": "pure",
+      "keyword": "hot",
+      "keywordPosition": "middle",
       "kind": "vowel",
       "voiced": true,
       "example": "hot"
@@ -2608,7 +2655,10 @@
       "code": "AH",
       "ipa": "/ʌ/",
       "label": "u",
-      "sayAs": "uh, as in sun",
+      "sayAs": "uh",
+      "ttsQuality": "pure",
+      "keyword": "up",
+      "keywordPosition": "first",
       "kind": "vowel",
       "voiced": true,
       "example": "sun"
@@ -2617,7 +2667,10 @@
       "code": "UH",
       "ipa": "/ʊ/",
       "label": "oo",
-      "sayAs": "oo, as in book",
+      "sayAs": "",
+      "ttsQuality": "keyword",
+      "keyword": "book",
+      "keywordPosition": "middle",
       "kind": "vowel",
       "voiced": true,
       "example": "book"
@@ -2626,7 +2679,10 @@
       "code": "EY",
       "ipa": "/eɪ/",
       "label": "ay",
-      "sayAs": "ay, as in rain",
+      "sayAs": "eigh",
+      "ttsQuality": "pure",
+      "keyword": "rain",
+      "keywordPosition": "middle",
       "kind": "vowel",
       "voiced": true,
       "example": "rain"
@@ -2635,7 +2691,10 @@
       "code": "IY",
       "ipa": "/iː/",
       "label": "ee",
-      "sayAs": "ee, as in feet",
+      "sayAs": "ee",
+      "ttsQuality": "pure",
+      "keyword": "feet",
+      "keywordPosition": "middle",
       "kind": "vowel",
       "voiced": true,
       "example": "feet"
@@ -2644,7 +2703,10 @@
       "code": "AY",
       "ipa": "/aɪ/",
       "label": "igh",
-      "sayAs": "eye, as in kite",
+      "sayAs": "eye",
+      "ttsQuality": "pure",
+      "keyword": "kite",
+      "keywordPosition": "middle",
       "kind": "vowel",
       "voiced": true,
       "example": "kite"
@@ -2653,7 +2715,10 @@
       "code": "OW",
       "ipa": "/oʊ/",
       "label": "oa",
-      "sayAs": "oh, as in boat",
+      "sayAs": "oh",
+      "ttsQuality": "pure",
+      "keyword": "boat",
+      "keywordPosition": "middle",
       "kind": "vowel",
       "voiced": true,
       "example": "boat"
@@ -2662,7 +2727,10 @@
       "code": "UW",
       "ipa": "/uː/",
       "label": "oo",
-      "sayAs": "oo, as in moon",
+      "sayAs": "ooh",
+      "ttsQuality": "pure",
+      "keyword": "moon",
+      "keywordPosition": "middle",
       "kind": "vowel",
       "voiced": true,
       "example": "moon"
@@ -2671,7 +2739,10 @@
       "code": "AW",
       "ipa": "/aʊ/",
       "label": "ow",
-      "sayAs": "ow, as in cow",
+      "sayAs": "",
+      "ttsQuality": "keyword",
+      "keyword": "out",
+      "keywordPosition": "first",
       "kind": "vowel",
       "voiced": true,
       "example": "cow"
@@ -2680,7 +2751,10 @@
       "code": "OY",
       "ipa": "/ɔɪ/",
       "label": "oi",
-      "sayAs": "oy, as in coin",
+      "sayAs": "oy",
+      "ttsQuality": "pure",
+      "keyword": "boy",
+      "keywordPosition": "last",
       "kind": "vowel",
       "voiced": true,
       "example": "coin"
@@ -2689,7 +2763,10 @@
       "code": "AO",
       "ipa": "/ɔ/",
       "label": "aw",
-      "sayAs": "aw, as in saw",
+      "sayAs": "aw",
+      "ttsQuality": "pure",
+      "keyword": "saw",
+      "keywordPosition": "last",
       "kind": "vowel",
       "voiced": true,
       "example": "fork"
@@ -2698,7 +2775,10 @@
       "code": "ER",
       "ipa": "/ɝ/",
       "label": "er",
-      "sayAs": "er, as in her",
+      "sayAs": "er",
+      "ttsQuality": "pure",
+      "keyword": "her",
+      "keywordPosition": "last",
       "kind": "r_colored_vowel",
       "voiced": true,
       "example": "bird"

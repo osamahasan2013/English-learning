@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { AudioSpeed } from "@/lib/audio/audio-service";
+import type { AudioSpeed, PlayResult } from "@/lib/audio/audio-service";
 import { cn } from "@/lib/utils";
 
 // Dictation: Listen (and Slow, when the level allows it) with a limited number of plays.
@@ -15,7 +15,7 @@ export function DictationControls({
   alreadyPlayed = 0,
 }: {
   text: string;
-  speak: (text: string, speed?: AudioSpeed) => Promise<unknown>;
+  speak: (text: string, speed?: AudioSpeed) => Promise<PlayResult>;
   // Plays allowed in total; null = no limit.
   limit: number | null;
   slow: boolean;
@@ -29,7 +29,7 @@ export function DictationControls({
   const play = (speed: AudioSpeed) => {
     if (out) return;
     setPlayed((n) => n + 1);
-    void speak(text, speed).then((ok) => setSilent(ok === false));
+    void speak(text, speed).then((r) => setSilent(r === "unavailable"));
   };
   const base =
     "flex min-h-16 items-center gap-2 rounded-2xl px-5 text-xl font-bold shadow-sm disabled:opacity-50";

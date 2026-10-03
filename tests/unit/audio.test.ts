@@ -22,6 +22,6 @@ describe("pickVoice", () => {
 describe("playAudio", () => {
   it("never throws when the browser has no speech synthesis", async () => {
     // jsdom has no speechSynthesis.
-    await expect(playAudio({ text: "cat" })).resolves.toBe(false);
+    await expect(playAudio({ text: "cat" })).resolves.toBe("unavailable");
   });
 });

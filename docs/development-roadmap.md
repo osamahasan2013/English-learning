@@ -130,8 +130,11 @@ separate lesson, activity, attempt, progress, mastery, review or assessment syst
 
 ## Known limitations
 
-- Isolated phonics sounds use speech-synthesis approximations (`say_as`) until recorded
-  audio is added; voice quality depends on the device.
+- No recorded audio exists yet. Phonics sounds use speech synthesis checked to say the
+  sound and never letter names (ADR-036, [audio.md](audio.md)). Consonants come out with
+  a short "uh" (`suh`). /æ/ /ɛ/ /ɪ/ /ʊ/ /aʊ/ /ks/ /ɪd/ cannot be synthesised and are named
+  by keyword ("the sound at the start of apple"), which weakens blending by ear. Voice
+  quality depends on the device. Renderings were verified with espeak-ng only.
 - Drag-and-drop works with a mouse; on touch screens tiles are tapped into place (drag on
   touch is on the Phase 13 list).
 - Answer keys stop answers being read from the page, but small option sets can always be

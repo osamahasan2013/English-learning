@@ -1,4 +1,5 @@
 import type { MasteryStatus } from "@/lib/learning/mastery";
+import { soundToken } from "@/lib/audio/pronunciation";
 
 // The phonics core, pure and shared by the importer, the lesson templates, the phonics
 // screens and the tests. Graphemes (what is written: "sh", "a", "igh") and phonemes (what
@@ -93,7 +94,8 @@ function toSegment(grapheme: string, pattern: PatternInfo | null, sound: Pattern
     patternCode: pattern?.code ?? null,
     soundCode: sound?.code ?? null,
     phonemes: sound?.phonemes ?? [],
-    sayAs: sound?.sayAs ?? "",
+    // The sound token ({/SH/}) resolved at play time; never the letters.
+    sayAs: soundToken(sound?.phonemes ?? []),
   };
 }
 
@@ -129,7 +131,13 @@ export function parseAuthoredSegments(
       const explicit = value.match(/^\[([A-Z+]+)\]$/);
       if (explicit) {
         const phonemes = explicit[1].split("+").filter(Boolean);
-        return { grapheme, patternCode: pattern?.code ?? null, soundCode: null, phonemes, sayAs: "" };
+        return {
+          grapheme,
+          patternCode: pattern?.code ?? null,
+          soundCode: null,
+          phonemes,
+          sayAs: soundToken(phonemes),
+        };
       }
       const owner = patterns.find((p) => p.sounds.some((s) => s.code === value));
       const sound = owner?.sounds.find((s) => s.code === value) ?? null;
@@ -347,7 +355,7 @@ export function segmentSounds(segments: Segment[], inventory: ReadonlyMap<string
       return {
         code,
         label: p?.label ?? code.toLowerCase(),
-        sayAs: p?.sayAs ?? code.toLowerCase(),
+        sayAs: soundToken([code]),
         grapheme: s.grapheme,
       };
     }),

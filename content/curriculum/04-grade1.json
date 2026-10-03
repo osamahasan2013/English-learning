@@ -30,7 +30,7 @@
               "emoji": "🦆",
               "minutes": 7,
               "difficulty": 3,
-              "introSpeech": "Let's learn ck!",
+              "introSpeech": "Let's learn {@c} {@k}. It says {/K/}, as in duck!",
               "blueprint": {
                 "name": "phonics_pattern",
                 "pattern": "CK",
@@ -79,7 +79,7 @@
               "emoji": "💍",
               "minutes": 7,
               "difficulty": 3,
-              "introSpeech": "Let's learn ng!",
+              "introSpeech": "Let's learn {@n} {@g}. It says {/NG/}, as in ring!",
               "blueprint": {
                 "name": "phonics_pattern",
                 "pattern": "NG",

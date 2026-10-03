@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import type { AudioSpeed } from "@/lib/audio/audio-service";
+import type { AudioSpeed, PlayResult } from "@/lib/audio/audio-service";
 
 // Listen, Slow and Again (repeats the last one). Large, icon-first, always labelled. If
 // the device cannot play sound, a visible note says so: the words are always on screen,
@@ -14,7 +14,7 @@ export function AudioControls({
   className,
 }: {
   text: string;
-  speak: (text: string, speed?: AudioSpeed) => Promise<unknown>;
+  speak: (text: string, speed?: AudioSpeed) => Promise<PlayResult>;
   size?: "md" | "lg";
   className?: string;
 }) {
@@ -24,7 +24,7 @@ export function AudioControls({
   const base = size === "lg" ? "min-h-16 px-5 text-xl rounded-2xl" : "min-h-12 px-4 text-lg rounded-xl";
   const play = (speed: AudioSpeed) => {
     setLast(speed);
-    void speak(text, speed).then((played) => setSilent(played === false));
+    void speak(text, speed).then((r) => setSilent(r === "unavailable"));
   };
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
@@ -69,7 +69,7 @@ export function SpeakButton({
   label,
 }: {
   text: string;
-  speak: (text: string, speed?: AudioSpeed) => Promise<unknown>;
+  speak: (text: string, speed?: AudioSpeed) => Promise<PlayResult>;
   label: string;
 }) {
   return (

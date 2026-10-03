@@ -23,7 +23,10 @@ export function SpellingRenderer({ step, phase, onAnswer, speak }: RendererProps
   const heard = step.promptSpeech.trim().toLowerCase() === word.trim().toLowerCase();
 
   async function playSounds() {
-    for (const sound of content.sounds ?? []) await speak(sound.sayAs, "slow");
+    await speak(
+      (content.sounds ?? []).map((s) => ({ text: s.sayAs, speed: "slow" as const })),
+      "slow",
+    );
   }
 
   return (

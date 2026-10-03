@@ -42,6 +42,9 @@ globals, `proxy.ts` instead of `middleware.ts`).
    no technical errors ("Something went wrong. Let's try again."). Feedback never relies on
    colour alone.
 7. **Audio only through `src/lib/audio`** — never call `speechSynthesis` from components.
+   Phonics sounds and letter names are speech tokens (`{/SH/}`, `{@s}`) resolved by
+   `src/lib/audio/pronunciation.ts`; never put letters (`sss`, `th`) in speech
+   (`docs/audio.md`).
 8. **Keep V1 simple**: rule-based mastery and review, browser TTS, Postgres-derived analytics.
 9. **Phonics is graphemes + phonemes.** Sounds are ARPAbet phoneme codes (`phonemes`);
    words carry their grapheme split (`word_segments`, from `src/lib/learning/phonics.ts` or
@@ -118,6 +121,6 @@ them the app still builds and shows a setup screen. `NEXT_PUBLIC_*` are inlined 
 
 ## Docs
 
-`docs/architecture.md`, `docs/database.md`, `docs/curriculum.md`,
+`docs/architecture.md`, `docs/database.md`, `docs/curriculum.md`, `docs/audio.md`,
 `docs/development-roadmap.md`, `docs/decisions.md`, `docs/development.md`.
 Update them when behaviour or architecture changes; record decisions as ADRs.

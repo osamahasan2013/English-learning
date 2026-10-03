@@ -1,3 +1,5 @@
+import { letterToken } from "@/lib/audio/pronunciation";
+
 // Feedback after each answer and at the end of a lesson. The kinds are fixed by the
 // engine; the words come from the feedback_messages table (content), rotated so the
 // child does not hear the same phrase every time. The fallbacks below are used only if
@@ -58,14 +60,18 @@ export function pickFeedback(
 }
 
 export function renderFeedback(message: FeedbackMessage, vars: { answer?: string; pattern?: string } = {}) {
-  const fill = (s: string) =>
+  const fill = (s: string, pattern: string) =>
     s
       .replace(/\{answer\}/g, vars.answer ?? "")
-      .replace(/\{pattern\}/g, (vars.pattern ?? "").toUpperCase())
+      .replace(/\{pattern\}/g, pattern)
       .replace(/\s+([.!?])/g, "$1")
       .trim();
-  const text = fill(message.text);
-  return { text, speech: message.speech ? fill(message.speech) : text, emoji: message.emoji };
+  // Shown as capitals (SH); said as the letters' NAMES ({@s} {@h} → "ess aitch"), since
+  // the message is about which letters to write — a voice would misread "SH" anyway.
+  const letters = [...(vars.pattern ?? "").toLowerCase()].filter((c) => /[a-z]/.test(c));
+  const text = fill(message.text, (vars.pattern ?? "").toUpperCase());
+  const spoken = letters.map(letterToken).join(" ");
+  return { text, speech: fill(message.speech || message.text, spoken), emoji: message.emoji };
 }
 
 // The words for one spelling error category (feedback_messages.error_category), rotated

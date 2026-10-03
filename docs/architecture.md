@@ -406,17 +406,25 @@ timestamps are clamped to [now − 60 days, now + 5 min].
 
 ## Audio
 
-`src/lib/audio/audio-service.ts` is the only audio entry point: plays a recorded asset if
-one exists, otherwise speaks with browser speech synthesis (en-US, rate 0.85; "Slow" 0.55),
-preferring natural voices. It never throws; without audio the app still works because all
-text is shown. Replacing TTS with recordings means filling `audio_assets` — no component
-changes. Phonics sounds use `phonics_pattern_sounds.say_as` / `phonemes.say_as` as a TTS
-approximation until recordings exist (`phonics_patterns.audio_asset_id` takes a recording).
-Word recordings are `audio_assets` files in the `content-audio` bucket (public URL); the
-Word Explorer passes them to the service and falls back to speech synthesis. Every spoken
-item has **Listen**, **Slow** and **Again** (`AudioControls`); when a device
-cannot speak, the controls and the lesson player show a visible "no sound" note, and
-nothing waits for audio, so a lesson can always be finished.
+Full detail, limitations and the pronunciation matrix: [audio.md](audio.md).
+
+- **What to say** is decided by the pronunciation resolver (`src/lib/audio/pronunciation.ts`,
+  pure). Content stores **speech tokens** for phonics sounds (`{/S/}`) and letter names
+  (`{@s}`), never letters for a voice to read. Each token resolves to a recorded clip,
+  else a speech-synthesis rendering checked to say the sound (`suh`, `ee`, `shun`), else a
+  keyword ("the sound at the start of apple"), else silence. It is never spoken as letter
+  names. The table comes from the database (`src/lib/server/sound-table.ts`); the child
+  layout provides it, and lesson payloads carry a copy for offline play.
+- **Playing** goes through `src/lib/audio/audio-service.ts`, the only code that touches
+  `speechSynthesis`/`Audio`. One thing plays at a time: a new request cancels the old one
+  and the rest of its sequence. Leaving a screen or hiding the app stops it. Results are
+  `played` / `interrupted` / `unavailable`. Settings: en-US, natural voice when installed,
+  rate 0.85, "Slow" 0.6.
+- **Recordings** (`audio_assets` in the `content-audio` bucket) replace synthesis per
+  phoneme, pattern sound or word with no component change.
+- Every spoken item has **Listen**, **Slow** and **Again** (`AudioControls`). When a device
+  cannot speak, a visible "no sound" note shows, and nothing waits for audio, so a lesson
+  can always be finished.
 
 ## Offline / PWA
 

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { soundToken, speechProblems } from "@/lib/audio/pronunciation";
 import type { z } from "zod";
 import type {
   assessmentsFileSchema,
@@ -488,6 +489,13 @@ export class ContentImporter {
     }
     for (const w of validation.warnings) this.flag(w);
 
+    // Recorded clips of single sounds (optional; they win over speech synthesis).
+    const phonemeAudio = file.phonemes
+      .filter((ph) => ph.audio)
+      .map((ph) => ({ storage_path: ph.audio, kind: "phonics", tts_text: soundToken([ph.code]), status: "published" }));
+    const phonemeAudioIds = phonemeAudio.length
+      ? await this.sync("audio_assets", "audio assets", ["storage_path"], phonemeAudio)
+      : new Map<string, string>();
     await this.sync(
       "phonemes",
       "phonemes",
@@ -497,6 +505,10 @@ export class ContentImporter {
         ipa: ph.ipa,
         label: ph.label,
         say_as: ph.sayAs,
+        tts_quality: ph.ttsQuality,
+        keyword: ph.keyword ?? "",
+        keyword_position: ph.keywordPosition,
+        audio_asset_id: ph.audio ? (phonemeAudioIds.get(ph.audio) ?? null) : null,
         kind: ph.kind,
         voiced: ph.voiced,
         example_word: ph.example,
@@ -522,7 +534,7 @@ export class ContentImporter {
       .map((p) => ({
         storage_path: p.audio,
         kind: "phonics",
-        tts_text: p.sounds.find((s) => s.primary)?.sayAs ?? p.pattern,
+        tts_text: soundToken(p.sounds.find((s) => s.primary)?.phonemes ?? []),
         status: "published",
       }));
     const audioIds = audioRows.length
@@ -566,6 +578,9 @@ export class ContentImporter {
           ipa: s.ipa,
           label: s.label,
           say_as: s.sayAs,
+          tts_quality: s.ttsQuality,
+          keyword: s.keyword ?? "",
+          keyword_position: s.keywordPosition,
           is_primary: s.primary,
           sort_order: i,
           phonemes: s.phonemes,
@@ -610,7 +625,7 @@ export class ContentImporter {
     this.phonemeInfo = new Map(
       file.phonemes.map((ph) => [
         ph.code,
-        { code: ph.code, ipa: ph.ipa, label: ph.label, sayAs: ph.sayAs, kind: ph.kind, voiced: ph.voiced },
+        { code: ph.code, ipa: ph.ipa, label: ph.label, sayAs: soundToken([ph.code]), kind: ph.kind, voiced: ph.voiced },
       ]),
     );
     this.phonicsPatterns = patterns.map((p) => ({
@@ -621,7 +636,7 @@ export class ContentImporter {
       sounds: p.sounds.map((s) => ({
         code: s.code,
         label: s.label,
-        sayAs: s.sayAs,
+        sayAs: soundToken(s.phonemes),
         phonemes: s.phonemes,
         primary: s.primary,
       })),
@@ -638,7 +653,7 @@ export class ContentImporter {
         sounds: p.sounds.map((s) => ({
           code: s.code,
           label: s.label,
-          sayAs: s.sayAs,
+          sayAs: soundToken(s.phonemes),
           primary: s.primary,
           phonemes: s.phonemes,
         })),
@@ -662,7 +677,7 @@ export class ContentImporter {
           code: String(ph.code),
           ipa: String(ph.ipa),
           label: String(ph.label),
-          sayAs: String(ph.say_as),
+          sayAs: soundToken([String(ph.code)]),
           kind: ph.kind as PhonemeInfo["kind"],
           voiced: Boolean(ph.voiced),
         },
@@ -679,7 +694,7 @@ export class ContentImporter {
         .map((s) => ({
           code: String(s.code),
           label: String(s.label),
-          sayAs: String(s.say_as),
+          sayAs: soundToken((s.phonemes as string[]) ?? []),
           phonemes: (s.phonemes as string[]) ?? [],
           primary: Boolean(s.is_primary),
         })),
@@ -955,7 +970,7 @@ export class ContentImporter {
       const segments = (splits.get(normalizeWord(w.word))?.segments ?? []).map((seg) => ({
         grapheme: seg.grapheme,
         patternCode: seg.patternCode,
-        sayAs: seg.sayAs || this.phonemeSpeech(seg.phonemes),
+        sayAs: soundToken(seg.phonemes),
         phonemes: seg.phonemes,
       }));
       this.wordBank.set(normalizeWord(w.word), templateWordFromInput(w, segments, refs));
@@ -1095,10 +1110,6 @@ export class ContentImporter {
     return this.publishedBankCache;
   }
 
-  private phonemeSpeech(phonemes: string[]) {
-    return phonemes.map((c) => this.phonemeInfo?.get(c)?.sayAs ?? c.toLowerCase()).join(" ");
-  }
-
   // Loads the word bank and patterns from the database, for imports that only contain
   // curriculum files (templates still need them).
   async loadBanksFromDatabase() {
@@ -1156,11 +1167,11 @@ export class ContentImporter {
             .sort((a, b) => Number(a.position) - Number(b.position))
             .map((seg) => {
               const phonemes = (seg.phonemes as string[]) ?? [];
-              const sound = seg.sound_id ? soundById.get(seg.sound_id) : undefined;
               return {
                 grapheme: String(seg.grapheme),
                 patternCode: seg.pattern_id ? (patternCode.get(seg.pattern_id) ?? null) : null,
-                sayAs: phonemes.length === 0 ? "" : sound ? String(sound.say_as) : this.phonemeSpeech(phonemes),
+                // The sound token ({/SH/}); silent letters have none.
+                sayAs: soundToken(phonemes),
                 phonemes,
               };
             }),
@@ -1225,7 +1236,7 @@ export class ContentImporter {
             .map((s) => ({
               code: String(s.code),
               label: String(s.label),
-              sayAs: String(s.say_as),
+              sayAs: soundToken((s.phonemes as string[]) ?? []),
               primary: Boolean(s.is_primary),
               phonemes: (s.phonemes as string[]) ?? [],
             })),
@@ -1381,6 +1392,10 @@ export class ContentImporter {
             const p = this.phonemeInfo?.get(phonemeCode);
             return p && { code: p.code, label: p.label, sayAs: p.sayAs, kind: p.kind };
           },
+          soundForLabel: (label) => {
+            const matches = [...(this.phonemeInfo?.values() ?? [])].filter((p) => p.label === label);
+            return matches.length === 1 ? [matches[0].code] : undefined;
+          },
         };
         expanded = expandTemplate(template, params as Record<string, unknown>, ctx);
       } else {
@@ -1389,6 +1404,13 @@ export class ContentImporter {
       }
       const parsed = parseQuestion(expanded.type, expanded.content, expanded.answer);
       if (!parsed.ok) throw new Error(parsed.error);
+      // Sounds are spoken through sound tokens, never as letters a voice would misread.
+      const speech = speechProblems(
+        expanded.promptSpeech,
+        expanded.content,
+        this.phonemeInfo ? new Set(this.phonemeInfo.keys()) : undefined,
+      );
+      if (speech.length) throw new Error(`speech: ${speech.join("; ")}`);
       // A word in a pattern's question must really use that pattern (its sound), not just
       // contain the letters: "ship" for SH, not "mishap".
       if (expanded.pattern && expanded.word) {

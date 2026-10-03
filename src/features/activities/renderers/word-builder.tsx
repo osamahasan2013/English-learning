@@ -26,12 +26,10 @@ export function WordBuilderRenderer({
   const scrambled = content.mode === "scrambled";
 
   async function demonstrate() {
-    for (let i = 0; i < chunks.length; i++) {
-      setBlendIndex(i);
-      await speak(step.tileSounds[chunks[i]] ?? chunks[i], "slow");
-    }
-    setBlendIndex(chunks.length);
-    await speak(word, "normal");
+    // Each tile's SOUND (never the raw letters, which a voice reads as letter names),
+    // then the word, as one sequence.
+    const items = chunks.map((c) => ({ text: step.tileSounds[c] ?? "", speed: "slow" as const }));
+    await speak([...items, { text: word, speed: "normal" }], "slow", { onItem: setBlendIndex });
     setBlendIndex(null);
   }
 

@@ -28,10 +28,12 @@ export function BlendSoundsRenderer({
   async function blend(speed: "slow" | "normal") {
     if (blending) return;
     setBlending(true);
-    for (let i = 0; i < content.units.length; i++) {
-      setActive(i);
-      await speak(content.units[i].sayAs || content.units[i].grapheme, speed === "slow" ? "slow" : "normal");
-    }
+    // One sequence: a new tap (or leaving the screen) stops it cleanly.
+    await speak(
+      content.units.map((u) => ({ text: u.sayAs, speed })),
+      speed,
+      { onItem: setActive },
+    );
     setActive(null);
     setBlending(false);
   }
@@ -52,7 +54,7 @@ export function BlendSoundsRenderer({
               type="button"
               onClick={() => {
                 setActive(i);
-                void speak(unit.sayAs || unit.grapheme, "slow").then(() => setActive(null));
+                void speak(unit.sayAs, "slow").then(() => setActive(null));
               }}
               aria-label={`Sound ${i + 1}: ${unit.grapheme}. Tap to hear.`}
               className={cn(

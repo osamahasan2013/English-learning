@@ -64,6 +64,14 @@ credentials.
 and family RLS through the real auth server and REST API (needs `npm run stack:start` or a
 Supabase project in `.env.local`).
 
+### Pronunciation audit
+
+`npm run audio:audit` prints what every phonics sound and letter name resolves to
+(recording / synthesis / keyword). If `espeak-ng` is installed (`apt-get install
+espeak-ng`), it also prints the phonemes a real engine produces for that text. Output such
+as `'Es` (ess) or `'eItS` (aitch) for a _sound_ means letter names: fix the rendering in
+`content/phonics.json`. See [audio.md](audio.md).
+
 The PWA test starts its own production server on port 3200 and kills it to simulate being
 offline: Playwright's `setOffline()` does not reliably block requests made by the service
 worker itself, so it cannot prove a page came from the cache.

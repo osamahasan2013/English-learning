@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { soundToken, speechProblems } from "@/lib/audio/pronunciation";
 import { describe, expect, it } from "vitest";
 import {
   assessmentsFileSchema,
@@ -56,7 +57,15 @@ const patterns = new Map(phonics.patterns.map((p) => [p.code, p]));
 const phonemes = new Map<string, PhonemeInfo>(
   phonics.phonemes.map((ph) => [
     ph.code,
-    { code: ph.code, ipa: ph.ipa, label: ph.label, sayAs: ph.sayAs, kind: ph.kind, voiced: ph.voiced },
+    // As the importer: in templates a sound's "sayAs" is its sound token ({/S/}).
+    {
+      code: ph.code,
+      ipa: ph.ipa,
+      label: ph.label,
+      sayAs: soundToken([ph.code]),
+      kind: ph.kind,
+      voiced: ph.voiced,
+    },
   ]),
 );
 const patternInfo: PatternInfo[] = phonics.patterns.map((p) => ({
@@ -64,7 +73,7 @@ const patternInfo: PatternInfo[] = phonics.patterns.map((p) => ({
   pattern: p.pattern,
   type: p.type,
   position: p.position,
-  sounds: p.sounds,
+  sounds: p.sounds.map((s) => ({ ...s, sayAs: soundToken(s.phonemes) })),
 }));
 const patternsByCode = new Map(patternInfo.map((p) => [p.code, p]));
 // The same grapheme split the importer stores in word_segments.
@@ -81,7 +90,6 @@ const splits = new Map(
     }),
   ]),
 );
-const speech = (codes: string[]) => codes.map((c) => phonemes.get(c)?.sayAs ?? c.toLowerCase()).join(" ");
 
 // The word bank exactly as the importer builds it (src/lib/content/word-bank.ts).
 const categoryRefs = new Map<string, CategoryRef>(
@@ -101,7 +109,7 @@ const templateBank = new Map<string, TemplateWord>(
       (splits.get(key)?.segments ?? []).map((seg) => ({
         grapheme: seg.grapheme,
         patternCode: seg.patternCode,
-        sayAs: seg.sayAs || speech(seg.phonemes),
+        sayAs: soundToken(seg.phonemes),
         phonemes: seg.phonemes,
       })),
       { categories: categoryRefs, levelRanks },
@@ -136,13 +144,17 @@ function expand(q: QuestionInput, seed: string, level?: string) {
             uppercase: p.uppercase ?? null,
             letterName: p.letterName,
             letterNameSayAs: p.letterNameSayAs,
-            sounds: p.sounds,
+            sounds: p.sounds.map((s) => ({ ...s, sayAs: soundToken(s.phonemes) })),
           }
         );
       },
       phoneme: (code) => {
         const p = phonemes.get(code);
         return p && { code: p.code, label: p.label, sayAs: p.sayAs, kind: p.kind };
+      },
+      soundForLabel: (label) => {
+        const matches = [...phonemes.values()].filter((p) => p.label === label);
+        return matches.length === 1 ? [matches[0].code] : undefined;
       },
     };
     return expandTemplate(template, params as Record<string, unknown>, ctx);
@@ -206,6 +218,13 @@ describe("shipped content", () => {
                   const e = expand(q, seed, file.level);
                   const parsed = parseQuestion(e.type, e.content, e.answer);
                   if (!parsed.ok) problems.push(`${seed}: ${parsed.error}`);
+                  // Sounds are spoken through tokens, never as letters a voice misreads.
+                  const speech = speechProblems(
+                    "promptSpeech" in e ? String(e.promptSpeech ?? "") : "",
+                    e.content,
+                    new Set(phonemes.keys()),
+                  );
+                  if (speech.length) problems.push(`${seed}: speech: ${speech.join("; ")}`);
                   // A pattern question's word must really use the pattern's sound.
                   const target = "pattern" in e && e.pattern ? patternsByCode.get(e.pattern) : undefined;
                   const split = "word" in e && e.word ? splits.get(normalizeWord(e.word)) : undefined;

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { publicAudioUrl, publicImageUrl } from "@/lib/content/media";
+import { soundToken } from "@/lib/audio/pronunciation";
 import { getPublicEnv } from "@/lib/env";
 import type { MasteryStatus } from "@/lib/learning/mastery";
 import {
@@ -321,7 +322,8 @@ export async function loadWordDetail(wordId: string) {
       return {
         grapheme: s.grapheme,
         silent: codes.length === 0,
-        sayAs: sound?.say_as || codes.map((c) => phonemeSay.get(c)?.say_as ?? c.toLowerCase()).join(" "),
+        // The sound token ({/SH/}), resolved by the audio service: never the letters.
+        sayAs: soundToken(codes),
         label: sound?.label || codes.map((c) => phonemeSay.get(c)?.label ?? c.toLowerCase()).join(""),
         patternType: one(s.phonics_patterns)?.pattern_type ?? null,
       };

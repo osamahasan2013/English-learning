@@ -16,6 +16,19 @@ system; levels, scope and order can be changed by editing `content/` and re-impo
 Each concept follows **explanation → demonstration → guided practice → independent
 practice → feedback → review**, recorded as the activity `stage`.
 
+## Speech: sounds and letter names
+
+Speech fields (`introSpeech`, `promptSpeech`, a template's `speech`, hints) are read by a
+voice. Write a phonics **sound** as a token, `{/SH/}` (ARPAbet codes, several for a
+sequence: `{/SH AH N/}`), and a **letter name** as `{@s}`. Example: `"Let's learn {@s} {@h}.
+It says {/SH/}!"`. Never write `sh`, `sss` or `th` in speech: voices read them as letter
+names, and the importer and `npm test` reject them. In display text read aloud (a
+pattern's child explanation, an authored spelling hint), write a sound between slashes,
+`/k/`: it is converted to the token, and letter groups become letter names. How tokens are
+spoken is described in [audio.md](audio.md). In `phonics.json`, each phoneme has a
+synthesis rendering (`sayAs`, checked with `npm run audio:audit`), a `ttsQuality` and a
+`keyword`; an optional `audio` path adds a recording.
+
 ## Subjects
 
 Content categories, not separate apps: **Phonics** (letters, sounds, blending, patterns),

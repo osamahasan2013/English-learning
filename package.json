@@ -17,6 +17,7 @@
     "test:integration": "vitest run --config vitest.integration.config.mts",
     "e2e": "playwright test",
     "content:import": "tsx --env-file-if-exists=.env.local scripts/content/import.mts",
+    "audio:audit": "tsx scripts/audio/pronunciation-audit.mts",
     "db:types": "node scripts/db/gen-types.mjs",
     "stack:start": "bash scripts/local-stack/start.sh",
     "stack:stop": "bash scripts/local-stack/stop.sh"

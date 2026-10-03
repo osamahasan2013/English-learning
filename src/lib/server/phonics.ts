@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { MasteryStatus } from "@/lib/learning/mastery";
+import { soundToken } from "@/lib/audio/pronunciation";
 import {
   practiceSuggestions,
   summarizeStages,
@@ -141,7 +142,7 @@ export async function searchPhonicsPatterns(search: PatternSearch) {
   let query = supabase
     .from("phonics_patterns")
     .select(
-      "id, code, pattern, pattern_type, stage_code, position, difficulty, explanation, child_explanation, status, levels(code, name), phonics_pattern_sounds(code, label, say_as, ipa, is_primary, sort_order)",
+      "id, code, pattern, pattern_type, stage_code, position, difficulty, explanation, child_explanation, status, levels(code, name), phonics_pattern_sounds(code, label, phonemes, ipa, is_primary, sort_order)",
       { count: "exact" },
     )
     .order("sort_order")
@@ -202,7 +203,13 @@ export async function searchPhonicsPatterns(search: PatternSearch) {
       level: one(p.levels)?.name ?? "",
       sounds: [...(p.phonics_pattern_sounds ?? [])]
         .sort((a, b) => a.sort_order - b.sort_order)
-        .map((s) => ({ code: s.code, label: s.label, sayAs: s.say_as, ipa: s.ipa, primary: s.is_primary })),
+        .map((s) => ({
+          code: s.code,
+          label: s.label,
+          sayAs: soundToken(s.phonemes),
+          ipa: s.ipa,
+          primary: s.is_primary,
+        })),
       examples: examples.get(p.id) ?? [],
     })),
   };

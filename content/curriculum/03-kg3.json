@@ -30,7 +30,7 @@
               "emoji": "🐚",
               "minutes": 7,
               "difficulty": 3,
-              "introSpeech": "Let's learn sh!",
+              "introSpeech": "Let's learn {@s} {@h}. It says {/SH/}!",
               "blueprint": {
                 "name": "phonics_pattern",
                 "pattern": "SH",
@@ -80,7 +80,7 @@
               "emoji": "🐥",
               "minutes": 7,
               "difficulty": 3,
-              "introSpeech": "Let's learn ch!",
+              "introSpeech": "Let's learn {@c} {@h}. It says {/CH/}!",
               "blueprint": {
                 "name": "phonics_pattern",
                 "pattern": "CH",
@@ -114,7 +114,7 @@
               "emoji": "🧺",
               "minutes": 5,
               "difficulty": 3,
-              "introSpeech": "Is it sh, or ch? Let's sort some words!",
+              "introSpeech": "Is it {/SH/}, or {/CH/}? Let's sort some words!",
               "prerequisites": [
                 "kg3-sh-1"
               ],
@@ -129,7 +129,7 @@
                     {
                       "type": "SORT",
                       "prompt": "sh or ch?",
-                      "promptSpeech": "Does the word have sh, or ch? Sort the words.",
+                      "promptSpeech": "Does the word have {/SH/}, or {/CH/}? Sort the words.",
                       "explanation": "sh says shh, like ship. ch says ch, like chick.",
                       "content": {
                         "groups": [
@@ -299,7 +299,7 @@
               "emoji": "👍",
               "minutes": 7,
               "difficulty": 4,
-              "introSpeech": "Let's learn th!",
+              "introSpeech": "Let's learn {@t} {@h}. It makes two sounds: {/TH/}, as in thin, and {/DH/}, as in this!",
               "blueprint": {
                 "name": "phonics_pattern",
                 "pattern": "TH",
@@ -354,7 +354,7 @@
               "emoji": "🐬",
               "minutes": 7,
               "difficulty": 4,
-              "introSpeech": "Let's learn ph!",
+              "introSpeech": "Let's learn {@p} {@h}. It says {/F/}, as in phone!",
               "blueprint": {
                 "name": "phonics_pattern",
                 "pattern": "PH",
@@ -403,7 +403,7 @@
               "emoji": "🐳",
               "minutes": 7,
               "difficulty": 4,
-              "introSpeech": "Let's learn wh!",
+              "introSpeech": "Let's learn {@w} {@h}. It says {/W/}, as in whale!",
               "blueprint": {
                 "name": "phonics_pattern",
                 "pattern": "WH",
@@ -1025,7 +1025,7 @@
               "description": "Spell: ship, shop, fish, dish, chip, chin.",
               "emoji": "🚢",
               "minutes": 8,
-              "introSpeech": "Let's spell! Spell sh and ch words.",
+              "introSpeech": "Let's spell! Spell words with {@s} {@h} and {@c} {@h}.",
               "blueprint": {
                 "name": "spelling_set",
                 "words": [
@@ -1045,7 +1045,7 @@
               "description": "Spell: thin, bath, this, whip, rock, ring.",
               "emoji": "💍",
               "minutes": 8,
-              "introSpeech": "Let's spell! Spell th, wh, ck and ng words.",
+              "introSpeech": "Let's spell! Spell words with {@t} {@h}, {@w} {@h}, {@c} {@k} and {@n} {@g}.",
               "blueprint": {
                 "name": "spelling_set",
                 "words": [

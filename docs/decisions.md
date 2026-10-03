@@ -80,7 +80,8 @@ function takes plain attempt lists, so it can be replaced without schema changes
 ## ADR-011 — Browser speech synthesis behind an audio service
 
 `src/lib/audio` plays recorded assets when present, otherwise TTS. Isolated phoneme sounds
-use `say_as` approximations. Recordings can replace TTS item by item.
+use `say_as` approximations. Recordings can replace TTS item by item. _(Refined by
+ADR-036: sounds are tokens resolved by a pronunciation resolver.)_
 
 ## ADR-012 — Child mode on the parent's session
 
@@ -416,3 +417,25 @@ accepts a physical keyboard.
 React; young children cannot type on a device keyboard.
 **Consequences.** Changing a level's input or limits is a data change; changing which
 activities a level's lessons contain needs a re-import.
+
+## ADR-036 — Phonics sounds are speech tokens, resolved in one place
+
+**Context.** The pre-Phase-7 audit found phonics sounds stored as text for speech
+synthesis (`sss`, `fff`, `hh`, `shh`, `th, as in thin`, `aa`, `ih`, `ay`), copied into
+question content at import. Checked with espeak-ng (the engine behind Chrome and Firefox
+on Linux), voices read these as letter names ("ess ess ess", "tee aitch") or as the wrong
+vowel (`ay` → "eye", `ih` → "eye", `eh` → /eɪ/). Children were being taught wrong sounds.
+
+**Decision.** Content stores tokens: `{/S/}` for a sound (a phoneme sequence) and `{@s}`
+for a letter name. One pure resolver (`src/lib/audio/pronunciation.ts`) turns a token into
+a recorded clip, else a rendering checked to produce the sound, graded `pure` or
+`approximate` (consonant + "uh"), else a keyword ("the sound at the start of apple") for
+sounds no voice can produce from text, else nothing. The table is data (`phonemes`,
+`phonics_pattern_sounds`, letter names, `audio_assets`), served by the child layout and
+carried in lesson payloads. The importer and the content tests reject speech containing
+bare letter groups. The audio service plays one thing at a time and cancels sequences.
+
+**Consequences.** No phonics sound is spoken as letters. Recordings replace synthesis per
+sound without a re-import. Consonants remain approximate (with "uh") and five vowel sounds
+are keyword-only until recordings exist; blending by ear is weaker for those. Old cached
+lessons without a sound table do not speak their tokens (silence, not wrong sounds).

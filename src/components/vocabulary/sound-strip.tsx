@@ -17,8 +17,10 @@ export function SoundStrip({
   if (segments.length === 0) return null;
   const sounding = segments.filter((s) => !s.silent);
   async function blend() {
-    for (const s of sounding) await speak({ text: s.sayAs, speed: "slow" });
-    await speak({ text: word, speed: "normal" });
+    await speak([
+      ...sounding.map((s) => ({ text: s.sayAs, speed: "slow" as const })),
+      { text: word, speed: "normal" },
+    ]);
   }
   return (
     <div className="flex flex-wrap items-center gap-2">

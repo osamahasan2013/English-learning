@@ -1,5 +1,5 @@
 import type { QuestionResponse } from "@/lib/content/question-schemas";
-import type { AudioSpeed } from "@/lib/audio/audio-service";
+import type { SpeakFn } from "@/lib/audio/audio-service";
 import type { Reveal } from "@/lib/learning/answer-key";
 import type { LessonStep } from "@/lib/learning/lesson-payload";
 import type { SessionPhase } from "@/lib/learning/lesson-session";
@@ -14,7 +14,7 @@ export type RendererProps<Q extends LessonStep["question"] = LessonStep["questio
   lastResponse: QuestionResponse | null;
   reveal: Reveal | null;
   onAnswer: (response: QuestionResponse) => void;
-  speak: (text: string, speed?: AudioSpeed) => Promise<unknown>;
+  speak: SpeakFn;
 };
 
 // The question type a renderer handles, as the device sees it (no answer).

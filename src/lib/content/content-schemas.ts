@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { findUnsafeSpeech } from "@/lib/audio/pronunciation";
 
 // Schemas for the content files in /content (and for CMS/API imports). Natural keys
 // (`code`, a word's text) make imports idempotent: re-importing updates rows in place.
@@ -115,6 +116,37 @@ export type ReferenceFile = z.infer<typeof referenceFileSchema>;
 
 const phonemeCode = z.string().regex(/^[A-Z]{1,3}$/, "phoneme codes are ARPAbet, e.g. SH, AE");
 
+const SOUND_QUALITIES = ["pure", "approximate", "keyword"] as const;
+const KEYWORD_POSITIONS = ["first", "middle", "last"] as const;
+const audioPath = z
+  .string()
+  .regex(/^audio\/[a-z0-9/_-]+\.(mp3|m4a|ogg|wav)$/, "audio must be audio/…/name.mp3");
+const keywordWord = z.string().regex(/^[a-z]{2,20}$/, "a keyword is one lowercase word");
+const speechRendering = z
+  .string()
+  .max(40)
+  .default("")
+  .refine(
+    (t) => findUnsafeSpeech(t).length === 0,
+    (t) => ({ message: `speech engines read "${findUnsafeSpeech(t).join(", ")}" as letter names` }),
+  );
+// Authored speech: sounds and letter names are written as tokens ({/SH/}, {@s}); a bare
+// letter group ("sh", "sss") is ambiguous and is read by voices as letter names.
+const safeSpeech = (max: number) =>
+  z
+    .string()
+    .max(max)
+    .default("")
+    .refine(
+      (t) => findUnsafeSpeech(t).length === 0,
+      (t) => ({
+        message: `"${findUnsafeSpeech(t).join(", ")}" would be read as letter names: write {/SH/} for a sound or {@s} {@h} for letters`,
+      }),
+    );
+const hasRendering = (x: { sayAs: string; ttsQuality: string; keyword?: string }) =>
+  x.ttsQuality === "keyword" ? !!x.keyword : x.sayAs !== "";
+const renderingMessage = "a sound needs a rendering (sayAs) or, with ttsQuality keyword, a keyword";
+
 export const phonicsFileSchema = z.object({
   // The sound inventory (American English). Pronunciations below are sequences of these.
   phonemes: z
@@ -123,12 +155,21 @@ export const phonicsFileSchema = z.object({
         code: phonemeCode,
         ipa: z.string().min(1).max(12),
         label: z.string().min(1).max(8),
-        sayAs: z.string().min(1).max(40),
+        // What speech synthesis says for the sound (see src/lib/audio/pronunciation.ts):
+        // never letters ("sss", "th"), which voices read as letter names.
+        sayAs: speechRendering,
+        ttsQuality: z.enum(SOUND_QUALITIES).default("approximate"),
+        // A word that has the sound, used when there is no safe rendering.
+        keyword: keywordWord.optional(),
+        keywordPosition: z.enum(KEYWORD_POSITIONS).default("first"),
+        // A recorded clip of the sound (optional; wins over speech synthesis).
+        audio: audioPath.optional(),
         kind: z.enum(["consonant", "vowel", "r_colored_vowel"]),
         voiced: z.boolean(),
         example: z.string().default(""),
         description: z.string().default(""),
-      }),
+      })
+      .refine(hasRendering, renderingMessage),
     )
     .default([]),
   // The progression: Letters → Sounds → Beginning sounds → … → Advanced patterns.
@@ -188,10 +229,15 @@ export const phonicsFileSchema = z.object({
             code,
             ipa: z.string().default(""),
             label: z.string().min(1).max(80),
-            sayAs: z.string().min(1).max(40),
+            // Own rendering for a multi-sound pattern ("shun"); empty = from the phonemes.
+            sayAs: speechRendering,
+            ttsQuality: z.enum(SOUND_QUALITIES).default("approximate"),
+            keyword: keywordWord.optional(),
+            keywordPosition: z.enum(KEYWORD_POSITIONS).default("first"),
             primary: z.boolean().default(false),
-            phonemes: z.array(phonemeCode).default([]),
-          }),
+            phonemes: z.array(phonemeCode).min(1, "a sound needs its phonemes"),
+          })
+          .refine((x) => x.ttsQuality !== "keyword" || !!x.keyword, "a keyword sound needs its keyword"),
         )
         .min(1)
         .refine((s) => s.filter((x) => x.primary).length === 1, "exactly one sound must be primary"),
@@ -372,7 +418,7 @@ export const rawQuestionSchema = z.object({
   code: slug.optional(),
   type: z.string(),
   prompt: z.string().max(300).default(""),
-  promptSpeech: z.string().max(300).default(""),
+  promptSpeech: safeSpeech(300),
   explanation: z.string().max(300).default(""),
   metadata: z.record(z.unknown()).default({}),
   content: z.record(z.unknown()).default({}),
@@ -419,7 +465,7 @@ const lessonInputSchema = z.object({
   minutes: z.number().int().min(1).max(60).default(5),
   difficulty: difficulty.default(1),
   // Read aloud on the lesson's intro screen.
-  introSpeech: z.string().max(400).default(""),
+  introSpeech: safeSpeech(400),
   // Lessons (by code, any level) to complete first. Skill prerequisites also apply.
   prerequisites: z.array(slug).default([]),
   status,

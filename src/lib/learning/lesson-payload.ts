@@ -4,6 +4,7 @@ import type { AnswerKey } from "@/lib/learning/answer-key";
 import type { FeedbackMessage } from "@/lib/learning/feedback";
 import type { PlayerRules, ScoringRules } from "@/lib/learning/rules";
 import type { SpellingStepSettings } from "@/lib/learning/spelling";
+import type { SoundTable } from "@/lib/audio/pronunciation";
 
 // What the lesson player receives: everything needed to run a lesson offline, already
 // validated. Built on the server by src/lib/server/lesson-loader.ts and cached on the
@@ -49,8 +50,8 @@ export type LessonStep = {
   // Validated activity configuration (e.g. the passage for reading questions).
   activityConfig: ActivityConfig;
   pattern: LessonPattern | null;
-  // For word building: what speech synthesis should say for each tile's sound (from the
-  // tile's phonics pattern), so blending demos say "kuh… aa… tuh", not letter names.
+  // For word building: the sound token for each tile ({/K/}), from the tile's phonics
+  // pattern, so blending demos say the sounds, never the letter names.
   tileSounds: Record<string, string>;
   // Spelling steps: the activity, input method, hints and dictation replays, resolved on the
   // server from the activity config and the level's spelling rules. null otherwise.
@@ -89,6 +90,10 @@ export type LessonPayload = {
     wordIds: string[];
   };
   steps: LessonStep[];
+  // Phonics sounds and letter names for the speech tokens in this lesson ({/S/}, {@s}),
+  // with recorded clips where they exist (see src/lib/audio/pronunciation.ts). Optional:
+  // lessons cached before it existed still play (their tokens are then not spoken).
+  sounds?: SoundTable;
   feedback: FeedbackMessage[];
   rules: { player: PlayerRules; scoring: ScoringRules };
   loadedAt: string;

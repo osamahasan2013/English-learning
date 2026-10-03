@@ -18,6 +18,7 @@ import {
 } from "@/lib/content/vocabulary";
 import type { WordArea } from "@/lib/learning/vocabulary";
 import { buildSpellingHints, type SpellingActivity, type SpellingSegment } from "@/lib/learning/spelling";
+import { letterToken, speechFromDisplay } from "@/lib/audio/pronunciation";
 
 export type TemplateSegment = {
   grapheme: string;
@@ -84,6 +85,9 @@ export type TemplateContext = {
   word: (text: string) => TemplateWord | undefined;
   pattern: (code: string) => TemplatePattern | undefined;
   phoneme?: (code: string) => TemplatePhoneme | undefined;
+  // The phonemes a written sound label stands for ("k" → K), for "/k/" in display text;
+  // undefined when unknown or ambiguous ("th" is /θ/ or /ð/).
+  soundForLabel?: (label: string) => string[] | undefined;
   // Deterministic seed (the question code), so re-imports produce identical content.
   seed: string;
   // The word bank (vocabulary templates choose distractors from it) and the lesson's level
@@ -284,7 +288,8 @@ function spellingHints(word: TemplateWord, ctx: TemplateContext, split = spellin
     split,
     focusPattern: spelling.focusPattern,
     irregularPositions: spelling.irregularPositions,
-    authored: spelling.hints.map((text) => ({ text })),
+    // An authored hint is display text; read aloud, "/k/" is the sound and "ch" the letters.
+    authored: spelling.hints.map((text) => ({ text, speech: speechFromDisplay(text, ctx.soundForLabel) })),
     max: 4,
   });
 }
@@ -359,7 +364,7 @@ export const TEMPLATES: Record<string, Expander> = {
         body,
         speech:
           optStr(params, "speech") ??
-          `${body} ${sound.sayAs}${first && !sound.sayAs.includes("as in") ? `, as in ${first}` : ""}.`,
+          `${speechFromDisplay(body, ctx.soundForLabel)} ${sound.sayAs}${first ? `, as in ${first}` : ""}.`,
         examples,
       },
       answer: null,
@@ -533,7 +538,8 @@ export const TEMPLATES: Record<string, Expander> = {
     });
     const upper = pattern.uppercase ?? pattern.pattern.toUpperCase();
     const name = pattern.letterName || pattern.pattern;
-    const nameSpeech = pattern.letterNameSayAs || name;
+    // The letter's NAME as a letter token ({@s} → "ess"), never its sound.
+    const nameSpeech = /^[a-z]$/.test(pattern.pattern) ? letterToken(pattern.pattern) : pattern.letterNameSayAs || name;
     const first = examples[0]?.text;
     const soundLabel = soundLabelFor(ctx, sound.phonemes, pattern.pattern);
     return {
@@ -785,7 +791,7 @@ export const TEMPLATES: Record<string, Expander> = {
     return {
       type: "SORT",
       prompt: `Which ${pattern.pattern} sound?`,
-      promptSpeech: `Listen to each word. Which ${pattern.pattern} sound does it have?`,
+      promptSpeech: `Listen to each word. Which sound does it have: ${groups.map((s) => s.sayAs).join(", or ")}?`,
       pattern: pattern.code,
       content: {
         groups: groups.map((s) => ({ id: optionId(s.code), label: s.label })),

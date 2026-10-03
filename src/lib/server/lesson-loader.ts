@@ -1,6 +1,8 @@
 import "server-only";
 
 import { parseActivityConfig } from "@/lib/content/activity-config";
+import { soundToken } from "@/lib/audio/pronunciation";
+import { getSoundTable } from "@/lib/server/sound-table";
 import { parseQuestion, type ParsedQuestion } from "@/lib/content/question-schemas";
 import { isRenderableQuestionType } from "@/features/activities/supported-types";
 import { buildAnswerKey } from "@/lib/learning/answer-key";
@@ -119,6 +121,7 @@ export async function loadLessonPayload(lessonId: string): Promise<LessonPayload
     },
     steps,
     feedback: toFeedback(feedbackRows.data ?? []),
+    sounds: await getSoundTable(),
     rules: { player: rules.player, scoring: rules.scoring },
     loadedAt: new Date().toISOString(),
   };
@@ -215,6 +218,7 @@ export async function loadAssessmentPayload(code: string): Promise<LessonPayload
     assessment: { id: assessment.id, code: assessment.code, areas },
     steps,
     feedback: toFeedback(feedbackRows.data ?? []),
+    sounds: await getSoundTable(),
     rules: { player: rules.player, scoring: rules.scoring },
     loadedAt: new Date().toISOString(),
   };
@@ -316,6 +320,7 @@ export async function loadWordPracticePayload(args: {
     practice: { kind: args.kind, returnHref: args.returnHref, wordIds },
     steps,
     feedback: toFeedback(feedbackRows.data ?? []),
+    sounds: await getSoundTable(),
     rules: { player: rules.player, scoring: rules.scoring },
     loadedAt: new Date().toISOString(),
   };
@@ -433,6 +438,7 @@ export async function loadSpellingPracticePayload(args: {
     practice: { kind: args.kind, returnHref: args.returnHref, returnLabel: args.returnLabel, wordIds },
     steps,
     feedback: toFeedback(feedbackRows.data ?? []),
+    sounds: await getSoundTable(),
     rules: { player: rules.player, scoring: rules.scoring },
     loadedAt: new Date().toISOString(),
   };
@@ -488,7 +494,7 @@ async function loadQuestionSupport(supabase: Supabase, questions: QuestionRow[])
     const { data: patternRows } = await supabase
       .from("phonics_patterns")
       .select(
-        "id, code, pattern, pattern_type, child_explanation, phonics_pattern_sounds(code, label, say_as, ipa, sort_order)",
+        "id, code, pattern, pattern_type, child_explanation, phonics_pattern_sounds(code, label, phonemes, ipa, sort_order)",
       )
       .in("id", patternIds);
     for (const p of patternRows ?? []) {
@@ -499,7 +505,7 @@ async function loadQuestionSupport(supabase: Supabase, questions: QuestionRow[])
         childExplanation: p.child_explanation,
         sounds: [...(p.phonics_pattern_sounds ?? [])]
           .sort((a, b) => a.sort_order - b.sort_order)
-          .map((s) => ({ code: s.code, label: s.label, sayAs: s.say_as, ipa: s.ipa })),
+          .map((s) => ({ code: s.code, label: s.label, sayAs: soundToken(s.phonemes), ipa: s.ipa })),
       });
     }
   }
@@ -516,7 +522,7 @@ async function loadQuestionSupport(supabase: Supabase, questions: QuestionRow[])
   if (tiles.size > 0) {
     const { data: tilePatterns } = await supabase
       .from("phonics_patterns")
-      .select("pattern, pattern_type, phonics_pattern_sounds(say_as, is_primary)")
+      .select("pattern, pattern_type, phonics_pattern_sounds(phonemes, is_primary)")
       .in("pattern", [...tiles])
       .in("pattern_type", ["letter", "consonant_digraph", "vowel_team", "r_controlled", "trigraph"])
       .eq("status", "published");
@@ -524,7 +530,7 @@ async function loadQuestionSupport(supabase: Supabase, questions: QuestionRow[])
       const primary = (p.phonics_pattern_sounds ?? []).find((x) => x.is_primary);
       // A single letter's own pattern wins over e.g. an ending with the same text.
       if (primary && (!tileSounds[p.pattern] || p.pattern_type === "letter"))
-        tileSounds[p.pattern] = primary.say_as;
+        tileSounds[p.pattern] = soundToken(primary.phonemes);
     }
   }
 

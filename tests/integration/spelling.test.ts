@@ -213,6 +213,102 @@ describe("spelling engine (real database)", () => {
     expect(data![1]).toMatchObject({ is_correct: true, error_type: null });
   });
 
+  it("never lets a family write spelling progress, answer for another child, or read the answer", async () => {
+    // The sync route looks the child up with the signed-in parent's own client: another
+    // parent gets nothing back, so the route answers 403 and writes nothing.
+    const { data: foreign } = await other.client
+      .from("children")
+      .select("id")
+      .eq("id", childId)
+      .maybeSingle();
+    expect(foreign).toBeNull();
+    // Attempts, scores and mastery are written only by the server: not by another family,
+    // and not by the child's own parent either (no self-made "correct" attempts).
+    const { data: shipRow } = await serviceClient()
+      .from("questions")
+      .select("skill_id")
+      .eq("id", ship.question.id)
+      .single();
+    // A complete, valid row: only the policies stop it.
+    const forgedAttempt = {
+      id: crypto.randomUUID(),
+      child_id: childId,
+      question_id: ship.question.id,
+      skill_id: shipRow!.skill_id,
+      word_id: ship.wordId,
+      question_type: "SPELLING",
+      attempt_number: 1,
+      response: { value: "ship" },
+      response_time_ms: 2000,
+      attempted_at: new Date().toISOString(),
+      is_correct: true,
+      score: 100,
+    };
+    for (const client of [other.client, parent.client]) {
+      const insert = await client.from("activity_attempts").insert(forgedAttempt);
+      expect(insert.error).not.toBeNull();
+      const progress = await client
+        .from("spelling_progress")
+        .upsert({ child_id: childId, word_id: ship.wordId, status: "MASTERED", mastery_score: 100 });
+      expect(progress.error).not.toBeNull();
+    }
+    // The stored answer of a spelling question is not readable by families.
+    const answer = await parent.client.from("questions").select("answer").eq("id", ship.question.id);
+    expect(answer.error).not.toBeNull();
+    const { data: progress } = await serviceClient()
+      .from("spelling_progress")
+      .select("status")
+      .eq("child_id", childId)
+      .eq("word_id", ship.wordId)
+      .maybeSingle();
+    expect(progress?.status).not.toBe("MASTERED");
+  });
+
+  it("analyses a missing-letter answer as the whole word, and keeps segmenting out of spelling mastery", async () => {
+    const db = serviceClient();
+    const byCode = async (code: string) => {
+      const { data } = await db.from("questions").select("id, word_id").eq("code", code).single();
+      return { id: data!.id, word_id: data!.word_id! };
+    };
+    const missing = await byCode("kg2-spell-cvc-1-a4-q1"); // b_g → big
+    const segment = await byCode("kg2-spell-cvc-1-a2-q1"); // WORD_TO_SOUNDS: bag
+    const event = (questionId: string, response: AttemptEvent["response"], at: string): AttemptEvent => ({
+      ...typed({ id: questionId, answer: { accepted: [] } }, "", at),
+      response,
+    });
+    const result = await processSyncBatch(childId, [
+      event(missing.id, { value: "a" }, minutesAgo(12)),
+      event(segment.id, { sequence: ["b", "ae", "g"] }, minutesAgo(11)),
+    ]);
+    expect(result.results.map((r) => r.status)).toEqual(["stored", "stored"]);
+    // MISSING_LETTER: the child's letter in the word (bag for big) is what gets analysed.
+    const [bigAttempt] = await attemptsFor(parent.client, missing.word_id);
+    expect(bigAttempt).toMatchObject({
+      response: { value: "a" },
+      is_correct: false,
+      error_type: "WRONG_VOWEL",
+    });
+    expect(bigAttempt.spelling_analysis).toMatchObject({ normalized: "bag", category: "WRONG_VOWEL" });
+    const { data: bigProgress } = await parent.client
+      .from("spelling_progress")
+      .select("attempts_count, correct_count")
+      .eq("child_id", childId)
+      .eq("word_id", missing.word_id)
+      .single();
+    expect(bigProgress).toMatchObject({ attempts_count: 1, correct_count: 0 });
+    // WORD_TO_SOUNDS (segmenting) is stored and scored, but it is phonics evidence, not
+    // spelling: it does not create spelling mastery for "bag".
+    const [bagAttempt] = await attemptsFor(parent.client, segment.word_id);
+    expect(bagAttempt).toMatchObject({ is_correct: true, spelling_analysis: null });
+    const { data: bagProgress } = await parent.client
+      .from("spelling_progress")
+      .select("word_id")
+      .eq("child_id", childId)
+      .eq("word_id", segment.word_id)
+      .maybeSingle();
+    expect(bagProgress).toBeNull();
+  });
+
   it("shows another family nothing", async () => {
     const [progress, attempts, errors, items] = await Promise.all([
       other.client.from("spelling_progress").select("word_id").eq("child_id", childId),
