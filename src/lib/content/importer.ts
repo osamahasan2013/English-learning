@@ -30,6 +30,8 @@ import { BlueprintError, expandBlueprint } from "@/lib/content/lesson-blueprints
 import { validatePhonicsFile, type ValidationIssue } from "@/lib/content/phonics-validation";
 import { decomposeWord, segmentsUsePattern, type PatternInfo, type PhonemeInfo } from "@/lib/learning/phonics";
 import { parseQuestion } from "@/lib/content/question-schemas";
+import { compileWritingAnswer, glyphProblems, type RubricTemplate, type WritingFile } from "@/lib/content/writing-content";
+import { WRITING_QUESTION_TYPES } from "@/lib/learning/writing-evaluation";
 import { comprehensionQuestion } from "@/lib/content/reading-content";
 import {
   analyzeText,
@@ -60,6 +62,12 @@ import {
 // Runs with a service-role client (scripts/content/import.ts); the admin CMS will call
 // the same function behind an admin check.
 
+type WritingRefs = {
+  skills: Map<string, { minRank: number; maxRank: number }>;
+  glyphs: Map<string, string>;
+  rubrics: Map<string, RubricTemplate & { minRank: number; maxRank: number }>;
+};
+
 export type ImportBundle = {
   reference?: ReferenceFile;
   phonics?: PhonicsFile;
@@ -68,6 +76,8 @@ export type ImportBundle = {
   sentences?: z.infer<typeof sentencesFileSchema>;
   vocabulary?: z.infer<typeof vocabularyFileSchema>;
   stories?: z.infer<typeof storiesFileSchema>;
+  // Writing: writing skills, handwriting glyphs and rubric templates (content/writing.json).
+  writing?: WritingFile;
   curriculum?: CurriculumFile[];
   assessments?: z.infer<typeof assessmentsFileSchema>;
   // Spelling targets (content/spelling/*.csv): words of the bank with their spelling data.
@@ -107,6 +117,7 @@ const CODE_KEYED_TABLES = new Set([
   "spelling_types",
   "reading_skill_types",
   "reading_content_types",
+  "writing_skill_types",
 ]);
 
 type Flag = { entity: string; entity_key: string; rule: string; severity: "warning" | "error"; message: string };
@@ -187,6 +198,9 @@ export class ContentImporter {
     contentTypes: Map<string, number>;
   } | null = null;
   private storyBank = new Map<string, { input: StoryInput; levelCode: string; patternWords: Map<string, string> }>();
+  // Writing: writing skills (level ranges), glyph codes → ids and rubric templates, from
+  // the writing file of this run, else the database.
+  private writingRefs: WritingRefs | null = null;
 
   constructor(
     private readonly db: Db,
@@ -1702,6 +1716,19 @@ export class ContentImporter {
         const raw = input as Extract<QuestionInput, { type: string }>;
         expanded = { ...raw, type: raw.type || fallbackType };
       }
+      // Writing: a rubric named by the question becomes its stored criteria; a handwriting
+      // question's glyph must exist.
+      let glyphId: string | null = null;
+      if (WRITING_QUESTION_TYPES.has(expanded.type)) {
+        const refs = this.writingRefs;
+        if (!refs) throw new Error("writing references are not loaded");
+        expanded.answer = compileWritingAnswer(expanded.type, expanded.answer, refs.rubrics, this.currentLevelRank);
+        if (expanded.type === "TRACING") {
+          const glyphCode = String(expanded.content.glyph ?? "");
+          glyphId = refs.glyphs.get(glyphCode) ?? null;
+          if (!glyphId) throw new Error(`unknown glyph "${glyphCode}"`);
+        }
+      }
       const parsed = parseQuestion(expanded.type, expanded.content, expanded.answer);
       if (!parsed.ok) throw new Error(parsed.error);
       // Sounds are spoken through sound tokens, never as letters a voice would misread.
@@ -1748,6 +1775,7 @@ export class ContentImporter {
           ? this.lookup("phonics_patterns", expanded.pattern.toUpperCase(), "phonics pattern")
           : null,
         story_id: expanded.story ? this.lookup("stories", expanded.story, "story") : null,
+        glyph_id: glyphId,
         difficulty: input.difficulty ?? 1,
         status: "published",
       };
@@ -1758,6 +1786,129 @@ export class ContentImporter {
       report.errors.push(`question ${code}: ${message}`);
       return null;
     }
+  }
+
+  // Writing skills, reference handwriting and rubric templates. A glyph whose strokes are
+  // malformed (or whose character does not match its kind and case) is rejected; doubts
+  // (a first stroke that starts at the bottom, a very loose tolerance) are flagged.
+  async importWriting(file: WritingFile) {
+    const ranks = (await this.loadVocabularyRefs()).levelRanks;
+    const rank = (code: string, what: string) => {
+      const r = ranks.get(code);
+      if (r === undefined) throw new Error(`${what}: unknown level "${code}"`);
+      return r;
+    };
+    this.flagScopes.add("glyph");
+    this.flagScopes.add("writing_rubric");
+
+    const skillReport = this.entity("writing skills");
+    const skillRows: Row[] = [];
+    const skills = new Map<string, { minRank: number; maxRank: number }>();
+    for (const sk of file.writingSkills) {
+      try {
+        const [minRank, maxRank] = [rank(sk.minLevel, sk.code), rank(sk.maxLevel, sk.code)];
+        if (minRank > maxRank) throw new Error(`${sk.code}: ${sk.minLevel} is after ${sk.maxLevel}`);
+        skills.set(sk.code, { minRank, maxRank });
+        skillRows.push({
+          code: sk.code,
+          name: sk.name,
+          child_name: sk.childName,
+          description: sk.description,
+          strand: sk.strand,
+          min_level_rank: minRank,
+          max_level_rank: maxRank,
+          emoji: sk.emoji,
+          sort_order: sk.sortOrder,
+          status: sk.status,
+        });
+      } catch (error) {
+        skillReport.invalid++;
+        skillReport.errors.push((error as Error).message);
+      }
+    }
+    await this.sync("writing_skill_types", "writing skills", ["code"], skillRows);
+
+    const glyphReport = this.entity("glyphs");
+    const glyphRows: Row[] = [];
+    for (const g of file.glyphs) {
+      const { errors, warnings } = glyphProblems(g);
+      if (errors.length > 0) {
+        glyphReport.invalid++;
+        glyphReport.errors.push(`glyph ${g.code}: ${errors.join("; ")}`);
+        continue;
+      }
+      for (const message of warnings)
+        this.flag({ entity: "glyph", entity_key: g.code, rule: "glyph_check", severity: "warning", message });
+      glyphRows.push({
+        code: g.code,
+        kind: g.kind,
+        character: g.character,
+        letter_case: g.case,
+        script: g.script,
+        name: g.name,
+        strokes: g.strokes,
+        guide: g.guide,
+        tolerance: g.tolerance,
+        completion: g.completion,
+        difficulty: g.difficulty,
+        family: g.family,
+        formation_tip: g.formationTip,
+        formation_speech: g.formationSpeech,
+        sort_order: g.sortOrder,
+        status: g.status,
+      });
+    }
+    const glyphIds = await this.sync("handwriting_glyphs", "glyphs", ["code"], glyphRows);
+
+    const rubricReport = this.entity("writing rubrics");
+    const rubricRows: Row[] = [];
+    const rubrics = new Map<string, RubricTemplate & { minRank: number; maxRank: number }>();
+    for (const r of file.rubrics) {
+      try {
+        const [minRank, maxRank] = [rank(r.minLevel, r.code), rank(r.maxLevel, r.code)];
+        if (minRank > maxRank) throw new Error(`${r.code}: ${r.minLevel} is after ${r.maxLevel}`);
+        if (!r.criteria.some((c) => c.critical === true || c.critical === "level") && !r.ideas?.critical && !r.topic?.critical)
+          throw new Error(`${r.code}: a rubric needs at least one critical criterion`);
+        const ids = r.criteria.map((c) => c.id);
+        if (new Set(ids).size !== ids.length) throw new Error(`${r.code}: criterion ids must be unique`);
+        rubrics.set(r.code, { ...r, minRank, maxRank });
+        rubricRows.push({
+          code: r.code,
+          name: r.name,
+          description: r.description,
+          min_level_rank: minRank,
+          max_level_rank: maxRank,
+          criteria: r.criteria,
+          status: r.status,
+        });
+      } catch (error) {
+        rubricReport.invalid++;
+        rubricReport.errors.push((error as Error).message);
+      }
+    }
+    await this.sync("writing_rubrics", "writing rubrics", ["code"], rubricRows);
+
+    this.writingRefs = {
+      skills,
+      glyphs: new Map(glyphRows.map((g) => [String(g.code), glyphIds.get(String(g.code))!])),
+      rubrics,
+    };
+  }
+
+  // Writing references from the database (when the writing file is not part of this run).
+  // Rubric templates are only in the file: a run without it cannot compile rubric answers.
+  private async loadWritingRefs(): Promise<WritingRefs> {
+    if (this.writingRefs) return this.writingRefs;
+    const [skills, glyphs] = await Promise.all([
+      fetchAll(this.db, "writing_skill_types", "code,min_level_rank,max_level_rank"),
+      fetchAll(this.db, "handwriting_glyphs", "id,code", [{ op: "neq", column: "status", value: "archived" }]),
+    ]);
+    this.writingRefs = {
+      skills: new Map(skills.map((r) => [String(r.code), { minRank: Number(r.min_level_rank), maxRank: Number(r.max_level_rank) }])),
+      glyphs: new Map(glyphs.map((r) => [String(r.code), String(r.id)])),
+      rubrics: new Map(),
+    };
+    return this.writingRefs;
   }
 
   async importCurriculum(file: CurriculumFile) {
@@ -1799,6 +1950,28 @@ export class ContentImporter {
           report.invalid++;
           skill.readingSkill = undefined;
         } else if (!readingSkills.has(skill.readingSkill)) readingSkills.set(skill.readingSkill, skill.code);
+      }
+
+    // Writing skills: a skill may only teach a writing skill taught at this level (no
+    // paragraph writing in KG1).
+    const writingRefs = await this.loadWritingRefs();
+    for (const unit of file.units)
+      for (const skill of unit.skills) {
+        if (!skill.writingSkill) continue;
+        const range = writingRefs.skills.get(skill.writingSkill);
+        const report = this.entity("skills");
+        if (!range) {
+          report.errors.push(`skill ${skill.code}: unknown writing skill "${skill.writingSkill}"`);
+          report.invalid++;
+          skill.writingSkill = undefined;
+        } else if (
+          this.currentLevelRank !== undefined &&
+          (this.currentLevelRank < range.minRank || this.currentLevelRank > range.maxRank)
+        ) {
+          report.errors.push(`skill ${skill.code}: ${skill.writingSkill} is not taught at ${file.level}`);
+          report.invalid++;
+          skill.writingSkill = undefined;
+        }
       }
 
     // Lessons written as a blueprint become ordinary activities here, before anything else
@@ -1879,6 +2052,7 @@ export class ContentImporter {
         difficulty: skill.difficulty,
         is_active: skill.active,
         reading_skill_code: skill.readingSkill ?? null,
+        writing_skill_code: skill.writingSkill ?? null,
         phonics_stage_code: skill.phonicsStage
           ? (this.lookup("phonics_stages", skill.phonicsStage, "phonics stage"), skill.phonicsStage)
           : null,
@@ -2036,6 +2210,7 @@ export class ContentImporter {
       this.loadIds("sentences", ["text"]),
     ]);
     await this.loadBanksFromDatabase();
+    await this.loadWritingRefs();
     this.currentLevelRank = undefined;
     const report = this.entity("assessments");
     const rows: Row[] = [];
@@ -2284,6 +2459,7 @@ export class ContentImporter {
     await this.importWordExamples();
     if (bundle.vocabulary) await this.importFamilies(bundle.vocabulary);
     if (bundle.stories) await this.importStories(bundle.stories);
+    if (bundle.writing) await this.importWriting(bundle.writing);
     // Spelling targets are checked (and their sentences stored) before the curriculum, whose
     // spelling templates read them; their rows are written after it, once skills exist.
     if (bundle.spelling) await this.prepareSpelling(bundle.spelling);

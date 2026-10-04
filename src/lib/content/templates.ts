@@ -1532,3 +1532,106 @@ export function expandTemplate(name: string, params: Params, ctx: TemplateContex
   // Drop undefined keys so stored JSON is clean and stable across imports.
   return JSON.parse(JSON.stringify(question)) as ExpandedQuestion;
 }
+
+// ---- Writing (Phase 8). Handwriting uses the reference glyphs (content/writing.json);
+// typed word writing reuses the SPELLING question type, so a written word is ordinary word
+// and spelling evidence. ------------------------------------------------------------------
+Object.assign(TEMPLATES, {
+  // Trace, copy or write a letter (glyph small-/big-letter). Its name is spoken as a letter
+  // token ({@a}); in write mode the child may hear its sound instead (cue: "sound").
+  trace_letter(params, ctx) {
+    const letter = str(params, "letter").toLowerCase();
+    if (!/^[a-z]$/.test(letter)) throw new TemplateError(`"${letter}" is not a letter`);
+    const upper = params.case === "upper";
+    const mode = optStr(params, "mode") ?? "trace";
+    if (!["trace", "copy", "write"].includes(mode)) throw new TemplateError(`unknown tracing mode "${mode}"`);
+    const pattern = needPattern(ctx, `LETTER_${letter.toUpperCase()}`);
+    const size = upper ? "big" : "small";
+    const shown = upper ? letter.toUpperCase() : letter;
+    const name = letterToken(letter);
+    const bySound = mode === "write" && params.cue === "sound";
+    const sound = bySound ? primarySound(pattern) : null;
+    const speech = sound
+      ? `Write the letter for this sound: ${sound.sayAs}`
+      : mode === "trace"
+        ? `Trace ${size} ${name}.`
+        : mode === "copy"
+          ? `Look, then write ${size} ${name}.`
+          : `Write ${size} ${name}.`;
+    return {
+      type: "TRACING",
+      // Write mode does not show the letter: the child writes it from memory.
+      prompt: sound ? "Write the letter for the sound" : mode === "trace" ? `Trace ${shown}` : mode === "copy" ? `Write ${shown}` : `Write the ${size} letter`,
+      promptSpeech: speech,
+      pattern: pattern.code,
+      content: { glyph: `${upper ? "upper" : "lower"}-${letter}`, mode, speech, showStart: mode === "trace" },
+      answer: { trace: true },
+    };
+  },
+
+  // WORD_COPY: the word is shown (and can be heard); copy it.
+  copy_word(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    const text = spellingWordText(target, ctx);
+    const split = spellingSplit(target, ctx);
+    return {
+      type: "SPELLING",
+      prompt: "Copy the word",
+      promptSpeech: `Copy the word ${target.word}.`,
+      word: target.word,
+      area: "spelling",
+      content: { mode: "copy", emoji: target.emoji || undefined, speech: target.word, tiles: letterTiles(text, ctx.seed, 2), split },
+      answer: { accepted: [text] },
+    };
+  },
+
+  // IMAGE_TO_WORD: a picture; write its word (the word is heard only on request).
+  picture_word(params, ctx) {
+    const target = needWord(ctx, str(params, "word"));
+    const emoji = needEmoji(target);
+    const text = spellingWordText(target, ctx);
+    const split = spellingSplit(target, ctx);
+    return {
+      type: "SPELLING",
+      prompt: "What is it? Write the word.",
+      promptSpeech: "What is it? Write the word.",
+      word: target.word,
+      area: "spelling",
+      content: { mode: "picture", emoji, speech: target.word, tiles: letterTiles(text, ctx.seed, 3), split, hint: optStr(params, "hint") },
+      answer: { accepted: [text] },
+    };
+  },
+
+  // SOUND_TO_LETTER (typed): hear a sound, write the letter(s) that spell it — the
+  // pattern's letters, plus other spellings of the same sound the author lists (c, k).
+  write_sound(params, ctx) {
+    const pattern = needPattern(ctx, str(params, "pattern"));
+    const sound = primarySound(pattern);
+    const also = strList(params, "alsoAccept", false).map((g) => g.toLowerCase());
+    for (const g of also) if (!/^[a-z]{1,4}$/.test(g)) throw new TemplateError(`"${g}" is not a spelling`);
+    return {
+      type: "SPELLING",
+      prompt: "Write the letters for the sound",
+      promptSpeech: `Write the letters for this sound: ${sound.sayAs}`,
+      pattern: pattern.code,
+      content: {
+        mode: "grapheme",
+        sounds: [{ label: soundLabelFor(ctx, sound.phonemes, pattern.pattern).slice(0, 8), sayAs: sound.sayAs }],
+        hint: optStr(params, "hint"),
+      },
+      answer: { accepted: [pattern.pattern, ...also] },
+    };
+  },
+
+  // SENTENCE_COPY: copy a sentence (capital letter, spaces and end mark as the level asks).
+  copy_sentence(params) {
+    const sentence = str(params, "sentence");
+    return {
+      type: "SENTENCE_WRITING",
+      prompt: "Copy the sentence",
+      promptSpeech: `Copy the sentence. ${sentence}`,
+      content: { mode: "copy", emoji: optStr(params, "emoji"), model: sentence },
+      answer: { accepted: [sentence, ...strList(params, "alsoAccept", false)] },
+    };
+  },
+} satisfies Record<string, Expander>);

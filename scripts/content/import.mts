@@ -23,6 +23,7 @@ import {
 } from "@/lib/content/content-schemas";
 import { parseSpellingCsv, parseWordsCsv } from "@/lib/content/csv";
 import { ContentImporter, type ImportBundle } from "@/lib/content/importer";
+import { writingFileSchema } from "@/lib/content/writing-content";
 
 const args = process.argv.slice(2);
 const flag = (name: string) => args.includes(name);
@@ -98,6 +99,7 @@ if (wordsOnly) {
   bundle.sentences = readJson("sentences.json", sentencesFileSchema);
   bundle.vocabulary = readJson("vocabulary.json", vocabularyFileSchema);
   bundle.stories = readJson("stories.json", storiesFileSchema);
+  bundle.writing = readJson("writing.json", writingFileSchema);
   const spellingDir = path.join(contentDir, "spelling");
   if (existsSync(spellingDir)) {
     bundle.spelling = readdirSync(spellingDir)

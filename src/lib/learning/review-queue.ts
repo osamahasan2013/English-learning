@@ -8,6 +8,7 @@ import { DEFAULT_RULES, type ReviewRules } from "@/lib/learning/rules";
 //   * spelling: words missed or weak when spelled and phonics patterns often misspelled
 //     (deriveSpellingReview / derivePatternReview in spelling.ts);
 //   * reading: words a child keeps tapping for help in texts (deriveReadingWordReview);
+//   * writing: letters a child keeps forming wrongly (deriveLetterReview in writing.ts);
 //   * items that no longer apply are resolved, not deleted.
 // Priority 0–100 (higher first) reuses the skill's review priority from mastery.ts.
 
@@ -22,7 +23,9 @@ export type ReviewReason =
   | "weak_spelling"
   | "spelling_pattern"
   // Reading (reading.ts): a word the child keeps tapping for help while reading.
-  | "reading_word";
+  | "reading_word"
+  // Writing (writing.ts): a letter the child keeps forming wrongly.
+  | "writing_letter";
 
 export type SkillReviewInput = {
   skillId: string;
@@ -44,6 +47,8 @@ export type ReviewItemRow = {
   word_id: string | null;
   phonics_pattern_id: string | null;
   lesson_id: string | null;
+  // Writing review: the handwriting glyph (only set by deriveLetterReview).
+  glyph_id?: string | null;
   priority: number;
   due_at: string;
   reason: ReviewReason;

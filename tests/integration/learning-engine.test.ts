@@ -21,16 +21,15 @@ type Question = { id: string; activity_id: string; question_type: string; answer
 
 function correctResponse(q: Question): QuestionResponse {
   const a = q.answer!;
-  if ("minCoverage" in a) return { coverage: a.minCoverage + 10 };
   if ("pairs" in a) return { pairs: a.pairs };
   if ("acceptedSequences" in a) return { sequence: a.acceptedSequences[0] };
   if ("correct" in a) return { sequence: a.correct };
+  if (!("accepted" in a)) throw new Error("no simple answer for this question type");
   if (q.question_type === "WORD_BUILDER") return { sequence: [...a.accepted[0]] };
   return { value: a.accepted[0] };
 }
 function wrongResponse(q: Question): QuestionResponse {
   const a = q.answer!;
-  if ("minCoverage" in a) return { coverage: 0 };
   if ("pairs" in a) return { pairs: [] };
   if ("acceptedSequences" in a || "correct" in a) return { sequence: ["nope"] };
   return q.question_type === "WORD_BUILDER" ? { sequence: ["z"] } : { value: "definitely-wrong" };

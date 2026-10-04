@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { traceStrokesSchema } from "@/lib/learning/tracing";
+import { rubricCriteriaSchema } from "@/lib/learning/writing";
 
 // The contract between stored content and the activity renderers. `questions.content`
 // and `questions.answer` are JSON in the database; these schemas validate them on import
@@ -117,12 +119,15 @@ export const sentenceBuilderContentSchema = z.object({
 });
 
 // Type a word: listen and type (picture + word), dictation (the word only, limited
-// replays) or sounds to word (tap the sounds, then write the word they make).
+// replays), sounds to word (tap the sounds, then write the word they make), and the
+// writing modes: copy (the word is shown; WORD_COPY), picture (the picture first, the word
+// only on request; IMAGE_TO_WORD) and grapheme (hear a sound, write the letter or letters
+// that spell it; SOUND_TO_LETTER — every accepted spelling of the sound is an answer).
 export const spellingContentSchema = z.object({
   emoji: z.string().max(16).optional(),
   speech: z.string().trim().max(60).optional(),
   hint: z.string().trim().max(120).optional(),
-  mode: z.enum(["listen", "dictation", "sounds"]).default("listen"),
+  mode: z.enum(["listen", "dictation", "sounds", "copy", "picture", "grapheme"]).default("listen"),
   sounds: z.array(heardSoundSchema).min(1).max(10).optional(),
   // Letters for tile input (the word's letters plus a few others).
   tiles: z.array(text(6)).min(2).max(16).optional(),
@@ -225,10 +230,85 @@ export const writingContentSchema = z.object({
   hint: z.string().trim().max(120).optional(),
 });
 
-// Trace a letter with a finger; scored by how much of the letter the strokes cover.
+// Handwriting with a finger, mouse or pen (tracing.ts). `glyph` names the reference
+// handwriting (handwriting_glyphs.code); the lesson loader sends its strokes with the step.
+//   trace — the letter is drawn faintly and the child goes over it (TRACING)
+//   copy  — the model is shown beside an empty box with guide lines (LETTER_WRITING)
+//   write — the child hears the letter (its name, its sound, or a word that starts with it)
+//           and writes it from memory (LETTER_WRITING, SOUND_TO_LETTER)
 export const tracingContentSchema = z.object({
-  letter: z.string().trim().min(1).max(2),
-  speech: z.string().trim().max(60).optional(),
+  glyph: z.string().regex(/^[a-z0-9-]{2,60}$/),
+  mode: z.enum(["trace", "copy", "write"]).default("trace"),
+  // What is said: "Trace small a." / a speech token for a sound ({/M/}).
+  speech: z.string().trim().max(120).optional(),
+  // Show where to start (a dot) and the stroke arrows.
+  showStart: z.boolean().default(true),
+});
+
+// Typed writing (writing.ts). A sentence: copy one (the model is shown; SENTENCE_COPY),
+// finish one (one blank; SENTENCE_COMPLETION) or write one freely about a picture or a
+// prompt (SENTENCE_WRITING, judged by a rubric, never by matching a stored sentence).
+export const sentenceWritingContentSchema = z
+  .object({
+    mode: z.enum(["copy", "complete", "free"]),
+    emoji: z.string().max(16).optional(),
+    model: z.string().trim().min(1).max(200).optional(),
+    parts: z
+      .array(z.union([z.object({ text: text(120) }), z.object({ blank: z.literal(true) })]))
+      .min(2)
+      .max(8)
+      .optional(),
+    // Words to help (tap to hear, copy); free writing only.
+    wordBank: z.array(text(24)).max(12).default([]),
+    starter: z.string().trim().max(80).optional(),
+    hint: z.string().trim().max(160).optional(),
+  })
+  .superRefine((c, ctx) => {
+    if (c.mode === "copy" && !c.model) ctx.addIssue({ code: "custom", message: "copying needs the model sentence" });
+    if (c.mode === "complete" && (c.parts?.filter((p) => "blank" in p).length ?? 0) !== 1)
+      ctx.addIssue({ code: "custom", message: "finishing a sentence needs exactly one blank" });
+  });
+
+// Guided and paragraph writing: a topic, a picture, boxes to write in (frames with sentence
+// starters, or the parts of a paragraph: topic sentence, details, ending), a word bank and
+// a short checklist. Scaffolding shrinks with the level (layout "free" is one box).
+export const guidedWritingContentSchema = z.object({
+  layout: z.enum(["frames", "paragraph", "free"]),
+  topic: text(120),
+  emoji: z.string().max(16).optional(),
+  frames: z
+    .array(
+      z.object({
+        label: z.string().trim().max(40).optional(),
+        starter: z.string().trim().max(80).optional(),
+        placeholder: z.string().trim().max(80).optional(),
+      }),
+    )
+    .min(1)
+    .max(8),
+  wordBank: z.array(text(24)).max(16).default([]),
+  checklist: z.array(text(80)).max(6).default([]),
+});
+
+// Story sequence writing: put pictures of a story in order, then write a sentence for each
+// (and, at Grade 2, join them with sequence words). The story itself comes from the
+// activity config (config.story), as for reading questions.
+export const storyOrderWritingContentSchema = z.object({
+  events: z
+    .array(z.object({ id: z.string().regex(/^[a-z0-9-]{1,40}$/), emoji: text(16), label: z.string().trim().max(60).default("") }))
+    .min(2)
+    .max(5),
+  connect: z.boolean().default(false),
+  wordBank: z.array(text(24)).max(16).default([]),
+  starters: z.array(z.string().trim().max(40)).max(5).default([]),
+});
+
+// Find and fix the mistakes in a short sentence ("the cat are big" → "The cat is big.").
+export const editAndCorrectContentSchema = z.object({
+  text: text(200),
+  focus: z.array(z.enum(["capitalization", "punctuation", "spelling", "grammar", "spacing"])).min(1).max(4),
+  emoji: z.string().max(16).optional(),
+  hint: z.string().trim().max(160).optional(),
 });
 
 // A sound unit a child can tap to hear (a grapheme segment, or a phoneme).
@@ -287,9 +367,33 @@ export const pairsAnswerSchema = z.object({
   pairs: z.array(z.tuple([itemId, itemId])).min(1).max(10),
 });
 
-export const coverageAnswerSchema = z.object({
-  minCoverage: z.number().int().min(30).max(95),
+// Handwriting: optional per-question completion threshold (the glyph's and the level's
+// otherwise). Nothing about it is secret; it is an answer so the question is scored.
+export const traceAnswerSchema = z.object({
+  trace: z.literal(true),
+  completion: z.number().min(0.3).max(0.98).optional(),
 });
+
+// Typed writing. Closed tasks list the accepted answers; open-ended ones carry their
+// rubric (compiled by the importer from writing_rubrics and the question's own required
+// ideas). Server-only, like every answer.
+export const writingRubricSchema = z.object({
+  code: z.string().regex(/^[a-z0-9-]{2,80}$/),
+  criteria: rubricCriteriaSchema,
+});
+export const sentenceWritingAnswerSchema = z.union([
+  z.object({ accepted: z.array(text(200)).min(1).max(10) }).strict(),
+  z.object({ rubric: writingRubricSchema }).strict(),
+]);
+export const guidedWritingAnswerSchema = z.object({ rubric: writingRubricSchema }).strict();
+export const storyOrderWritingAnswerSchema = z
+  .object({
+    acceptedSequences: z.array(z.array(z.string().regex(/^[a-z0-9-]{1,40}$/)).min(2).max(5)).min(1).max(3),
+    eventCriteria: z.record(z.string().regex(/^[a-z0-9-]{1,40}$/), rubricCriteriaSchema),
+    rubric: writingRubricSchema,
+  })
+  .strict();
+export const editAnswerSchema = z.object({ accepted: z.array(text(200)).min(1).max(5) }).strict();
 
 // Select-all: every right option id (order does not matter).
 export const selectAllAnswerSchema = z.object({
@@ -301,8 +405,25 @@ export const sequenceResponseSchema = z.object({ sequence: z.array(z.string().ma
 export const pairsResponseSchema = z.object({
   pairs: z.array(z.tuple([z.string().max(40), z.string().max(40)])).max(10),
 });
+// Kept so answers queued by an older app (tracing scored on the device) still parse; the
+// server rejects them, since a coverage number from the device cannot be checked.
 export const coverageResponseSchema = z.object({ coverage: z.number().min(0).max(100) });
+// Handwriting: the strokes as drawn (tracing.ts). `typed`: the keyboard alternative for a
+// child who cannot draw (the letter typed instead; recorded as such).
+export const strokesResponseSchema = z.object({
+  strokes: traceStrokesSchema,
+  typed: z.string().trim().min(1).max(4).optional(),
+});
+// Several boxes of writing (guided frames, paragraph parts, story sentences) and, for story
+// writing, the order the pictures were put in (`order`, event ids).
+export const linesResponseSchema = z.object({
+  lines: z.array(z.string().max(600)).min(1).max(10),
+  order: z.array(z.string().max(40)).max(10).optional(),
+});
+// Most specific shapes first: z.union keeps the first match and drops unknown keys.
 export const responseSchema = z.union([
+  strokesResponseSchema,
+  linesResponseSchema,
   valueResponseSchema,
   sequenceResponseSchema,
   pairsResponseSchema,
@@ -353,7 +474,7 @@ export const questionTypeSchemas = {
   },
   READING: { content: readingContentSchema, answer: acceptedAnswerSchema, response: valueResponseSchema },
   WRITING: { content: writingContentSchema, answer: acceptedAnswerSchema, response: valueResponseSchema },
-  TRACING: { content: tracingContentSchema, answer: coverageAnswerSchema, response: coverageResponseSchema },
+  TRACING: { content: tracingContentSchema, answer: traceAnswerSchema, response: strokesResponseSchema },
   BLEND_SOUNDS: {
     content: blendSoundsContentSchema,
     answer: acceptedAnswerSchema,
@@ -383,6 +504,18 @@ export const questionTypeSchemas = {
     answer: sequenceAnswerSchema,
     response: sequenceResponseSchema,
   },
+  SENTENCE_WRITING: {
+    content: sentenceWritingContentSchema,
+    answer: sentenceWritingAnswerSchema,
+    response: valueResponseSchema,
+  },
+  GUIDED_WRITING: { content: guidedWritingContentSchema, answer: guidedWritingAnswerSchema, response: linesResponseSchema },
+  STORY_ORDER_WRITING: {
+    content: storyOrderWritingContentSchema,
+    answer: storyOrderWritingAnswerSchema,
+    response: linesResponseSchema,
+  },
+  EDIT_AND_CORRECT: { content: editAndCorrectContentSchema, answer: editAnswerSchema, response: valueResponseSchema },
 } as const;
 
 export type SupportedQuestionType = keyof typeof questionTypeSchemas;
@@ -410,6 +543,16 @@ export type SentenceDictationContent = z.infer<typeof sentenceDictationContentSc
 export type SelectAllContent = z.infer<typeof selectAllContentSchema>;
 export type OrderEventsContent = z.infer<typeof orderEventsContentSchema>;
 export type ReadPassageContent = z.infer<typeof readPassageContentSchema>;
+export type SentenceWritingContent = z.infer<typeof sentenceWritingContentSchema>;
+export type GuidedWritingContent = z.infer<typeof guidedWritingContentSchema>;
+export type StoryOrderWritingContent = z.infer<typeof storyOrderWritingContentSchema>;
+export type EditAndCorrectContent = z.infer<typeof editAndCorrectContentSchema>;
+export type TraceAnswer = z.infer<typeof traceAnswerSchema>;
+export type SentenceWritingAnswer = z.infer<typeof sentenceWritingAnswerSchema>;
+export type GuidedWritingAnswer = z.infer<typeof guidedWritingAnswerSchema>;
+export type StoryOrderWritingAnswer = z.infer<typeof storyOrderWritingAnswerSchema>;
+export type EditAnswer = z.infer<typeof editAnswerSchema>;
+export type WritingRubric = z.infer<typeof writingRubricSchema>;
 export type PassageRef = z.infer<typeof passageRefSchema>;
 export type SelectAllAnswer = z.infer<typeof selectAllAnswerSchema>;
 export type SpellingSegmentContent = z.infer<typeof spellingSegmentSchema>;
@@ -417,15 +560,19 @@ export type SpellingHintContent = z.infer<typeof spellingHintSchema>;
 export type AcceptedAnswer = z.infer<typeof acceptedAnswerSchema>;
 export type SequenceAnswer = z.infer<typeof sequenceAnswerSchema>;
 export type PairsAnswer = z.infer<typeof pairsAnswerSchema>;
-export type CoverageAnswer = z.infer<typeof coverageAnswerSchema>;
+
 export type SentenceAnswer = z.infer<typeof sentenceAnswerSchema>;
 export type AnswerSpec =
   | AcceptedAnswer
   | SentenceAnswer
   | SequenceAnswer
   | PairsAnswer
-  | CoverageAnswer
-  | SelectAllAnswer;
+  | TraceAnswer
+  | SelectAllAnswer
+  | SentenceWritingAnswer
+  | GuidedWritingAnswer
+  | StoryOrderWritingAnswer
+  | EditAnswer;
 
 export type ParsedQuestion =
   | { type: "INTRO"; content: IntroContent; answer: null }
@@ -443,14 +590,18 @@ export type ParsedQuestion =
   | { type: "DRAG_DROP"; content: DragDropContent; answer: SequenceAnswer }
   | { type: "READING"; content: ReadingContent; answer: AcceptedAnswer }
   | { type: "WRITING"; content: WritingContent; answer: AcceptedAnswer }
-  | { type: "TRACING"; content: TracingContent; answer: CoverageAnswer }
+  | { type: "TRACING"; content: TracingContent; answer: TraceAnswer }
   | { type: "BLEND_SOUNDS"; content: BlendSoundsContent; answer: AcceptedAnswer }
   | { type: "SEGMENT_WORD"; content: SegmentWordContent; answer: SequenceAnswer }
   | { type: "FIND_PATTERN"; content: FindPatternContent; answer: AcceptedAnswer }
   | { type: "SENTENCE_DICTATION"; content: SentenceDictationContent; answer: SentenceAnswer }
   | { type: "READ_PASSAGE"; content: ReadPassageContent; answer: null }
   | { type: "SELECT_ALL"; content: SelectAllContent; answer: SelectAllAnswer }
-  | { type: "ORDER_EVENTS"; content: OrderEventsContent; answer: SequenceAnswer };
+  | { type: "ORDER_EVENTS"; content: OrderEventsContent; answer: SequenceAnswer }
+  | { type: "SENTENCE_WRITING"; content: SentenceWritingContent; answer: SentenceWritingAnswer }
+  | { type: "GUIDED_WRITING"; content: GuidedWritingContent; answer: GuidedWritingAnswer }
+  | { type: "STORY_ORDER_WRITING"; content: StoryOrderWritingContent; answer: StoryOrderWritingAnswer }
+  | { type: "EDIT_AND_CORRECT"; content: EditAndCorrectContent; answer: EditAnswer };
 
 export type ParseQuestionResult = { ok: true; question: ParsedQuestion } | { ok: false; error: string };
 
@@ -566,6 +717,13 @@ function checkCrossFields(q: ParsedQuestion): string | null {
       if (split && split.map((g) => g.grapheme).join("") !== q.answer.accepted[0].toLowerCase())
         return "the grapheme split must spell the first accepted answer";
       if (q.content.mode === "sounds" && !q.content.sounds) return "sounds-to-word needs the sounds to play";
+      // Sound to letter: one sound to hear; the letters are the answer, never the speech.
+      if (q.content.mode === "grapheme") {
+        if (q.content.sounds?.length !== 1) return "sound-to-letter needs exactly one sound to play";
+        if (q.content.speech) return "sound-to-letter says its sound, not a word (leave speech out)";
+        if (q.content.split) return "sound-to-letter has no word split";
+      }
+      if (q.content.mode === "picture" && !q.content.emoji) return "picture-to-word needs a picture";
       if (q.content.tiles && !q.answer.accepted.some((a) => containsLetters(q.content.tiles!.join("").toLowerCase(), a)))
         return "the tiles cannot spell the answer";
       if (split && q.content.irregular.some((p) => p >= split.length)) return "irregular position outside the word";
@@ -586,6 +744,36 @@ function checkCrossFields(q: ParsedQuestion): string | null {
         if ([...seq].sort().join("\u0000") !== sorted) return "each accepted order must use every event once";
       return q.answer.acceptedSequences.some((seq) => seq.join("\u0000") === ids.join("\u0000"))
         ? "events must not be stored in the right order"
+        : null;
+    }
+    case "SENTENCE_WRITING": {
+      const open = "rubric" in q.answer;
+      if (q.content.mode === "free" && !open) return "free writing is judged by a rubric, not accepted sentences";
+      if (q.content.mode !== "free" && open) return "copying and finishing a sentence need accepted answers";
+      if (q.content.mode === "copy" && "accepted" in q.answer) {
+        const model = q.content.model!.replace(/\s+/g, " ").trim();
+        if (!q.answer.accepted.some((a) => a.replace(/\s+/g, " ").trim() === model))
+          return "the model sentence must be one of the accepted answers";
+      }
+      return null;
+    }
+    case "GUIDED_WRITING":
+      return q.content.layout === "free" && q.content.frames.length !== 1 ? "free layout has exactly one box" : null;
+    case "STORY_ORDER_WRITING": {
+      const ids = q.content.events.map((e) => e.id);
+      if (new Set(ids).size !== ids.length) return "event ids must be unique";
+      const sorted = [...ids].sort().join("\u0000");
+      for (const seq of q.answer.acceptedSequences)
+        if ([...seq].sort().join("\u0000") !== sorted) return "each accepted order must use every event once";
+      if (q.answer.acceptedSequences.some((seq) => seq.join("\u0000") === ids.join("\u0000")))
+        return "events must not be stored in the right order";
+      const unknown = Object.keys(q.answer.eventCriteria).find((id) => !ids.includes(id));
+      return unknown ? `criteria for unknown event ${unknown}` : null;
+    }
+    case "EDIT_AND_CORRECT": {
+      const norm = (v: string) => v.replace(/\s+/g, " ").trim();
+      return q.answer.accepted.some((a) => norm(a) === norm(q.content.text))
+        ? "the sentence to correct must have something to fix"
         : null;
     }
     case "SENTENCE_DICTATION":

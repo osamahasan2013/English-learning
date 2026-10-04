@@ -2,6 +2,7 @@ import { readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { expect, type Page } from "@playwright/test";
 import { createClient } from "@supabase/supabase-js";
+import { correctWritingResponse, wrongWritingResponse } from "../writing-helpers";
 
 // Test helpers: an admin client (service role) to look up answers and verify stored data,
 // and page helpers that drive the app like a parent and a child would.
@@ -310,36 +311,65 @@ export async function answerQuestion(page: Page, q: QuestionRow, correct: boolea
       return;
     }
     case "TRACING": {
+      // Draw the glyph's own strokes (from the database) with the mouse, in order; a wrong
+      // answer is a short mark in the corner.
       const canvas = page.getByTestId("tracing-canvas");
       const box = (await canvas.boundingBox())!;
-      // Read where the letter is drawn on the guide canvas, then trace along it row by row.
-      const segments = correct
-        ? await canvas.evaluate((ink) => {
-            const guide = ink.previousElementSibling as HTMLCanvasElement;
-            const ctx = guide.getContext("2d")!;
-            const { data, width, height } = ctx.getImageData(0, 0, guide.width, guide.height);
-            const out: [number, number, number][] = [];
-            for (let y = 4; y < height; y += 8) {
-              let start = -1;
-              for (let x = 0; x <= width; x++) {
-                const on = x < width && data[(y * width + x) * 4 + 3] > 40;
-                if (on && start < 0) start = x;
-                if (!on && start >= 0) {
-                  out.push([start, y, x - 1]);
-                  start = -1;
-                }
-              }
-            }
-            return out.map(([a, y, b]) => [a / width, y / height, b / width] as [number, number, number]);
-          })
-        : [[0.02, 0.02, 0.06] as [number, number, number]];
-      for (const [x1, y, x2] of segments) {
-        await page.mouse.move(box.x + x1 * box.width, box.y + y * box.height);
+      const { data: glyph } = await admin
+        .from("handwriting_glyphs")
+        .select("strokes")
+        .eq("code", content.glyph)
+        .single();
+      const strokes = correct
+        ? (glyph!.strokes as { points: [number, number][] }[]).map((s) => s.points)
+        : [
+            [
+              [3, 3],
+              [3, 25],
+            ],
+          ];
+      const at = ([x, y]: number[]) =>
+        [box.x + (x / 100) * box.width, box.y + (y / 100) * box.height] as const;
+      for (const points of strokes) {
+        await page.mouse.move(...at(points[0]));
         await page.mouse.down();
-        await page.mouse.move(box.x + x2 * box.width, box.y + y * box.height, { steps: 3 });
+        for (let i = 1; i < points.length; i++) await page.mouse.move(...at(points[i]), { steps: 4 });
         await page.mouse.up();
       }
       await page.getByRole("button", { name: /Done/ }).click();
+      return;
+    }
+    case "SENTENCE_WRITING":
+    case "GUIDED_WRITING":
+    case "STORY_ORDER_WRITING":
+    case "EDIT_AND_CORRECT": {
+      const response = (
+        correct
+          ? correctWritingResponse
+          : (t: string, c: Record<string, unknown>) => wrongWritingResponse(t, c)
+      )(q.question_type, content, q.answer as Record<string, unknown>, null) as {
+        value?: string;
+        lines?: string[];
+        order?: string[];
+      };
+      const section = page.locator("section[data-question-id]");
+      if (q.question_type === "STORY_ORDER_WRITING") {
+        const events = content.events as { id: string; emoji: string; label: string }[];
+        for (const id of response.order!) {
+          const e = events.find((x) => x.id === id)!;
+          await section
+            .getByRole("button", { name: `Add picture: ${e.label || e.emoji}`, exact: true })
+            .click();
+        }
+        for (const [i, line] of response.lines!.entries())
+          await section.getByLabel(new RegExp(`^Sentence for picture ${i + 1}`)).fill(line);
+      } else if (q.question_type === "GUIDED_WRITING") {
+        const boxes = section.locator("textarea, input[type!=hidden]");
+        for (const [i, line] of response.lines!.entries()) await boxes.nth(i).fill(line);
+      } else {
+        await section.locator("textarea, input").first().fill(response.value!);
+      }
+      await section.getByRole("button", { name: /Check/ }).click();
       return;
     }
     default:

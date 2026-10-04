@@ -17,7 +17,9 @@ import { VocabularySummaryCard } from "@/components/parent/vocabulary-report";
 import { SpellingSummaryCard } from "@/components/parent/spelling-report";
 import { loadSpellingReport } from "@/lib/server/spelling";
 import { ReadingSummaryCard } from "@/components/parent/reading-report";
+import { WritingSummaryCard } from "@/components/parent/writing-report";
 import { loadReadingReport } from "@/lib/server/reading";
+import { loadWritingReport } from "@/lib/server/writing";
 import { ageFromDateOfBirth, cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -29,15 +31,17 @@ export default async function DashboardPage(props: PageProps<"/parent/dashboard"
 
   const child = children.find((c) => c.id === childParam) ?? children[0];
   const timeZone = profile?.timezone ?? "UTC";
-  const [progress, dimensionNames, phonics, phonicsCheck, vocabulary, spelling, reading] = await Promise.all([
-    loadChildProgress(child.id, timeZone, new Date(), child.current_level_id),
-    listDimensionNames(),
-    loadChildPhonics(child.id),
-    loadLatestPhonicsCheck(child.id),
-    loadVocabularyReport(child.id),
-    loadSpellingReport(child.id),
-    loadReadingReport(child.id, child.current_level_id),
-  ]);
+  const [progress, dimensionNames, phonics, phonicsCheck, vocabulary, spelling, reading, writing] =
+    await Promise.all([
+      loadChildProgress(child.id, timeZone, new Date(), child.current_level_id),
+      listDimensionNames(),
+      loadChildPhonics(child.id),
+      loadLatestPhonicsCheck(child.id),
+      loadVocabularyReport(child.id),
+      loadSpellingReport(child.id),
+      loadReadingReport(child.id, child.current_level_id),
+      loadWritingReport(child.id, child.current_level_id),
+    ]);
   const phonicsStarted = phonics.stages.filter((s) => s.started > 0);
   const age = ageFromDateOfBirth(child.date_of_birth);
 
@@ -340,6 +344,7 @@ export default async function DashboardPage(props: PageProps<"/parent/dashboard"
       <VocabularySummaryCard report={vocabulary} childId={child.id} />
       <SpellingSummaryCard report={spelling} childId={child.id} />
       <ReadingSummaryCard report={reading} childId={child.id} />
+      <WritingSummaryCard report={writing} childId={child.id} />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card className="space-y-3">

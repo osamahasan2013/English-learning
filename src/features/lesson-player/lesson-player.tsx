@@ -40,6 +40,8 @@ import {
   spellingErrorMessage,
   stepHints,
 } from "./spelling-help";
+import { firstWritingHint, WritingFeedback } from "./writing-feedback";
+import type { WritingAnalysis } from "@/lib/learning/writing";
 
 // The reusable lesson player: Intro → Activities → Summary for any lesson, whatever its
 // activity types (each step is drawn by the renderer registered for its type).
@@ -144,6 +146,8 @@ function LessonRun({
   const [runId, setRunId] = useState(() => resumable?.runId ?? newId());
   const [startedAt, setStartedAt] = useState(() => resumable?.startedAt ?? new Date().toISOString());
   const [reveals, setReveals] = useState<Record<string, Reveal | null>>({});
+  // What the writing checks found in the last answer to each written step (shown with the feedback).
+  const [writingChecks, setWritingChecks] = useState<Record<string, WritingAnalysis | null>>({});
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [confirmExit, setConfirmExit] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -274,6 +278,7 @@ function LessonRun({
     }).then(() => notifyQueued());
     const result = await checkWithKey(step.question.type, step.answerKey, response);
     setChecking(false);
+    setWritingChecks((all) => ({ ...all, [step.questionId]: result.writing ?? null }));
     dispatch({ type: "answered", isCorrect: result.isCorrect, almost: result.almost, response });
 
     const kind: FeedbackKind = result.isCorrect
@@ -301,7 +306,10 @@ function LessonRun({
           payload.feedback,
           state.index + attemptNumber,
         );
-    void speak(mistake ? `${message.speech} ${mistake.speech}` : message.speech);
+    // Writing: the first thing to fix ("Start each sentence with a capital letter.").
+    const writingHint = result.isCorrect ? null : firstWritingHint(result.writing);
+    const extra = mistake?.speech ?? writingHint;
+    void speak(extra ? `${message.speech} ${extra}` : message.speech);
   }
 
   // A story was read (READ_PASSAGE): recorded once, like an answer, never scored. A text
@@ -458,6 +466,7 @@ function LessonRun({
         response={view.response}
         reveal={reveal}
         reviewing={view.reviewing}
+        writing={view.phase === "answering" ? null : (writingChecks[step.questionId] ?? null)}
         canGoBack={canGoBack(state)}
         onPrevious={() => dispatch({ type: "previous" })}
         onNext={() => dispatch({ type: "next" })}
@@ -574,6 +583,7 @@ function FeedbackBar({
   response,
   reveal,
   reviewing,
+  writing,
   canGoBack: back,
   onPrevious,
   onNext,
@@ -588,6 +598,7 @@ function FeedbackBar({
   response: QuestionResponse | null;
   reveal: Reveal | null;
   reviewing: boolean;
+  writing: WritingAnalysis | null;
   canGoBack: boolean;
   onPrevious: () => void;
   onNext: () => void;
@@ -681,6 +692,7 @@ function FeedbackBar({
           />
         </div>
       ) : null}
+      {writing && !mistake ? <WritingFeedback analysis={writing} correct={kind === "CORRECT"} /> : null}
       {showExplanation ? <p className="text-xl font-semibold">{step.explanation}</p> : null}
     </div>
   );

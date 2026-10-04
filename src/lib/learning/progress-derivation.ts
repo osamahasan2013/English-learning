@@ -7,6 +7,8 @@ import { evaluateResponse } from "@/lib/learning/evaluate";
 import { analyzeAnswer, type AnswerAnalysis } from "@/lib/learning/spelling";
 import { masteryRank, type MasteryStatus } from "@/lib/learning/mastery";
 import { DEFAULT_RULES, type ScoringRules } from "@/lib/learning/rules";
+import type { WritingAnalysis } from "@/lib/learning/writing";
+import { WRITING_QUESTION_TYPES, type WritingContext } from "@/lib/learning/writing-evaluation";
 import { attemptScore, percentage, scoreLesson, type LessonScore } from "@/lib/learning/scoring";
 import type { AttemptEvent } from "@/lib/offline/sync-protocol";
 
@@ -65,6 +67,7 @@ export type AttemptRowResult =
         attempted_at: string;
         hints_used: number;
         spelling_analysis: AnswerAnalysis | null;
+        writing_analysis: WritingAnalysis | null;
       };
       // The phonics pattern the spelling mistake was in (resolved to an id by the writer).
       errorPatternCode: string | null;
@@ -95,6 +98,9 @@ export function buildAttemptRow(
   childId: string,
   now: Date,
   scoring: ScoringRules = DEFAULT_RULES.scoring,
+  // Writing questions: the level's writing settings, the glyph of a handwriting question
+  // and the known words (spelling in open-ended writing). Without it they are rejected.
+  writing?: Omit<WritingContext, "content">,
 ): AttemptRowResult {
   if (!isSupportedQuestionType(question.question_type))
     return { ok: false, reason: "unsupported_question_type" };
@@ -106,18 +112,29 @@ export function buildAttemptRow(
   const response = schemas.response.safeParse(event.response);
   if (!response.success) return { ok: false, reason: "response_shape_invalid" };
 
-  const result = evaluateResponse(question.question_type, answer.data, response.data);
+  const isWriting = WRITING_QUESTION_TYPES.has(question.question_type);
+  if (isWriting && !writing) return { ok: false, reason: "writing_context_missing" };
+  if (question.question_type === "TRACING" && !writing?.glyph)
+    return { ok: false, reason: "glyph_unavailable" };
+  const result = evaluateResponse(
+    question.question_type,
+    answer.data,
+    response.data,
+    writing ? { ...writing, content: question.content ?? {} } : undefined,
+  );
   // Spelling answers: the server's own analysis (normalised answer, letter diff, category,
   // pattern) from the stored answer and the question's grapheme split. The verdict stays
   // the evaluator's; the child's text stays as typed in `response`.
-  const analysis = analyzeAnswer(
-    { type: question.question_type, content: question.content ?? {} },
-    response.data as { value?: string; sequence?: string[] },
-    {
-      expected: "accepted" in answer.data ? answer.data.accepted : undefined,
-      requirePunctuation: "requirePunctuation" in answer.data && answer.data.requirePunctuation === true,
-    },
-  );
+  const analysis = isWriting
+    ? null
+    : analyzeAnswer(
+        { type: question.question_type, content: question.content ?? {} },
+        response.data as { value?: string; sequence?: string[] },
+        {
+          expected: "accepted" in answer.data ? answer.data.accepted : undefined,
+          requirePunctuation: "requirePunctuation" in answer.data && answer.data.requirePunctuation === true,
+        },
+      );
   const errorType = result.isCorrect ? null : (analysis?.category ?? result.errorType);
   return {
     ok: true,
@@ -145,6 +162,8 @@ export function buildAttemptRow(
       attempted_at: clampTimestamp(event.attemptedAt, now),
       hints_used: Math.min(5, Math.max(0, event.hintsUsed ?? 0)),
       spelling_analysis: analysis,
+      // Writing answers: what the checks found (the child's text stays in `response`).
+      writing_analysis: result.writing ?? null,
     },
   };
 }

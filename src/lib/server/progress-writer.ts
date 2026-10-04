@@ -39,6 +39,7 @@ import {
   spellingKey,
 } from "@/lib/learning/spelling";
 import { deriveReadingWordReview, readingKey } from "@/lib/learning/reading";
+import { deriveLetterReview, writingKey } from "@/lib/learning/writing";
 import type { LearningRules } from "@/lib/learning/rules";
 import { scoreLesson } from "@/lib/learning/scoring";
 import type { MasteryStatus } from "@/lib/learning/mastery";
@@ -53,6 +54,7 @@ import type {
 } from "@/lib/offline/sync-protocol";
 import { logger } from "@/lib/logging";
 import { loadLearningRules } from "@/lib/server/learning-rules";
+import { loadWritingContexts } from "@/lib/server/writing-context";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Writes a batch of synced learning events for ONE child. The caller must already have
@@ -108,6 +110,7 @@ export async function processSyncBatch(
     await recomputeReadingWordReviews(db, childId, read, [...stored.newWordIds], now, rules);
   if (stored.errorPatternIds.size > 0)
     await recomputePatternReviews(db, childId, [...stored.errorPatternIds], now, rules);
+  if (stored.glyphIds.size > 0) await recomputeLetterReviews(db, childId, [...stored.glyphIds], now, rules);
   if (lessonIds.size > 0 || stored.newSkillIds.size > 0)
     await recomputeLevelRollups(db, childId, [...lessonIds]);
   const sessionIds = new Set([...stored.sessionIds, ...newRuns.sessionIds]);
@@ -414,7 +417,10 @@ async function storeAttempts(
   const sessionIds = new Set<string>();
   // Phonics patterns of spelling mistakes in this batch (ship → sip: SH).
   const errorPatternIds = new Set<string>();
-  if (attempts.length === 0) return { newSkillIds, newWordIds, lessonIds, sessionIds, errorPatternIds };
+  // Handwriting glyphs with a new first try (letter review).
+  const glyphIds = new Set<string>();
+  if (attempts.length === 0)
+    return { newSkillIds, newWordIds, lessonIds, sessionIds, errorPatternIds, glyphIds };
 
   const already = await existingIds(
     db,
@@ -428,16 +434,33 @@ async function storeAttempts(
     }
     return true;
   });
-  if (pending.length === 0) return { newSkillIds, newWordIds, lessonIds, sessionIds, errorPatternIds };
+  if (pending.length === 0)
+    return { newSkillIds, newWordIds, lessonIds, sessionIds, errorPatternIds, glyphIds };
 
   const questionIds = [...new Set(pending.map((a) => a.questionId))];
   const { data: questionRows, error } = await db
     .from("questions")
     .select(
-      "id, skill_id, question_type, answer, content, version, activity_id, word_id, status, activities(lesson_id, status, config, lessons(status))",
+      "id, skill_id, question_type, answer, content, version, activity_id, word_id, glyph_id, status, activities(lesson_id, status, config, lessons(status)), skills(units(levels(code)))",
     )
     .in("id", questionIds);
   if (error) throw error;
+  // Writing answers are judged with the level's writing settings (the question's skill →
+  // unit → level), the glyph of a handwriting question and the known words.
+  const writingContexts = await loadWritingContexts(
+    db,
+    (questionRows ?? []).map((q) => {
+      const unit = one(one(q.skills)?.units);
+      return {
+        id: q.id,
+        question_type: q.question_type,
+        glyph_id: q.glyph_id,
+        level_code: one(unit?.levels)?.code ?? null,
+      };
+    }),
+    rules,
+  );
+  const glyphOf = new Map((questionRows ?? []).map((q) => [q.id, q.glyph_id]));
   const questions = new Map<string, StoredQuestion>();
   // Only published content counts: a draft or archived question (or one in an unpublished
   // activity or lesson) is never evidence, and its answer must not be recorded.
@@ -517,7 +540,14 @@ async function storeAttempts(
       results.set(attempt.id, { id: attempt.id, status: "rejected", reason: "duplicate_first_try" });
       continue;
     }
-    const built = buildAttemptRow(question, attempt, childId, now, rules.scoring);
+    const built = buildAttemptRow(
+      question,
+      attempt,
+      childId,
+      now,
+      rules.scoring,
+      writingContexts.get(question.id),
+    );
     if (!built.ok) {
       results.set(attempt.id, { id: attempt.id, status: "rejected", reason: built.reason });
       continue;
@@ -553,9 +583,11 @@ async function storeAttempts(
       newSkillIds.add(row.skill_id);
       if (row.word_id) newWordIds.add(row.word_id);
       if (row.error_pattern_id) errorPatternIds.add(row.error_pattern_id);
+      const glyphId = glyphOf.get(row.question_id);
+      if (glyphId) glyphIds.add(glyphId);
     }
   }
-  return { newSkillIds, newWordIds, lessonIds, sessionIds, errorPatternIds };
+  return { newSkillIds, newWordIds, lessonIds, sessionIds, errorPatternIds, glyphIds };
 }
 
 // First tries already stored for the runs and sittings these answers name, as
@@ -1389,6 +1421,49 @@ async function recomputePatternReviews(
   await syncReviewItems(db, childId, patternIds.map(patternKey), rows, now);
 }
 
+// Letter review: a letter formed wrongly in several of the child's latest first tries at
+// handwriting it comes back for review (writing:<glyph id>), pointing at the newest lesson
+// where it was practised; right first tries in a row resolve it.
+async function recomputeLetterReviews(
+  db: Db,
+  childId: string,
+  glyphIds: string[],
+  now: Date,
+  rules: LearningRules,
+) {
+  const { lookback, correctToResolve } = rules.writing.letterReview;
+  const results = await Promise.all(
+    glyphIds.map((glyphId) =>
+      db
+        .from("activity_attempts")
+        .select("is_correct, attempted_at, skill_id, lesson_id, questions!inner(glyph_id)")
+        .eq("child_id", childId)
+        .eq("attempt_number", 1)
+        .eq("questions.glyph_id", glyphId)
+        .order("attempted_at", { ascending: false })
+        .limit(Math.max(lookback, correctToResolve)),
+    ),
+  );
+  const rows: ReviewItemRow[] = [];
+  glyphIds.forEach((glyphId, i) => {
+    const { data: tries, error } = results[i];
+    if (error) throw error;
+    const latest = tries?.[0];
+    const item = deriveLetterReview(
+      {
+        glyphId,
+        skillId: latest?.skill_id ?? null,
+        lessonId: latest?.lesson_id ?? null,
+        tries: (tries ?? []).map((t) => ({ isCorrect: t.is_correct, attemptedAt: t.attempted_at })),
+      },
+      now,
+      rules.writing.letterReview,
+    );
+    if (item) rows.push(item);
+  });
+  await syncReviewItems(db, childId, glyphIds.map(writingKey), rows, now);
+}
+
 // Reading sessions (READ_PASSAGE): stored once each, never scored. The story must be
 // published; the word count comes from the story; help words are kept only if they are
 // words of that story; a lesson or question the device names is kept only if it is a
@@ -1700,4 +1775,9 @@ async function awardAchievements(db: Db, childId: string, now: Date) {
   );
   if (rewardError) throw rewardError;
   return newlyEarned.map((a) => ({ code: a.code, title: a.title, emoji: a.emoji }));
+}
+
+function one<T>(value: T | T[] | null | undefined): T | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
 }

@@ -36,6 +36,14 @@ const spellingConfigSchema = z
   })
   .strict();
 
+const tracingConfigSchema = z.object({ ...common, showModel: z.boolean().default(true) }).strict();
+
+// Typed writing: `checklist` shows the writing checklist (capital, spaces, end mark) while
+// writing; `wordBank` false hides the question's word bank (less scaffolding).
+const writingConfigSchema = z
+  .object({ ...common, checklist: z.boolean().default(true), wordBank: z.boolean().default(true) })
+  .strict();
+
 export const activityConfigSchemas = {
   INTRO: z.object({}).strict(),
   MULTIPLE_CHOICE: baseConfigSchema,
@@ -69,7 +77,25 @@ export const activityConfigSchemas = {
   SEGMENT_WORD: baseConfigSchema,
   FIND_PATTERN: baseConfigSchema,
   // showModel: animate the letter being written before the child traces it.
-  TRACING: z.object({ ...common, showModel: z.boolean().default(true) }).strict(),
+  TRACING: tracingConfigSchema,
+  // Writing engine (Phase 8). The activity type picks the configuration; its questions may
+  // be of a different (reused) question type: a WORD_COPY activity holds SPELLING questions
+  // in copy mode, a SENTENCE_BUILD activity SENTENCE_BUILDER questions, and so on.
+  LETTER_WRITING: tracingConfigSchema,
+  SOUND_TO_LETTER: z
+    .object({ ...common, showModel: z.boolean().default(false), input: z.enum(INPUT_METHODS).optional(), maxHints: z.number().int().min(0).max(4).optional() })
+    .strict(),
+  WORD_COPY: spellingConfigSchema,
+  WORD_BUILD: spellingConfigSchema,
+  IMAGE_TO_WORD: spellingConfigSchema,
+  SENTENCE_BUILD: baseConfigSchema,
+  SENTENCE_COPY: writingConfigSchema,
+  SENTENCE_COMPLETION: writingConfigSchema,
+  SENTENCE_WRITING: writingConfigSchema,
+  GUIDED_WRITING: writingConfigSchema,
+  PARAGRAPH_WRITING: writingConfigSchema,
+  STORY_ORDER_WRITING: z.object({ ...common, story: storyCode.optional(), showStory: z.boolean().default(true) }).strict(),
+  EDIT_AND_CORRECT: writingConfigSchema,
 } as const;
 
 export type ActivityConfigType = keyof typeof activityConfigSchemas;
@@ -83,6 +109,9 @@ export type ActivityConfig = {
   story?: string;
   readAloud?: boolean;
   showModel?: boolean;
+  showStory?: boolean;
+  checklist?: boolean;
+  wordBank?: boolean;
 };
 
 export type ParseActivityConfigResult = { ok: true; config: ActivityConfig } | { ok: false; error: string };

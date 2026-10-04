@@ -14,6 +14,9 @@ import {
   type SpellingActivity,
 } from "@/lib/learning/spelling";
 import type { LearningRules } from "@/lib/learning/rules";
+import { glyphFromRow, GLYPH_COLUMNS } from "@/lib/server/glyphs";
+import type { TraceGlyph } from "@/lib/learning/tracing";
+import { resolveWritingSettings, WRITING_QUESTION_TYPES } from "@/lib/learning/writing-evaluation";
 import type { FeedbackKind, FeedbackMessage } from "@/lib/learning/feedback";
 import type { ClientQuestion, LessonPattern, LessonPayload, LessonStep } from "@/lib/learning/lesson-payload";
 import { logger } from "@/lib/logging";
@@ -470,6 +473,8 @@ type QuestionSupport = {
   tileSounds: Record<string, string>;
   // Published story passages by code (loaded once per payload, on first use).
   passage: (code: string) => Promise<LessonStep["passage"]>;
+  // Published handwriting glyphs by code, for the handwriting questions of this payload.
+  glyphs: Map<string, TraceGlyph>;
 };
 
 // Answers (service role, for exactly these RLS-visible question ids), phonics patterns and
@@ -547,7 +552,28 @@ async function loadQuestionSupport(supabase: Supabase, questions: QuestionRow[])
     return passages.get(code)!;
   };
 
-  return { answers, patterns, tileSounds, passage };
+  // Glyphs: only the letters these questions practise (each a few hundred numbers).
+  const glyphCodes = new Set<string>();
+  for (const q of questions) {
+    if (q.question_type !== "TRACING") continue;
+    const code = (q.content as { glyph?: unknown }).glyph;
+    if (typeof code === "string") glyphCodes.add(code);
+  }
+  const glyphs = new Map<string, TraceGlyph>();
+  if (glyphCodes.size > 0) {
+    const { data: glyphRows, error: glyphError } = await supabase
+      .from("handwriting_glyphs")
+      .select(GLYPH_COLUMNS)
+      .in("code", [...glyphCodes])
+      .eq("status", "published");
+    if (glyphError) throw glyphError;
+    for (const row of glyphRows ?? []) {
+      const glyph = glyphFromRow(row);
+      if (glyph) glyphs.set(glyph.code, glyph);
+    }
+  }
+
+  return { answers, patterns, tileSounds, passage, glyphs };
 }
 
 async function buildStep(
@@ -585,6 +611,20 @@ async function buildStep(
     logger.warn("lesson.story_unavailable", { lessonId: ownerId, questionId: q.id, reason: config.story });
     if (q.question_type === "READ_PASSAGE") return null;
   }
+  // Writing: the level's expectations, and for handwriting the glyph (a letter that is not
+  // published cannot be traced, so the step is skipped).
+  const isWriting = WRITING_QUESTION_TYPES.has(q.question_type);
+  const writing = isWriting ? resolveWritingSettings(levelCode, rules.writing) : null;
+  const glyph =
+    parsed.question.type === "TRACING" ? (support.glyphs.get(parsed.question.content.glyph) ?? null) : null;
+  if (parsed.question.type === "TRACING" && !glyph) {
+    logger.warn("lesson.glyph_unavailable", {
+      lessonId: ownerId,
+      questionId: q.id,
+      reason: parsed.question.content.glyph,
+    });
+    return null;
+  }
   const activity = spellingActivityOf(q.metadata);
   const spelling =
     activity || SPELLING_ANALYSIS_TYPES.has(q.question_type)
@@ -601,7 +641,14 @@ async function buildStep(
     wordId: q.word_id,
     scored: parsed.question.answer !== null,
     question: toClientQuestion(parsed.question),
-    answerKey: await buildAnswerKey(q.question_type, parsed.question.answer, crypto.randomUUID()),
+    answerKey: await buildAnswerKey(
+      q.question_type,
+      parsed.question.answer,
+      crypto.randomUUID(),
+      writing ? { content: parsed.question.content, glyph, settings: writing } : undefined,
+    ),
+    glyph,
+    writing,
     activityConfig: config,
     passage,
     pattern: q.phonics_pattern_id ? (support.patterns.get(q.phonics_pattern_id) ?? null) : null,
@@ -624,7 +671,13 @@ function toFeedback(
 // Drops the answer. Listening types need the spoken word itself (the child has to hear
 // it), so it is filled in from the answer when the content does not name it.
 function toClientQuestion(question: ParsedQuestion): ClientQuestion {
-  if ((question.type === "WORD_BUILDER" || question.type === "SPELLING") && !question.content.speech) {
+  // A sound-to-letter question says its sound (content.sounds), never the letters.
+  const grapheme = question.type === "SPELLING" && question.content.mode === "grapheme";
+  if (
+    (question.type === "WORD_BUILDER" || question.type === "SPELLING") &&
+    !question.content.speech &&
+    !grapheme
+  ) {
     return {
       type: question.type,
       content: { ...question.content, speech: question.answer.accepted[0] },

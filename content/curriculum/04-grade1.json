@@ -2021,6 +2021,635 @@
           "lessons": []
         }
       ]
+    },
+    {
+      "code": "g1-writing",
+      "subject": "WRITING",
+      "title": "Writing Stories",
+      "emoji": "📝",
+      "description": "Write sentences, make them longer, retell in order and write a short paragraph.",
+      "skills": [
+        {
+          "code": "g1-sentence-writing",
+          "dimension": "WRITING",
+          "title": "Writing sentences",
+          "childTitle": "Write sentences",
+          "description": "Writes whole sentences of four or more words.",
+          "writingSkill": "SENTENCE_WRITING",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g1-write-sentences",
+              "title": "Write about the weather",
+              "childTitle": "Write sentences",
+              "description": "Write whole sentences about pictures.",
+              "emoji": "🌧️",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "A whole sentence tells who or what, and what happens. Let's write some!",
+              "activities": [
+                {
+                  "type": "SENTENCE_WRITING",
+                  "stage": "independent_practice",
+                  "title": "Write a sentence",
+                  "instructions": "Look at the picture. Write a whole sentence.",
+                  "instructionsSpeech": "Look at the picture. Write a whole sentence.",
+                  "questions": [
+                    {
+                      "type": "SENTENCE_WRITING",
+                      "prompt": "Write a sentence about the rain.",
+                      "promptSpeech": "Look at the picture. Write a sentence about the rain.",
+                      "explanation": "For example: The rain makes big puddles.",
+                      "content": {
+                        "mode": "free",
+                        "emoji": "🌧️",
+                        "wordBank": [
+                          "rain",
+                          "wet",
+                          "umbrella",
+                          "puddle",
+                          "sky",
+                          "gray"
+                        ]
+                      },
+                      "answer": {
+                        "rubric": "g1-sentence",
+                        "ideas": [
+                          [
+                            "rain",
+                            "raining",
+                            "rainy",
+                            "rained",
+                            "wet",
+                            "umbrella",
+                            "puddle",
+                            "puddles"
+                          ]
+                        ]
+                      }
+                    },
+                    {
+                      "type": "SENTENCE_WRITING",
+                      "prompt": "Write a sentence about the snail.",
+                      "promptSpeech": "Look at the picture. Write a sentence about the snail.",
+                      "explanation": "For example: The snail is slow.",
+                      "content": {
+                        "mode": "free",
+                        "emoji": "🐌",
+                        "wordBank": [
+                          "snail",
+                          "slow",
+                          "shell",
+                          "leaf",
+                          "slimy"
+                        ]
+                      },
+                      "answer": {
+                        "rubric": "g1-sentence",
+                        "ideas": [
+                          [
+                            "snail",
+                            "snails"
+                          ]
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "g1-sentence-expansion",
+          "dimension": "WRITING",
+          "title": "Sentence expansion",
+          "childTitle": "Make it longer",
+          "description": "Adds where, when or how to a short sentence.",
+          "writingSkill": "SENTENCE_EXPANSION",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g1-expand-sentences",
+              "title": "Make it longer",
+              "childTitle": "Make it longer",
+              "description": "Add words to make short sentences more interesting.",
+              "emoji": "➕",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "A short sentence can grow. Add words that tell where, when or how!",
+              "activities": [
+                {
+                  "type": "SENTENCE_WRITING",
+                  "stage": "independent_practice",
+                  "title": "Make it longer",
+                  "instructions": "Make the sentence longer. Tell where, when or how.",
+                  "instructionsSpeech": "Make the sentence longer. Tell where, when or how.",
+                  "questions": [
+                    {
+                      "type": "SENTENCE_WRITING",
+                      "prompt": "Make it longer: The dog runs.",
+                      "promptSpeech": "Make this sentence longer: The dog runs. Tell where, when, or how.",
+                      "explanation": "For example: The big dog runs fast in the park.",
+                      "content": {
+                        "mode": "free",
+                        "emoji": "🐕",
+                        "wordBank": [
+                          "fast",
+                          "park",
+                          "big",
+                          "in",
+                          "the",
+                          "every",
+                          "day"
+                        ],
+                        "hint": "Tell where, when or how."
+                      },
+                      "answer": {
+                        "rubric": "g1-expand",
+                        "ideas": [
+                          [
+                            "dog",
+                            "dogs"
+                          ],
+                          [
+                            "run",
+                            "runs",
+                            "running",
+                            "ran"
+                          ]
+                        ],
+                        "ownWords": "The dog runs."
+                      }
+                    },
+                    {
+                      "type": "SENTENCE_WRITING",
+                      "prompt": "Make it longer: The bird sings.",
+                      "promptSpeech": "Make this sentence longer: The bird sings. Tell where, when, or how.",
+                      "explanation": "For example: The happy bird sings in the tree.",
+                      "content": {
+                        "mode": "free",
+                        "emoji": "🐦",
+                        "wordBank": [
+                          "tree",
+                          "morning",
+                          "loud",
+                          "happy",
+                          "in",
+                          "the"
+                        ],
+                        "hint": "Tell where, when or how."
+                      },
+                      "answer": {
+                        "rubric": "g1-expand",
+                        "ideas": [
+                          [
+                            "bird",
+                            "birds"
+                          ],
+                          [
+                            "sing",
+                            "sings",
+                            "singing",
+                            "sang"
+                          ]
+                        ],
+                        "ownWords": "The bird sings."
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "prerequisites": [
+            "g1-sentence-writing"
+          ]
+        },
+        {
+          "code": "g1-story-sequence",
+          "dimension": "WRITING",
+          "title": "Story sequence writing",
+          "childTitle": "Tell what happens",
+          "description": "Puts story pictures in order and writes a sentence for each.",
+          "writingSkill": "STORY_SEQUENCE_WRITING",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g1-story-seeds",
+              "title": "How seeds grow",
+              "childTitle": "How seeds grow",
+              "description": "Put the pictures in order, then write what happens.",
+              "emoji": "🌱",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Read about how seeds grow. Then put the pictures in order and write about each one.",
+              "activities": [
+                {
+                  "type": "STORY_ORDER_WRITING",
+                  "stage": "independent_practice",
+                  "title": "Write what happens",
+                  "instructions": "Put the pictures in order. Write a sentence for each one.",
+                  "instructionsSpeech": "Put the pictures in order. Write a sentence for each one.",
+                  "questions": [
+                    {
+                      "type": "STORY_ORDER_WRITING",
+                      "prompt": "Put the pictures in order, then write",
+                      "promptSpeech": "Put the pictures in order. Then write a sentence for each picture.",
+                      "explanation": "First the seed goes in the soil. Next it gets water and sun. Then a root and a stem grow. At the end there are leaves and a flower.",
+                      "content": {
+                        "events": [
+                          {
+                            "id": "water",
+                            "emoji": "🌧️",
+                            "label": "Water and sun"
+                          },
+                          {
+                            "id": "flower",
+                            "emoji": "🌻",
+                            "label": "A flower"
+                          },
+                          {
+                            "id": "soil",
+                            "emoji": "🪴",
+                            "label": "Into the soil"
+                          },
+                          {
+                            "id": "root",
+                            "emoji": "🌿",
+                            "label": "Root and stem"
+                          }
+                        ],
+                        "connect": false,
+                        "wordBank": [
+                          "seed",
+                          "soil",
+                          "water",
+                          "sun",
+                          "root",
+                          "stem",
+                          "leaves",
+                          "flower",
+                          "grows"
+                        ],
+                        "starters": [
+                          "First,",
+                          "Next,",
+                          "Then",
+                          "At the end,"
+                        ]
+                      },
+                      "answer": {
+                        "acceptedSequences": [
+                          [
+                            "soil",
+                            "water",
+                            "root",
+                            "flower"
+                          ]
+                        ],
+                        "events": {
+                          "soil": [
+                            [
+                              "soil",
+                              "dirt",
+                              "plant",
+                              "planted",
+                              "put"
+                            ],
+                            [
+                              "seed",
+                              "seeds"
+                            ]
+                          ],
+                          "water": [
+                            [
+                              "water",
+                              "watered",
+                              "rain",
+                              "sun",
+                              "sunny"
+                            ]
+                          ],
+                          "root": [
+                            [
+                              "root",
+                              "roots",
+                              "stem",
+                              "grows",
+                              "grew",
+                              "grow"
+                            ]
+                          ],
+                          "flower": [
+                            [
+                              "flower",
+                              "flowers",
+                              "leaves",
+                              "leaf",
+                              "plant"
+                            ]
+                          ]
+                        },
+                        "rubric": "g1-story"
+                      }
+                    }
+                  ],
+                  "config": {
+                    "story": "how-seeds-grow"
+                  }
+                }
+              ]
+            }
+          ],
+          "prerequisites": [
+            "g1-sentence-writing"
+          ]
+        },
+        {
+          "code": "g1-paragraph",
+          "dimension": "WRITING",
+          "title": "Writing a short paragraph",
+          "childTitle": "My paragraph",
+          "description": "Writes a topic sentence, details and an ending with help.",
+          "writingSkill": "PARAGRAPH_WRITING",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g1-guided-paragraph",
+              "title": "My favourite food",
+              "childTitle": "My paragraph",
+              "description": "Write a short paragraph about your favourite food.",
+              "emoji": "🍕",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "A paragraph is a few sentences about one topic. Let's write one together!",
+              "activities": [
+                {
+                  "type": "PARAGRAPH_WRITING",
+                  "stage": "independent_practice",
+                  "title": "Write a paragraph",
+                  "instructions": "Write a sentence in each part.",
+                  "instructionsSpeech": "Write a sentence in each part.",
+                  "questions": [
+                    {
+                      "type": "GUIDED_WRITING",
+                      "prompt": "Write about your favourite food.",
+                      "promptSpeech": "Write a short paragraph about your favourite food. Write a sentence in each part.",
+                      "explanation": "For example: My favorite food is pizza. It is hot and cheesy. I eat it on Fridays. I like it because it is yummy.",
+                      "content": {
+                        "layout": "paragraph",
+                        "topic": "My favourite food",
+                        "frames": [
+                          {
+                            "label": "Topic sentence",
+                            "starter": "My favorite food is"
+                          },
+                          {
+                            "label": "Detail",
+                            "placeholder": "What does it look or taste like?"
+                          },
+                          {
+                            "label": "Detail",
+                            "placeholder": "When do you eat it?"
+                          },
+                          {
+                            "label": "Ending",
+                            "placeholder": "Why do you like it?"
+                          }
+                        ],
+                        "wordBank": [
+                          "yummy",
+                          "sweet",
+                          "hot",
+                          "cold",
+                          "eat",
+                          "lunch",
+                          "dinner",
+                          "because"
+                        ],
+                        "checklist": [
+                          "One idea in each part"
+                        ],
+                        "emoji": "🍕"
+                      },
+                      "answer": {
+                        "rubric": "g1-paragraph",
+                        "ideas": [
+                          [
+                            "food",
+                            "eat",
+                            "eating",
+                            "ate",
+                            "pizza",
+                            "apple",
+                            "rice",
+                            "pasta",
+                            "bread",
+                            "soup",
+                            "cake",
+                            "banana",
+                            "fruit",
+                            "yummy",
+                            "sandwich",
+                            "noodles"
+                          ]
+                        ],
+                        "topic": [
+                          [
+                            "food",
+                            "favorite",
+                            "favourite"
+                          ]
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "prerequisites": [
+            "g1-sentence-expansion"
+          ]
+        },
+        {
+          "code": "g1-descriptive",
+          "dimension": "WRITING",
+          "title": "Describing",
+          "childTitle": "Describe it",
+          "description": "Describes an animal with describing words.",
+          "writingSkill": "DESCRIPTIVE_WRITING",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g1-describe-it",
+              "title": "Describe a cat",
+              "childTitle": "Describe it",
+              "description": "Use describing words to tell about a cat.",
+              "emoji": "🐈",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Describing words tell how something looks, feels and sounds. Let's describe a cat!",
+              "activities": [
+                {
+                  "type": "GUIDED_WRITING",
+                  "stage": "independent_practice",
+                  "title": "Describe it",
+                  "instructions": "Write about how a cat looks, feels and sounds.",
+                  "instructionsSpeech": "Write about how a cat looks, feels and sounds.",
+                  "questions": [
+                    {
+                      "type": "GUIDED_WRITING",
+                      "prompt": "Describe a cat.",
+                      "promptSpeech": "Describe a cat. How does it look, feel, and sound?",
+                      "explanation": "For example: The cat is small and orange. Its fur is soft and fluffy. It has long whiskers. It says purr.",
+                      "content": {
+                        "layout": "free",
+                        "topic": "Describe a cat",
+                        "frames": [
+                          {
+                            "label": "My description",
+                            "placeholder": "How does it look? How does it feel?"
+                          }
+                        ],
+                        "wordBank": [
+                          "soft",
+                          "fluffy",
+                          "small",
+                          "orange",
+                          "whiskers",
+                          "tail",
+                          "purr",
+                          "furry"
+                        ],
+                        "checklist": [
+                          "How it looks",
+                          "How it feels",
+                          "How it sounds"
+                        ],
+                        "emoji": "🐈"
+                      },
+                      "answer": {
+                        "rubric": "g2-descriptive",
+                        "ideas": [
+                          [
+                            "cat",
+                            "cats",
+                            "kitten"
+                          ]
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "prerequisites": [
+            "g1-sentence-writing"
+          ]
+        },
+        {
+          "code": "g1-editing",
+          "dimension": "WRITING",
+          "title": "Editing sentences",
+          "childTitle": "Fix mistakes",
+          "description": "Fixes capital letters and end marks.",
+          "writingSkill": "EDITING",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g1-fix-sentences",
+              "title": "Fix the sentence",
+              "childTitle": "Fix mistakes",
+              "description": "Find and fix capital letters and end marks.",
+              "emoji": "🔍",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Good writers check their work. Let's find and fix the mistakes!",
+              "activities": [
+                {
+                  "type": "EDIT_AND_CORRECT",
+                  "stage": "independent_practice",
+                  "title": "Fix the sentence",
+                  "instructions": "Find the mistakes. Write the sentence the right way.",
+                  "instructionsSpeech": "Find the mistakes. Write the sentence the right way.",
+                  "questions": [
+                    {
+                      "type": "EDIT_AND_CORRECT",
+                      "prompt": "Fix the sentence",
+                      "promptSpeech": "Find the mistakes. Write the sentence the right way.",
+                      "explanation": "The cat is on the mat. Capital T, and a full stop.",
+                      "content": {
+                        "text": "the cat is on the mat",
+                        "focus": [
+                          "capitalization",
+                          "punctuation"
+                        ],
+                        "emoji": "🐱"
+                      },
+                      "answer": {
+                        "accepted": [
+                          "The cat is on the mat."
+                        ]
+                      }
+                    },
+                    {
+                      "type": "EDIT_AND_CORRECT",
+                      "prompt": "Fix the sentence",
+                      "promptSpeech": "Find the mistakes. Write the sentence the right way.",
+                      "explanation": "I like my dog. I is always a capital letter.",
+                      "content": {
+                        "text": "i like my dog",
+                        "focus": [
+                          "capitalization",
+                          "punctuation"
+                        ],
+                        "emoji": "🐶"
+                      },
+                      "answer": {
+                        "accepted": [
+                          "I like my dog.",
+                          "I like my dog!"
+                        ]
+                      }
+                    },
+                    {
+                      "type": "EDIT_AND_CORRECT",
+                      "prompt": "Fix the sentence",
+                      "promptSpeech": "Find the mistakes. Write the sentence the right way.",
+                      "explanation": "We went to the park. A sentence ends with an end mark.",
+                      "content": {
+                        "text": "We went to the park",
+                        "focus": [
+                          "punctuation"
+                        ],
+                        "emoji": "🏞️"
+                      },
+                      "answer": {
+                        "accepted": [
+                          "We went to the park.",
+                          "We went to the park!"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "prerequisites": [
+            "g1-sentence-writing"
+          ]
+        }
+      ]
     }
   ]
 }

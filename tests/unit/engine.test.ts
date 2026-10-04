@@ -20,7 +20,6 @@ import { deriveSkillReviewItem, dueReviewItems } from "@/lib/learning/review-que
 import { deriveWordReview } from "@/lib/learning/vocabulary";
 import { DEFAULT_RULES, mergeLearningRules } from "@/lib/learning/rules";
 import { accuracy, attemptScore, percentage, scoreLesson, summarizeAttempts } from "@/lib/learning/scoring";
-import { traceCoverage } from "@/lib/learning/tracing";
 
 const now = new Date("2026-09-30T12:00:00Z");
 
@@ -339,25 +338,6 @@ describe("learning sessions on the device", () => {
   });
 });
 
-describe("tracing", () => {
-  const W = 10;
-  const grid = (cells: [number, number][]) => {
-    const g = Array<boolean>(W * W).fill(false);
-    for (const [x, y] of cells) g[y * W + x] = true;
-    return g;
-  };
-  const letter = grid(Array.from({ length: 8 }, (_, i) => [5, i + 1] as [number, number]));
-
-  it("scores strokes along the letter high and scribbles low", () => {
-    expect(traceCoverage(letter, letter, W)).toBe(100);
-    const half = grid(Array.from({ length: 3 }, (_, i) => [5, i + 1] as [number, number]));
-    expect(traceCoverage(letter, half, W)).toBeLessThan(70);
-    const everywhere = Array<boolean>(W * W).fill(true);
-    expect(traceCoverage(letter, everywhere, W)).toBeLessThan(60);
-    expect(traceCoverage(letter, grid([]), W)).toBe(0);
-  });
-});
-
 describe("activity configuration", () => {
   it("accepts valid config and rejects unknown keys or bad values before publishing", () => {
     expect(parseActivityConfig("MULTIPLE_CHOICE", {}).ok).toBe(true);
@@ -406,6 +386,7 @@ describe("activity configuration", () => {
       ).ok,
     ).toBe(false);
     expect(parseQuestion("WRITING", { wordBank: ["cat", "dog"] }, { accepted: ["cow"] }).ok).toBe(false);
-    expect(parseQuestion("TRACING", { letter: "a" }, { minCoverage: 60 }).ok).toBe(true);
+    expect(parseQuestion("TRACING", { glyph: "lower-a" }, { trace: true }).ok).toBe(true);
+    expect(parseQuestion("TRACING", { letter: "a" }, { minCoverage: 60 }).ok).toBe(false);
   });
 });

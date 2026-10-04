@@ -413,6 +413,42 @@ history table is `reading_sessions`, because reading a text is not a question an
   text with its analysis and flags) and `/admin/reading/[code]` (preview as children see
   it, words with their decodability, questions with reading skills, publish/unpublish).
 
+## Writing engine (Phase 8)
+
+Writing reuses the lesson player, the learning engine, the word bank, the phonics data and
+the story library (ADR-039 – ADR-042; full description in [writing-engine.md](writing-engine.md)).
+Writing lessons are ordinary lessons in `WRITING` units; written answers are ordinary
+attempts with the server's `writing_analysis`; mastery, review and sync are the ordinary
+ones. New: reference data and evaluators.
+
+- **Data.** `writing_skill_types` (25 skills with a strand and a level range; curriculum
+  skills are tagged with `skills.writing_skill_code`), `handwriting_glyphs` (ordered
+  reference strokes in a 0–100 box, guide lines, tolerance, completion; `questions.glyph_id`),
+  `writing_rubrics` (admin-only templates; the importer compiles them into each question's
+  server-only answer), `activity_attempts.writing_analysis`, letter review items
+  (`writing:<glyph>`).
+- **Handwriting** (`tracing.ts`, pure): strokes recorded by pointer events, simplified to
+  integer points on the device and judged on the server against the glyph — coverage by ink
+  that runs along each stroke, precision, balance (mirror letters), alignment for writing
+  from memory, stroke order / direction / start measured (enforced only where a level asks).
+  Not handwriting recognition; a typed alternative exists.
+- **Typed writing** (`writing.ts`, pure): mechanics by level (off / hint / required),
+  copying, completion, editing, open writing by rubric (critical criteria decide; spelling
+  and spacing in open writing are tips), story sequence writing. Open writing is never
+  matched against a stored sentence.
+- **Question types.** `TRACING` (trace / copy / write), `SENTENCE_WRITING` (copy / complete /
+  free), `GUIDED_WRITING` (frames / paragraph / free), `STORY_ORDER_WRITING`,
+  `EDIT_AND_CORRECT`; word writing reuses `SPELLING` (copy / picture / grapheme modes),
+  `WORD_BUILDER`, `MISSING_LETTER` and `SENTENCE_BUILDER`. Fifteen writing activity types
+  map onto them (activity type = configuration).
+- **Keys.** `writing-key.ts`: digest-only keys (sentences, keyword phrases and story orders
+  as salted digests; the glyph is public reference data) so the device gives the same
+  right / almost and checklist as the server without holding the answers.
+- **Server.** The lesson loader attaches each handwriting step's glyph and the level's
+  writing settings; the progress writer loads glyphs, the question's level and the word
+  list (`writing-context.ts`), re-evaluates, stores `writing_analysis`, and derives letter
+  review. Screens: `/child/writing`, `/parent/writing` (+ dashboard card), `/admin/writing`.
+
 ## Progress pipeline
 
 1. The child answers. The player writes an `attempt` event (device-generated UUID, the

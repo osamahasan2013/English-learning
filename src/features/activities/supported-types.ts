@@ -24,6 +24,10 @@ export const RENDERABLE_QUESTION_TYPES = [
   "READ_PASSAGE",
   "SELECT_ALL",
   "ORDER_EVENTS",
+  "SENTENCE_WRITING",
+  "GUIDED_WRITING",
+  "STORY_ORDER_WRITING",
+  "EDIT_AND_CORRECT",
 ] as const satisfies readonly SupportedQuestionType[];
 
 export function isRenderableQuestionType(type: string): type is (typeof RENDERABLE_QUESTION_TYPES)[number] {

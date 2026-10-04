@@ -1536,6 +1536,325 @@
           "lessons": []
         }
       ]
+    },
+    {
+      "code": "kg2-writing",
+      "subject": "WRITING",
+      "title": "Writing Words",
+      "emoji": "✏️",
+      "description": "Write small letters, sounds and short words, and first sentences.",
+      "skills": [
+        {
+          "code": "kg2-letter-writing",
+          "dimension": "WRITING",
+          "title": "Writing small letters",
+          "childTitle": "Small letters",
+          "description": "Writes small letters from a model and from their sound.",
+          "writingSkill": "LOWERCASE_WRITING",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg2-write-letters-1",
+              "title": "Write m, s and p",
+              "childTitle": "Write letters",
+              "description": "Copy small letters, then write them from their sound.",
+              "emoji": "✍️",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Let's write small letters. First look, then write. Then listen, and write the letter for the sound.",
+              "activities": [
+                {
+                  "type": "LETTER_WRITING",
+                  "stage": "guided_practice",
+                  "title": "Look and write",
+                  "instructions": "Look at the letter. Write it in the box.",
+                  "instructionsSpeech": "Look at the letter. Write it in the box.",
+                  "questions": [
+                    {
+                      "template": "trace_letter",
+                      "letter": "m",
+                      "mode": "copy",
+                      "case": "lower",
+                      "explanation": "Small m: a line down, then two humps."
+                    },
+                    {
+                      "template": "trace_letter",
+                      "letter": "s",
+                      "mode": "copy",
+                      "case": "lower",
+                      "explanation": "Small s: curve round, then back the other way."
+                    }
+                  ],
+                  "config": {
+                    "showModel": true
+                  }
+                },
+                {
+                  "type": "SOUND_TO_LETTER",
+                  "stage": "independent_practice",
+                  "title": "Listen and write",
+                  "instructions": "Listen to the sound. Write its letter.",
+                  "instructionsSpeech": "Listen to the sound. Write its letter.",
+                  "questions": [
+                    {
+                      "template": "trace_letter",
+                      "letter": "p",
+                      "mode": "write",
+                      "case": "lower",
+                      "cue": "sound",
+                      "explanation": "That sound is the letter p."
+                    },
+                    {
+                      "template": "trace_letter",
+                      "letter": "m",
+                      "mode": "write",
+                      "case": "lower",
+                      "cue": "sound",
+                      "explanation": "That sound is the letter m."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "kg2-sound-to-letter",
+          "dimension": "WRITING",
+          "title": "Sounds to letters",
+          "childTitle": "Sounds to letters",
+          "description": "Hears a sound and writes the letter that spells it.",
+          "writingSkill": "SOUND_TO_LETTER",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg2-sounds-to-letters",
+              "title": "Sounds to letters",
+              "childTitle": "Sounds to letters",
+              "description": "Hear a sound, then type its letter.",
+              "emoji": "👂",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Listen to each sound. Then write the letter that makes it.",
+              "activities": [
+                {
+                  "type": "SOUND_TO_LETTER",
+                  "stage": "guided_practice",
+                  "title": "Sound to letter",
+                  "instructions": "Listen to the sound. Write the letter.",
+                  "instructionsSpeech": "Listen to the sound. Write the letter.",
+                  "questions": [
+                    {
+                      "template": "write_sound",
+                      "pattern": "LETTER_T",
+                      "explanation": "That sound is spelled with t."
+                    },
+                    {
+                      "template": "write_sound",
+                      "pattern": "LETTER_S",
+                      "explanation": "That sound is spelled with s."
+                    },
+                    {
+                      "template": "write_sound",
+                      "pattern": "LETTER_K",
+                      "alsoAccept": [
+                        "c",
+                        "ck"
+                      ],
+                      "explanation": "That sound can be spelled c, k or ck."
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "prerequisites": [
+            "kg2-letter-writing"
+          ]
+        },
+        {
+          "code": "kg2-cvc-writing",
+          "dimension": "WRITING",
+          "title": "Writing short words",
+          "childTitle": "Write words",
+          "description": "Writes short words from a model and from a picture.",
+          "writingSkill": "WORD_WRITING",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg2-write-cvc",
+              "title": "Write short words",
+              "childTitle": "Write words",
+              "description": "Copy words, then write words for pictures.",
+              "emoji": "📝",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Let's write words! Say each sound as you write it.",
+              "activities": [
+                {
+                  "type": "WORD_COPY",
+                  "stage": "guided_practice",
+                  "title": "Copy the word",
+                  "instructions": "Look at the word. Copy it.",
+                  "instructionsSpeech": "Look at the word. Copy it.",
+                  "questions": [
+                    {
+                      "template": "copy_word",
+                      "word": "map",
+                      "explanation": "map: m, a, p."
+                    },
+                    {
+                      "template": "copy_word",
+                      "word": "pig",
+                      "explanation": "pig: p, i, g."
+                    }
+                  ]
+                },
+                {
+                  "type": "IMAGE_TO_WORD",
+                  "stage": "independent_practice",
+                  "title": "Write the word",
+                  "instructions": "What is in the picture? Write the word.",
+                  "instructionsSpeech": "What is in the picture? Write the word.",
+                  "questions": [
+                    {
+                      "template": "picture_word",
+                      "word": "cat",
+                      "explanation": "cat: c, a, t."
+                    },
+                    {
+                      "template": "picture_word",
+                      "word": "hat",
+                      "explanation": "hat: h, a, t."
+                    },
+                    {
+                      "template": "picture_word",
+                      "word": "sun",
+                      "explanation": "sun: s, u, n."
+                    }
+                  ]
+                },
+                {
+                  "type": "MISSING_LETTER",
+                  "stage": "review",
+                  "title": "Missing letter",
+                  "instructions": "Which letter is missing?",
+                  "instructionsSpeech": "Which letter is missing?",
+                  "questions": [
+                    {
+                      "template": "missing_pattern",
+                      "word": "bed",
+                      "missing": "e",
+                      "choices": [
+                        "a",
+                        "u"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "prerequisites": [
+            "kg2-sound-to-letter"
+          ]
+        },
+        {
+          "code": "kg2-sentence-copying",
+          "dimension": "WRITING",
+          "title": "Building and copying sentences",
+          "childTitle": "First sentences",
+          "description": "Builds, finishes and copies short sentences.",
+          "writingSkill": "SENTENCE_COPYING",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg2-write-sentences",
+              "title": "My first sentences",
+              "childTitle": "First sentences",
+              "description": "Put words in order, finish a sentence and copy one.",
+              "emoji": "🧩",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "A sentence is a group of words that tells an idea. Let's build some!",
+              "activities": [
+                {
+                  "type": "SENTENCE_BUILD",
+                  "stage": "guided_practice",
+                  "title": "Build the sentence",
+                  "instructions": "Put the words in order.",
+                  "instructionsSpeech": "Put the words in order.",
+                  "questions": [
+                    {
+                      "template": "order_sentence",
+                      "sentence": "I see a cat.",
+                      "emoji": "🐱"
+                    }
+                  ]
+                },
+                {
+                  "type": "SENTENCE_COMPLETION",
+                  "stage": "guided_practice",
+                  "title": "Finish the sentence",
+                  "instructions": "Look at the picture. Write the missing word.",
+                  "instructionsSpeech": "Look at the picture. Write the missing word.",
+                  "questions": [
+                    {
+                      "type": "SENTENCE_WRITING",
+                      "prompt": "Finish the sentence",
+                      "promptSpeech": "Look at the picture. Finish the sentence: I see a...",
+                      "explanation": "I see a dog.",
+                      "content": {
+                        "mode": "complete",
+                        "emoji": "🐶",
+                        "parts": [
+                          {
+                            "text": "I see a"
+                          },
+                          {
+                            "blank": true
+                          },
+                          {
+                            "text": "."
+                          }
+                        ]
+                      },
+                      "answer": {
+                        "accepted": [
+                          "dog",
+                          "puppy"
+                        ]
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "SENTENCE_COPY",
+                  "stage": "independent_practice",
+                  "title": "Copy the sentence",
+                  "instructions": "Look at the sentence. Copy it.",
+                  "instructionsSpeech": "Look at the sentence. Copy it.",
+                  "questions": [
+                    {
+                      "template": "copy_sentence",
+                      "sentence": "I can run.",
+                      "emoji": "🏃",
+                      "explanation": "I can run. A space goes between the words."
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "prerequisites": [
+            "kg2-cvc-writing"
+          ]
+        }
+      ]
     }
   ]
 }

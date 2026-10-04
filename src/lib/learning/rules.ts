@@ -3,7 +3,7 @@ import { z } from "zod";
 // The engine's tunable numbers. Defaults live here; an admin can override any of them
 // per rule set in the `learning_rules` table (code = mastery | prerequisites | review |
 // player | scoring | vocabulary | spelling |
-// reading), which the server merges over these defaults. Every value is
+// reading | writing), which the server merges over these defaults. Every value is
 // documented in docs/curriculum.md so parent-facing explanations can quote it.
 
 const statuses = ["NOT_STARTED", "LEARNING", "PRACTICING", "ALMOST_MASTERED", "MASTERED"] as const;
@@ -183,7 +183,56 @@ export const readingRulesSchema = z.object({
   rereadBelowPercent: z.number().min(0).max(100),
 });
 
+// Writing (Phase 8): how strictly each level is held to the mechanics of writing (capital
+// letters, spaces between words, end marks, spelling of known words), how forgiving
+// tracing and letter writing are, and when a letter comes back for review. "off": not
+// mentioned; "hint": pointed out, never marks an answer wrong; "required": part of what
+// makes the answer right. Mastery is ordinary skill mastery (the `mastery` rules).
+export const WRITING_MECHANICS = ["capitalization", "punctuation", "spacing", "spelling"] as const;
+export type WritingMechanic = (typeof WRITING_MECHANICS)[number];
+export const MECHANIC_MODES = ["off", "hint", "required"] as const;
+export type MechanicMode = (typeof MECHANIC_MODES)[number];
+
+export const writingLevelRulesSchema = z.object({
+  mechanics: z.object(
+    Object.fromEntries(WRITING_MECHANICS.map((m) => [m, z.enum(MECHANIC_MODES)])) as Record<
+      WritingMechanic,
+      z.ZodEnum<["off", "hint", "required"]>
+    >,
+  ),
+  // Tracing tolerance is the glyph's own, multiplied by this (younger hands get more room).
+  traceToleranceScale: z.number().min(0.5).max(3),
+  // Writing a letter from memory or from a model (no guide underneath) gets this much more.
+  writeToleranceScale: z.number().min(1).max(3),
+  // The glyph's completion threshold, multiplied by this.
+  completionScale: z.number().min(0.5).max(1.2),
+  // Stroke order and direction: "hint" (feedback, recorded) or "required".
+  strokeOrder: z.enum(["off", "hint", "required"]),
+  // Shortest sentence (words) that counts as a sentence in open-ended writing.
+  minSentenceWords: z.number().int().min(1).max(10),
+});
+
+export const writingRulesSchema = z.object({
+  defaultLevel: z.string(),
+  levels: z.record(z.string().regex(/^[A-Z0-9_]{1,40}$/), writingLevelRulesSchema),
+  // Ink must land near the letter: below this share of ink on or next to a stroke, the
+  // trace counts as scribbling and is not complete.
+  minPrecision: z.number().min(0.2).max(1),
+  // Within this many coverage points of the threshold a trace is "almost".
+  almostMargin: z.number().min(0).max(0.4),
+  // A letter formed wrongly on the first try in at least `missesForReview` of the child's
+  // last `lookback` tries comes back for review (writing:<glyph id>) until it is formed
+  // right on `correctToResolve` first tries in a row.
+  letterReview: z.object({
+    lookback: z.number().int().min(2).max(20),
+    missesForReview: z.number().int().min(1).max(10),
+    correctToResolve: z.number().int().min(1).max(10),
+  }),
+});
+
 export type ReadingRules = z.infer<typeof readingRulesSchema>;
+export type WritingRules = z.infer<typeof writingRulesSchema>;
+export type WritingLevelRules = z.infer<typeof writingLevelRulesSchema>;
 export type ReadingLevelRules = z.infer<typeof readingLevelRulesSchema>;
 export type MasteryRules = z.infer<typeof masteryRulesSchema>;
 export type SpellingRules = z.infer<typeof spellingRulesSchema>;
@@ -203,6 +252,7 @@ export type LearningRules = {
   vocabulary: VocabularyRules;
   spelling: SpellingRules;
   reading: ReadingRules;
+  writing: WritingRules;
 };
 
 export const DEFAULT_RULES: LearningRules = {
@@ -386,6 +436,64 @@ export const DEFAULT_RULES: LearningRules = {
     helpLookbackSessions: 5,
     rereadBelowPercent: 60,
   },
+  writing: {
+    defaultLevel: "KG3",
+    levels: {
+      KG1: {
+        mechanics: { capitalization: "off", punctuation: "off", spacing: "off", spelling: "hint" },
+        traceToleranceScale: 1.4,
+        writeToleranceScale: 1.4,
+        completionScale: 0.85,
+        strokeOrder: "hint",
+        minSentenceWords: 1,
+      },
+      KG2: {
+        mechanics: { capitalization: "hint", punctuation: "hint", spacing: "hint", spelling: "hint" },
+        traceToleranceScale: 1.25,
+        writeToleranceScale: 1.35,
+        completionScale: 0.9,
+        strokeOrder: "hint",
+        minSentenceWords: 2,
+      },
+      KG3: {
+        mechanics: { capitalization: "required", punctuation: "required", spacing: "hint", spelling: "hint" },
+        traceToleranceScale: 1.1,
+        writeToleranceScale: 1.3,
+        completionScale: 0.95,
+        strokeOrder: "hint",
+        minSentenceWords: 3,
+      },
+      GRADE1: {
+        mechanics: {
+          capitalization: "required",
+          punctuation: "required",
+          spacing: "required",
+          spelling: "hint",
+        },
+        traceToleranceScale: 1,
+        writeToleranceScale: 1.25,
+        completionScale: 1,
+        strokeOrder: "hint",
+        minSentenceWords: 3,
+      },
+      GRADE2: {
+        mechanics: {
+          capitalization: "required",
+          punctuation: "required",
+          spacing: "required",
+          spelling: "required",
+        },
+        traceToleranceScale: 1,
+        writeToleranceScale: 1.2,
+        completionScale: 1,
+        strokeOrder: "hint",
+        minSentenceWords: 4,
+      },
+    },
+    minPrecision: 0.7,
+    almostMargin: 0.15,
+    letterReview: { lookback: 4, missesForReview: 2, correctToResolve: 2 },
+  },
 };
 
 const schemas = {
@@ -397,6 +505,7 @@ const schemas = {
   vocabulary: vocabularyRulesSchema,
   spelling: spellingRulesSchema,
   reading: readingRulesSchema,
+  writing: writingRulesSchema,
 } as const;
 
 // Merges stored overrides over the defaults. An override that fails validation is

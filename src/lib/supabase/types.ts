@@ -139,6 +139,7 @@ export type Database = {
           hints_used: number;
           spelling_analysis: Json | null;
           error_pattern_id: string | null;
+          writing_analysis: Json | null;
         };
         Insert: {
           id: string;
@@ -165,6 +166,7 @@ export type Database = {
           hints_used?: number;
           spelling_analysis?: Json | null;
           error_pattern_id?: string | null;
+          writing_analysis?: Json | null;
         };
         Update: {
           id?: string;
@@ -191,6 +193,7 @@ export type Database = {
           hints_used?: number;
           spelling_analysis?: Json | null;
           error_pattern_id?: string | null;
+          writing_analysis?: Json | null;
         };
         Relationships: [
           {
@@ -777,6 +780,74 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           error_category?: string | null;
+        };
+        Relationships: [
+
+        ];
+      };
+      handwriting_glyphs: {
+        Row: {
+          id: string;
+          code: string;
+          kind: string;
+          character: string;
+          letter_case: string;
+          script: string;
+          name: string;
+          strokes: Json;
+          guide: Json;
+          tolerance: number;
+          completion: number;
+          difficulty: number;
+          family: string;
+          formation_tip: string;
+          formation_speech: string;
+          sort_order: number;
+          status: Database["public"]["Enums"]["content_status"];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          code: string;
+          kind: string;
+          character: string;
+          letter_case?: string;
+          script?: string;
+          name: string;
+          strokes: Json;
+          guide?: Json;
+          tolerance?: number;
+          completion?: number;
+          difficulty?: number;
+          family?: string;
+          formation_tip?: string;
+          formation_speech?: string;
+          sort_order?: number;
+          status?: Database["public"]["Enums"]["content_status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          code?: string;
+          kind?: string;
+          character?: string;
+          letter_case?: string;
+          script?: string;
+          name?: string;
+          strokes?: Json;
+          guide?: Json;
+          tolerance?: number;
+          completion?: number;
+          difficulty?: number;
+          family?: string;
+          formation_tip?: string;
+          formation_speech?: string;
+          sort_order?: number;
+          status?: Database["public"]["Enums"]["content_status"];
+          created_at?: string;
+          updated_at?: string;
         };
         Relationships: [
 
@@ -1656,6 +1727,7 @@ export type Database = {
           audio_id: string | null;
           image_id: string | null;
           metadata: Json;
+          glyph_id: string | null;
         };
         Insert: {
           id?: string;
@@ -1681,6 +1753,7 @@ export type Database = {
           audio_id?: string | null;
           image_id?: string | null;
           metadata?: Json;
+          glyph_id?: string | null;
         };
         Update: {
           id?: string;
@@ -1706,6 +1779,7 @@ export type Database = {
           audio_id?: string | null;
           image_id?: string | null;
           metadata?: Json;
+          glyph_id?: string | null;
         };
         Relationships: [
           {
@@ -1720,6 +1794,13 @@ export type Database = {
             columns: ["audio_id"];
             isOneToOne: false;
             referencedRelation: "audio_assets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "questions_glyph_id_fkey";
+            columns: ["glyph_id"];
+            isOneToOne: false;
+            referencedRelation: "handwriting_glyphs";
             referencedColumns: ["id"];
           },
           {
@@ -1973,6 +2054,7 @@ export type Database = {
           resolved_at: string | null;
           created_at: string;
           updated_at: string;
+          glyph_id: string | null;
         };
         Insert: {
           id?: string;
@@ -1989,6 +2071,7 @@ export type Database = {
           resolved_at?: string | null;
           created_at?: string;
           updated_at?: string;
+          glyph_id?: string | null;
         };
         Update: {
           id?: string;
@@ -2005,6 +2088,7 @@ export type Database = {
           resolved_at?: string | null;
           created_at?: string;
           updated_at?: string;
+          glyph_id?: string | null;
         };
         Relationships: [
           {
@@ -2012,6 +2096,13 @@ export type Database = {
             columns: ["child_id"];
             isOneToOne: false;
             referencedRelation: "children";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "review_items_glyph_id_fkey";
+            columns: ["glyph_id"];
+            isOneToOne: false;
+            referencedRelation: "handwriting_glyphs";
             referencedColumns: ["id"];
           },
           {
@@ -2399,6 +2490,7 @@ export type Database = {
           is_active: boolean;
           phonics_stage_code: string | null;
           reading_skill_code: string | null;
+          writing_skill_code: string | null;
         };
         Insert: {
           id?: string;
@@ -2419,6 +2511,7 @@ export type Database = {
           is_active?: boolean;
           phonics_stage_code?: string | null;
           reading_skill_code?: string | null;
+          writing_skill_code?: string | null;
         };
         Update: {
           id?: string;
@@ -2439,6 +2532,7 @@ export type Database = {
           is_active?: boolean;
           phonics_stage_code?: string | null;
           reading_skill_code?: string | null;
+          writing_skill_code?: string | null;
         };
         Relationships: [
           {
@@ -2475,6 +2569,13 @@ export type Database = {
             isOneToOne: false;
             referencedRelation: "units";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "skills_writing_skill_code_fkey";
+            columns: ["writing_skill_code"];
+            isOneToOne: false;
+            referencedRelation: "writing_skill_types";
+            referencedColumns: ["code"];
           },
         ];
       };
@@ -3698,6 +3799,94 @@ export type Database = {
             referencedRelation: "levels";
             referencedColumns: ["id"];
           },
+        ];
+      };
+      writing_rubrics: {
+        Row: {
+          id: string;
+          code: string;
+          name: string;
+          description: string;
+          min_level_rank: number;
+          max_level_rank: number;
+          criteria: Json;
+          status: Database["public"]["Enums"]["content_status"];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          code: string;
+          name: string;
+          description?: string;
+          min_level_rank: number;
+          max_level_rank: number;
+          criteria: Json;
+          status?: Database["public"]["Enums"]["content_status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          code?: string;
+          name?: string;
+          description?: string;
+          min_level_rank?: number;
+          max_level_rank?: number;
+          criteria?: Json;
+          status?: Database["public"]["Enums"]["content_status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+
+        ];
+      };
+      writing_skill_types: {
+        Row: {
+          code: string;
+          name: string;
+          child_name: string;
+          description: string;
+          strand: string;
+          min_level_rank: number;
+          max_level_rank: number;
+          emoji: string;
+          sort_order: number;
+          status: Database["public"]["Enums"]["content_status"];
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          code: string;
+          name: string;
+          child_name?: string;
+          description?: string;
+          strand: string;
+          min_level_rank: number;
+          max_level_rank: number;
+          emoji?: string;
+          sort_order?: number;
+          status?: Database["public"]["Enums"]["content_status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          code?: string;
+          name?: string;
+          child_name?: string;
+          description?: string;
+          strand?: string;
+          min_level_rank?: number;
+          max_level_rank?: number;
+          emoji?: string;
+          sort_order?: number;
+          status?: Database["public"]["Enums"]["content_status"];
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+
         ];
       };
     };

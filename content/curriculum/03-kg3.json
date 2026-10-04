@@ -1287,6 +1287,464 @@
           "lessons": []
         }
       ]
+    },
+    {
+      "code": "kg3-writing",
+      "subject": "WRITING",
+      "title": "Writing Sentences",
+      "emoji": "✍️",
+      "description": "Write words with digraphs and whole sentences with capitals and full stops.",
+      "skills": [
+        {
+          "code": "kg3-word-writing",
+          "dimension": "WRITING",
+          "title": "Spelling words in writing",
+          "childTitle": "Write words",
+          "description": "Writes words with digraphs from pictures and sounds.",
+          "writingSkill": "SPELLING_TO_WRITING",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg3-write-words",
+              "title": "Write words with two-letter sounds",
+              "childTitle": "Write words",
+              "description": "Write fish, ship and shop, and the letters for two sounds.",
+              "emoji": "🐟",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Some sounds are spelled with two letters. Let's write words with them!",
+              "activities": [
+                {
+                  "type": "SOUND_TO_LETTER",
+                  "stage": "guided_practice",
+                  "title": "Letters for the sound",
+                  "instructions": "Listen to the sound. Write the two letters.",
+                  "instructionsSpeech": "Listen to the sound. Write the two letters.",
+                  "questions": [
+                    {
+                      "template": "write_sound",
+                      "pattern": "SH",
+                      "explanation": "Two letters make that sound together."
+                    },
+                    {
+                      "template": "write_sound",
+                      "pattern": "CH",
+                      "explanation": "Two letters make that sound together."
+                    }
+                  ]
+                },
+                {
+                  "type": "IMAGE_TO_WORD",
+                  "stage": "independent_practice",
+                  "title": "Write the word",
+                  "instructions": "What is in the picture? Write the word.",
+                  "instructionsSpeech": "What is in the picture? Write the word.",
+                  "questions": [
+                    {
+                      "template": "picture_word",
+                      "word": "fish",
+                      "explanation": "fish: f, i, sh."
+                    },
+                    {
+                      "template": "picture_word",
+                      "word": "ship",
+                      "explanation": "ship: sh, i, p."
+                    }
+                  ]
+                },
+                {
+                  "type": "WORD_BUILD",
+                  "stage": "review",
+                  "title": "Build the word",
+                  "instructions": "Build the word with the letter tiles.",
+                  "instructionsSpeech": "Build the word with the letter tiles.",
+                  "questions": [
+                    {
+                      "template": "build_word",
+                      "word": "shop",
+                      "extra": [
+                        "ch"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "kg3-capitals",
+          "dimension": "WRITING",
+          "title": "Capital letters and full stops",
+          "childTitle": "Capitals and full stops",
+          "description": "Starts a sentence with a capital letter and ends it with a full stop.",
+          "writingSkill": "CAPITALIZATION",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg3-capitals-1",
+              "title": "Capital letters and full stops",
+              "childTitle": "Capitals and stops",
+              "description": "Copy and build sentences with a capital letter and a full stop.",
+              "emoji": "🅰️",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "A sentence starts with a capital letter and ends with a full stop.",
+              "activities": [
+                {
+                  "type": "SENTENCE_COPY",
+                  "stage": "guided_practice",
+                  "title": "Copy the sentence",
+                  "instructions": "Copy the sentence. Start with a capital letter. End with a full stop.",
+                  "instructionsSpeech": "Copy the sentence. Start with a capital letter. End with a full stop.",
+                  "questions": [
+                    {
+                      "template": "copy_sentence",
+                      "sentence": "The cat is big.",
+                      "emoji": "🐱",
+                      "explanation": "The cat is big. Capital T at the start, a full stop at the end."
+                    },
+                    {
+                      "template": "copy_sentence",
+                      "sentence": "I like my dog.",
+                      "emoji": "🐶",
+                      "explanation": "I like my dog. I is always a capital letter."
+                    }
+                  ]
+                },
+                {
+                  "type": "SENTENCE_BUILD",
+                  "stage": "independent_practice",
+                  "title": "Build the sentence",
+                  "instructions": "Put the words in order. The capital letter goes first.",
+                  "instructionsSpeech": "Put the words in order. The capital letter goes first.",
+                  "questions": [
+                    {
+                      "template": "order_sentence",
+                      "sentence": "The sun is hot.",
+                      "emoji": "☀️"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "prerequisites": [
+            "kg3-word-writing"
+          ]
+        },
+        {
+          "code": "kg3-sentence-writing",
+          "dimension": "WRITING",
+          "title": "Writing a sentence",
+          "childTitle": "Write a sentence",
+          "description": "Writes a sentence of three or more words about a picture.",
+          "writingSkill": "SENTENCE_WRITING",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg3-writing-workshop",
+              "title": "Letters, words and sentences",
+              "childTitle": "Writing workshop",
+              "description": "Trace a letter, write one, build and write a word, then build and write a sentence.",
+              "emoji": "🛠️",
+              "minutes": 8,
+              "difficulty": 1,
+              "introSpeech": "Welcome to the writing workshop! First we write a letter, then a word, then a whole sentence.",
+              "activities": [
+                {
+                  "type": "TRACING",
+                  "stage": "guided_practice",
+                  "title": "Trace the letter",
+                  "instructions": "Trace the big letter. Start at the green dot.",
+                  "instructionsSpeech": "Trace the big letter. Start at the green dot.",
+                  "questions": [
+                    {
+                      "template": "trace_letter",
+                      "letter": "f",
+                      "case": "upper",
+                      "mode": "trace",
+                      "explanation": "Big F: a line down, then across the top and the middle."
+                    }
+                  ],
+                  "config": {
+                    "showModel": true
+                  }
+                },
+                {
+                  "type": "LETTER_WRITING",
+                  "stage": "guided_practice",
+                  "title": "Write the letter",
+                  "instructions": "Listen. Write the small letter.",
+                  "instructionsSpeech": "Listen. Write the small letter.",
+                  "questions": [
+                    {
+                      "template": "trace_letter",
+                      "letter": "f",
+                      "mode": "write",
+                      "explanation": "Small f: curve over the top and down, then cross it."
+                    }
+                  ]
+                },
+                {
+                  "type": "WORD_BUILD",
+                  "stage": "guided_practice",
+                  "title": "Build the word",
+                  "instructions": "Build the word with the letter tiles.",
+                  "instructionsSpeech": "Build the word with the letter tiles.",
+                  "questions": [
+                    {
+                      "template": "build_word",
+                      "word": "fish",
+                      "extra": [
+                        "ch"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "IMAGE_TO_WORD",
+                  "stage": "independent_practice",
+                  "title": "Write the word",
+                  "instructions": "What is in the picture? Write the word.",
+                  "instructionsSpeech": "What is in the picture? Write the word.",
+                  "questions": [
+                    {
+                      "template": "picture_word",
+                      "word": "ship",
+                      "explanation": "ship: sh, i, p."
+                    }
+                  ]
+                },
+                {
+                  "type": "SENTENCE_BUILD",
+                  "stage": "independent_practice",
+                  "title": "Build the sentence",
+                  "instructions": "Put the words in order.",
+                  "instructionsSpeech": "Put the words in order.",
+                  "questions": [
+                    {
+                      "template": "order_sentence",
+                      "sentence": "The fish can swim.",
+                      "emoji": "🐟"
+                    }
+                  ]
+                },
+                {
+                  "type": "SENTENCE_WRITING",
+                  "stage": "independent_practice",
+                  "title": "Write a sentence",
+                  "instructions": "Look at the picture. Write a sentence about it.",
+                  "instructionsSpeech": "Look at the picture. Write a sentence about it.",
+                  "questions": [
+                    {
+                      "type": "SENTENCE_WRITING",
+                      "prompt": "Write about the fish.",
+                      "promptSpeech": "Look at the picture. Write a sentence about the fish.",
+                      "explanation": "For example: The fish can swim fast.",
+                      "content": {
+                        "mode": "free",
+                        "emoji": "🐟",
+                        "wordBank": [
+                          "fish",
+                          "swim",
+                          "can",
+                          "the",
+                          "big",
+                          "blue"
+                        ]
+                      },
+                      "answer": {
+                        "rubric": "kg3-sentence",
+                        "ideas": [
+                          [
+                            "fish",
+                            "fishes"
+                          ]
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "code": "kg3-write-sentences",
+              "title": "Write a sentence",
+              "childTitle": "Write a sentence",
+              "description": "Write your own sentence about a picture.",
+              "emoji": "🖊️",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Now you are the writer! Look at the picture and write a sentence about it.",
+              "activities": [
+                {
+                  "type": "SENTENCE_WRITING",
+                  "stage": "independent_practice",
+                  "title": "Write a sentence",
+                  "instructions": "Look at the picture. Write a sentence about it.",
+                  "instructionsSpeech": "Look at the picture. Write a sentence about it.",
+                  "questions": [
+                    {
+                      "type": "SENTENCE_WRITING",
+                      "prompt": "Write about the dog.",
+                      "promptSpeech": "Look at the picture. Write a sentence about the dog.",
+                      "explanation": "For example: The dog is happy.",
+                      "content": {
+                        "mode": "free",
+                        "emoji": "🐶",
+                        "wordBank": [
+                          "dog",
+                          "big",
+                          "runs",
+                          "is",
+                          "happy",
+                          "the"
+                        ]
+                      },
+                      "answer": {
+                        "rubric": "kg3-sentence",
+                        "ideas": [
+                          [
+                            "dog",
+                            "dogs",
+                            "puppy"
+                          ]
+                        ]
+                      }
+                    },
+                    {
+                      "type": "SENTENCE_WRITING",
+                      "prompt": "Write about the apple.",
+                      "promptSpeech": "Look at the picture. Write a sentence about the apple.",
+                      "explanation": "For example: I see a red apple.",
+                      "content": {
+                        "mode": "free",
+                        "emoji": "🍎",
+                        "wordBank": [
+                          "apple",
+                          "red",
+                          "an",
+                          "is",
+                          "yummy",
+                          "eat"
+                        ],
+                        "starter": "I see"
+                      },
+                      "answer": {
+                        "rubric": "kg3-sentence",
+                        "ideas": [
+                          [
+                            "apple",
+                            "apples"
+                          ]
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "prerequisites": [
+            "kg3-capitals"
+          ]
+        },
+        {
+          "code": "kg3-guided-writing",
+          "dimension": "WRITING",
+          "title": "Guided writing",
+          "childTitle": "Writing with help",
+          "description": "Finishes sentence starters about a topic.",
+          "writingSkill": "GUIDED_WRITING",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg3-guided-1",
+              "title": "My pet",
+              "childTitle": "My pet",
+              "description": "Finish three sentences about a pet.",
+              "emoji": "🐾",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Let's write about a pet. Use the sentence starters to help you.",
+              "activities": [
+                {
+                  "type": "GUIDED_WRITING",
+                  "stage": "independent_practice",
+                  "title": "Write about a pet",
+                  "instructions": "Finish each sentence about a pet.",
+                  "instructionsSpeech": "Finish each sentence about a pet.",
+                  "questions": [
+                    {
+                      "type": "GUIDED_WRITING",
+                      "prompt": "Write about a pet.",
+                      "promptSpeech": "Write about a pet. Finish each sentence.",
+                      "explanation": "For example: I have a cat. It is soft. I like to play with it.",
+                      "content": {
+                        "layout": "frames",
+                        "topic": "My pet",
+                        "frames": [
+                          {
+                            "starter": "I have a"
+                          },
+                          {
+                            "starter": "It is"
+                          },
+                          {
+                            "starter": "I like to"
+                          }
+                        ],
+                        "wordBank": [
+                          "cat",
+                          "dog",
+                          "fish",
+                          "big",
+                          "small",
+                          "soft",
+                          "play",
+                          "run",
+                          "pet"
+                        ],
+                        "checklist": [
+                          "Tell about your pet"
+                        ],
+                        "emoji": "🐾"
+                      },
+                      "answer": {
+                        "rubric": "kg3-frames",
+                        "ideas": [
+                          [
+                            "cat",
+                            "dog",
+                            "fish",
+                            "bird",
+                            "rabbit",
+                            "pet",
+                            "hamster",
+                            "turtle",
+                            "puppy",
+                            "kitten",
+                            "mouse",
+                            "frog"
+                          ]
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "prerequisites": [
+            "kg3-sentence-writing"
+          ]
+        }
+      ]
     }
   ]
 }

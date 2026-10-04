@@ -15,7 +15,7 @@ function correctResponse(type: string, a: AnswerSpec): QuestionResponse {
   if ("pairs" in a) return { pairs: a.pairs };
   if ("acceptedSequences" in a) return { sequence: a.acceptedSequences[0] };
   if ("correct" in a) return { sequence: a.correct };
-  if ("minCoverage" in a) return { coverage: a.minCoverage + 10 };
+  if (!("accepted" in a)) throw new Error("no simple answer for this question type");
   if (type === "WORD_BUILDER") return { sequence: [...a.accepted[0]] };
   return { value: a.accepted[0] };
 }

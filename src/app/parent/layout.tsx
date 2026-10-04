@@ -12,6 +12,7 @@ const NAV: NavItem[] = [
   { href: "/parent/words", label: "Words" },
   { href: "/parent/spelling", label: "Spelling" },
   { href: "/parent/reading", label: "Reading" },
+  { href: "/parent/writing", label: "Writing" },
   { href: "/parent/settings", label: "Settings" },
 ];
 

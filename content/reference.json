@@ -337,7 +337,8 @@
     {
       "code": "TRACING",
       "name": "Tracing",
-      "isScored": true
+      "isScored": true,
+      "description": "Trace a letter or shape with a finger, mouse or pen; checked against the glyph's reference strokes with a tolerance (not handwriting recognition)."
     },
     {
       "code": "BLEND_SOUNDS",
@@ -379,6 +380,84 @@
       "code": "ORDER_EVENTS",
       "name": "Put events in order",
       "description": "Put the events of a story in the order they happened.",
+      "isScored": true
+    },
+    {
+      "code": "LETTER_WRITING",
+      "name": "Letter writing",
+      "description": "Write a letter from a model or from memory, with a finger, mouse or pen (judged against the reference strokes).",
+      "isScored": true
+    },
+    {
+      "code": "SOUND_TO_LETTER",
+      "name": "Sound to letter",
+      "description": "Hear a sound, write the letter or letters that spell it (handwritten or typed).",
+      "isScored": true
+    },
+    {
+      "code": "WORD_COPY",
+      "name": "Word copy",
+      "description": "Look at a word and copy it.",
+      "isScored": true
+    },
+    {
+      "code": "WORD_BUILD",
+      "name": "Word build",
+      "description": "Build a word from letter or sound tiles.",
+      "isScored": true
+    },
+    {
+      "code": "IMAGE_TO_WORD",
+      "name": "Picture to word",
+      "description": "Look at a picture and write its word.",
+      "isScored": true
+    },
+    {
+      "code": "SENTENCE_BUILD",
+      "name": "Sentence build",
+      "description": "Put word tiles in order to make a sentence.",
+      "isScored": true
+    },
+    {
+      "code": "SENTENCE_COPY",
+      "name": "Sentence copy",
+      "description": "Copy a sentence with the right words, spaces, capital letter and end mark.",
+      "isScored": true
+    },
+    {
+      "code": "SENTENCE_COMPLETION",
+      "name": "Sentence completion",
+      "description": "Write the missing word of a sentence.",
+      "isScored": true
+    },
+    {
+      "code": "SENTENCE_WRITING",
+      "name": "Sentence writing",
+      "description": "Write a sentence: copy one, finish one, or write your own (open writing is checked by a rubric, never by matching a stored sentence).",
+      "isScored": true
+    },
+    {
+      "code": "GUIDED_WRITING",
+      "name": "Guided writing",
+      "description": "Write with sentence frames, a word bank and a checklist; checked by a rubric.",
+      "isScored": true
+    },
+    {
+      "code": "STORY_ORDER_WRITING",
+      "name": "Story order writing",
+      "description": "Put story pictures in order and write a sentence for each; the order and each sentence's idea are checked.",
+      "isScored": true
+    },
+    {
+      "code": "PARAGRAPH_WRITING",
+      "name": "Paragraph writing",
+      "description": "Write a short paragraph (topic sentence, details, ending); checked by a rubric.",
+      "isScored": true
+    },
+    {
+      "code": "EDIT_AND_CORRECT",
+      "name": "Edit and correct",
+      "description": "Find and fix the mistakes in a sentence (capitals, end marks, spelling, words).",
       "isScored": true
     }
   ],

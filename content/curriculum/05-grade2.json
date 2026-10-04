@@ -1841,6 +1841,636 @@
           "lessons": []
         }
       ]
+    },
+    {
+      "code": "g2-writing",
+      "subject": "WRITING",
+      "title": "Writing Paragraphs",
+      "emoji": "📄",
+      "description": "Write paragraphs, facts and stories, then edit and revise.",
+      "skills": [
+        {
+          "code": "g2-paragraph",
+          "dimension": "WRITING",
+          "title": "Paragraph writing",
+          "childTitle": "Write a paragraph",
+          "description": "Writes a paragraph with a topic sentence, details and an ending.",
+          "writingSkill": "PARAGRAPH_WRITING",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g2-paragraph-1",
+              "title": "My best day",
+              "childTitle": "My best day",
+              "description": "Write a paragraph about your best day.",
+              "emoji": "📄",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Let's write a paragraph. Start with a topic sentence, add details, and finish with an ending.",
+              "activities": [
+                {
+                  "type": "PARAGRAPH_WRITING",
+                  "stage": "independent_practice",
+                  "title": "Write a paragraph",
+                  "instructions": "Write a sentence or two in each part.",
+                  "instructionsSpeech": "Write a sentence or two in each part.",
+                  "questions": [
+                    {
+                      "type": "GUIDED_WRITING",
+                      "prompt": "Write about your best day.",
+                      "promptSpeech": "Write a paragraph about your best day. Start with a topic sentence, add details, and finish with an ending.",
+                      "explanation": "For example: My best day was my birthday. We went to the zoo. My grandma came too. It was the best day ever!",
+                      "content": {
+                        "layout": "paragraph",
+                        "topic": "My best day",
+                        "frames": [
+                          {
+                            "label": "Topic sentence",
+                            "placeholder": "What was your best day?"
+                          },
+                          {
+                            "label": "Detail",
+                            "placeholder": "What did you do?"
+                          },
+                          {
+                            "label": "Detail",
+                            "placeholder": "Who was with you?"
+                          },
+                          {
+                            "label": "Ending",
+                            "placeholder": "How did you feel?"
+                          }
+                        ],
+                        "wordBank": [
+                          "first",
+                          "then",
+                          "because",
+                          "happy",
+                          "excited",
+                          "favorite",
+                          "family",
+                          "friends"
+                        ],
+                        "checklist": [
+                          "A topic sentence",
+                          "Two details",
+                          "An ending"
+                        ],
+                        "emoji": "🌟"
+                      },
+                      "answer": {
+                        "rubric": "g2-paragraph",
+                        "ideas": [
+                          [
+                            "day",
+                            "fun",
+                            "played",
+                            "went",
+                            "saw",
+                            "family",
+                            "friend",
+                            "friends",
+                            "park",
+                            "beach",
+                            "birthday",
+                            "school",
+                            "trip",
+                            "zoo",
+                            "party"
+                          ]
+                        ],
+                        "topic": [
+                          [
+                            "day",
+                            "best",
+                            "favorite",
+                            "favourite"
+                          ]
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "g2-informational",
+          "dimension": "WRITING",
+          "title": "Informational writing",
+          "childTitle": "Tell facts",
+          "description": "Writes facts about a topic with a topic sentence.",
+          "writingSkill": "INFORMATIONAL_WRITING",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g2-facts-dogs",
+              "title": "Facts about dogs",
+              "childTitle": "Facts about dogs",
+              "description": "Write true facts about dogs.",
+              "emoji": "🐕",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Facts are true things we know. Let's write facts about dogs!",
+              "activities": [
+                {
+                  "type": "GUIDED_WRITING",
+                  "stage": "independent_practice",
+                  "title": "Write facts",
+                  "instructions": "Write facts about dogs. Start with a topic sentence.",
+                  "instructionsSpeech": "Write facts about dogs. Start with a topic sentence.",
+                  "questions": [
+                    {
+                      "type": "GUIDED_WRITING",
+                      "prompt": "Write facts about dogs.",
+                      "promptSpeech": "Write facts about dogs. Start with a sentence that names your topic.",
+                      "explanation": "For example: Dogs are great pets. Dogs can bark and smell very well. Dogs need food, water and walks.",
+                      "content": {
+                        "layout": "free",
+                        "topic": "Facts about dogs",
+                        "frames": [
+                          {
+                            "label": "My facts",
+                            "placeholder": "Dogs are… Dogs can… Dogs need…"
+                          }
+                        ],
+                        "wordBank": [
+                          "dogs",
+                          "bark",
+                          "walk",
+                          "food",
+                          "water",
+                          "pets",
+                          "tails",
+                          "smell"
+                        ],
+                        "checklist": [
+                          "A topic sentence",
+                          "Three facts"
+                        ],
+                        "emoji": "🐕"
+                      },
+                      "answer": {
+                        "rubric": "g2-informational",
+                        "ideas": [
+                          [
+                            "dog",
+                            "dogs",
+                            "puppy",
+                            "puppies"
+                          ]
+                        ],
+                        "topic": [
+                          [
+                            "dog",
+                            "dogs"
+                          ]
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "prerequisites": [
+            "g2-paragraph"
+          ]
+        },
+        {
+          "code": "g2-narrative",
+          "dimension": "WRITING",
+          "title": "Story writing",
+          "childTitle": "Write a story",
+          "description": "Writes a short story with a beginning, a middle and an end.",
+          "writingSkill": "NARRATIVE_WRITING",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g2-story-writing",
+              "title": "A day at the beach",
+              "childTitle": "Write a story",
+              "description": "Write a story with a beginning, a middle and an end.",
+              "emoji": "🏖️",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Stories have a beginning, a middle and an end. Let's write a story about the beach!",
+              "activities": [
+                {
+                  "type": "GUIDED_WRITING",
+                  "stage": "independent_practice",
+                  "title": "Write a story",
+                  "instructions": "Write the beginning, the middle and the end.",
+                  "instructionsSpeech": "Write the beginning, the middle and the end.",
+                  "questions": [
+                    {
+                      "type": "GUIDED_WRITING",
+                      "prompt": "Write a story about a day at the beach.",
+                      "promptSpeech": "Write a story about a day at the beach. Tell the beginning, the middle, and the end.",
+                      "explanation": "For example: First, Sam went to the beach. Then he found a big shell. Next, a wave took his hat. At the end, his dad found it.",
+                      "content": {
+                        "layout": "paragraph",
+                        "topic": "A day at the beach",
+                        "frames": [
+                          {
+                            "label": "Beginning",
+                            "placeholder": "Who went to the beach?"
+                          },
+                          {
+                            "label": "Middle",
+                            "placeholder": "What happened?"
+                          },
+                          {
+                            "label": "End",
+                            "placeholder": "How did it end?"
+                          }
+                        ],
+                        "wordBank": [
+                          "first",
+                          "then",
+                          "next",
+                          "at the end",
+                          "sand",
+                          "waves",
+                          "shells",
+                          "swim"
+                        ],
+                        "checklist": [
+                          "Beginning",
+                          "Middle",
+                          "End"
+                        ],
+                        "emoji": "🏖️"
+                      },
+                      "answer": {
+                        "rubric": "g2-narrative",
+                        "ideas": [
+                          [
+                            "beach",
+                            "sea",
+                            "sand",
+                            "water",
+                            "waves",
+                            "swim",
+                            "swam",
+                            "shell",
+                            "shells",
+                            "sun",
+                            "ocean"
+                          ]
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "prerequisites": [
+            "g2-paragraph"
+          ]
+        },
+        {
+          "code": "g2-story-sequence",
+          "dimension": "WRITING",
+          "title": "Story sequence writing",
+          "childTitle": "Retell the story",
+          "description": "Retells a story in order, joined with sequence words.",
+          "writingSkill": "STORY_SEQUENCE_WRITING",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g2-story-storm",
+              "title": "The storm at the farm",
+              "childTitle": "Retell the story",
+              "description": "Put the pictures in order and retell the story with order words.",
+              "emoji": "⛈️",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Read the story. Then put the pictures in order and retell it. Use words like first, next, then and at the end.",
+              "activities": [
+                {
+                  "type": "STORY_ORDER_WRITING",
+                  "stage": "independent_practice",
+                  "title": "Retell the story",
+                  "instructions": "Put the pictures in order. Write a sentence for each one.",
+                  "instructionsSpeech": "Put the pictures in order. Write a sentence for each one.",
+                  "questions": [
+                    {
+                      "type": "STORY_ORDER_WRITING",
+                      "prompt": "Put the pictures in order, then retell",
+                      "promptSpeech": "Put the pictures in order. Then retell the story. Use words like first, next, then, and at the end.",
+                      "explanation": "First a storm came. Next Mara helped get the horses into the barn. Then the rain poured down. At the end, Mara felt proud.",
+                      "content": {
+                        "events": [
+                          {
+                            "id": "horses",
+                            "emoji": "🐴",
+                            "label": "Into the barn"
+                          },
+                          {
+                            "id": "proud",
+                            "emoji": "😊",
+                            "label": "Mara is proud"
+                          },
+                          {
+                            "id": "storm",
+                            "emoji": "🌩️",
+                            "label": "A storm comes"
+                          },
+                          {
+                            "id": "rain",
+                            "emoji": "🌧️",
+                            "label": "The rain pours"
+                          }
+                        ],
+                        "connect": true,
+                        "wordBank": [
+                          "first",
+                          "next",
+                          "then",
+                          "at the end",
+                          "storm",
+                          "horses",
+                          "barn",
+                          "proud"
+                        ],
+                        "starters": []
+                      },
+                      "answer": {
+                        "acceptedSequences": [
+                          [
+                            "storm",
+                            "horses",
+                            "rain",
+                            "proud"
+                          ]
+                        ],
+                        "events": {
+                          "storm": [
+                            [
+                              "storm",
+                              "dark",
+                              "wind",
+                              "sky",
+                              "thunder",
+                              "howl"
+                            ]
+                          ],
+                          "horses": [
+                            [
+                              "horse",
+                              "horses",
+                              "barn"
+                            ]
+                          ],
+                          "rain": [
+                            [
+                              "rain",
+                              "rained",
+                              "pours",
+                              "poured",
+                              "raining",
+                              "safe"
+                            ]
+                          ],
+                          "proud": [
+                            [
+                              "proud",
+                              "happy",
+                              "helpful",
+                              "smiled",
+                              "smile",
+                              "scared"
+                            ]
+                          ]
+                        },
+                        "rubric": "g2-story"
+                      }
+                    }
+                  ],
+                  "config": {
+                    "story": "the-storm-at-the-farm"
+                  }
+                }
+              ]
+            }
+          ],
+          "prerequisites": [
+            "g2-paragraph"
+          ]
+        },
+        {
+          "code": "g2-editing",
+          "dimension": "WRITING",
+          "title": "Editing",
+          "childTitle": "Fix mistakes",
+          "description": "Fixes capital letters, end marks, spelling and words that do not sound right.",
+          "writingSkill": "EDITING",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g2-edit-1",
+              "title": "Fix the mistakes",
+              "childTitle": "Fix mistakes",
+              "description": "Find and fix capitals, end marks, spellings and words.",
+              "emoji": "🔍",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Editors look for mistakes. Check the capitals, the end marks, the spelling, and every word.",
+              "activities": [
+                {
+                  "type": "EDIT_AND_CORRECT",
+                  "stage": "independent_practice",
+                  "title": "Fix the mistakes",
+                  "instructions": "Find every mistake. Write the sentence the right way.",
+                  "instructionsSpeech": "Find every mistake. Write the sentence the right way.",
+                  "questions": [
+                    {
+                      "type": "EDIT_AND_CORRECT",
+                      "prompt": "Fix the sentence",
+                      "promptSpeech": "Find the mistakes. Write the sentence the right way.",
+                      "explanation": "My friend and I went to the park. Capital M and I, friend has an i, and a full stop.",
+                      "content": {
+                        "text": "my frend and i went to the park",
+                        "focus": [
+                          "capitalization",
+                          "spelling",
+                          "punctuation"
+                        ],
+                        "emoji": "🧒"
+                      },
+                      "answer": {
+                        "accepted": [
+                          "My friend and I went to the park.",
+                          "My friend and I went to the park!"
+                        ]
+                      }
+                    },
+                    {
+                      "type": "EDIT_AND_CORRECT",
+                      "prompt": "Fix the sentence",
+                      "promptSpeech": "Find the mistakes. Write the sentence the right way.",
+                      "explanation": "The dogs are barking. More than one dog: are, not is.",
+                      "content": {
+                        "text": "The dogs is barking.",
+                        "focus": [
+                          "grammar"
+                        ],
+                        "emoji": "🐕"
+                      },
+                      "answer": {
+                        "accepted": [
+                          "The dogs are barking.",
+                          "The dogs are barking!"
+                        ]
+                      }
+                    },
+                    {
+                      "type": "EDIT_AND_CORRECT",
+                      "prompt": "Fix the sentence",
+                      "promptSpeech": "Find the mistakes. Write the sentence the right way.",
+                      "explanation": "We saw a big bird. Capital W, saw has no e, and a full stop.",
+                      "content": {
+                        "text": "we sawe a big bird",
+                        "focus": [
+                          "capitalization",
+                          "spelling",
+                          "punctuation"
+                        ],
+                        "emoji": "🦅"
+                      },
+                      "answer": {
+                        "accepted": [
+                          "We saw a big bird.",
+                          "We saw a big bird!"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "prerequisites": [
+            "g2-paragraph"
+          ]
+        },
+        {
+          "code": "g2-revising",
+          "dimension": "WRITING",
+          "title": "Revising",
+          "childTitle": "Make it better",
+          "description": "Revises a plain sentence with describing words and detail.",
+          "writingSkill": "REVISING",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "g2-revise-1",
+              "title": "Make it better",
+              "childTitle": "Make it better",
+              "description": "Make plain sentences better with describing words and detail.",
+              "emoji": "✨",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Writers make their sentences better. Add describing words, or tell where, when or how.",
+              "activities": [
+                {
+                  "type": "SENTENCE_WRITING",
+                  "stage": "independent_practice",
+                  "title": "Make it better",
+                  "instructions": "Make the sentence better. Add describing words and detail.",
+                  "instructionsSpeech": "Make the sentence better. Add describing words and detail.",
+                  "questions": [
+                    {
+                      "type": "SENTENCE_WRITING",
+                      "prompt": "Make it better: The cat sat.",
+                      "promptSpeech": "Make this sentence better: The cat sat. Add describing words, and tell where.",
+                      "explanation": "For example: The fluffy orange cat sat on the warm rug.",
+                      "content": {
+                        "mode": "free",
+                        "emoji": "🐈",
+                        "wordBank": [
+                          "fluffy",
+                          "sleepy",
+                          "orange",
+                          "on",
+                          "the",
+                          "warm",
+                          "rug",
+                          "window"
+                        ],
+                        "hint": "Add describing words, and tell where."
+                      },
+                      "answer": {
+                        "rubric": "g2-revise",
+                        "ideas": [
+                          [
+                            "cat",
+                            "cats",
+                            "kitten"
+                          ]
+                        ],
+                        "ownWords": "The cat sat."
+                      }
+                    },
+                    {
+                      "type": "SENTENCE_WRITING",
+                      "prompt": "Make it better: I ate food.",
+                      "promptSpeech": "Make this sentence better: I ate food. Tell what, when, and how it tasted.",
+                      "explanation": "For example: I ate a hot, cheesy pizza for dinner.",
+                      "content": {
+                        "mode": "free",
+                        "emoji": "🍽️",
+                        "wordBank": [
+                          "yummy",
+                          "hot",
+                          "lunch",
+                          "for",
+                          "dinner",
+                          "sweet",
+                          "crunchy"
+                        ],
+                        "hint": "Tell what you ate, when, and how it tasted."
+                      },
+                      "answer": {
+                        "rubric": "g2-revise",
+                        "ideas": [
+                          [
+                            "ate",
+                            "eat",
+                            "eating",
+                            "food",
+                            "lunch",
+                            "dinner",
+                            "breakfast",
+                            "pizza",
+                            "apple",
+                            "sandwich",
+                            "soup",
+                            "rice"
+                          ]
+                        ],
+                        "ownWords": "I ate food."
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "prerequisites": [
+            "g2-editing"
+          ]
+        }
+      ]
     }
   ]
 }

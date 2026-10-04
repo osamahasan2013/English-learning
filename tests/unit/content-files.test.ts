@@ -35,7 +35,10 @@ import {
 
 // Validates the shipped curriculum without a database, so a content mistake fails CI
 // before it reaches an import.
+import { resolveWritingSettings, WRITING_QUESTION_TYPES } from "@/lib/learning/writing-evaluation";
+import { compileAnswer, correctWritingResponse, glyphByCode, wrongWritingResponse } from "../writing-helpers";
 const dir = path.resolve(__dirname, "../../content");
+// Writing (Phase 8): rubric answers are compiled as the importer does.
 const json = (file: string) => JSON.parse(readFileSync(path.join(dir, file), "utf8"));
 
 const reference = referenceFileSchema.parse(json("reference.json"));
@@ -259,7 +262,10 @@ describe("shipped content", () => {
                 const seed = `${lesson.code}-a${a + 1}-q${i + 1}`;
                 try {
                   const e = expand(q, seed, file.level);
-                  const parsed = parseQuestion(e.type, e.content, e.answer);
+                  const answer = WRITING_QUESTION_TYPES.has(e.type)
+                    ? compileAnswer(e.type, e.answer, file.level)
+                    : e.answer;
+                  const parsed = parseQuestion(e.type, e.content, answer);
                   if (!parsed.ok) problems.push(`${seed}: ${parsed.error}`);
                   // Sounds are spoken through tokens, never as letters a voice misreads.
                   const speech = speechProblems(
@@ -441,19 +447,46 @@ describe("shipped content", () => {
               for (const [i, q] of activity.questions.entries()) {
                 const seed = `${lesson.code}-a${a + 1}-q${i + 1}`;
                 const e = expand(q, seed, file.level);
-                const parsed = parseQuestion(e.type, e.content, e.answer);
-                if (!parsed.ok || parsed.question.answer === null) continue;
+                const isWriting = WRITING_QUESTION_TYPES.has(e.type);
+                const authored = isWriting ? compileAnswer(e.type, e.answer, file.level) : e.answer;
+                const parsed = parseQuestion(e.type, e.content, authored);
+                if (!parsed.ok) {
+                  if (isWriting) problems.push(`${seed}: ${parsed.error}`);
+                  continue;
+                }
+                if (parsed.question.answer === null) continue;
                 const answer = parsed.question.answer as AnswerSpec;
-                const right = correctResponse(e.type, answer);
-                const key = await buildAnswerKey(e.type, answer, seed);
+                const content = parsed.question.content as Record<string, unknown>;
+                const glyph = e.type === "TRACING" ? glyphByCode(String(content.glyph)) : null;
+                if (e.type === "TRACING" && !glyph)
+                  problems.push(`${seed}: unknown glyph ${String(content.glyph)}`);
+                const writing = isWriting
+                  ? { content, glyph, settings: resolveWritingSettings(file.level, rules.writing) }
+                  : undefined;
+                const right = isWriting
+                  ? correctWritingResponse(e.type, content, answer as Record<string, unknown>, glyph)
+                  : correctResponse(e.type, answer);
+                const key = await buildAnswerKey(e.type, answer, seed, writing);
                 const device = await checkWithKey(e.type, key, right);
-                if (!device.isCorrect || !evaluateResponse(e.type, answer, right).isCorrect)
-                  problems.push(`${seed}: correct answer not accepted`);
+                const server = evaluateResponse(e.type, answer, right, writing);
+                if (!device.isCorrect || !server.isCorrect)
+                  problems.push(
+                    `${seed}: correct answer not accepted (device ${device.isCorrect}, server ${server.isCorrect})`,
+                  );
+                if (isWriting) {
+                  const wrong = wrongWritingResponse(e.type, content);
+                  const deviceWrong = await checkWithKey(e.type, key, wrong);
+                  const serverWrong = evaluateResponse(e.type, answer, wrong, writing);
+                  if (deviceWrong.isCorrect || serverWrong.isCorrect)
+                    problems.push(`${seed}: a wrong answer was accepted`);
+                  if (deviceWrong.almost !== serverWrong.almost)
+                    problems.push(`${seed}: device and server disagree on almost`);
+                }
                 const { answer: _answer, ...client } = parsed.question;
                 if (JSON.stringify(client).includes(JSON.stringify(answer)))
                   problems.push(`${seed}: answer leaks`);
                 const reveal = await revealAnswer(client as ClientQuestion, key);
-                if (!reveal && !["WORD_BUILDER", "SPELLING"].includes(e.type))
+                if (!reveal && !["WORD_BUILDER", "SPELLING"].includes(e.type) && !isWriting)
                   problems.push(`${seed}: cannot reveal`);
                 count++;
               }
@@ -463,10 +496,10 @@ describe("shipped content", () => {
 });
 
 function correctResponse(type: string, answer: AnswerSpec): QuestionResponse {
-  if ("minCoverage" in answer) return { coverage: answer.minCoverage };
   if ("pairs" in answer) return { pairs: answer.pairs };
   if ("acceptedSequences" in answer) return { sequence: answer.acceptedSequences[0] };
   if ("correct" in answer) return { sequence: answer.correct };
+  if (!("accepted" in answer)) throw new Error(`no simple answer for ${type}`);
   if (type === "WORD_BUILDER") return { sequence: [...answer.accepted[0]] };
   return { value: answer.accepted[0] };
 }

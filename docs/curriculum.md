@@ -64,17 +64,24 @@ Original, age-appropriate content covering KG1–Grade 2:
   55 comprehension questions, 16 reading lessons (`reading` blueprint, 146 questions) in a
   "Story time" unit per level, and 118 high-frequency words added to the bank
   (`content/words/reading-words.csv`) so every text links to bank words (444 word links).
+- Writing (Phase 8): 25 writing skills, 69 handwriting glyphs (a–z, A–Z, 0–9 and 7
+  pre-writing shapes, ball-and-stick print) and 13 rubric templates (`content/writing.json`);
+  one WRITING unit per level with 25 lessons and 67 questions: tracing shapes and letters,
+  big and small letters (trace, copy, from memory, from the sound), sound to letters, copying
+  and writing words, word and sentence building, sentence copying and completion, own
+  sentences (rubrics), guided frames, a short paragraph, story sequence writing, describing,
+  facts, a short story, editing and revising (see [writing-engine.md](writing-engine.md)).
 - 96 lessons / 784 activities / 1,113 lesson questions across 25 units — including 21
   vocabulary sets (407 questions) — the "Find My Level" placement (8 stages) and the
   **Phonics Check** (12 areas, 24 questions).
 
-| Level   | Phonics (Phase 4)                                                                                                                                           | Other units                                                                                   |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| KG1     | One lesson per letter a–z (name, sound, beginning sound, picture sort, find the letter); upper/lower case, letter names, beginning sounds                   | Trace letters; words: animals, colors, my body, family                                        |
-| KG2     | Short a, i, o, u, e CVC lessons (blend, segment, middle sound, build, read, spell); segmenting; ending sounds; word families                                | Word games, sight words, sentence order, CVC check; words: food, toys, on the go, more colors |
-| KG3     | Digraphs sh, ch (+ sh/ch sort), th (two sounds), ph, wh; magic e with a, i, o                                                                               | Tricky words; words: clothes, my house, nature                                                |
-| Grade 1 | ck, ng; consonant blends; vowel teams ee, ea (two sounds), ai/ay, oa, ow (two sounds), oo (two sounds), ou, oi/oy; ar, or, er/ir/ur, air; -ing, -ed, -s/-es | Read and match; words: feelings, jobs, weather, my day, describing, school                    |
-| Grade 2 | -tion/-sion, suffixes (-ment, -ness, -ful, -less), multisyllable words                                                                                      | Story time; words: technology, my town, sports, places                                        |
+| Level   | Phonics (Phase 4)                                                                                                                                           | Other units                                                                                                 |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| KG1     | One lesson per letter a–z (name, sound, beginning sound, picture sort, find the letter); upper/lower case, letter names, beginning sounds                   | Writing: lines and circles, trace letters, big letters, copy words; words: animals, colors, my body, family |
+| KG2     | Short a, i, o, u, e CVC lessons (blend, segment, middle sound, build, read, spell); segmenting; ending sounds; word families                                | Word games, sight words, sentence order, CVC check; words: food, toys, on the go, more colors               |
+| KG3     | Digraphs sh, ch (+ sh/ch sort), th (two sounds), ph, wh; magic e with a, i, o                                                                               | Tricky words; words: clothes, my house, nature                                                              |
+| Grade 1 | ck, ng; consonant blends; vowel teams ee, ea (two sounds), ai/ay, oa, ow (two sounds), oo (two sounds), ou, oi/oy; ar, or, er/ir/ur, air; -ing, -ed, -s/-es | Read and match; words: feelings, jobs, weather, my day, describing, school                                  |
+| Grade 2 | -tion/-sion, suffixes (-ment, -ness, -ful, -less), multisyllable words                                                                                      | Story time; words: technology, my town, sports, places                                                      |
 
 **Multiple pronunciations are modelled explicitly**, never flattened into one rule: TH
 (thumb/this), EA (leaf/bread), OW (snow/cow), OO (moon/book), -ED (jumped/played/painted),
@@ -231,6 +238,32 @@ read again. The importer:
 | KG3     | 8          | 8         | 8                  | 70%+               | listening   | sentence  |
 | Grade 1 | 6          | 16        | 12                 | 60%+               | reading     | sentence  |
 | Grade 2 | 8          | 28        | 16                 | 50%+               | reading     | sentence  |
+
+### Writing content (Phase 8)
+
+`content/writing.json` holds the writing skills (`code`, strand, `minLevel`–`maxLevel`),
+the glyphs (`code`, kind, character, case, name, `strokes` in a 0–100 box in writing order
+— the first point of a stroke is where it starts — `guide`, `tolerance`, `completion`,
+formation tip and words) and the rubric templates (criteria, plus how a question's
+`ideas`, `topic` and `ownWords` become criteria). Writing lessons live in a `WRITING`
+unit; tag each skill with `writingSkill`. Useful templates: `trace_letter` (letter, case,
+mode trace / copy / write, `cue: "sound"`), `copy_word`, `picture_word`, `write_sound`
+(pattern, `alsoAccept`), `copy_sentence`. Open writing names its rubric in the answer:
+
+```json
+{
+  "type": "SENTENCE_WRITING",
+  "prompt": "Write about the dog.",
+  "content": { "mode": "free", "emoji": "🐶", "wordBank": ["dog", "runs"] },
+  "answer": { "rubric": "kg3-sentence", "ideas": [["dog", "dogs", "puppy"]] }
+}
+```
+
+Story writing lists its events (stored out of order), the accepted order and each event's
+keyword groups: `"answer": { "acceptedSequences": [["soil", "water"]], "events": { "soil":
+[["soil", "seed"]], "water": [["water", "rain"]] }, "rubric": "g1-story" }`. The importer
+refuses unknown glyphs and rubrics, rubrics outside their levels and malformed strokes, and
+flags doubtful glyphs (a first stroke starting at the bottom, very loose thresholds).
 
 ### Spelling targets (CSV)
 

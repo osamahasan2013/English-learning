@@ -6,7 +6,9 @@ import type { RENDERABLE_QUESTION_TYPES } from "./supported-types";
 import { BlendSoundsRenderer } from "./renderers/blend-sounds";
 import { ChoiceRenderer } from "./renderers/choice";
 import { DragDropRenderer } from "./renderers/drag-drop";
+import { EditAndCorrectRenderer } from "./renderers/edit-correct";
 import { FindPatternRenderer } from "./renderers/find-pattern";
+import { GuidedWritingRenderer } from "./renderers/guided-writing";
 import { IntroRenderer } from "./renderers/intro";
 import { MatchRenderer } from "./renderers/match";
 import { MissingLetterRenderer } from "./renderers/missing-letter";
@@ -17,8 +19,10 @@ import { SelectAllRenderer } from "./renderers/select-all";
 import { SegmentWordRenderer } from "./renderers/segment-word";
 import { SentenceDictationRenderer } from "./renderers/sentence-dictation";
 import { SentenceBuilderRenderer } from "./renderers/sentence-builder";
+import { SentenceWritingRenderer } from "./renderers/sentence-writing";
 import { SortRenderer } from "./renderers/sort";
 import { SpellingRenderer } from "./renderers/spelling";
+import { StoryOrderWritingRenderer } from "./renderers/story-writing";
 import { TracingRenderer } from "./renderers/tracing";
 import { WordBuilderRenderer } from "./renderers/word-builder";
 import { WritingRenderer } from "./renderers/writing";
@@ -52,4 +56,8 @@ export const ACTIVITY_RENDERERS: Record<(typeof RENDERABLE_QUESTION_TYPES)[numbe
   READ_PASSAGE: ReadPassageRenderer,
   SELECT_ALL: SelectAllRenderer,
   ORDER_EVENTS: OrderEventsRenderer,
+  SENTENCE_WRITING: SentenceWritingRenderer,
+  GUIDED_WRITING: GuidedWritingRenderer,
+  STORY_ORDER_WRITING: StoryOrderWritingRenderer,
+  EDIT_AND_CORRECT: EditAndCorrectRenderer,
 };

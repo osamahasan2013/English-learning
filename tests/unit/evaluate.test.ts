@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { resolveWritingSettings } from "@/lib/learning/writing-evaluation";
+import { glyphByCode, strokesOf } from "../writing-helpers";
 import { classifySpellingError, evaluateResponse } from "@/lib/learning/evaluate";
 
 describe("evaluateResponse", () => {
@@ -148,15 +150,35 @@ describe("evaluateResponse", () => {
     expect(evaluateResponse("WRITING", answer, { value: "I can see a horse." }).isCorrect).toBe(false);
   });
 
-  it("scores tracing on coverage, with a near miss margin", () => {
-    const answer = { minCoverage: 60 };
-    expect(evaluateResponse("TRACING", answer, { coverage: 72 }).isCorrect).toBe(true);
-    expect(evaluateResponse("TRACING", answer, { coverage: 50 })).toEqual({
-      isCorrect: false,
-      almost: true,
-      errorType: "incomplete_trace",
-    });
-    expect(evaluateResponse("TRACING", answer, { coverage: 10 }).almost).toBe(false);
+  it("judges handwriting against the glyph, never a score sent by the device", () => {
+    const glyph = glyphByCode("lower-l")!;
+    const writing = {
+      content: { glyph: "lower-l", mode: "trace", showStart: true },
+      glyph,
+      settings: resolveWritingSettings("KG1"),
+    };
+    const answer = { trace: true as const };
+    expect(evaluateResponse("TRACING", answer, { strokes: strokesOf(glyph) }, writing).isCorrect).toBe(true);
+    const off = evaluateResponse(
+      "TRACING",
+      answer,
+      {
+        strokes: [
+          [
+            [90, 10],
+            [90, 40],
+          ],
+        ],
+      },
+      writing,
+    );
+    expect(off).toMatchObject({ isCorrect: false });
+    expect(off.writing?.kind).toBe("trace");
+    // A legacy coverage claim, or no writing context, is never accepted.
+    expect(evaluateResponse("TRACING", answer, { coverage: 100 } as never, writing).isCorrect).toBe(false);
+    expect(evaluateResponse("TRACING", answer, { strokes: strokesOf(glyph) }).errorType).toBe(
+      "invalid_response",
+    );
   });
 });
 

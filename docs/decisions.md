@@ -480,3 +480,78 @@ authors keep their own difficulty and a large disagreement is flagged.
 **Consequences.** Level appropriateness is enforced before content reaches a child.
 Changing a level's limits or the difficulty weights is a `learning_rules` override, not a
 code change. A text kind or skill is added as a row.
+
+## ADR-039 — Writing is reference data plus the learning engine
+
+**Context.** Phase 8 asks for handwriting, word, sentence and composition writing from KG1
+to Grade 2 without parallel lesson, attempt, progress, mastery, review, audio or sync
+systems.
+
+**Decision.** Writing lessons are ordinary lessons in `WRITING` units; a written answer is
+an ordinary `activity_attempts` row (strokes or text kept as written in `response`) with
+the server's `writing_analysis`; mastery is `skill_mastery` of curriculum skills tagged
+with a writing skill (`writing_skill_types`, with a level range enforced at import);
+letters formed wrongly become ordinary review items (`writing:<glyph>`). Word writing
+reuses `SPELLING` (copy / picture / grapheme modes), so a written word is also word and
+spelling evidence. New tables are reference data only: writing skill types, handwriting
+glyphs and rubric templates. Fifteen writing activity types map onto five question types
+and four reused ones (activity type = configuration, ADR-020).
+
+**Consequences.** Writing appears in the daily plan, the review queue, lesson stars and
+the parent dashboard with no new pipeline. A new writing activity is a configuration and
+a renderer, not a new system.
+
+## ADR-040 — Handwriting is judged against reference strokes on the server
+
+**Context.** The Phase 3 tracer let the device send a coverage percentage, which a modified
+client could forge, and judged only area coverage (no order, no direction; a scribble over
+the letter scored well).
+
+**Decision.** Glyphs store ordered strokes in a 0–100 box (first point = start, point order
+= direction), guide lines, tolerance and completion; components never hold stroke data.
+The device records strokes (integer points, ≤ 12 × 80) and sends them; `evaluateTrace`
+runs on the device (feedback) and the server (the stored verdict). It uses
+direction-aware coverage (ink must run along a stroke), precision, a balance check for
+mirrored letters, alignment for writing from memory, and measures stroke order, direction
+and start point, which count only where a level requires them. A typed alternative is
+judged as the letter and recorded as typed. Legacy `{ coverage }` answers are rejected.
+
+**Consequences.** Progress cannot be forged with a number; wrong letters, mirror letters
+and scribbles fail; children are not over-penalised at KG1 (looser tolerances by level).
+It is shape matching, not recognition: a superset letter (o for c) passes. Tuning is data
+(per-glyph tolerance/completion, per-level scales).
+
+## ADR-041 — Open writing is checked by deterministic rubrics, never by matching a sentence
+
+**Context.** "Write a sentence about the dog" has endless right answers; exact matching
+would mark good writing wrong, and AI grading is out of scope.
+
+**Decision.** Rubric templates (`writing_rubrics`, admin-only) list criteria — words,
+sentences, required ideas as keyword groups (any form), sequence words, whole sentences,
+not copied, topic sentence, ending, boxes filled, mechanics, spelling — each critical or a
+tip; mechanics follow the level (`off` / `hint` / `required`). The importer compiles the
+template plus the question's own keywords into the question's server-only answer. The
+device key holds the criteria with every keyword replaced by salted digests of its
+phrases, so it decides like the server without the words. Spelling in open writing is
+only suggested for words close to a known word (never critical); run-together words are a
+tip, because a word list cannot split unknown words reliably.
+
+**Consequences.** Many different good sentences are accepted; the checks are explainable
+to children ("Start each sentence with a capital letter") and to parents, who see the
+child's own words next to them. The checks do not understand meaning, and the report says
+so.
+
+## ADR-042 — Writing mechanics and scaffolding are per-level rules
+
+**Context.** A capital letter or a full stop should not make a KG1 child "wrong", but should
+be required by Grade 1; scaffolding should shrink as children grow.
+
+**Decision.** `rules.writing.levels` sets, per level, capitalization / punctuation / spacing
+/ spelling to off, hint or required, tracing tolerance and completion scales, stroke-order
+enforcement and the shortest sentence. The lesson loader puts the resolved settings on the
+step (for the checklist and the key); the server resolves them from the question's level.
+Scaffolding is content: sentence frames with starters (KG3), labelled paragraph parts
+(Grade 1), a free box (Grade 2), word banks that an activity can hide.
+
+**Consequences.** Raising expectations for a level is a `learning_rules` override. The same
+question behaves appropriately wherever a level uses it.

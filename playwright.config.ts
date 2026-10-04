@@ -25,12 +25,12 @@ export default defineConfig({
     { name: "tablet", use: { ...devices["iPad (gen 7) landscape"], browserName: "chromium" } },
     {
       name: "mobile",
-      testMatch: /(phonics|vertical-slice|vocabulary|spelling|reading)\.spec\.ts/,
+      testMatch: /(phonics|vertical-slice|vocabulary|spelling|reading|writing)\.spec\.ts/,
       use: { ...devices["Pixel 7"], browserName: "chromium" },
     },
     {
       name: "desktop",
-      testMatch: /(phonics|vertical-slice|vocabulary|spelling|reading)\.spec\.ts/,
+      testMatch: /(phonics|vertical-slice|vocabulary|spelling|reading|writing)\.spec\.ts/,
       use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } },
     },
   ],

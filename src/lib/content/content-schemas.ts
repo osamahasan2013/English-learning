@@ -145,6 +145,7 @@ export const referenceFileSchema = z.object({
           "vocabulary",
           "spelling",
           "reading",
+          "writing",
         ]),
         description: z.string().default(""),
         config: z.record(z.unknown()),
@@ -639,6 +640,8 @@ const skillInputSchema = z.object({
   // The reading skill this skill teaches (reading_skill_types), so comprehension answers
   // build ordinary skill mastery.
   readingSkill: code.optional(),
+  // The writing skill this skill teaches (writing_skill_types), within its level range.
+  writingSkill: code.optional(),
   status,
   lessons: z.array(lessonInputSchema).default([]),
 });

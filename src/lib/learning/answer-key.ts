@@ -9,10 +9,18 @@ import {
   canonicalValue,
   isAlmostShare,
   sortedLetters,
-  TRACE_ALMOST_MARGIN,
 } from "@/lib/learning/evaluate";
 import { sha256 } from "@/lib/learning/sha256";
 import { punctuationCheck } from "@/lib/learning/spelling";
+import type { TraceGlyph } from "@/lib/learning/tracing";
+import type { WritingAnalysis } from "@/lib/learning/writing";
+import { WRITING_QUESTION_TYPES, type WritingSettings } from "@/lib/learning/writing-evaluation";
+import {
+  buildWritingKey,
+  checkWritingKey,
+  WRITING_KEY_MODES,
+  type WritingKey,
+} from "@/lib/learning/writing-key";
 
 // Correct answers never travel to the device in plain text. The lesson loader turns each
 // question's answer into an AnswerKey of salted SHA-256 digests of the answer's canonical
@@ -30,10 +38,12 @@ export type AnswerKey =
   | { mode: "pairs"; salt: string; digests: string[] }
   // Select-all: one digest per right option; `count` of them.
   | { mode: "set"; salt: string; digests: string[]; count: number }
-  // Tracing is scored on coverage; the threshold is not a secret.
-  | { mode: "coverage"; minCoverage: number };
+  // Writing (writing-key.ts): handwriting, copying, finishing and correcting sentences,
+  // open-ended writing by rubric, story writing.
+  | WritingKey;
 
-export type KeyCheck = { isCorrect: boolean; almost: boolean };
+// `writing`: what the device found in a written answer (the checklist shown after it).
+export type KeyCheck = { isCorrect: boolean; almost: boolean; writing?: WritingAnalysis | null };
 
 const DIGEST_HEX_LENGTH = 24;
 
@@ -50,13 +60,30 @@ export async function digest(salt: string, value: string): Promise<string> {
 
 const LETTER_TYPES = new Set(["WORD_BUILDER", "SPELLING"]);
 
+// `writing`: the writing question types also need the question's content, the glyph for
+// handwriting and the level's writing settings.
 export async function buildAnswerKey(
   questionType: string,
   answer: AnswerSpec | null,
   salt: string,
+  writing?: { content: unknown; glyph?: TraceGlyph | null; settings: WritingSettings },
 ): Promise<AnswerKey> {
   if (answer === null) return { mode: "none" };
-  if ("minCoverage" in answer) return { mode: "coverage", minCoverage: answer.minCoverage };
+  if (WRITING_QUESTION_TYPES.has(questionType)) {
+    if (!writing) return { mode: "none" };
+    const key = await buildWritingKey({
+      questionType,
+      answer,
+      content: writing.content,
+      salt,
+      hash: (v) => digest(salt, v),
+      glyph: writing.glyph,
+      settings: writing.settings,
+    });
+    return key ?? { mode: "none" };
+  }
+  if (!("pairs" in answer || "correct" in answer || "acceptedSequences" in answer || "accepted" in answer))
+    return { mode: "none" };
   const hash = (values: string[]) => Promise.all([...new Set(values)].map((v) => digest(salt, v)));
   if ("pairs" in answer) return { mode: "pairs", salt, digests: await hash(answer.pairs.map(canonicalPair)) };
   if ("correct" in answer) {
@@ -90,16 +117,13 @@ export async function checkWithKey(
   response: QuestionResponse,
 ): Promise<KeyCheck> {
   const no = { isCorrect: false, almost: false };
+  if (WRITING_KEY_MODES.has(key.mode)) {
+    const w = key as WritingKey;
+    return checkWritingKey(w, response, (v) => digest("salt" in w ? w.salt : "", v));
+  }
   switch (key.mode) {
     case "none":
       return { isCorrect: true, almost: false };
-    case "coverage":
-      if (!("coverage" in response)) return no;
-      return {
-        isCorrect: response.coverage >= key.minCoverage,
-        almost:
-          response.coverage < key.minCoverage && response.coverage >= key.minCoverage - TRACE_ALMOST_MARGIN,
-      };
     case "pairs": {
       if (!("pairs" in response)) return no;
       const given = [...new Set(response.pairs.map(canonicalPair))];
@@ -145,6 +169,7 @@ export async function checkWithKey(
       return { isCorrect: false, almost };
     }
   }
+  return no;
 }
 
 // What to show once the tries are used up. Recovered by testing what is on screen
@@ -160,7 +185,12 @@ export type Reveal = {
 
 export async function revealAnswer(question: ClientQuestion, key: AnswerKey): Promise<Reveal | null> {
   if (key.mode === "none") return null;
-  if (key.mode === "coverage") return question.type === "TRACING" ? { text: question.content.letter } : null;
+  if (key.mode === "trace") return { text: key.glyph.character };
+  // A sentence to copy is on screen; other writing has no single answer to show (the
+  // explanation and the checklist say what to do).
+  if (key.mode === "copy")
+    return question.type === "SENTENCE_WRITING" ? { text: question.content.model ?? "" } : null;
+  if (WRITING_KEY_MODES.has(key.mode)) return null;
   const matches = async (value: string) => {
     if (key.mode === "values") return key.digests.includes(await digest(key.salt, value));
     return false;

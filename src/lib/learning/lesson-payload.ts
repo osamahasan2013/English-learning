@@ -6,6 +6,8 @@ import type { PlayerRules, ScoringRules } from "@/lib/learning/rules";
 import type { SpellingStepSettings } from "@/lib/learning/spelling";
 import type { SoundTable } from "@/lib/audio/pronunciation";
 import type { ReadingParagraph } from "@/lib/learning/reading";
+import type { TraceGlyph } from "@/lib/learning/tracing";
+import type { WritingSettings } from "@/lib/learning/writing-evaluation";
 
 // What the lesson player receives: everything needed to run a lesson offline, already
 // validated. Built on the server by src/lib/server/lesson-loader.ts and cached on the
@@ -81,6 +83,11 @@ export type LessonStep = {
   // Spelling steps: the activity, input method, hints and dictation replays, resolved on the
   // server from the activity config and the level's spelling rules. null otherwise.
   spelling: SpellingStepSettings | null;
+  // Handwriting steps: the reference glyph (strokes, guide lines, tolerance), loaded only
+  // for the letters this lesson uses. Writing steps: the level's writing expectations
+  // (which mechanics are required, hinted or off). Optional: older cached lessons lack them.
+  glyph?: TraceGlyph | null;
+  writing?: WritingSettings | null;
 };
 
 export type LessonPayload = {

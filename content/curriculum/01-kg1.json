@@ -1551,7 +1551,7 @@
       "subject": "WRITING",
       "title": "Writing Letters",
       "emoji": "✍️",
-      "description": "Trace letters and match big and small letters.",
+      "description": "Trace lines, circles and letters, then write big and small letters and copy words.",
       "skills": [
         {
           "code": "kg1-letter-formation",
@@ -1586,43 +1586,25 @@
                   },
                   "questions": [
                     {
-                      "type": "TRACING",
-                      "prompt": "Trace a",
-                      "promptSpeech": "Trace the letter a.",
-                      "explanation": "Start at the top and follow the shape of a.",
-                      "content": {
-                        "letter": "a",
-                        "speech": "Trace the letter a."
-                      },
-                      "answer": {
-                        "minCoverage": 60
-                      }
+                      "template": "trace_letter",
+                      "letter": "a",
+                      "mode": "trace",
+                      "case": "lower",
+                      "explanation": "Small a: round like c, then up and down."
                     },
                     {
-                      "type": "TRACING",
-                      "prompt": "Trace c",
-                      "promptSpeech": "Trace the letter c.",
-                      "explanation": "Start at the top and follow the shape of c.",
-                      "content": {
-                        "letter": "c",
-                        "speech": "Trace the letter c."
-                      },
-                      "answer": {
-                        "minCoverage": 60
-                      }
+                      "template": "trace_letter",
+                      "letter": "c",
+                      "mode": "trace",
+                      "case": "lower",
+                      "explanation": "Small c: start near the top and curve round."
                     },
                     {
-                      "type": "TRACING",
-                      "prompt": "Trace t",
-                      "promptSpeech": "Trace the letter t.",
-                      "explanation": "Start at the top and follow the shape of t.",
-                      "content": {
-                        "letter": "t",
-                        "speech": "Trace the letter t."
-                      },
-                      "answer": {
-                        "minCoverage": 60
-                      }
+                      "template": "trace_letter",
+                      "letter": "t",
+                      "mode": "trace",
+                      "case": "lower",
+                      "explanation": "Small t: a line down, then across."
                     }
                   ]
                 },
@@ -1753,6 +1735,226 @@
                 }
               ]
             }
+          ],
+          "writingSkill": "LETTER_FORMATION"
+        },
+        {
+          "code": "kg1-pre-writing",
+          "dimension": "WRITING",
+          "title": "Pre-writing strokes",
+          "childTitle": "Lines and circles",
+          "description": "Traces lines, circles and zigzags, starting at the dot.",
+          "writingSkill": "LETTER_TRACING",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg1-trace-shapes",
+              "title": "Lines and circles",
+              "childTitle": "Lines and circles",
+              "description": "Trace lines, a circle and a zigzag with your finger.",
+              "emoji": "〰️",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Let's get our fingers ready to write! Start at the green dot and follow the line.",
+              "activities": [
+                {
+                  "type": "TRACING",
+                  "stage": "guided_practice",
+                  "title": "Trace the shapes",
+                  "instructions": "Start at the green dot. Follow the line.",
+                  "instructionsSpeech": "Start at the green dot. Follow the line.",
+                  "questions": [
+                    {
+                      "type": "TRACING",
+                      "prompt": "Trace the line down",
+                      "promptSpeech": "Start at the top. Trace the line down.",
+                      "explanation": "Lines down start at the top.",
+                      "content": {
+                        "glyph": "shape-line-down",
+                        "mode": "trace",
+                        "speech": "Start at the top. Trace the line down.",
+                        "showStart": true
+                      },
+                      "answer": {
+                        "trace": true
+                      }
+                    },
+                    {
+                      "type": "TRACING",
+                      "prompt": "Trace the line across",
+                      "promptSpeech": "Trace the line across.",
+                      "explanation": "Lines across go from left to right.",
+                      "content": {
+                        "glyph": "shape-line-across",
+                        "mode": "trace",
+                        "speech": "Trace the line across.",
+                        "showStart": true
+                      },
+                      "answer": {
+                        "trace": true
+                      }
+                    },
+                    {
+                      "type": "TRACING",
+                      "prompt": "Trace the circle",
+                      "promptSpeech": "Start at the top. Trace the circle all the way round.",
+                      "explanation": "A circle goes all the way round, back to the start.",
+                      "content": {
+                        "glyph": "shape-circle",
+                        "mode": "trace",
+                        "speech": "Start at the top. Trace the circle all the way round.",
+                        "showStart": true
+                      },
+                      "answer": {
+                        "trace": true
+                      }
+                    },
+                    {
+                      "type": "TRACING",
+                      "prompt": "Trace the zigzag",
+                      "promptSpeech": "Trace the zigzag: down, up, down, up.",
+                      "explanation": "A zigzag goes down and up, down and up.",
+                      "content": {
+                        "glyph": "shape-zigzag",
+                        "mode": "trace",
+                        "speech": "Trace the zigzag: down, up, down, up.",
+                        "showStart": true
+                      },
+                      "answer": {
+                        "trace": true
+                      }
+                    }
+                  ],
+                  "config": {
+                    "showModel": true
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "code": "kg1-big-letters",
+          "dimension": "WRITING",
+          "title": "Writing capital letters",
+          "childTitle": "Big letters",
+          "description": "Traces and copies capital letters.",
+          "writingSkill": "UPPERCASE_WRITING",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg1-big-letters-1",
+              "title": "Big A, T and L",
+              "childTitle": "Big letters",
+              "description": "Trace big letters, then write one on your own.",
+              "emoji": "🔠",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Big letters are capital letters. Let's trace them!",
+              "activities": [
+                {
+                  "type": "TRACING",
+                  "stage": "guided_practice",
+                  "title": "Trace big letters",
+                  "instructions": "Trace the big letter. Start at the green dot.",
+                  "instructionsSpeech": "Trace the big letter. Start at the green dot.",
+                  "questions": [
+                    {
+                      "template": "trace_letter",
+                      "letter": "a",
+                      "mode": "trace",
+                      "case": "upper",
+                      "explanation": "Big A: slant down, slant down, then across."
+                    },
+                    {
+                      "template": "trace_letter",
+                      "letter": "t",
+                      "mode": "trace",
+                      "case": "upper",
+                      "explanation": "Big T: a line down, then across the top."
+                    }
+                  ],
+                  "config": {
+                    "showModel": true
+                  }
+                },
+                {
+                  "type": "LETTER_WRITING",
+                  "stage": "independent_practice",
+                  "title": "Write a big letter",
+                  "instructions": "Look at the letter. Write it in the box.",
+                  "instructionsSpeech": "Look at the letter. Write it in the box.",
+                  "questions": [
+                    {
+                      "template": "trace_letter",
+                      "letter": "l",
+                      "mode": "copy",
+                      "case": "upper",
+                      "explanation": "Big L: a line down, then across."
+                    }
+                  ],
+                  "config": {
+                    "showModel": true
+                  }
+                }
+              ]
+            }
+          ],
+          "prerequisites": [
+            "kg1-letter-formation"
+          ]
+        },
+        {
+          "code": "kg1-copy-words",
+          "dimension": "WRITING",
+          "title": "Copying words",
+          "childTitle": "Copy words",
+          "description": "Copies short words letter by letter.",
+          "writingSkill": "WORD_COPYING",
+          "difficulty": 1,
+          "importance": 3,
+          "lessons": [
+            {
+              "code": "kg1-copy-words-1",
+              "title": "Copy cat, dog and sun",
+              "childTitle": "Copy words",
+              "description": "Look at a word, then copy it.",
+              "emoji": "📋",
+              "minutes": 5,
+              "difficulty": 1,
+              "introSpeech": "Look at the word. Then make it yourself, letter by letter.",
+              "activities": [
+                {
+                  "type": "WORD_COPY",
+                  "stage": "guided_practice",
+                  "title": "Copy the word",
+                  "instructions": "Look at the word. Copy it.",
+                  "instructionsSpeech": "Look at the word. Copy it.",
+                  "questions": [
+                    {
+                      "template": "copy_word",
+                      "word": "cat",
+                      "explanation": "cat: c, a, t."
+                    },
+                    {
+                      "template": "copy_word",
+                      "word": "dog",
+                      "explanation": "dog: d, o, g."
+                    },
+                    {
+                      "template": "copy_word",
+                      "word": "sun",
+                      "explanation": "sun: s, u, n."
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "prerequisites": [
+            "kg1-letter-formation"
           ]
         }
       ]

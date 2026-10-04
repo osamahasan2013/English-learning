@@ -1,4 +1,11 @@
 import type { AnswerSpec, QuestionResponse } from "@/lib/content/question-schemas";
+import type { WritingAnalysis, WritingErrorType } from "@/lib/learning/writing";
+import {
+  evaluateWritingQuestion,
+  WRITING_QUESTION_TYPES,
+  type TraceErrorType,
+  type WritingContext,
+} from "@/lib/learning/writing-evaluation";
 import {
   analyzeSentence,
   analyzeSpelling,
@@ -19,6 +26,8 @@ export type EvaluationResult = {
   almost: boolean;
   // Coarse, parent-meaningful error category; null when correct.
   errorType: ErrorType | null;
+  // Writing questions: what was checked and found (stored as writing_analysis).
+  writing?: WritingAnalysis | null;
 };
 
 export type ErrorType =
@@ -39,7 +48,10 @@ export type ErrorType =
   | "missed_choice"
   | "invalid_response"
   // Spelling answers are classified by the spelling engine (spelling.ts).
-  | SpellingErrorType;
+  | SpellingErrorType
+  // Writing answers (writing.ts, tracing.ts).
+  | WritingErrorType
+  | TraceErrorType;
 
 export function normalizeText(value: string) {
   return value.normalize("NFKC").toLowerCase().replace(/[‘’]/g, "'").replace(/\s+/g, " ").trim();
@@ -65,8 +77,6 @@ export const PAIR_TYPES = new Set(["MATCH", "SORT"]);
 const LETTER_TYPES = new Set(["WORD_BUILDER", "SPELLING"]);
 // A near miss needs at least this share of parts right (pairs, blanks, tokens).
 export const ALMOST_SHARE = 0.5;
-// Tracing within this many coverage points of the target counts as "almost".
-export const TRACE_ALMOST_MARGIN = 15;
 
 // ---- Canonical forms (shared with answer-key.ts) --------------------------------------
 
@@ -117,20 +127,25 @@ export function isAlmostShare(right: number, total: number) {
 const correct: EvaluationResult = { isCorrect: true, almost: false, errorType: null };
 const invalid: EvaluationResult = { isCorrect: false, almost: false, errorType: "invalid_response" };
 
+// `writing`: the question's content and the level's writing settings, needed by the writing
+// question types (handwriting is judged against its glyph, open-ended writing by its
+// rubric). Without it a writing answer cannot be judged and counts as invalid.
 export function evaluateResponse(
   questionType: string,
   answer: AnswerSpec | null,
   response: QuestionResponse,
+  writing?: WritingContext,
 ): EvaluationResult {
   if (answer === null) return correct;
 
-  if ("minCoverage" in answer) {
-    if (!("coverage" in response)) return invalid;
-    if (response.coverage >= answer.minCoverage) return correct;
+  if (WRITING_QUESTION_TYPES.has(questionType)) {
+    if (!writing) return invalid;
+    const result = evaluateWritingQuestion(questionType, answer, response, writing);
     return {
-      isCorrect: false,
-      almost: response.coverage >= answer.minCoverage - TRACE_ALMOST_MARGIN,
-      errorType: "incomplete_trace",
+      isCorrect: result.isCorrect,
+      almost: result.almost,
+      errorType: result.errorType,
+      writing: result.analysis,
     };
   }
 
@@ -182,6 +197,7 @@ export function evaluateResponse(
     };
   }
 
+  if (!("accepted" in answer)) return invalid;
   const value = canonicalValue(questionType, response);
   if (value === null) return invalid;
   const accepted = canonicalAccepted(questionType, answer.accepted);

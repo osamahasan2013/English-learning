@@ -68,8 +68,6 @@ const cases: [string, AnswerSpec, QuestionResponse][] = [
     },
   ],
   ["WRITING", { accepted: ["I can see a bird."] }, { value: "i can see a bird" }],
-  ["TRACING", { minCoverage: 60 }, { coverage: 55 }],
-  ["TRACING", { minCoverage: 60 }, { coverage: 80 }],
   ["MISSING_LETTER", { accepted: ["a"] }, { sequence: ["a"] }],
 ];
 
