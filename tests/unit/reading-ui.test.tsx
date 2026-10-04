@@ -93,21 +93,25 @@ describe("PassageView", () => {
     expect(document.querySelector('[data-sentence="0"]')!.className).not.toMatch(/underline/);
   });
 
-  it("for the youngest readers, Slow points at each word as it is said", async () => {
+  it("points at the words being said when the level reads in phrases or word by word", async () => {
     const { speak, calls } = fakeSpeak();
     render(<PassageView passage={passage} speak={speak} highlight="word" />);
     await userEvent.click(screen.getByRole("button", { name: /Slow/ }));
-    expect(calls[0].requests.slice(0, 4).map((r) => [r.text, r.speed])).toEqual([
-      ["I", "slow"],
-      ["see", "slow"],
-      ["a", "slow"],
-      ["cat", "slow"],
+    // Sentences go to the audio service, which reads them in the level's pieces.
+    expect(calls[0].requests.map((r) => [r.text, r.speed, r.intent])).toEqual([
+      ["I see a cat.", "slow", "STORY_READING"],
+      ["The cat is big.", "slow", "STORY_READING"],
+      ["It naps.", "slow", "STORY_READING"],
     ]);
-    act(() => calls[0].options?.onItem?.(3));
-    const cat = within(document.querySelector('[data-sentence="0"]') as HTMLElement).getByRole("button", {
-      name: "cat",
-    });
-    expect(cat.className).toMatch(/bg-primary/);
+    // The service reports the piece being said: "cat" (word 3 of the first sentence).
+    act(() => calls[0].options?.onChunk?.(0, { start: 3, count: 1 }));
+    const first = within(document.querySelector('[data-sentence="0"]') as HTMLElement);
+    expect(first.getByRole("button", { name: "cat" }).className).toMatch(/bg-primary/);
+    expect(first.getByRole("button", { name: "see" }).className).not.toMatch(/bg-primary/);
+    // A piece that is the whole sentence highlights the sentence, no single word.
+    act(() => calls[0].options?.onChunk?.(1, { start: 0, count: 4 }));
+    const second = within(document.querySelector('[data-sentence="1"]') as HTMLElement);
+    expect(second.getByRole("button", { name: "big" }).className).not.toMatch(/bg-primary/);
   });
 
   it("a tapped word is said and reported with its word id", async () => {

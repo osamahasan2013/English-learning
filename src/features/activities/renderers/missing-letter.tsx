@@ -28,7 +28,7 @@ export function MissingLetterRenderer({
       {content.mode === "sound" && content.sound ? (
         <button
           type="button"
-          onClick={() => void speak(content.sound!.sayAs, "slow")}
+          onClick={() => void speak(content.sound!.sayAs, "slow", { intent: "PHONEME" })}
           className="bg-accent-soft text-accent flex min-h-16 items-center gap-2 rounded-2xl px-5 text-2xl font-extrabold shadow-sm"
         >
           <span aria-hidden>🔉</span> /{content.sound.label}/

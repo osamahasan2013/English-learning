@@ -33,7 +33,7 @@ export function SegmentWordRenderer({
 
   function pick(id: string) {
     const sound = byId.get(id)!;
-    void speak(sound.sayAs, "slow");
+    void speak(sound.sayAs, "slow", { intent: "PHONEME" });
     if (locked || count === null || picked.length >= count) return;
     setPicked((p) => [...p, id]);
   }

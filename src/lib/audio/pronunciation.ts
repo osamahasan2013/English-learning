@@ -63,12 +63,12 @@ export function letterToken(letter: string) {
 }
 
 // Tokens are written by the content templates in canonical form ({/SH/}, {@s}); hand-made
-// ones are accepted in any case and with stray spaces ({/sh/}, {/ SH /}, {@S}) and read the
+// ones are accepted in any case and with stray spaces ({/sh/}, { /SH/ }, { @S }) and read the
 // same way, so a typo never turns a sound into its letters.
-const TOKEN = /\{\/\s*([A-Za-z]{1,3}(?:\s+[A-Za-z]{1,3})*)\s*\/\}|\{@\s*([A-Za-z])\s*\}/g;
+const TOKEN = /\{\s*\/\s*([A-Za-z]{1,3}(?:\s+[A-Za-z]{1,3})*)\s*\/\s*\}|\{\s*@\s*([A-Za-z])\s*\}/g;
 // Anything else between braces, or a token that was never closed ("{/S/"), is broken:
 // never read aloud.
-const BROKEN_TOKEN = /\{[^{}]{0,40}\}|\{[@/][^{}\s]*/g;
+const BROKEN_TOKEN = /\{[^{}]{0,40}\}|\{\s*[@/][^{}\s]*/g;
 
 export type SpeechToken = { kind: "sound"; phonemes: string[] } | { kind: "letter"; letter: string };
 type Piece = { kind: "text"; text: string } | SpeechToken;
@@ -214,21 +214,38 @@ function stripUnsafe(text: string) {
   return text.replace(/[A-Za-z]+/g, (w) => (bad.has(w.toLowerCase()) ? "" : w)).replace(/\s{2,}/g, " ");
 }
 
-export type SpeechPart = { kind: "tts"; text: string } | { kind: "asset"; url: string; fallback: string };
+// What a part of speech IS, kept from the token it came from: ordinary words, a phonics
+// sound, or a letter's name. The audio service paces each kind differently, and a sound can
+// never turn into a letter name on the way (they are different parts, resolved
+// differently: resolveSound vs resolveLetter).
+export type SpeechRole = "speech" | "phoneme" | "letter_name";
 
-// Text → the clips and utterances to play, in order. Plain words around tokens join the
-// token's rendering into one utterance (natural phrasing); a recorded clip splits it.
-// Unsafe words left in plain text (content imported before this check existed) are
-// dropped: silence is better than teaching a letter name as a sound.
-export function planSpeech(text: string, table: SoundTable, options: ResolveOptions = {}): SpeechPart[] {
+export type SpeechPart =
+  | { kind: "tts"; text: string; role: SpeechRole }
+  | { kind: "asset"; url: string; fallback: string; role: SpeechRole };
+
+export type PlanOptions = ResolveOptions & {
+  // false: tokens are read inside the surrounding words, as one line (captions, audits).
+  separateTokens?: boolean;
+};
+
+// Text → the clips and utterances to play, in order. Each sound and letter name is a part
+// of its own, so it is never run into the words around it ("gate. {/G/}, {/EY/}, {/T/}.
+// gate." is five parts, not one breath that sounds like "gate g a t gate"). Unsafe words
+// left in plain text (content imported before this check existed) are dropped: silence is
+// better than teaching a letter name as a sound.
+export function planSpeech(text: string, table: SoundTable, options: PlanOptions = {}): SpeechPart[] {
+  const separate = options.separateTokens ?? true;
   const parts: SpeechPart[] = [];
   let buffer = "";
   const flush = () => {
-    const t = buffer
+    let t = buffer
       .replace(/\s+/g, " ")
       .replace(/\s+([,.?!])/g, "$1")
       .trim();
-    if (t && /[A-Za-z0-9]/.test(t)) parts.push({ kind: "tts", text: t });
+    // Punctuation left at the start by a token that was split off (", as in goat").
+    if (separate) t = t.replace(/^[,;:.!?]+\s*/, "");
+    if (t && /[A-Za-z0-9]/.test(t)) parts.push({ kind: "tts", text: t, role: "speech" });
     buffer = "";
   };
   for (const piece of parseSpeech(text)) {
@@ -236,13 +253,17 @@ export function planSpeech(text: string, table: SoundTable, options: ResolveOpti
       buffer += stripUnsafe(piece.text.replace(BROKEN_TOKEN, " "));
       continue;
     }
+    const role: SpeechRole = piece.kind === "sound" ? "phoneme" : "letter_name";
     const r =
       piece.kind === "sound"
         ? resolveSound(piece.phonemes, table, options)
         : resolveLetter(piece.letter, table);
     if (r.assetUrl) {
       flush();
-      parts.push({ kind: "asset", url: r.assetUrl, fallback: r.text });
+      parts.push({ kind: "asset", url: r.assetUrl, fallback: r.text, role });
+    } else if (separate) {
+      flush();
+      if (r.text) parts.push({ kind: "tts", text: r.text, role });
     } else buffer += r.text;
   }
   flush();
@@ -264,7 +285,7 @@ export function unresolvedTokens(text: string, table: SoundTable, options: Resol
 
 // The whole thing as synthesis would say it (no clips): for tests, audits and captions.
 export function speakableText(text: string, table: SoundTable, options: ResolveOptions = {}) {
-  return planSpeech(text, stripAssets(table), options)
+  return planSpeech(text, stripAssets(table), { ...options, separateTokens: false })
     .map((p) => (p.kind === "tts" ? p.text : p.fallback))
     .join(" ");
 }

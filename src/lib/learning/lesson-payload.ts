@@ -4,6 +4,7 @@ import type { AnswerKey } from "@/lib/learning/answer-key";
 import type { FeedbackMessage } from "@/lib/learning/feedback";
 import type { PlayerRules, ScoringRules } from "@/lib/learning/rules";
 import type { SpellingStepSettings } from "@/lib/learning/spelling";
+import type { AudioPacing } from "@/lib/audio/pacing";
 import type { SoundTable } from "@/lib/audio/pronunciation";
 import type { ReadingParagraph } from "@/lib/learning/reading";
 import type { TraceGlyph } from "@/lib/learning/tracing";
@@ -128,5 +129,8 @@ export type LessonPayload = {
   sounds?: SoundTable;
   feedback: FeedbackMessage[];
   rules: { player: PlayerRules; scoring: ScoringRules };
+  // How fast and in what pieces speech is read at the lesson's level (absent in lessons
+  // cached before Phase 8.2: the default level's pacing is used).
+  audioPacing?: AudioPacing;
   loadedAt: string;
 };

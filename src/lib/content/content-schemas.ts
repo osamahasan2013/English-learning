@@ -146,6 +146,7 @@ export const referenceFileSchema = z.object({
           "spelling",
           "reading",
           "writing",
+          "audio",
         ]),
         description: z.string().default(""),
         config: z.record(z.unknown()),
@@ -256,8 +257,13 @@ export const phonicsFileSchema = z.object({
       uppercase: z.string().regex(/^[A-Z]{1,2}$/).optional(),
       letterName: z.string().max(20).default(""),
       letterNameSayAs: z.string().max(40).default(""),
-      // Recorded audio in Supabase Storage (optional; speech synthesis is the fallback).
+      // Recorded audio in Supabase Storage (optional; speech synthesis is the fallback): the
+      // pattern's main SOUND, and for letters a separate recording of the letter's NAME.
       audio: z.string().regex(/^audio\/[a-z0-9/_-]+\.(mp3|m4a|ogg|wav)$/, "audio must be audio/…/name.mp3").optional(),
+      letterNameAudio: z
+        .string()
+        .regex(/^audio\/[a-z0-9/_-]+\.(mp3|m4a|ogg|wav)$/, "audio must be audio/…/name.mp3")
+        .optional(),
       relations: z
         .array(
           z.object({

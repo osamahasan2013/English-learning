@@ -13,7 +13,11 @@ How the app decides what to say, and why phonics sounds are never spoken as lett
 | **Recorded asset**             | A real audio file in Supabase Storage (`content-audio`)     | `audio/phonemes/s.mp3`   | `audio_assets` (+ `audio_asset_id` on phonemes, pattern sounds, patterns, words) |
 
 A letter's **name** and its **sound** are different things and are stored and spoken
-separately: "This is the letter ess. It says suh, as in sun."
+separately: "This is the letter ess. It says suh, as in sun." A **word** is said whole
+("gate"), never spelled out; **segmenting** (g … ay … t) and **blending** (g … ay … t …
+gate) happen only when an activity asks for them. These are audio intents
+([audio-engine.md](audio-engine.md)): each is paced on its own, and a sound, a letter name
+and a word never run together.
 
 ## Speech tokens
 
@@ -35,6 +39,11 @@ Display text read aloud (a pattern's child explanation, an authored spelling hin
 converted by `speechFromDisplay`: `/k/` becomes the sound token and a letter group such
 as `ch` becomes letter names ("The ch in school says /k/." → "The C aitch in school says
 kuh.").
+
+Tokens are read in any case and with spaces (`{/sh/}`, `{ /SH/ }`, `{@S}`, `{ @s }`) and
+keep their kind; broken ones (`{sound}`, an unclosed `{/S/`) are never spoken. When
+played, each token is a piece of its own (role `phoneme` or `letter_name`) with a short
+silence around it; captions (`speakableText`) still read as one line.
 
 ## The resolver
 
@@ -212,12 +221,19 @@ now `A`.
 
 ## Future: professional recordings
 
-Add files to `content-audio` and reference them from content. Nothing in the components
-changes:
+The data model is ready (Phase 8.2: `audio_assets.content_key` / `version` / `metadata`,
+recording kinds, a separate letter-NAME recording on letter patterns; see
+[audio-engine.md](audio-engine.md)). Add files to `content-audio` and reference them from
+content. Nothing in the components changes:
 
 - a phoneme clip (`phonics.json` → `phonemes[].audio`) — used for every `{/X/}` of that
-  sound, everywhere;
-- a pattern's sound (`patterns[].audio`) — its main sound;
+  sound, everywhere (single sounds /a/ … /z/);
+- a pattern's sound (`patterns[].audio`) — digraphs (/sh/ /ch/ /th/ /ph/ /wh/ /ck/ /ng/),
+  vowel teams (/ai/ /ay/ /ee/ /ea/ /oa/ /ow/ /oo/ /ou/ /oi/ /oy/), r-controlled vowels
+  (/ar/ /er/ /ir/ /or/ /ur/) and endings (-ing, -ed, -s, -es, -tion, -sion, -ment, -ness,
+  -ful, -less);
+- a letter's NAME (`patterns[].letterNameAudio`, letters only) — never the same clip as
+  its sound;
 - a word (`audio` column in the words CSV) — Word Explorer and dictation.
 
 Priority order: the short vowels and /aʊ/ /ʊ/ (no synthesis possible), then all

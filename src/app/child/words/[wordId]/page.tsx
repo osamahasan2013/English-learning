@@ -47,7 +47,7 @@ export default async function WordExplorerPage(props: PageProps<"/child/words/[w
             <h2 id="the-word" className="text-6xl font-extrabold tracking-wide uppercase">
               {word.word}
             </h2>
-            <ListenTo text={word.speech} assetUrl={word.audioUrl} />
+            <ListenTo text={word.speech} assetUrl={word.audioUrl} intent="WORD" />
             <div className="flex flex-wrap items-center gap-3">
               <SaveWordButton wordId={word.id} word={word.word} saved={progress.saved} />
               {progress.status !== "NOT_STARTED" ? <Stars count={wordStars(progress.status)} /> : null}
@@ -61,7 +61,7 @@ export default async function WordExplorerPage(props: PageProps<"/child/words/[w
               <span aria-hidden>💡 </span>Meaning
             </h3>
             <p className="text-2xl">{word.meaning}</p>
-            <ListenTo text={word.meaning} />
+            <ListenTo text={word.meaning} intent="SENTENCE" />
           </section>
         ) : null}
 
@@ -73,7 +73,7 @@ export default async function WordExplorerPage(props: PageProps<"/child/words/[w
             <p className="text-2xl">
               {example.emoji ? <span aria-hidden>{example.emoji} </span> : null}“{example.text}”
             </p>
-            <ListenTo text={example.text} />
+            <ListenTo text={example.text} intent="SENTENCE" />
           </section>
         ) : null}
 

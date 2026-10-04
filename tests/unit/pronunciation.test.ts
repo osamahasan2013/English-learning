@@ -147,20 +147,25 @@ describe("recorded audio", () => {
 
   it("an existing clip takes priority over speech synthesis", () => {
     expect(planSpeech(soundToken(["S"]), withClip)).toEqual([
-      { kind: "asset", url: "https://x/s.mp3", fallback: "suh" },
+      { kind: "asset", url: "https://x/s.mp3", fallback: "suh", role: "phoneme" },
     ]);
   });
 
   it("speech synthesis is used only when there is no clip", () => {
-    expect(planSpeech(soundToken(["M"]), withClip)).toEqual([{ kind: "tts", text: "muh" }]);
+    expect(planSpeech(soundToken(["M"]), withClip)).toEqual([{ kind: "tts", text: "muh", role: "phoneme" }]);
   });
 
-  it("a clip splits a sentence; the words around it are still spoken", () => {
+  it("every sound is a part of its own: never run into the words around it", () => {
     expect(planSpeech("Which one starts with {/S/}, or {/M/}?", withClip)).toEqual([
-      { kind: "tts", text: "Which one starts with" },
-      { kind: "asset", url: "https://x/s.mp3", fallback: "suh" },
-      { kind: "tts", text: ", or muh?" },
+      { kind: "tts", text: "Which one starts with", role: "speech" },
+      { kind: "asset", url: "https://x/s.mp3", fallback: "suh", role: "phoneme" },
+      { kind: "tts", text: "or", role: "speech" },
+      { kind: "tts", text: "muh", role: "phoneme" },
     ]);
+    // Captions still read as one line.
+    expect(speakableText("Which one starts with {/S/}, or {/M/}?", withClip)).toBe(
+      "Which one starts with suh, or muh?",
+    );
   });
 
   it("a later row adds a clip to a sound without replacing its rendering", () => {
@@ -340,4 +345,73 @@ describe("token parsing (every supported form)", () => {
       expect(findUnsafeSpeech(sound)).toEqual([]);
     }
   });
+});
+
+describe("letter name vs sound keep their meaning (Phase 8.2)", () => {
+  const t = buildSoundTable(
+    [
+      { phonemes: ["G"], tts: "guh", quality: "approximate", assetUrl: "https://x/sound-g.mp3" },
+      { phonemes: ["S"], tts: "suh", quality: "approximate" },
+      { phonemes: ["K"], tts: "kuh", quality: "approximate" },
+      { phonemes: ["T"], tts: "tuh", quality: "approximate" },
+    ],
+    [
+      { letter: "g", name: "jee", assetUrl: "https://x/name-g.mp3" },
+      { letter: "s", name: "ess" },
+      { letter: "c", name: "see" },
+      { letter: "t", name: "tee" },
+    ],
+  );
+
+  for (const [letter, phonemes, name, sound] of [
+    ["s", ["S"], "ess", "suh"],
+    ["c", ["K"], "see", "kuh"],
+    ["t", ["T"], "tee", "tuh"],
+  ] as const) {
+    it(`${letter.toUpperCase()} (letter name "${name}") ≠ /${phonemes[0].toLowerCase()}/ (sound "${sound}")`, () => {
+      expect(planSpeech(letterToken(letter), t)).toEqual([{ kind: "tts", text: name, role: "letter_name" }]);
+      expect(planSpeech(soundToken(phonemes), t)).toEqual([{ kind: "tts", text: sound, role: "phoneme" }]);
+    });
+  }
+
+  it("G: the letter's NAME recording and the SOUND recording are never swapped", () => {
+    expect(planSpeech("{@g}", t)).toEqual([
+      { kind: "asset", url: "https://x/name-g.mp3", fallback: "jee", role: "letter_name" },
+    ]);
+    expect(planSpeech("{/G/}", t)).toEqual([
+      { kind: "asset", url: "https://x/sound-g.mp3", fallback: "guh", role: "phoneme" },
+    ]);
+  });
+
+  it("a sound with no safe rendering says nothing — never the letter's name", () => {
+    const none = buildSoundTable(
+      [{ phonemes: ["ZH"], tts: "", quality: "keyword" }],
+      [{ letter: "z", name: "zee" }],
+    );
+    expect(planSpeech("{/ZH/}", none)).toEqual([]);
+    expect(planSpeech("{/zh/}", none)).toEqual([]);
+  });
+
+  it("tokens in any case or spacing keep their kind", () => {
+    for (const token of ["{@s}", "{@S}", "{ @s }", "{@ s}"])
+      expect(planSpeech(token, t), token).toEqual([{ kind: "tts", text: "ess", role: "letter_name" }]);
+    for (const token of ["{/s/}", "{/S/}", "{/ s /}", "{/ S/}"])
+      expect(planSpeech(token, t), token).toEqual([{ kind: "tts", text: "suh", role: "phoneme" }]);
+    for (const broken of ["{/s", "{@", "{sound}", "{/S1/}", "{@ss}"])
+      expect(planSpeech(`Say ${broken} now`, t), broken).toEqual([
+        { kind: "tts", text: "Say now", role: "speech" },
+      ]);
+  });
+});
+
+it("{ /s/ } and { @s } (spaces inside the braces) are tokens too", () => {
+  const t = buildSoundTable(
+    [{ phonemes: ["S"], tts: "suh", quality: "approximate" }],
+    [{ letter: "s", name: "ess" }],
+  );
+  expect(planSpeech("{ /s/ }", t)).toEqual([{ kind: "tts", text: "suh", role: "phoneme" }]);
+  expect(planSpeech("{ @s }", t)).toEqual([{ kind: "tts", text: "ess", role: "letter_name" }]);
+  expect(
+    planSpeech("{ /SH/ }", buildSoundTable([{ phonemes: ["SH"], tts: "shuh", quality: "approximate" }])),
+  ).toEqual([{ kind: "tts", text: "shuh", role: "phoneme" }]);
 });

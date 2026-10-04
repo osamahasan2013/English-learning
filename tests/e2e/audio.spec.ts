@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { DEFAULT_RULES } from "../../src/lib/learning/rules";
 import { addChild, answerQuestion, lessonQuestions, registerParent, startLesson } from "./helpers";
 import {
   clearSpeechLog,
@@ -16,8 +17,15 @@ import {
 // takes an utterance spoken right after it with it; "immediate" models desktop Chrome.
 // Slow, Try again, Read it again, Start again, rapid presses, a tapped word, leaving the
 // screen and an engine with no voices are all checked against what was actually heard.
+// Phase 8.2: speech is paced for the level (KG3 here): Slow reads the same words from the
+// start at the level's slow rate in short phrases, and phonics sounds are separate pieces.
+// These are behaviour checks; they do not prove how a real device's voice sounds.
 
-const SLOW_RATE = 0.6;
+const KG3 = DEFAULT_RULES.audio.levels.KG3;
+const SLOW_RATE = KG3.slow.rate;
+// A slow piece of `text`: its beginning, at the slow rate.
+const slowStartOf = (text: string | undefined) => (e: SpeechLogEntry) =>
+  e.rate === SLOW_RATE && !!text && !!e.text && text.startsWith(e.text);
 const section = (page: Page) => page.locator("section[data-question-id]");
 
 async function eventually(page: Page, check: (log: SpeechLogEntry[]) => boolean, timeout = 6000) {
@@ -70,9 +78,10 @@ for (const [mode, device] of RUNS) {
       // Slow while Listen is still speaking: the same words again, slower.
       t = await now(page);
       await page.getByRole("button", { name: /Slow/ }).first().click();
-      await eventually(page, (log) =>
-        startsAfter(log, t).some((e) => e.text === text && e.rate === SLOW_RATE),
-      );
+      await eventually(page, (log) => {
+        const first = startsAfter(log, t)[0];
+        return !!first && slowStartOf(text)(first);
+      });
 
       // Slow → Slow, then normal → slow → normal → slow pressed quickly.
       t = await now(page);
@@ -84,14 +93,17 @@ for (const [mode, device] of RUNS) {
       await page.waitForTimeout(1500);
       const after = startsAfter(await speechLog(page), t);
       expect(after.length).toBeGreaterThan(0);
-      expect(after.at(-1)!.rate).toBe(SLOW_RATE);
+      // The last press (Slow) wins: its words at the slow reading rate, any sound in them at
+      // the (even slower) phonics rate.
+      expect(after.at(-1)!.rate).toBeLessThanOrEqual(SLOW_RATE);
 
       // Again repeats the last speed.
       t = await now(page);
       await page.getByRole("button", { name: /Again/ }).first().click();
-      await eventually(page, (log) =>
-        startsAfter(log, t).some((e) => e.text === text && e.rate === SLOW_RATE),
-      );
+      await eventually(page, (log) => {
+        const first = startsAfter(log, t)[0];
+        return !!first && slowStartOf(text)(first);
+      });
       expect(overlaps(await speechLog(page))).toEqual([]);
       // A voice was chosen once the voices loaded.
       expect(heard(await speechLog(page)).at(-1)!.voice).toBe("Fake Samantha");
@@ -148,12 +160,13 @@ for (const [mode, device] of RUNS) {
       t = await now(page);
       await story.getByRole("button", { name: /Start again/ }).click();
       await eventually(page, (log) => startsAfter(log, t)[0]?.text === first);
-      // Slow while reading: the first sentence again, slowly.
+      // Slow while reading: the first sentence again from its start, slowly, in short phrases.
       t = await now(page);
       await story.getByRole("button", { name: /Slow/ }).click();
-      await eventually(page, (log) =>
-        startsAfter(log, t).some((e) => e.text === first && e.rate === SLOW_RATE),
-      );
+      await eventually(page, (log) => {
+        const pieces = startsAfter(log, t);
+        return pieces.length > 1 && slowStartOf(first)(pieces[0]) && pieces[0].text !== first;
+      });
       // A tapped word stops the story; the story's buttons are ready to start again.
       t = await now(page);
       await story.getByRole("button", { name: "shell", exact: true }).first().click();
@@ -162,11 +175,14 @@ for (const [mode, device] of RUNS) {
       expect(startsAfter(await speechLog(page), t).map((e) => e.text)).toEqual(["shell"]);
       await expect(story.getByRole("button", { name: /^(🔊 )?Listen$/ })).toBeVisible();
 
-      // Read it again: the story starts over from the first sentence.
+      // Read it again: the story starts over from the first sentence (at the last speed, Slow).
       await story.getByRole("button", { name: /I read it/ }).click();
       t = await now(page);
       await story.getByRole("button", { name: /Read it again/ }).click();
-      await eventually(page, (log) => startsAfter(log, t)[0]?.text === first);
+      await eventually(page, (log) => {
+        const firstPiece = startsAfter(log, t)[0];
+        return !!firstPiece && slowStartOf(first)(firstPiece);
+      });
       expect(overlaps(await speechLog(page))).toEqual([]);
 
       // Leaving the screen while it reads stops it.
@@ -174,7 +190,9 @@ for (const [mode, device] of RUNS) {
       await expect(page).toHaveURL(/\/child\/home/);
       t = await now(page);
       await page.waitForTimeout(1500);
-      expect(startsAfter(await speechLog(page), t).filter((e) => sentences.includes(e.text!))).toEqual([]);
+      expect(
+        startsAfter(await speechLog(page), t).filter((e) => sentences.some((s) => s.includes(e.text!))),
+      ).toEqual([]);
     });
   });
 }
@@ -212,4 +230,77 @@ test("no voices on the device: the child is told, and the lesson still works", a
   await expect(page.getByRole("status").filter({ hasText: /Audio isn.t available right now/ })).toBeVisible();
   await startLesson(page);
   await expect(section(page).first()).toBeVisible();
+});
+
+test("a spelling intro says the word and its sounds as separate pieces, never one run", async ({ page }) => {
+  await childAt(page, "deferred", /Grade 1/);
+  const { lessonId, questions } = await lessonQuestions("g1-spell-magic-e-1");
+  await page.goto(`/child/learn/${lessonId}`);
+  await startLesson(page);
+  for (let guard = 0; guard < 8; guard++) {
+    await section(page).first().waitFor();
+    const q = questions.get((await section(page).getAttribute("data-question-id"))!)!;
+    if (JSON.stringify(q.content).includes("{/G/}")) break;
+    const next = page.getByRole("button", { name: /^Next/ });
+    if (!(await next.isVisible())) await answerQuestion(page, q, true);
+    await next.click();
+  }
+  const pieces = ["gate.", "guh", "eigh", "tuh", "gate."];
+  await eventually(
+    page,
+    (log) =>
+      heard(log)
+        .map((e) => e.text)
+        .join("|")
+        .includes(pieces.join("|")),
+    10_000,
+  );
+  const said = heard(await speechLog(page));
+  const at = said.findIndex((e, i) => pieces.every((p, k) => said[i + k]?.text === p));
+  const run = said.slice(at, at + pieces.length);
+  const gap = DEFAULT_RULES.audio.phonics.tokenGapMs.normal;
+  for (let i = 1; i < run.length; i++) expect(run[i].t - run[i - 1].t).toBeGreaterThanOrEqual(gap);
+  // The sounds at the phonics rate, the word at the reading rate.
+  expect(run[1].rate).toBe(DEFAULT_RULES.audio.phonics.rate.normal);
+  expect(run[0].rate).toBe(DEFAULT_RULES.audio.levels.GRADE1.normal.rate);
+  expect(overlaps(await speechLog(page))).toEqual([]);
+});
+
+test("the grown-ups' audio check: Normal vs Slow, letter name vs sound vs word, timings", async ({
+  page,
+  context,
+}) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await installFakeSpeech(page, "deferred");
+  await registerParent(page, "Audio Check");
+  await page.goto("/parent/settings");
+  await page.getByRole("link", { name: "Open the audio check" }).click();
+  await expect(page.getByRole("heading", { name: "Audio check" })).toBeVisible();
+  await page.getByRole("combobox").selectOption("KG1");
+  const card = (id: string) => page.locator(`[data-check="${id}"]`);
+  const play = async (id: string) => {
+    await clearSpeechLog(page);
+    await card(id)
+      .getByRole("button", { name: /^Play:/ })
+      .click();
+    await expect(card(id).locator("[data-timing]")).toContainText(/heard/, { timeout: 15_000 });
+    return heard(await speechLog(page)).map((e) => e.text);
+  };
+  expect(await play("reading-normal")).toEqual(["The cat is", "at the gate."]);
+  expect(await play("reading-slow")).toEqual(["The", "cat", "is", "at", "the", "gate."]);
+  const ratio = Number((await page.locator("[data-ratio]").innerText()).match(/([\d.]+)×/)![1]);
+  expect(ratio).toBeGreaterThan(1.5);
+  expect(await play("letter-name")).toEqual(["jee"]);
+  expect(await play("phoneme")).toEqual(["guh"]);
+  expect(await play("word")).toEqual(["gate"]);
+  expect(await play("segmenting")).toEqual(["guh", "eigh", "tuh"]);
+  expect(await play("blending")).toEqual(["guh", "eigh", "tuh", "gate"]);
+  await card("reading-slow")
+    .getByRole("button", { name: /Sounds right/ })
+    .click();
+  await page.getByRole("button", { name: /Copy results/ }).click();
+  await expect(page.getByRole("status").filter({ hasText: "Copied." })).toBeVisible();
+  const copied = await page.evaluate(() => navigator.clipboard.readText());
+  expect(copied).toMatch(/KG1 Reading — Slow: pass \| rate 0.62 \| pieces 6/);
+  expect(copied).toMatch(/Slow \/ Normal elapsed: [\d.]+×/);
 });

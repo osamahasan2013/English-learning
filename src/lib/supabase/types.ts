@@ -577,6 +577,9 @@ export type Database = {
           status: Database["public"]["Enums"]["content_status"];
           created_at: string;
           updated_at: string;
+          content_key: string | null;
+          version: number;
+          metadata: Json;
         };
         Insert: {
           id?: string;
@@ -589,6 +592,9 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          content_key?: string | null;
+          version?: number;
+          metadata?: Json;
         };
         Update: {
           id?: string;
@@ -601,6 +607,9 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          content_key?: string | null;
+          version?: number;
+          metadata?: Json;
         };
         Relationships: [
 
@@ -1562,6 +1571,7 @@ export type Database = {
           letter_name: string;
           letter_name_say_as: string;
           image_asset_id: string | null;
+          letter_name_audio_asset_id: string | null;
         };
         Insert: {
           id?: string;
@@ -1584,6 +1594,7 @@ export type Database = {
           letter_name?: string;
           letter_name_say_as?: string;
           image_asset_id?: string | null;
+          letter_name_audio_asset_id?: string | null;
         };
         Update: {
           id?: string;
@@ -1606,6 +1617,7 @@ export type Database = {
           letter_name?: string;
           letter_name_say_as?: string;
           image_asset_id?: string | null;
+          letter_name_audio_asset_id?: string | null;
         };
         Relationships: [
           {
@@ -1620,6 +1632,13 @@ export type Database = {
             columns: ["image_asset_id"];
             isOneToOne: false;
             referencedRelation: "image_assets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "phonics_patterns_letter_name_audio_asset_id_fkey";
+            columns: ["letter_name_audio_asset_id"];
+            isOneToOne: false;
+            referencedRelation: "audio_assets";
             referencedColumns: ["id"];
           },
           {

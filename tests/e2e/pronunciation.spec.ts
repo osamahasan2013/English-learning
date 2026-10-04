@@ -5,7 +5,8 @@ import { addChild, answerQuestion, lessonQuestions, registerParent, startLesson 
 // (sound tokens) → the sound table in the payload → the pronunciation resolver → the
 // browser's speech synthesis. A fake engine records every utterance. Phonics sounds must
 // be spoken as sounds (suh, shuh), letter names as names (ess, aitch), and never as raw
-// tokens or letter strings (sss, th).
+// tokens or letter strings (sss, th). Each sound and letter name is an utterance of its
+// own (Phase 8.2), so the checks look for runs of pieces in order.
 
 async function recordSpeech(page: Page) {
   await page.addInitScript(() => {
@@ -13,6 +14,7 @@ async function recordSpeech(page: Page) {
     (window as unknown as { __spoken: string[] }).__spoken = spoken;
     class Utterance {
       text: string;
+      onstart?: () => void;
       onend?: () => void;
       onerror?: (e: { error: string }) => void;
       constructor(text: string) {
@@ -25,6 +27,7 @@ async function recordSpeech(page: Page) {
       value: {
         speak: (u: Utterance) => {
           spoken.push(u.text);
+          setTimeout(() => u.onstart?.(), 0);
           setTimeout(() => u.onend?.(), 30);
         },
         cancel: () => {},
@@ -35,6 +38,11 @@ async function recordSpeech(page: Page) {
   });
 }
 const spoken = (page: Page) => page.evaluate(() => (window as unknown as { __spoken: string[] }).__spoken);
+// The pieces said in this order, one after another.
+const saidInOrder = async (page: Page, run: string[]) => {
+  const all = await spoken(page);
+  return all.some((_, i) => run.every((piece, k) => all[i + k] === piece));
+};
 
 test("phonics sounds are spoken as sounds and letter names as names", async ({ page }) => {
   await recordSpeech(page);
@@ -47,8 +55,7 @@ test("phonics sounds are spoken as sounds and letter names as names", async ({ p
   const { lessonId: letterS } = await lessonQuestions("kg1-letter-s-1");
   await page.goto(`/child/learn/${letterS}`);
   await startLesson(page);
-  await expect.poll(() => spoken(page)).toContainEqual(expect.stringContaining("This is the letter ess."));
-  await expect.poll(() => spoken(page)).toContainEqual(expect.stringContaining("It says suh"));
+  await expect.poll(() => saidInOrder(page, ["This is the letter", "ess", "It says", "suh"])).toBe(true);
   await page.getByRole("button", { name: /sound/i }).first().click();
   await expect.poll(async () => (await spoken(page)).at(-1)).toBe("suh");
   // Each page load starts a new recording: keep what this page said.
@@ -57,7 +64,7 @@ test("phonics sounds are spoken as sounds and letter names as names", async ({ p
   // The sh lesson: the intro names the letters and says the sound.
   const { lessonId: sh } = await lessonQuestions("kg3-sh-1");
   await page.goto(`/child/learn/${sh}`);
-  await expect.poll(() => spoken(page)).toContainEqual("Let's learn ess aitch. It says shuh!");
+  await expect.poll(() => saidInOrder(page, ["Let's learn", "ess", "aitch", "It says", "shuh"])).toBe(true);
   all.push(...(await spoken(page)));
 
   expect(all.length).toBeGreaterThan(3);
@@ -91,6 +98,6 @@ test("a sound named by a keyword never names one of the answer choices", async (
     await page.getByRole("button", { name: /^Next/ }).click();
   }
   await expect
-    .poll(async () => (await spoken(page)).find((t) => t.startsWith("Which one starts with")))
-    .toBe("Which one starts with the sound at the start of ant?");
+    .poll(() => saidInOrder(page, ["Which one starts with", "the sound at the start of ant"]))
+    .toBe(true);
 });

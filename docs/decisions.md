@@ -584,3 +584,30 @@ restarts the reading when the child had listened.
 exists. Behaviour is checked against a modelled engine (immediate and deferred cancel)
 in unit and browser tests; real-device behaviour (iOS Safari, Android) still has to be
 confirmed on devices.
+
+## ADR-044 — Audio intents and per-level pacing; recordings are first-class
+
+**Context.** On a real iPhone, normal reading was too fast for early readers, Slow sounded
+almost the same as Normal, words ran together, and a spelling intro ("gate. {/G/},
+{/EY/}, {/T/}. gate.") was heard as "gate g a t gate". Causes: Slow changed only the
+speech rate, which iOS Safari barely honours; stories were read a sentence per utterance;
+the resolver joined sound tokens into the surrounding sentence as one utterance; and the
+word builder's Blend used each tile's usual letter sound instead of the word's grapheme
+split (the a of gate as "the sound at the start of apple", the silent e as "egg").
+
+**Decision.** Keep the one audio service and give it meaning and pace: requests carry an
+intent (instruction, feedback, word, sentence, story, letter name, phoneme, segmenting,
+blending); `planSpeech` makes every token a part of its own with its role; a new `audio`
+rule set gives each level a Normal and a Slow pace as rate + piece size + pauses, plus
+phonics gaps, applied by the service (`pacing.ts`), carried in lesson payloads and
+provided by the child layout. Word blends come from the grapheme split. Recordings stay
+first in the resolution order; `audio_assets` gains content keys, versions, metadata and
+recording kinds, and letters get a NAME recording separate from their SOUND. A grown-ups'
+audio check page with a timing log is the acceptance test on real devices.
+
+**Consequences.** Slow is slower on every engine by construction (smaller pieces and
+pauses), at the cost of slightly more segmented speech at Slow — tuned per level and
+overridable in `learning_rules` without a release. Phonics speech is clearer even with
+browser voices, but pure phonemes still need recordings. Automated tests check pieces,
+rates, gaps and order against a modelled engine; how it sounds can only be judged on
+devices.

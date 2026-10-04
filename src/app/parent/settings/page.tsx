@@ -46,6 +46,13 @@ export default async function SettingsPage() {
         <CardTitle>Sync</CardTitle>
         <SyncStatusPanel />
       </Card>
+      <Card className="space-y-3">
+        <CardTitle>Audio check</CardTitle>
+        <p>Check on this device that reading speeds, letter names and letter sounds sound right.</p>
+        <Link href="/parent/audio-check" className={buttonClasses("secondary", "md")}>
+          Open the audio check
+        </Link>
+      </Card>
     </div>
   );
 }

@@ -525,7 +525,15 @@ Full detail, limitations and the pronunciation matrix: [audio.md](audio.md).
   more. One playback state (`idle` / `loading` / `playing` / `unavailable`) is read by
   `useAudio`; a screen owns the sound it starts and stops only that on unmount; hiding
   the app stops everything. Results are `played` / `interrupted` / `unavailable`.
-  Settings: en-US, a natural on-device voice when installed, rate 0.85, "Slow" 0.6.
+  Settings: en-US, a natural on-device voice when installed.
+- **Pacing and intents** (Phase 8.2, `src/lib/audio/pacing.ts`): every request says what it
+  teaches (instruction, feedback, word, sentence, story, letter name, phoneme, segmenting,
+  blending). Speed is the `audio` learning rules per level — rate AND piece size (sentence
+  / phrase / word) AND pauses — so Slow is audibly slower even where the engine barely
+  honours the rate (iOS Safari). Sounds and letter names are pieces of their own, never run
+  into words; words are never spelled out unless an activity segments or blends. Lesson
+  payloads carry their level's pacing; the child layout provides the child's level.
+  `/parent/audio-check` is the listening test for real devices.
 - **Recordings** (`audio_assets` in the `content-audio` bucket) replace synthesis per
   phoneme, pattern sound or word with no component change.
 - Every spoken item has **Listen**, **Slow** and **Again**, and **Stop** while playing

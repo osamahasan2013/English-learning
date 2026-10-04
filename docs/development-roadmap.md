@@ -148,6 +148,18 @@ diagnostics; Stop, Start again and Read it again fixed. Tests: `audio-service.te
 `audio-ui.test.tsx`, `pronunciation.test.ts`, e2e `audio.spec.ts` with an instrumented engine.
 Still to do: confirm on real iOS Safari and Android devices.
 
+## Phase 8.2 — audio pedagogical quality
+
+Audio intents and per-level pacing (ADR-044, [audio-engine.md](audio-engine.md)): `audio`
+learning rules (Normal / Slow per level as rate + pieces + pauses, phonics gaps),
+`src/lib/audio/pacing.ts`, sounds and letter names as separate pieces, story pieces with
+highlighting, blends from the grapheme split, recorded-audio model (migration
+`20261010100100`: content keys, versions, kinds, letter-name recordings), the grown-ups'
+audio check page with a timing log. Tests: `audio-pacing.test.ts`, the pacing block of
+`audio-service.test.tsx`, `pronunciation.test.ts`, SQL `011_recorded_audio.sql`, e2e
+`audio.spec.ts`. Still to do: the listening test on a real iPhone, Android phone and desktop
+browser; recordings.
+
 ## Phases
 
 | #   | Phase                       | Status | Notes / next steps                                                                                                                                                                                                                                                        |

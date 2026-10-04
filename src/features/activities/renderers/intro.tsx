@@ -22,7 +22,7 @@ export function IntroRenderer({ step, speak }: RendererProps<QuestionOf<"INTRO">
             <li key={sound.code}>
               <button
                 type="button"
-                onClick={() => void speak(sound.sayAs, "slow")}
+                onClick={() => void speak(sound.sayAs, "slow", { intent: "PHONEME" })}
                 className="bg-accent-soft text-accent flex min-h-14 items-center gap-2 rounded-2xl px-4 text-xl font-bold"
               >
                 <span aria-hidden>🔊</span> {sound.label}
@@ -40,7 +40,7 @@ export function IntroRenderer({ step, speak }: RendererProps<QuestionOf<"INTRO">
               <li key={example.text}>
                 <button
                   type="button"
-                  onClick={() => void speak(example.text)}
+                  onClick={() => void speak(example.text, "normal", { intent: "WORD" })}
                   className="bg-surface flex w-full flex-col items-center gap-2 rounded-3xl p-4 shadow-sm"
                   aria-label={`${example.text}. Tap to hear.`}
                 >
@@ -88,7 +88,7 @@ function LetterNameAndSound({
       </button>
       <button
         type="button"
-        onClick={() => void speak(letter.soundSpeech, "slow")}
+        onClick={() => void speak(letter.soundSpeech, "slow", { intent: "PHONEME" })}
         className="bg-accent-soft text-accent flex min-h-24 flex-col items-center justify-center rounded-3xl p-3 shadow-sm"
       >
         <span className="text-lg font-bold">

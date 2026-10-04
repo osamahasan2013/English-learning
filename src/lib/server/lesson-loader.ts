@@ -1,5 +1,6 @@
 import "server-only";
 
+import { resolveAudioPacing } from "@/lib/audio/pacing";
 import { parseActivityConfig } from "@/lib/content/activity-config";
 import { soundToken } from "@/lib/audio/pronunciation";
 import { getSoundTable } from "@/lib/server/sound-table";
@@ -127,6 +128,7 @@ export async function loadLessonPayload(lessonId: string): Promise<LessonPayload
     feedback: toFeedback(feedbackRows.data ?? []),
     sounds: await getSoundTable(),
     rules: { player: rules.player, scoring: rules.scoring },
+    audioPacing: resolveAudioPacing(rules.audio, levelCode),
     loadedAt: new Date().toISOString(),
   };
 }
@@ -224,6 +226,7 @@ export async function loadAssessmentPayload(code: string): Promise<LessonPayload
     feedback: toFeedback(feedbackRows.data ?? []),
     sounds: await getSoundTable(),
     rules: { player: rules.player, scoring: rules.scoring },
+    audioPacing: resolveAudioPacing(rules.audio, null),
     loadedAt: new Date().toISOString(),
   };
 }
@@ -326,6 +329,7 @@ export async function loadWordPracticePayload(args: {
     feedback: toFeedback(feedbackRows.data ?? []),
     sounds: await getSoundTable(),
     rules: { player: rules.player, scoring: rules.scoring },
+    audioPacing: resolveAudioPacing(rules.audio, args.levelCode ?? null),
     loadedAt: new Date().toISOString(),
   };
 }
@@ -444,6 +448,7 @@ export async function loadSpellingPracticePayload(args: {
     feedback: toFeedback(feedbackRows.data ?? []),
     sounds: await getSoundTable(),
     rules: { player: rules.player, scoring: rules.scoring },
+    audioPacing: resolveAudioPacing(rules.audio, args.levelCode),
     loadedAt: new Date().toISOString(),
   };
 }

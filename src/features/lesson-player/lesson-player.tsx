@@ -155,19 +155,20 @@ function LessonRun({
   const [hintsShown, setHintsShown] = useState<Record<string, number>>({});
   const shownAt = useRef(0);
   const runRecorded = useRef(false);
-  // The lesson carries its own sound table (phonics sounds, letter names, recorded clips),
-  // so its audio also works when the lesson is played offline.
-  const { speak: play, supported: audioSupported } = useAudio(payload.sounds);
+  // The lesson carries its own sound table (phonics sounds, letter names, recorded clips)
+  // and its level's pacing, so its audio also works when the lesson is played offline.
+  const { speak: play, supported: audioSupported } = useAudio(payload.sounds, payload.audioPacing);
 
   // A scored question's own words (its options, items…): a keyword fallback for a sound
   // must not name them ("Which one starts with the sound at the start of egg?").
   const avoid = useRef<string[] | undefined>(undefined);
   const speak: SpeakFn = useCallback(
-    (text, speed = "normal", options) => {
-      const requests = typeof text === "string" ? [{ text, speed }] : text;
+    (text, speed = "normal", options = {}) => {
+      const { intent, ...rest } = options;
+      const requests = typeof text === "string" ? [{ text, speed, intent }] : text;
       return play(
         requests.map((r) => ({ ...r, avoid: r.avoid ?? avoid.current })),
-        options,
+        rest,
       );
     },
     [play],
@@ -309,7 +310,7 @@ function LessonRun({
     // Writing: the first thing to fix ("Start each sentence with a capital letter.").
     const writingHint = result.isCorrect ? null : firstWritingHint(result.writing);
     const extra = mistake?.speech ?? writingHint;
-    void speak(extra ? `${message.speech} ${extra}` : message.speech);
+    void speak(extra ? `${message.speech} ${extra}` : message.speech, "normal", { intent: "FEEDBACK" });
   }
 
   // A story was read (READ_PASSAGE): recorded once, like an answer, never scored. A text

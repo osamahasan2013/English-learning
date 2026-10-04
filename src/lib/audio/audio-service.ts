@@ -14,12 +14,23 @@
 // result says whether anything was heard, and failures are logged without content.
 
 import {
+  chunkText,
+  countWords,
+  DEFAULT_AUDIO_PACING,
+  paceFor,
+  type AudioIntent,
+  type AudioPacing,
+} from "@/lib/audio/pacing";
+import {
   EMPTY_SOUND_TABLE,
   planSpeech,
   unresolvedTokens,
   type SoundTable,
   type SpeechPart,
+  type SpeechRole,
 } from "@/lib/audio/pronunciation";
+
+export type { AudioIntent, AudioPacing } from "@/lib/audio/pacing";
 
 export type AudioSpeed = "normal" | "slow";
 
@@ -30,6 +41,9 @@ export type AudioRequest = {
   speed?: AudioSpeed;
   // Words on screen that a keyword fallback must not name (they are the answer choices).
   avoid?: readonly string[];
+  // What the request teaches (pacing.ts): a story is paced for the level, a word is one
+  // piece, a sound gets its own slower rate. Default: INSTRUCTION.
+  intent?: AudioIntent;
 };
 
 // played: something was heard. interrupted: a newer request (or leaving) stopped it — not
@@ -52,14 +66,14 @@ export type AudioSnapshot = {
   source: "asset" | "tts" | null;
 };
 
+// Engine handling. Speed and pauses are not here: they are the `audio` learning rules,
+// per level (pacing.ts).
 export const SPEECH_SETTINGS = {
   locale: "en-US",
-  // A little slower than conversation; "Slow" is clearly slower without dragging.
-  rate: { normal: 0.85, slow: 0.6 } satisfies Record<AudioSpeed, number>,
   pitch: 1,
   volume: 1,
   recordedSlowPlaybackRate: 0.75,
-  // A pause between the items of a sequence (each sound of a word), in ms.
+  // A pause between the items of a sequence that is neither phonics nor reading, in ms.
   sequenceGapMs: 250,
   // How long to wait for the engine to confirm a cancel before speaking anyway.
   cancelSettleMs: 300,
@@ -110,8 +124,13 @@ export function pickVoice(voices: readonly SpeechSynthesisVoice[], locale: strin
   return local[0] ?? pool[0] ?? null;
 }
 
-export function rateFor(speed: AudioSpeed) {
-  return SPEECH_SETTINGS.rate[speed];
+// The speech rate for a request (the level's pace for its intent and speed).
+export function rateFor(
+  speed: AudioSpeed,
+  intent: AudioIntent = "INSTRUCTION",
+  pacing: AudioPacing = DEFAULT_AUDIO_PACING,
+) {
+  return paceFor(intent, speed, pacing).rate;
 }
 
 // Text → utterances short enough for every engine, split after sentences, then phrases,
@@ -252,6 +271,17 @@ function ensureSetup() {
   });
 }
 
+// What the device offers (for the grown-ups' audio check page): no child data.
+export function getAudioEngineInfo() {
+  const tts = isSpeechSynthesisAvailable();
+  if (tts) refreshVoice();
+  return {
+    tts,
+    voices: tts ? window.speechSynthesis.getVoices().length : 0,
+    voice: voice ? { name: voice.name, lang: voice.lang, local: voice.localService } : null,
+  };
+}
+
 // Start loading the voice list early (the first press then gets the right voice).
 export function prepareAudio() {
   ensureSetup();
@@ -357,11 +387,14 @@ function playRecorded(url: string, speed: AudioSpeed, id: number): Promise<Outco
 
 const INTERRUPTED = new Set(["interrupted", "canceled"]);
 
+type PieceMeta = Omit<AudioTiming, "voice" | "spokeAt" | "startedAt" | "endedAt" | "outcome" | "error">;
+
 function speakOnce(
   text: string,
-  speed: AudioSpeed,
+  rate: number,
   id: number,
   chosen: SpeechSynthesisVoice | null | undefined,
+  meta: PieceMeta,
 ): Promise<Outcome> {
   return new Promise((resolve) => {
     const synth = window.speechSynthesis;
@@ -369,13 +402,14 @@ function speakOnce(
     if (synth.paused) synth.resume();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = SPEECH_SETTINGS.locale;
-    u.rate = rateFor(speed);
+    u.rate = rate;
     u.pitch = SPEECH_SETTINGS.pitch;
     u.volume = SPEECH_SETTINGS.volume;
     const v = chosen === undefined ? (voice ?? pickVoice(synth.getVoices())) : chosen;
     if (v) u.voice = v;
     activeUtterance = u;
     const spokenAt = Date.now();
+    const timing = recordTiming({ ...meta, voice: v?.name ?? null, spokeAt: now() });
     let started = false;
     let settled = false;
     let endTimer: ReturnType<typeof setTimeout> | undefined;
@@ -385,6 +419,7 @@ function speakOnce(
       clearTimeout(startTimer);
       clearTimeout(endTimer);
       if (activeUtterance === u) activeUtterance = null;
+      updateTiming(timing, { endedAt: now(), outcome, error: error ?? null });
       for (const waiter of [...settleWaiters]) waiter();
       resolve({ outcome, started, error });
     };
@@ -392,9 +427,10 @@ function speakOnce(
       if (started) return;
       started = true;
       clearTimeout(startTimer);
+      updateTiming(timing, { startedAt: now() });
       if (id === current) setSnapshot({ state: "playing", source: "tts" });
       // Some engines never report the end: never leave a request waiting forever.
-      const expected = (text.length * 150) / rateFor(speed);
+      const expected = (text.length * 150) / rate;
       endTimer = setTimeout(() => finish("ended", "no_end"), Math.max(4000, expected * 2));
     };
     const startTimer = setTimeout(() => {
@@ -428,52 +464,132 @@ const VOICE_ERRORS = new Set([
   "language-unavailable",
 ]);
 
-async function speakText(text: string, speed: AudioSpeed, id: number): Promise<boolean> {
+// One piece (a phrase, a word, a sound) through the engine: a lost piece is said once
+// more, a failing voice gives way to the default one. True when it was heard.
+async function speakPiece(text: string, rate: number, id: number, meta: PieceMeta): Promise<boolean> {
   if (!isSpeechSynthesisAvailable() || text.trim() === "") return false;
-  let heard = false;
-  for (const chunk of splitForSpeech(text)) {
-    if (id !== current) return heard;
-    let r = await speakOnce(chunk, speed, id, undefined);
-    if (id !== current) return heard || r.started;
-    // Still the newest request, yet cut short or never started: the engine processed an
-    // earlier cancel late, or lost it. Say it once more.
-    if (r.outcome === "interrupted" || r.error === "no_start") {
-      logAudio("warn", "utterance_lost", { requestId: id, reason: r.error, started: r.started });
-      if (r.error === "no_start") {
-        const settling = halt();
-        if (settling) await settling;
-      }
-      await wait(SPEECH_SETTINGS.retryDelayMs);
-      if (id !== current) return heard;
-      r = await speakOnce(chunk, speed, id, undefined);
-      if (id !== current) return heard || r.started;
+  let r = await speakOnce(text, rate, id, undefined, meta);
+  if (id !== current) return r.started;
+  // Still the newest request, yet cut short or never started: the engine processed an
+  // earlier cancel late, or lost it. Say it once more.
+  if (r.outcome === "interrupted" || r.error === "no_start") {
+    logAudio("warn", "utterance_lost", { requestId: id, reason: r.error, started: r.started });
+    if (r.error === "no_start") {
+      const settling = halt();
+      if (settling) await settling;
     }
-    if (r.outcome === "failed" && r.error && VOICE_ERRORS.has(r.error) && voice) {
-      logAudio("warn", "voice_failed", { requestId: id, voice: voice.name, error: r.error });
-      r = await speakOnce(chunk, speed, id, null);
-      if (id !== current) return heard || r.started;
-    }
-    if (r.outcome === "failed") {
-      logAudio("warn", "tts_failed", {
-        requestId: id,
-        error: r.error,
-        voice: voice?.name ?? null,
-        voices: window.speechSynthesis.getVoices().length,
-        rate: rateFor(speed),
-        chars: chunk.length,
-      });
-      continue;
-    }
-    heard ||= r.started || r.outcome === "ended";
+    await wait(SPEECH_SETTINGS.retryDelayMs);
+    if (id !== current) return false;
+    r = await speakOnce(text, rate, id, undefined, { ...meta, retry: true });
+    if (id !== current) return r.started;
   }
-  return heard;
+  if (r.outcome === "failed" && r.error && VOICE_ERRORS.has(r.error) && voice) {
+    logAudio("warn", "voice_failed", { requestId: id, voice: voice.name, error: r.error });
+    r = await speakOnce(text, rate, id, null, { ...meta, retry: true });
+    if (id !== current) return r.started;
+  }
+  if (r.outcome === "failed") {
+    logAudio("warn", "tts_failed", {
+      requestId: id,
+      error: r.error,
+      voice: voice?.name ?? null,
+      voices: window.speechSynthesis.getVoices().length,
+      rate,
+      chars: text.length,
+    });
+    return false;
+  }
+  return r.started || r.outcome === "ended";
 }
+
+// ── Timing log (development and the audio check page) ────────────────────────────────
+// What each piece asked for and what the engine did: rate, voice, pause, start, end. No
+// words are kept (only their number of characters), so no child content is recorded. Off
+// unless a page turns it on; kept in memory only.
+
+export type AudioTiming = {
+  requestId: number;
+  intent: AudioIntent;
+  role: SpeechRole;
+  speed: AudioSpeed;
+  level: string;
+  rate: number;
+  // Which piece of the request, out of how many, and the silence before it.
+  piece: number;
+  pieces: number;
+  pauseBeforeMs: number;
+  chars: number;
+  retry: boolean;
+  voice: string | null;
+  spokeAt: number;
+  startedAt: number | null;
+  endedAt: number | null;
+  outcome: Outcome["outcome"] | null;
+  error: string | null;
+};
+
+let timingOn = false;
+let timings: AudioTiming[] = [];
+const timingListeners = new Set<() => void>();
+const MAX_TIMINGS = 400;
+const now = () => (typeof performance !== "undefined" ? Math.round(performance.now()) : Date.now());
+
+function emitTimings() {
+  for (const listener of timingListeners) listener();
+}
+
+function recordTiming(entry: Omit<AudioTiming, "startedAt" | "endedAt" | "outcome" | "error">) {
+  if (!timingOn) return null;
+  const t: AudioTiming = { ...entry, startedAt: null, endedAt: null, outcome: null, error: null };
+  timings = [...timings.slice(-(MAX_TIMINGS - 1)), t];
+  emitTimings();
+  return t;
+}
+
+function updateTiming(t: AudioTiming | null, change: Partial<AudioTiming>) {
+  if (!t) return;
+  Object.assign(t, change);
+  timings = [...timings];
+  emitTimings();
+}
+
+export function setAudioTimingLog(on: boolean) {
+  timingOn = on;
+  if (!on) timings = [];
+  emitTimings();
+}
+
+export function getAudioTimings() {
+  return timings;
+}
+
+export function clearAudioTimings() {
+  timings = [];
+  emitTimings();
+}
+
+export function subscribeAudioTimings(listener: () => void) {
+  timingListeners.add(listener);
+  return () => {
+    timingListeners.delete(listener);
+  };
+}
+
+// ── Playing ──────────────────────────────────────────────────────────────────────────
 
 export type PlayOptions = {
   // Phonics sounds and letter names for the tokens in the text.
   sounds?: SoundTable;
+  // The child's level pacing (useAudio provides it). Default: the default level's.
+  pacing?: AudioPacing;
+  // A sequence that teaches a word's sounds: wider gaps between the sounds, and before
+  // the whole word at the end of a blend.
+  sequence?: "SEGMENTING" | "BLENDING";
   // Called as each item of a sequence starts (to highlight the sound being played).
   onItem?: (index: number) => void;
+  // Called as each piece of an item starts, with the words of the item it covers (to
+  // highlight the words being read when a sentence is read in phrases or word by word).
+  onChunk?: (index: number, words: { start: number; count: number }) => void;
   // The screen starting the request (see stopAudio).
   owner?: AudioOwner;
 };
@@ -482,7 +598,31 @@ function partsFor(request: AudioRequest, sounds: SoundTable): SpeechPart[] {
   const parts = planSpeech(request.text, sounds, request.avoid ? { avoid: new Set(request.avoid) } : {});
   if (!request.assetUrl) return parts;
   const fallback = parts.map((p) => (p.kind === "tts" ? p.text : p.fallback)).join(" ");
-  return [{ kind: "asset", url: request.assetUrl, fallback }];
+  return [{ kind: "asset", url: request.assetUrl, fallback, role: "speech" }];
+}
+
+const PHONICS_INTENTS = new Set<AudioIntent>(["PHONEME", "LETTER_NAME"]);
+const READING_INTENTS = new Set<AudioIntent>(["STORY_READING", "SENTENCE"]);
+
+// The silence before item `index` of a sequence.
+function gapBefore(
+  requests: AudioRequest[],
+  index: number,
+  speed: AudioSpeed,
+  pacing: AudioPacing,
+  sequence?: PlayOptions["sequence"],
+) {
+  const item = requests[index].intent ?? "INSTRUCTION";
+  const prev = requests[index - 1].intent ?? "INSTRUCTION";
+  const last = index === requests.length - 1;
+  if (sequence === "BLENDING" && last) return pacing.phonics.wordGapMs[speed];
+  if (sequence || PHONICS_INTENTS.has(item) || PHONICS_INTENTS.has(prev))
+    return item === "WORD" && PHONICS_INTENTS.has(prev)
+      ? pacing.phonics.wordGapMs[speed]
+      : pacing.phonics.itemGapMs[speed];
+  if (READING_INTENTS.has(item) && READING_INTENTS.has(prev))
+    return paceFor(item, speed, pacing).sentenceGapMs;
+  return SPEECH_SETTINGS.sequenceGapMs;
 }
 
 // Plays one request or a sequence. Never throws: audio is an aid, and a device without it
@@ -501,29 +641,82 @@ export async function playAudio(
   if (settling) await settling;
   const requests = Array.isArray(request) ? request : [request];
   const sounds = options.sounds ?? EMPTY_SOUND_TABLE;
+  const pacing = options.pacing ?? DEFAULT_AUDIO_PACING;
   let played = false;
   try {
     for (const [index, req] of requests.entries()) {
       if (id !== current) return "interrupted";
+      const speed = req.speed ?? "normal";
+      const intent = req.intent ?? "INSTRUCTION";
       if (index > 0) {
-        await wait(SPEECH_SETTINGS.sequenceGapMs);
+        await wait(gapBefore(requests, index, speed, pacing, options.sequence));
         if (id !== current) return "interrupted";
       }
       options.onItem?.(index);
-      const speed = req.speed ?? "normal";
       const missing = unresolvedTokens(req.text, sounds);
       if (missing.length) logAudio("warn", "token_unresolved", { requestId: id, tokens: missing.join(" ") });
-      for (const part of partsFor(req, sounds)) {
+      const parts = partsFor(req, sounds);
+      // Words of the item already covered by earlier parts (for onChunk).
+      let wordsBefore = 0;
+      for (const [pi, part] of parts.entries()) {
         if (id !== current) return "interrupted";
+        // A sound or letter name stands apart from the words around it.
+        if (pi > 0 && (part.role !== "speech" || parts[pi - 1].role !== "speech")) {
+          await wait(pacing.phonics.tokenGapMs[speed]);
+          if (id !== current) return "interrupted";
+        }
+        const partIntent: AudioIntent =
+          part.role === "phoneme" ? "PHONEME" : part.role === "letter_name" ? "LETTER_NAME" : intent;
+        const pace = paceFor(partIntent, speed, pacing);
+        const meta = { requestId: id, intent: partIntent, role: part.role, speed, level: pacing.level };
         let ok = false;
         if (part.kind === "asset") {
           const r = await playRecorded(part.url, speed, id);
           ok = r.outcome === "ended" || (r.outcome === "interrupted" && r.started);
           if (r.outcome === "failed" && id === current) {
             logAudio("warn", "asset_failed", { requestId: id, error: r.error, fallback: "tts" });
-            ok = await speakText(part.fallback, speed, id);
+            ok = await speakPiece(part.fallback, pace.rate, id, {
+              ...meta,
+              rate: pace.rate,
+              piece: 0,
+              pieces: 1,
+              pauseBeforeMs: 0,
+              chars: part.fallback.length,
+              retry: false,
+            });
           }
-        } else ok = await speakText(part.text, speed, id);
+        } else if (part.role !== "speech") {
+          ok = await speakPiece(part.text, pace.rate, id, {
+            ...meta,
+            rate: pace.rate,
+            piece: 0,
+            pieces: 1,
+            pauseBeforeMs: 0,
+            chars: part.text.length,
+            retry: false,
+          });
+        } else {
+          const chunks = chunkText(part.text, pace, SPEECH_SETTINGS.maxUtteranceChars);
+          for (const [ci, chunk] of chunks.entries()) {
+            if (id !== current) return "interrupted";
+            if (chunk.pauseBeforeMs > 0) {
+              await wait(chunk.pauseBeforeMs);
+              if (id !== current) return "interrupted";
+            }
+            options.onChunk?.(index, { start: wordsBefore + chunk.wordStart, count: chunk.wordCount });
+            const heard = await speakPiece(chunk.text, pace.rate, id, {
+              ...meta,
+              rate: pace.rate,
+              piece: ci,
+              pieces: chunks.length,
+              pauseBeforeMs: chunk.pauseBeforeMs,
+              chars: chunk.text.length,
+              retry: false,
+            });
+            ok ||= heard;
+          }
+          wordsBefore += countWords(part.text);
+        }
         played ||= ok;
       }
     }
@@ -550,5 +743,5 @@ export async function playAudio(
 export type SpeakFn = (
   text: string | AudioRequest[],
   speed?: AudioSpeed,
-  options?: Omit<PlayOptions, "sounds" | "owner">,
+  options?: Omit<PlayOptions, "sounds" | "owner" | "pacing"> & { intent?: AudioIntent },
 ) => Promise<PlayResult>;

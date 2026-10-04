@@ -34,8 +34,13 @@ export function SpellingRenderer({ step, phase, onAnswer, speak }: RendererProps
 
   async function playSounds() {
     await speak(
-      (content.sounds ?? []).map((s) => ({ text: s.sayAs, speed: "slow" as const })),
+      (content.sounds ?? []).map((s) => ({
+        text: s.sayAs,
+        speed: "slow" as const,
+        intent: "PHONEME" as const,
+      })),
       "slow",
+      { sequence: "SEGMENTING" },
     );
   }
 
@@ -77,7 +82,7 @@ export function SpellingRenderer({ step, phase, onAnswer, speak }: RendererProps
         sound ? (
           <button
             type="button"
-            onClick={() => void speak(sound.sayAs, "slow")}
+            onClick={() => void speak(sound.sayAs, "slow", { intent: "PHONEME" })}
             className="bg-accent flex min-h-20 items-center gap-3 rounded-3xl px-8 text-3xl font-extrabold text-white shadow-sm"
           >
             <span aria-hidden>🔊</span> Hear the sound
@@ -98,7 +103,7 @@ export function SpellingRenderer({ step, phase, onAnswer, speak }: RendererProps
               <button
                 key={i}
                 type="button"
-                onClick={() => void speak(sound.sayAs, "slow")}
+                onClick={() => void speak(sound.sayAs, "slow", { intent: "PHONEME" })}
                 className="bg-accent-soft text-accent min-h-16 min-w-16 rounded-2xl px-4 text-3xl font-extrabold shadow-sm"
                 aria-label={`Sound ${i + 1}: ${sound.label}`}
               >

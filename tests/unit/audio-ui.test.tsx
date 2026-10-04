@@ -137,7 +137,7 @@ describe("PassageView", () => {
     const { speak, calls } = controllableSpeak();
     render(<PassageView passage={passage} speak={speak} autoListen="slow" />);
     expect(calls).toHaveLength(1);
-    expect(calls[0].requests[0]).toEqual({ text: "I see a cat.", speed: "slow" });
+    expect(calls[0].requests[0]).toEqual({ text: "I see a cat.", speed: "slow", intent: "STORY_READING" });
   });
 });
 
@@ -188,7 +188,7 @@ describe("Read it again", () => {
     await user.click(screen.getByRole("button", { name: /I read it/ }));
     await user.click(screen.getByRole("button", { name: /Read it again/ }));
     expect(calls).toHaveLength(2);
-    expect(calls[1].requests[0]).toEqual({ text: "I see a cat.", speed: "slow" });
+    expect(calls[1].requests[0]).toEqual({ text: "I see a cat.", speed: "slow", intent: "STORY_READING" });
   });
 
   it("a child reading by themselves is not read to (nothing starts by itself)", async () => {

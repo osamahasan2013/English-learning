@@ -1,12 +1,96 @@
-# Audio engine — playback lifecycle
+# Audio engine — playback lifecycle and pacing
 
-How sound is played (Phase 8.1). **What** is said (tokens, the pronunciation resolver, the
-pronunciation matrix) is in [audio.md](audio.md). Decision record: ADR-043.
+How sound is played (Phase 8.1) and paced for children (Phase 8.2). **What** is said
+(tokens, the pronunciation resolver, the pronunciation matrix) is in [audio.md](audio.md).
+Decision records: ADR-043 (lifecycle), ADR-044 (intents, pacing, recorded audio).
 
 There is one audio system: `src/lib/audio/` — `pronunciation.ts` (pure: text → clips and
-utterances), `audio-service.ts` (the only code that touches `speechSynthesis` and
-`Audio`) and `use-audio.ts` (the React hook). Phonics, vocabulary, spelling, reading and
-writing all use it; no component calls a browser audio API.
+utterances, each tagged speech / phoneme / letter name), `pacing.ts` (pure: intents and
+the per-level pace, text → pieces), `audio-service.ts` (the only code that touches
+`speechSynthesis` and `Audio`), `use-audio.ts` (the React hook and the sound-table and
+pacing providers) and `audio-check.ts` (the grown-ups' listening test). Phonics,
+vocabulary, spelling, reading and writing all use it; no component calls a browser audio
+API, and no component holds a speed or a pause.
+
+## Audio intents
+
+Every request says what it teaches (`AudioRequest.intent`, default `INSTRUCTION`). The
+intent decides the pacing, never the words:
+
+| Intent          | Used for                                    | Pacing                                                            |
+| --------------- | ------------------------------------------- | ----------------------------------------------------------------- |
+| `INSTRUCTION`   | prompts, explanations, intros               | level pace; Slow in phrases (never word by word)                  |
+| `FEEDBACK`      | "Great job!", "Start with a capital letter" | as INSTRUCTION                                                    |
+| `WORD`          | a whole word ("gate")                       | one piece at the level's rate — **never spelled out**             |
+| `SENTENCE`      | a sentence to hear (a word's example)       | level pace (sentence / phrase / word)                             |
+| `STORY_READING` | a story read aloud                          | level pace; the highlight follows each piece                      |
+| `LETTER_NAME`   | a letter's name ("jee")                     | phonics rate, a piece of its own                                  |
+| `PHONEME`       | a sound (/g/ → "guh")                       | phonics rate, a piece of its own                                  |
+| `SEGMENTING`    | sequence: a word's sounds one by one        | `itemGapMs` between the sounds                                    |
+| `BLENDING`      | sequence: the sounds, then the whole word   | `itemGapMs` between the sounds, `wordGapMs` before the whole word |
+
+Segmenting and blending are explicit (`PlayOptions.sequence`): a word is only ever broken
+into sounds when an activity asks for it. Inside any text, sound and letter-name tokens
+are separate parts (`planSpeech`) with `tokenGapMs` of silence around them, so "gate.
+{/G/}, {/EY/}, {/T/}. gate." is heard as five pieces — "gate … guh … eigh … tuh … gate" —
+not one breath that sounds like "gate g a t gate". A part keeps its role (speech /
+phoneme / letter_name) all the way to the engine (and to the timing log): a sound is
+resolved by `resolveSound` and can never become a letter name; a letter name by
+`resolveLetter` and never shares a clip with the sound.
+
+## Reading pacing (the `audio` learning rules)
+
+Browser voices do not reliably slow down from the rate alone: on a real iPhone, Safari
+sounded nearly the same at 0.85 and 0.6. So pace is three things together — **rate**,
+**piece size** (a sentence, a phrase of up to `maxWords`, or a word) and **pauses**
+(between pieces, and between sentences). Slow is slower on every engine because it reads
+smaller pieces with pauses, whatever the engine does with the rate. Rates stay at 0.6 or
+above (lower distorts some voices). Values live in `rules.ts` (`audio`), overridable per
+level in `learning_rules` (code `audio`); lesson payloads carry their level's pace (also
+offline) and the child layout provides the child's level elsewhere.
+
+| Level   | Normal                                  | Slow                                    |
+| ------- | --------------------------------------- | --------------------------------------- |
+| KG1     | 0.78, phrases ≤ 3 words, 200 ms, 600 ms | 0.62, word by word, 380 ms, 900 ms      |
+| KG2     | 0.80, phrases ≤ 4 words, 180 ms, 550 ms | 0.64, word by word, 340 ms, 850 ms      |
+| KG3     | 0.83, whole sentences, —, 500 ms        | 0.66, phrases ≤ 2 words, 350 ms, 800 ms |
+| Grade 1 | 0.88, whole sentences, —, 450 ms        | 0.70, phrases ≤ 2 words, 330 ms, 750 ms |
+| Grade 2 | 0.92, whole sentences, —, 400 ms        | 0.74, phrases ≤ 2 words, 300 ms, 700 ms |
+
+(rate, piece, pause between pieces, gap between sentences). Phonics, every level: sound /
+letter-name rate 0.75 (Slow 0.6), `tokenGapMs` 350 (600), `itemGapMs` 450 (750),
+`wordGapMs` 650 (1000).
+
+Why: read-aloud for early readers is about 90–120 words a minute and "slow, pointing at
+each word" about 50–70; adult conversation is 150+. The youngest hear short phrases at
+Normal (natural, with breathing room) and single words at Slow (the "finger under each
+word" reading teachers model); from KG3 Normal is whole sentences, and Slow pairs of words —
+deliberate but still phrased, not robotic. For "The cat is at the gate." Slow adds at
+least 560 ms of silence at every level (1.9 s at KG1) on top of the lower rate, so it is
+audibly slower even on an engine that ignores the rate. Phrases are balanced ("I see | a
+cat.", not "I see a | cat.") and punctuation stays on its word so intonation is kept.
+
+The service reports each piece as it starts (`onChunk`), so the story highlight follows
+the words being said; the request ids of 8.1 keep an interrupted reading from
+highlighting anything.
+
+## Recorded audio
+
+Recordings are first-class and optional (production has none yet; nothing is
+fabricated). Order: **recorded clip → (cached clip, via the service worker) → speech
+synthesis of the resolver's rendering → keyword → nothing**, then `unavailable`.
+`audio_assets` (Phase 8.2 migration `20261010100100`) holds each take: `kind`
+(letter_name, phoneme, word, sentence, instruction, story, blending, segmenting,
+dictation, plus the older word / letter / phonics), `content_key` (`phoneme:SH`,
+`letter_name:g`, `pattern_sound:AI`, `word:gate` — unique per `version`), `version`,
+`locale`, `voice` (speaker), `duration_ms`, `storage_path`, `status`, `metadata`. What a
+clip records is a link from that thing: `phonemes.audio_asset_id` (a sound everywhere it
+appears), `phonics_pattern_sounds` / `phonics_patterns.audio_asset_id` (digraphs, vowel
+teams, r-controlled vowels, endings), **`phonics_patterns.letter_name_audio_asset_id`**
+(a letter's NAME, separate from its sound), `words`, `sentences`, `spelling_words`
+(dictation), `stories`, `questions`, `lessons`. Authoring: `phonemes[].audio`,
+`patterns[].audio` and `patterns[].letterNameAudio` in `phonics.json`, `audio` columns in
+the CSVs. No component changes when recordings arrive.
 
 ## Sources and resolution
 
@@ -38,10 +122,10 @@ failure) or `unavailable`. It never throws.
   only when nothing else exists — they need the network, stop long utterances after about
   15 seconds and lose utterances after a cancel. A voice that fails (`network`,
   `voice-unavailable`, …) is retried once with the device's default voice.
-- **Language** `en-US`; **rate** 0.85, **Slow** 0.6 (recorded clips: playbackRate 0.75);
-  **pitch** 1; **volume** 1 (`SPEECH_SETTINGS`).
-- **Long text** is split into utterances of at most 200 characters at sentence, then
-  phrase, then word boundaries (`splitForSpeech`), spoken in order.
+- **Language** `en-US`; **rate and pauses** from the level's pace (above; recorded clips:
+  playbackRate 0.75 for Slow); **pitch** 1; **volume** 1 (`SPEECH_SETTINGS`).
+- **Pieces**: text is read in the level's pieces (`chunkText`); any piece longer than 200
+  characters is split at phrases (Chrome's online voices stop long utterances).
 - **Paused engine** (Android Chrome after the app was in the background): `resume()`
   before speaking.
 - `pause()`/`resume()` are not offered to children: Stop and Listen (from the start) are
@@ -110,18 +194,24 @@ sound; hiding the app (`visibilitychange`), locking the screen or leaving the pa
 
 ## The buttons
 
-- **Listen** — the words from the beginning at rate 0.85 (stops whatever was playing).
-- **Slow** — the same words from the beginning at 0.6, same voice and language. Works
-  after Listen, after Slow, during either, after Read it again or Try again.
+- **Listen** — the words from the beginning at the level's Normal pace (stops whatever
+  was playing).
+- **Slow** — the same words from the beginning at the level's Slow pace (lower rate,
+  smaller pieces, pauses), same voice and language. Works after Listen, after Slow,
+  during either, after Read it again or Try again.
 - **Again** — repeats the last speed. Stays in place while playing (buttons do not move
   under a child's finger).
 - **Stop** (⏹ "Stop audio") — appears while something plays.
-- **Story** (`PassageView`): Listen reads sentence by sentence and highlights each one
-  (word by word for Slow at the youngest levels); while it reads, Listen becomes
-  **Start again** (from sentence 1, no duplicate voice). A tapped word replaces the
-  reading and the buttons reset. Highlighting follows the engine's sentence (or word)
-  boundaries: browser voices give no finer timing, so it is not word-perfect within a
-  sentence, and a whole-story recording plays without highlighting.
+- **Story** (`PassageView`): Listen reads it sentence by sentence (`STORY_READING`), in
+  the level's pieces; the sentence is highlighted and, when it is read in phrases or word
+  by word, so are the words being said; while it reads, Listen becomes **Start again**
+  (from sentence 1, no duplicate voice). A tapped word (`WORD`) replaces the reading and
+  the buttons reset. Highlighting follows the pieces the engine is given: browser voices
+  give no finer timing, so within a piece it is not word-perfect, and a whole-story
+  recording plays without highlighting.
+- **Blend** (word builder, Word Explorer): the word's sounds from its **grapheme split**
+  (g · a · t · e → /G/ /EY/ /T/, silent e says nothing — never a letter's usual sound,
+  so the a of gate is not "the a of apple"), then the whole word (`BLENDING`).
 - **Read it again** — the text goes back to the top. If the child listened (or the story
   is listen-first) it is read aloud again from sentence 1 at the child's last speed;
   otherwise any reading still going is stopped and the child reads it again. The replay
@@ -155,6 +245,19 @@ sound; hiding the app (`visibilitychange`), locking the screen or leaving the pa
 - A recorded clip that is not cached fails → speech synthesis. Audio failure never blocks
   an activity.
 
+## Audio check (real devices)
+
+`/parent/audio-check` (linked from parent Settings) plays fixed test lines through the
+same service, voices and pacing children get — Reading Normal and Slow at any level, the
+letter name G, the sound /g/, the word "gate", segmenting, blending and the "gate" spelling
+intro — shows the device's voice, and for each line what the engine did: rate, pieces,
+paced silence, elapsed and speaking time, outcome, retries. It compares Slow with Normal
+(× as long) and copies the results as text to share. The grown-up marks each line as
+sounding right or wrong: this human listening test on an iPhone, an Android phone and a
+desktop browser is the acceptance test for audio quality — the automated tests cannot
+hear. The timing log (`setAudioTimingLog`) is on only while the page is open, in memory,
+and records no words (only their length).
+
 ## Diagnostics
 
 Structured console records, content-free (ids, codes, voice names, rates, lengths, token
@@ -169,19 +272,36 @@ only failures, at most 20 per page.
   cancel: Slow during Listen, rapid presses, sequences, stale callbacks, lost and stuck
   utterances, refusals, late voices, voice fallback, paused engine, long text, the state
   machine, same-tick speaking, owners.
-- `tests/unit/pronunciation.test.ts` — every token form, broken and unresolved tokens,
-  letter names vs sounds.
+- `tests/unit/pronunciation.test.ts` — every token form (`{@s}`, `{@S}`, `{ @s }`, `{/s/}`,
+  `{/S/}`, `{ /s/ }`, `{/sh/}`…), broken and unresolved tokens, letter names vs sounds
+  with their roles (G, S, C, T), letter-name and sound clips never swapped.
+- `tests/unit/audio-pacing.test.ts` — per-level pacing, Slow slower than Normal at every
+  level by rate AND silence, pieces and word offsets, intents, rule overrides, the
+  audio-check summary.
+- `tests/unit/audio-service.test.tsx` (Phase 8.2 block) — "gate. {/G/}…" as five pieces
+  with gaps, letter name vs sound to the engine, a word never spelled, blend gaps, KG1 /
+  Grade 2 reading pieces and rates, highlight pieces, Slow mid-reading, the timing log.
 - `tests/unit/audio-ui.test.tsx` — Listen/Slow/Again/Stop, Start again, a tapped word,
   Read it again, Try again.
 - `tests/e2e/audio.spec.ts` with `tests/e2e/fake-speech.ts` — real lessons in Chromium
   with an instrumented engine (headless Chromium has no voices): deferred cancel on
-  tablet, phone and desktop sizes, immediate cancel, phonics tokens, no voices.
+  tablet, phone and desktop sizes, immediate cancel, phonics tokens, no voices, the
+  magic-e spelling intro as separate pieces, and the audio check page (KG1 Normal vs Slow
+  pieces and ratio, letter name / sound / word / segmenting / blending, copied results).
+  These prove behaviour (pieces, rates, gaps, order, no overlap) — **not** how a real
+  voice sounds. That is the audio check on real devices.
 
 ## Known browser limitations
 
 - Real devices were **not** tested from the development environment (no audio output,
   no Safari/iOS); the engine behaviours above are modelled in tests from documented
-  WebKit/Chrome behaviour and should be checked on devices (see the Phase 8.1 report).
+  WebKit/Chrome behaviour and must be checked on devices with the audio check page.
+- iOS Safari: the rate makes little audible difference (reported on a real iPhone), which
+  is why Slow relies on pieces and pauses; each utterance also adds a small start-up gap
+  of its own on iOS, so word-by-word reading is a little slower there than the numbers.
+- Isolated consonants from speech synthesis are approximate ("guh"); only recordings give
+  pure sounds. Long a /EY/ sounds like the letter name A — that is correct phonics ("a_e
+  says its name"), which is why the pieces must be separate.
 - Voice quality and exact sound renderings depend on the device's voices.
 - Sentence-level highlighting only (no word timing from browser voices).
 - Firefox on Linux needs speech-dispatcher; without it there are no voices

@@ -17,10 +17,14 @@ export function SoundStrip({
   if (segments.length === 0) return null;
   const sounding = segments.filter((s) => !s.silent);
   async function blend() {
-    await speak([
-      ...sounding.map((s) => ({ text: s.sayAs, speed: "slow" as const })),
-      { text: word, speed: "normal" },
-    ]);
+    // The sounds with clear gaps, then the whole word after a longer pause.
+    await speak(
+      [
+        ...sounding.map((s) => ({ text: s.sayAs, speed: "slow" as const, intent: "PHONEME" as const })),
+        { text: word, speed: "normal", intent: "WORD" },
+      ],
+      { sequence: "BLENDING" },
+    );
   }
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -35,7 +39,7 @@ export function SoundStrip({
             <button
               type="button"
               disabled={s.silent}
-              onClick={() => void speak({ text: s.sayAs, speed: "slow" })}
+              onClick={() => void speak({ text: s.sayAs, speed: "slow", intent: "PHONEME" })}
               aria-label={s.silent ? `${s.grapheme}, silent` : `${s.grapheme}: hear the sound`}
               className={cn(
                 "bg-surface border-border min-h-16 min-w-16 rounded-2xl border-2 px-4 text-3xl font-extrabold shadow-sm",

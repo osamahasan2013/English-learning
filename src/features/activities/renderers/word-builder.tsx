@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AudioControls } from "@/components/child/audio-controls";
+import { soundToken } from "@/lib/audio/pronunciation";
 import { segmentWord } from "@/lib/learning/blending";
 import { cn } from "@/lib/utils";
 import type { QuestionOf, RendererProps } from "../types";
@@ -20,16 +21,35 @@ export function WordBuilderRenderer({
   const { content } = step.question;
   // The loader always fills in the word to say: the child blends what they hear.
   const word = content.speech ?? "";
-  const chunks = segmentWord(word, content.tiles);
+  // The word's own grapheme split when the question has one (g · a · t · e, with a's sound
+  // /EY/ and a silent e), else the tiles it is built from. Sounds come from the split,
+  // never from a letter's usual sound (the a of gate is not the a of apple).
+  const units = content.split
+    ? content.split.map((g) => ({
+        text: g.grapheme,
+        sound: g.phonemes?.length ? soundToken(g.phonemes) : "",
+      }))
+    : segmentWord(word, content.tiles).map((c) => ({ text: c, sound: step.tileSounds[c] ?? "" }));
+  const chunks = units.map((u) => u.text);
   const [blendIndex, setBlendIndex] = useState<number | null>(null);
   const built = lastResponse && "sequence" in lastResponse ? lastResponse.sequence.join("") : null;
   const scrambled = content.mode === "scrambled";
 
   async function demonstrate() {
-    // Each tile's SOUND (never the raw letters, which a voice reads as letter names),
-    // then the word, as one sequence.
-    const items = chunks.map((c) => ({ text: step.tileSounds[c] ?? "", speed: "slow" as const }));
-    await speak([...items, { text: word, speed: "normal" }], "slow", { onItem: setBlendIndex });
+    // Each SOUND on its own (never the raw letters, which a voice reads as letter names;
+    // silent letters say nothing), then the whole word after a longer pause: a blend.
+    const sounding = units.map((u, i) => ({ ...u, i })).filter((u) => u.sound);
+    await speak(
+      [
+        ...sounding.map((u) => ({ text: u.sound, speed: "slow" as const, intent: "PHONEME" as const })),
+        { text: word, speed: "normal", intent: "WORD" },
+      ],
+      "slow",
+      {
+        sequence: "BLENDING",
+        onItem: (k) => setBlendIndex(k < sounding.length ? sounding[k].i : chunks.length),
+      },
+    );
     setBlendIndex(null);
   }
 

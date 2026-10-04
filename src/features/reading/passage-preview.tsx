@@ -18,8 +18,8 @@ export function PassagePreview({
     <PassageView
       passage={passage}
       highlight={highlight}
-      speak={(text, speed = "normal", options) =>
-        speak(typeof text === "string" ? [{ text, speed }] : text, options)
+      speak={(text, speed = "normal", { intent, ...options } = {}) =>
+        speak(typeof text === "string" ? [{ text, speed, intent }] : text, options)
       }
     />
   );

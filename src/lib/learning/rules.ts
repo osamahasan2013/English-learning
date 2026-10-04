@@ -230,6 +230,47 @@ export const writingRulesSchema = z.object({
   }),
 });
 
+// Audio pacing (Phase 8.2): how fast, and in what pieces, speech is read to a child at
+// each level. Browser voices do not reliably slow down from the rate alone (iOS Safari
+// sounds nearly the same at 0.85 and 0.6), so pace is set by rate AND by the size of the
+// pieces read in one go AND by the pauses between them — Slow is audibly slower on every
+// engine because it reads smaller pieces with pauses, not only because of its rate.
+// Phonics pieces (a sound, a letter name) are always read on their own, never run into
+// the words around them. docs/audio-engine.md explains the chosen values.
+export const AUDIO_CHUNKS = ["sentence", "phrase", "word"] as const;
+export type AudioChunk = (typeof AUDIO_CHUNKS)[number];
+
+export const readingPaceSchema = z.object({
+  // Speech-synthesis rate (1 = the voice's own speed).
+  rate: z.number().min(0.5).max(1.2),
+  // Read in one go: a whole sentence, a short phrase (up to maxWords) or one word.
+  chunk: z.enum(AUDIO_CHUNKS),
+  maxWords: z.number().int().min(1).max(12),
+  // Silence between the pieces of a sentence, and between sentences (ms).
+  pauseMs: z.number().int().min(0).max(1500),
+  sentenceGapMs: z.number().int().min(0).max(3000),
+});
+
+const bySpeed = <T extends z.ZodTypeAny>(schema: T) => z.object({ normal: schema, slow: schema });
+
+export const audioRulesSchema = z.object({
+  defaultLevel: z.string(),
+  levels: z.record(z.string().regex(/^[A-Z0-9_]{1,40}$/), bySpeed(readingPaceSchema)),
+  phonics: z.object({
+    // A sound or a letter name on its own.
+    rate: bySpeed(z.number().min(0.5).max(1.2)),
+    // Silence around a sound or letter name inside a sentence ("It says … guh … as in goat").
+    tokenGapMs: bySpeed(z.number().int().min(0).max(2000)),
+    // Silence between the sounds of a word when segmenting or blending (g … ay … t).
+    itemGapMs: bySpeed(z.number().int().min(0).max(2000)),
+    // Silence before the whole word at the end of a blend (… t … gate).
+    wordGapMs: bySpeed(z.number().int().min(0).max(3000)),
+  }),
+});
+
+export type AudioRules = z.infer<typeof audioRulesSchema>;
+export type ReadingPace = z.infer<typeof readingPaceSchema>;
+
 export type ReadingRules = z.infer<typeof readingRulesSchema>;
 export type WritingRules = z.infer<typeof writingRulesSchema>;
 export type WritingLevelRules = z.infer<typeof writingLevelRulesSchema>;
@@ -253,6 +294,7 @@ export type LearningRules = {
   spelling: SpellingRules;
   reading: ReadingRules;
   writing: WritingRules;
+  audio: AudioRules;
 };
 
 export const DEFAULT_RULES: LearningRules = {
@@ -494,6 +536,40 @@ export const DEFAULT_RULES: LearningRules = {
     almostMargin: 0.15,
     letterReview: { lookback: 4, missesForReview: 2, correctToResolve: 2 },
   },
+  // Read-aloud for early readers is about 90–120 words a minute and "slow, pointing at each
+  // word" about 50–70; adult conversation is 150+. Rates are kept at 0.6 or above (lower
+  // distorts some voices): the youngest get small pieces and pauses instead.
+  audio: {
+    defaultLevel: "KG3",
+    levels: {
+      KG1: {
+        normal: { rate: 0.78, chunk: "phrase", maxWords: 3, pauseMs: 200, sentenceGapMs: 600 },
+        slow: { rate: 0.62, chunk: "word", maxWords: 1, pauseMs: 380, sentenceGapMs: 900 },
+      },
+      KG2: {
+        normal: { rate: 0.8, chunk: "phrase", maxWords: 4, pauseMs: 180, sentenceGapMs: 550 },
+        slow: { rate: 0.64, chunk: "word", maxWords: 1, pauseMs: 340, sentenceGapMs: 850 },
+      },
+      KG3: {
+        normal: { rate: 0.83, chunk: "sentence", maxWords: 12, pauseMs: 0, sentenceGapMs: 500 },
+        slow: { rate: 0.66, chunk: "phrase", maxWords: 2, pauseMs: 350, sentenceGapMs: 800 },
+      },
+      GRADE1: {
+        normal: { rate: 0.88, chunk: "sentence", maxWords: 12, pauseMs: 0, sentenceGapMs: 450 },
+        slow: { rate: 0.7, chunk: "phrase", maxWords: 2, pauseMs: 330, sentenceGapMs: 750 },
+      },
+      GRADE2: {
+        normal: { rate: 0.92, chunk: "sentence", maxWords: 12, pauseMs: 0, sentenceGapMs: 400 },
+        slow: { rate: 0.74, chunk: "phrase", maxWords: 2, pauseMs: 300, sentenceGapMs: 700 },
+      },
+    },
+    phonics: {
+      rate: { normal: 0.75, slow: 0.6 },
+      tokenGapMs: { normal: 350, slow: 600 },
+      itemGapMs: { normal: 450, slow: 750 },
+      wordGapMs: { normal: 650, slow: 1000 },
+    },
+  },
 };
 
 const schemas = {
@@ -506,6 +582,7 @@ const schemas = {
   spelling: spellingRulesSchema,
   reading: readingRulesSchema,
   writing: writingRulesSchema,
+  audio: audioRulesSchema,
 } as const;
 
 // Merges stored overrides over the defaults. An override that fails validation is

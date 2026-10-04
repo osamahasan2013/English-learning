@@ -43,12 +43,15 @@ export async function loadSoundTable(supabase: Supabase): Promise<SoundTable> {
     supabase
       .from("phonics_pattern_sounds")
       .select(
-        "phonemes, say_as, tts_quality, keyword, keyword_position, is_primary, audio_assets(storage_path, status), phonics_patterns!inner(status, audio_assets(storage_path, status))",
+        "phonemes, say_as, tts_quality, keyword, keyword_position, is_primary, audio_assets(storage_path, status), phonics_patterns!inner(status, audio_assets!phonics_patterns_audio_asset_id_fkey(storage_path, status))",
       )
       .eq("phonics_patterns.status", "published"),
     supabase
       .from("phonics_patterns")
-      .select("pattern, letter_name_say_as")
+      // A letter's NAME has its own recording (never the pattern's SOUND clip).
+      .select(
+        "pattern, letter_name_say_as, letter_name_audio:audio_assets!phonics_patterns_letter_name_audio_asset_id_fkey(storage_path, status)",
+      )
       .eq("pattern_type", "letter")
       .eq("status", "published"),
   ]);
@@ -87,7 +90,11 @@ export async function loadSoundTable(supabase: Supabase): Promise<SoundTable> {
   ];
   return buildSoundTable(
     rows,
-    (letters.data ?? []).map((l) => ({ letter: l.pattern, name: l.letter_name_say_as })),
+    (letters.data ?? []).map((l) => ({
+      letter: l.pattern,
+      name: l.letter_name_say_as,
+      assetUrl: assetUrl(l.letter_name_audio as Asset, base),
+    })),
   );
 }
 

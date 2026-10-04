@@ -29,10 +29,11 @@ export function BlendSoundsRenderer({
     if (blending) return;
     setBlending(true);
     // One sequence: a new tap (or leaving the screen) stops it cleanly.
+    // The sounds one by one with clear gaps (the child does the blending).
     await speak(
-      content.units.map((u) => ({ text: u.sayAs, speed })),
+      content.units.map((u) => ({ text: u.sayAs, speed, intent: "PHONEME" as const })),
       speed,
-      { onItem: setActive },
+      { onItem: setActive, sequence: "SEGMENTING" },
     );
     setActive(null);
     setBlending(false);
@@ -54,7 +55,7 @@ export function BlendSoundsRenderer({
               type="button"
               onClick={() => {
                 setActive(i);
-                void speak(unit.sayAs, "slow").then(() => setActive(null));
+                void speak(unit.sayAs, "slow", { intent: "PHONEME" }).then(() => setActive(null));
               }}
               aria-label={`Sound ${i + 1}: ${unit.grapheme}. Tap to hear.`}
               className={cn(

@@ -564,7 +564,13 @@ export class ContentImporter {
     // Recorded clips of single sounds (optional; they win over speech synthesis).
     const phonemeAudio = file.phonemes
       .filter((ph) => ph.audio)
-      .map((ph) => ({ storage_path: ph.audio, kind: "phonics", tts_text: soundToken([ph.code]), status: "published" }));
+      .map((ph) => ({
+        storage_path: ph.audio,
+        kind: "phoneme",
+        content_key: `phoneme:${ph.code}`,
+        tts_text: soundToken([ph.code]),
+        status: "published",
+      }));
     const phonemeAudioIds = phonemeAudio.length
       ? await this.sync("audio_assets", "audio assets", ["storage_path"], phonemeAudio)
       : new Map<string, string>();
@@ -601,14 +607,27 @@ export class ContentImporter {
         sort_order: i,
       })),
     );
-    const audioRows = file.patterns
-      .filter((p) => p.audio)
-      .map((p) => ({
-        storage_path: p.audio,
-        kind: "phonics",
-        tts_text: soundToken(p.sounds.find((s) => s.primary)?.phonemes ?? []),
-        status: "published",
-      }));
+    // A pattern's SOUND recording, and (letters) a separate recording of the letter's NAME.
+    const audioRows = [
+      ...file.patterns
+        .filter((p) => p.audio)
+        .map((p) => ({
+          storage_path: p.audio,
+          kind: "phoneme",
+          content_key: `pattern_sound:${p.code}`,
+          tts_text: soundToken(p.sounds.find((s) => s.primary)?.phonemes ?? []),
+          status: "published",
+        })),
+      ...file.patterns
+        .filter((p) => p.letterNameAudio && p.type === "letter")
+        .map((p) => ({
+          storage_path: p.letterNameAudio,
+          kind: "letter_name",
+          content_key: `letter_name:${p.pattern}`,
+          tts_text: p.letterNameSayAs || p.pattern.toUpperCase(),
+          status: "published",
+        })),
+    ];
     const audioIds = audioRows.length
       ? await this.sync("audio_assets", "audio assets", ["storage_path"], audioRows)
       : new Map<string, string>();
@@ -633,6 +652,8 @@ export class ContentImporter {
           letter_name: p.letterName,
           letter_name_say_as: p.letterNameSayAs,
           audio_asset_id: p.audio ? (audioIds.get(p.audio) ?? null) : null,
+          letter_name_audio_asset_id:
+            p.letterNameAudio && p.type === "letter" ? (audioIds.get(p.letterNameAudio) ?? null) : null,
           status: p.status,
         });
       } catch (error) {

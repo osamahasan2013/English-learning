@@ -2,13 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { AudioUnavailable } from "@/components/child/audio-controls";
-import {
-  stopAudio,
-  type AudioRequest,
-  type AudioSpeed,
-  type PlayResult,
-  type SpeakFn,
-} from "@/lib/audio/audio-service";
+import { stopAudio, type AudioSpeed, type PlayResult, type SpeakFn } from "@/lib/audio/audio-service";
 import type { PassageRef } from "@/lib/content/question-schemas";
 import type { ReadingPassage } from "@/lib/learning/lesson-payload";
 import { normalizeReadingWord, tokenizeWords } from "@/lib/learning/reading";
@@ -16,8 +10,8 @@ import { cn } from "@/lib/utils";
 
 // A reading text on screen: large type, short lines, generous spacing, one paragraph per
 // page of the story (a speaker's name for dialogue). Listen reads it sentence by sentence and
-// highlights the sentence being read; for the youngest readers Slow reads it word by word and
-// highlights each word (pointing at words as they are read). A recording of the whole text,
+// highlights the sentence being read; when the child's level reads it in phrases or word by
+// word (the youngest, and Slow), the words being said are pointed at too. A recording of the whole text,
 // when there is one, plays instead without highlighting (its timing is unknown). Tapping a
 // word says it — and is reported as a word the child needed help with.
 //
@@ -49,7 +43,9 @@ type Props = {
   autoListen?: AudioSpeed | null;
 };
 
-type Active = { sentence: number; word: number | null } | null;
+// The sentence being read, and the words of it being said right now when it is read in
+// phrases or word by word ([start, end) word indexes; null: the whole sentence).
+type Active = { sentence: number; words: [number, number] | null } | null;
 
 export function PassageView({
   passage,
@@ -99,25 +95,19 @@ export function PassageView({
       void speak([{ text, assetUrl: passage.audioUrl, speed }]).then(finish);
       return;
     }
-    if (speed === "slow" && highlight === "word") {
-      // Word by word: each word of each sentence, pointed at as it is said.
-      const items: { request: AudioRequest; at: Active }[] = sentences.flatMap((s, si) =>
-        tokenizeWords(s.text).map((t, wi) => ({
-          request: { text: t.text, speed },
-          at: { sentence: si, word: wi },
-        })),
-      );
-      void speak(
-        items.map((i) => i.request),
-        speed,
-        { onItem: (i) => at(items[i]?.at ?? null) },
-      ).then(finish);
-      return;
-    }
+    // Sentence by sentence; the audio service reads each one in the pieces the child's
+    // level asks for at this speed (whole, in phrases, or word by word) and reports each
+    // piece as it starts, so the highlight follows what is being said.
     void speak(
-      sentences.map((s) => ({ text: s.text, speed })),
+      sentences.map((s) => ({ text: s.text, speed, intent: "STORY_READING" as const })),
       speed,
-      { onItem: (i) => at({ sentence: i, word: null }) },
+      {
+        onItem: (i) => at({ sentence: i, words: null }),
+        onChunk: (i, w) => {
+          const total = tokenizeWords(sentences[i]?.text ?? "").length;
+          at({ sentence: i, words: w.count > 0 && w.count < total ? [w.start, w.start + w.count] : null });
+        },
+      },
     ).then(finish);
   }
 
@@ -129,7 +119,7 @@ export function PassageView({
     run.current++;
     setPlaying(false);
     setActive(null);
-    void speak(word, "slow");
+    void speak(word, "slow", { intent: "WORD" });
   }
 
   function stop() {
@@ -226,7 +216,7 @@ export function PassageView({
               {paragraph.sentences.map((sentence, si) => {
                 sentenceIndex++;
                 const index = sentenceIndex;
-                const isActive = active?.sentence === index && active.word === null;
+                const isActive = active?.sentence === index;
                 const isPointed = pointTo?.paragraph === pi && pointTo.sentence === si;
                 return (
                   <span
@@ -242,7 +232,7 @@ export function PassageView({
                     {isPointed ? <span className="sr-only">The answer is here: </span> : null}
                     <SentenceWords
                       text={sentence.text}
-                      activeWord={active?.sentence === index ? active.word : null}
+                      activeWords={active?.sentence === index ? active.words : null}
                       focus={focus}
                       marked={marked}
                       onWord={sayWord}
@@ -261,13 +251,13 @@ export function PassageView({
 // One sentence, each word a button (tap to hear it), punctuation as plain text.
 function SentenceWords({
   text,
-  activeWord,
+  activeWords,
   focus,
   marked,
   onWord,
 }: {
   text: string;
-  activeWord: number | null;
+  activeWords: [number, number] | null;
   focus: ReadonlySet<string>;
   marked: string | null;
   onWord: (word: string) => void;
@@ -277,7 +267,7 @@ function SentenceWords({
   let last = 0;
   tokens.forEach((t, i) => {
     if (t.start > last) parts.push(text.slice(last, t.start));
-    const isActive = activeWord === i;
+    const isActive = !!activeWords && i >= activeWords[0] && i < activeWords[1];
     const isFocus = focus.has(t.normalized);
     const isMarked = marked === t.normalized;
     parts.push(

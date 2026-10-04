@@ -24,6 +24,7 @@ import {
   type PlayOptions,
   type PlayResult,
 } from "@/lib/audio/audio-service";
+import { DEFAULT_AUDIO_PACING, type AudioPacing } from "@/lib/audio/pacing";
 import { EMPTY_SOUND_TABLE, type SoundTable } from "@/lib/audio/pronunciation";
 
 // The phonics sounds and letter names for the screen (from the database, with any
@@ -39,6 +40,18 @@ export function useSoundTable() {
   return useContext(SoundTableContext);
 }
 
+// How fast and in what pieces speech is read for the child's level (the `audio` learning
+// rules). The child layout provides it for the child's level; a lesson provides its own.
+const AudioPacingContext = createContext<AudioPacing>(DEFAULT_AUDIO_PACING);
+
+export function AudioPacingProvider({ pacing, children }: { pacing: AudioPacing; children: ReactNode }) {
+  return createElement(AudioPacingContext.Provider, { value: pacing }, children);
+}
+
+export function useAudioPacing() {
+  return useContext(AudioPacingContext);
+}
+
 // The playback state as the service knows it (one store for the whole app).
 export function useAudioSnapshot() {
   return useSyncExternalStore(subscribeAudio, getAudioSnapshot, getServerAudioSnapshot);
@@ -47,9 +60,11 @@ export function useAudioSnapshot() {
 // A screen's access to audio. The screen is the owner of what it starts: `speaking` and
 // `state` describe its own request (derived from the service, never kept separately), and
 // leaving the screen stops its sound — not a sound another screen started meanwhile.
-export function useAudio(table?: SoundTable) {
+export function useAudio(table?: SoundTable, pacing?: AudioPacing) {
   const contextTable = useSoundTable();
   const sounds = table ?? contextTable;
+  const contextPacing = useAudioPacing();
+  const pace = pacing ?? contextPacing;
   const [owner] = useState<AudioOwner>(() => ({}));
   const [supported, setSupported] = useState(true);
   const snapshot = useAudioSnapshot();
@@ -67,9 +82,9 @@ export function useAudio(table?: SoundTable) {
   const speak = useCallback(
     (
       request: AudioRequest | AudioRequest[],
-      options: Omit<PlayOptions, "sounds" | "owner"> = {},
-    ): Promise<PlayResult> => playAudio(request, { ...options, sounds, owner }),
-    [sounds, owner],
+      options: Omit<PlayOptions, "sounds" | "owner" | "pacing"> = {},
+    ): Promise<PlayResult> => playAudio(request, { ...options, sounds, owner, pacing: pace }),
+    [sounds, owner, pace],
   );
 
   const stop = useCallback(() => stopAudio({ owner }), [owner]);
