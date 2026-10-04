@@ -123,5 +123,5 @@ them the app still builds and shows a setup screen. `NEXT_PUBLIC_*` are inlined 
 
 `docs/architecture.md`, `docs/database.md`, `docs/curriculum.md`, `docs/audio.md`,
 `docs/development-roadmap.md`, `docs/decisions.md`, `docs/development.md`,
-`docs/writing-engine.md`.
+`docs/writing-engine.md`, `docs/audio-engine.md`.
 Update them when behaviour or architecture changes; record decisions as ADRs.

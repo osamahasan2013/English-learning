@@ -137,6 +137,17 @@ ADR-039 – ADR-042; [writing-engine.md](writing-engine.md)):
 | Screens       | `/child/writing`, `/parent/writing` + dashboard card, `/admin/writing[/glyphs/:code]` (preview, publish, thresholds, try-it pad)                                                                                                                  |
 | Tests         | unit `writing.test.ts`, `writing-ui.test.tsx` (+ content files: every shipped writing question right and wrong, device = server), SQL `010_writing_engine.sql`, integration `writing.test.ts`, e2e `writing.spec.ts` on phone, tablet and desktop |
 
+## Phase 8.1 — audio reliability ✅
+
+Hardening of the one audio service before Phase 9 (ADR-043, [audio-engine.md](audio-engine.md)):
+request ids with stale-callback protection, waiting for the speech engine to let go before
+speaking (WebKit / Android process `cancel()` late), one retry for a lost utterance, start /
+end watchdogs, one playback state for `useAudio`, owner-scoped stop, on-device voices first,
+long text split, iOS unlock on the first tap, tolerant token parsing, content-free
+diagnostics; Stop, Start again and Read it again fixed. Tests: `audio-service.test.tsx`,
+`audio-ui.test.tsx`, `pronunciation.test.ts`, e2e `audio.spec.ts` with an instrumented engine.
+Still to do: confirm on real iOS Safari and Android devices.
+
 ## Phases
 
 | #   | Phase                       | Status | Notes / next steps                                                                                                                                                                                                                                                        |

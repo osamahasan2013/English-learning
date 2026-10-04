@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { PassageView } from "@/features/reading/passage-view";
+import { stopAudio, type AudioSpeed } from "@/lib/audio/audio-service";
 import { cn } from "@/lib/utils";
 import type { QuestionOf, ReadingReport, RendererProps } from "../types";
 
@@ -27,6 +28,9 @@ export function ReadPassageRenderer({ step, speak, onReading }: RendererProps<Qu
   const [rereads, setRereads] = useState(0);
   const [listened, setListened] = useState(false);
   const [readKey, setReadKey] = useState(0);
+  // The speed of the child's last listen, and what Read it again replays (null: nothing).
+  const lastSpeed = useRef<AudioSpeed | null>(null);
+  const [replay, setReplay] = useState<AudioSpeed | null>(null);
   const top = useRef<HTMLDivElement>(null);
 
   // Everything the report needs, kept in a ref so the leave handler sees the latest values.
@@ -116,9 +120,11 @@ export function ReadPassageRenderer({ step, speak, onReading }: RendererProps<Qu
         passage={passage}
         speak={speak}
         highlight={content.highlight}
+        autoListen={replay}
         onListen={({ speed }) => {
           if (speed === "slow") stats.current.slowListens++;
           else stats.current.listens++;
+          lastSpeed.current = speed;
           setListened(true);
         }}
         onWordHelp={(wordId) => {
@@ -168,6 +174,12 @@ export function ReadPassageRenderer({ step, speak, onReading }: RendererProps<Qu
             onClick={() => {
               stats.current.rereads++;
               setRereads((n) => n + 1);
+              // The text starts over from the top: read aloud again (at the child's last
+              // speed) when they listened to it, or it is a listen-first story; otherwise a
+              // reading still going is stopped and the child reads it again themselves.
+              const again = lastSpeed.current ?? (listenFirst ? "normal" : null);
+              if (!again) stopAudio();
+              setReplay(again);
               setReadKey((k) => k + 1);
               top.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
             }}

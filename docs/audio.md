@@ -71,19 +71,22 @@ recording or from synthesis.
 ## The audio service
 
 `src/lib/audio/audio-service.ts` is the only code that touches `speechSynthesis` or
-`Audio` (components call `useAudio().speak` or the `speak` prop):
+`Audio` (components call `useAudio().speak` or the `speak` prop). Its playback lifecycle —
+request ids, waiting for the engine to let go before speaking, retries, the playback
+state, owners, the buttons, iOS and offline behaviour — is in
+[audio-engine.md](audio-engine.md). In short:
 
-- **One thing at a time.** Every request (or `stopAudio`) cancels what is playing,
+- **One thing at a time.** Every request (or `stopAudio`) stops what is playing,
   including the rest of a sequence ("suh… the sound at the start of apple… tuh… sat"),
   so repeated taps never overlap or queue. A sequence reports each item as it starts, so
   the screen can highlight the sound being played.
-- **Clean-up.** Leaving a screen (unmount), hiding the app or leaving the page stops the
-  sound. A recorded clip that is stopped releases whoever is waiting on it, so the
-  `speaking` state never gets stuck.
+- **Clean-up.** Leaving a screen stops the sound that screen started; hiding the app or
+  leaving the page stops everything.
 - **Results.** `played`, `interrupted` (stopped by a newer request: not a failure) or
-  `unavailable` (nothing could play: the visible "No sound right now" note).
-- **Voice.** en-US, a natural voice when installed (re-chosen when the voice list loads),
-  rate 0.85, "Slow" 0.6, pitch 1. The voice is not processed to sound "cute".
+  `unavailable` (nothing could be heard: "Audio isn't available right now. Try again, or
+  read the words.").
+- **Voice.** en-US, a natural voice on the device when installed (re-chosen when the voice
+  list loads), rate 0.85, "Slow" 0.6, pitch 1. The voice is not processed to sound "cute".
 - **Recorded clips** play first. If a clip fails, the text is spoken instead.
 
 ## Pronunciation matrix

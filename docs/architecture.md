@@ -516,15 +516,21 @@ Full detail, limitations and the pronunciation matrix: [audio.md](audio.md).
   names. The table comes from the database (`src/lib/server/sound-table.ts`); the child
   layout provides it, and lesson payloads carry a copy for offline play.
 - **Playing** goes through `src/lib/audio/audio-service.ts`, the only code that touches
-  `speechSynthesis`/`Audio`. One thing plays at a time: a new request cancels the old one
-  and the rest of its sequence. Leaving a screen or hiding the app stops it. Results are
-  `played` / `interrupted` / `unavailable`. Settings: en-US, natural voice when installed,
-  rate 0.85, "Slow" 0.6.
+  `speechSynthesis`/`Audio` ([audio-engine.md](audio-engine.md)). One thing plays at a
+  time: every request has an id, and starting one stops the old one and the rest of its
+  sequence; callbacks of an older request never touch the newer one. A new request waits
+  until the speech engine confirms the old utterance is gone (WebKit and Android process
+  `cancel()` late and drop an utterance spoken right after it), speaks in the same tick
+  when nothing is playing (iOS needs that inside a tap), and says a lost utterance once
+  more. One playback state (`idle` / `loading` / `playing` / `unavailable`) is read by
+  `useAudio`; a screen owns the sound it starts and stops only that on unmount; hiding
+  the app stops everything. Results are `played` / `interrupted` / `unavailable`.
+  Settings: en-US, a natural on-device voice when installed, rate 0.85, "Slow" 0.6.
 - **Recordings** (`audio_assets` in the `content-audio` bucket) replace synthesis per
   phoneme, pattern sound or word with no component change.
-- Every spoken item has **Listen**, **Slow** and **Again** (`AudioControls`). When a device
-  cannot speak, a visible "no sound" note shows, and nothing waits for audio, so a lesson
-  can always be finished.
+- Every spoken item has **Listen**, **Slow** and **Again**, and **Stop** while playing
+  (`AudioControls`). When nothing can be heard, "Audio isn't available right now" shows,
+  and nothing waits for audio, so a lesson can always be finished.
 
 ## Offline / PWA
 

@@ -4,11 +4,22 @@
 // exists, otherwise to speech synthesis that says the SOUND (never the letter names).
 // Moving to professional recordings means filling audio_assets — no component changes.
 //
-// One thing plays at a time. Every new request (or stopAudio) cancels what is playing,
-// including the rest of a sequence ("s… a… t… sat"), so repeated taps never overlap or
-// queue up, and leaving a screen stops the sound.
+// One thing plays at a time (docs/audio-engine.md). Every request gets an id; starting a
+// request makes it the current one and stops what was playing, including the rest of a
+// sequence ("s… a… t… sat"). Callbacks from an older request never touch the newer one.
+// Speech engines do not stop instantly: WebKit (iOS Safari) and Android process cancel()
+// after the current task and take an utterance spoken right after it with them, so a new
+// request waits until the engine confirms the old utterance is gone before it speaks, and
+// an utterance the engine still drops is said once more. Nothing fails silently: the
+// result says whether anything was heard, and failures are logged without content.
 
-import { EMPTY_SOUND_TABLE, planSpeech, type SoundTable, type SpeechPart } from "@/lib/audio/pronunciation";
+import {
+  EMPTY_SOUND_TABLE,
+  planSpeech,
+  unresolvedTokens,
+  type SoundTable,
+  type SpeechPart,
+} from "@/lib/audio/pronunciation";
 
 export type AudioSpeed = "normal" | "slow";
 
@@ -22,20 +33,51 @@ export type AudioRequest = {
 };
 
 // played: something was heard. interrupted: a newer request (or leaving) stopped it — not
-// a failure. unavailable: nothing could play (no speech engine, blocked file).
+// a failure. unavailable: nothing could be heard (no speech engine, no voice, blocked).
 export type PlayResult = "played" | "interrupted" | "unavailable";
+
+// The one playback state of the app. loading: a request is starting (the engine is
+// letting go of the previous one, or a clip is loading). playing: sound is coming out.
+// unavailable: the last request could not be heard.
+export type PlaybackState = "idle" | "loading" | "playing" | "unavailable";
+
+// Whoever started the current request (a screen's useAudio), so leaving one screen only
+// stops its own sound.
+export type AudioOwner = object;
+
+export type AudioSnapshot = {
+  state: PlaybackState;
+  requestId: number;
+  owner: AudioOwner | null;
+  source: "asset" | "tts" | null;
+};
 
 export const SPEECH_SETTINGS = {
   locale: "en-US",
   // A little slower than conversation; "Slow" is clearly slower without dragging.
   rate: { normal: 0.85, slow: 0.6 } satisfies Record<AudioSpeed, number>,
   pitch: 1,
+  volume: 1,
   recordedSlowPlaybackRate: 0.75,
   // A pause between the items of a sequence (each sound of a word), in ms.
   sequenceGapMs: 250,
+  // How long to wait for the engine to confirm a cancel before speaking anyway.
+  cancelSettleMs: 300,
+  // An utterance the engine dropped (cut short by a cancel it processed late, or never
+  // started) is said once more after this pause.
+  retryDelayMs: 150,
+  // No "start" by then: the engine is stuck or lost the utterance.
+  startTimeoutMs: 4000,
+  // An "end" that comes this soon after speak() with no "start" is a dropped utterance.
+  droppedWithinMs: 100,
+  // Longer text is split at sentence and phrase boundaries: some engines (Chrome's online
+  // voices) stop after about 15 seconds of one utterance without telling anyone.
+  maxUtteranceChars: 200,
 } as const;
 
-// Voices known to sound natural, preferred in this order when installed.
+// Voices known to sound natural, preferred in this order when installed. Voices on the
+// device come first: online voices (Chrome's "Google …", Edge's "… Online") need the
+// network, drop utterances after cancel() and stop long ones, so they are a last resort.
 const PREFERRED_VOICES = [
   /natural/i,
   /samantha/i,
@@ -55,108 +97,385 @@ export function isSpeechSynthesisAvailable() {
   );
 }
 
-export function pickVoice(voices: SpeechSynthesisVoice[], locale: string = SPEECH_SETTINGS.locale) {
+export function pickVoice(voices: readonly SpeechSynthesisVoice[], locale: string = SPEECH_SETTINGS.locale) {
   const matching = voices.filter((v) => v.lang.replace("_", "-").toLowerCase() === locale.toLowerCase());
   const pool = matching.length ? matching : voices.filter((v) => v.lang.toLowerCase().startsWith("en"));
-  for (const pattern of PREFERRED_VOICES) {
-    const voice = pool.find((v) => pattern.test(v.name));
-    if (voice) return voice;
+  const local = pool.filter((v) => v.localService);
+  for (const candidates of [local, pool]) {
+    for (const pattern of PREFERRED_VOICES) {
+      const voice = candidates.find((v) => pattern.test(v.name));
+      if (voice) return voice;
+    }
   }
-  return pool.find((v) => v.localService) ?? pool[0] ?? null;
+  return local[0] ?? pool[0] ?? null;
 }
 
-// Voices arrive asynchronously in Chrome; keep the choice up to date instead of asking
-// for every utterance (the first utterance used to get the default, often wrong, voice).
+export function rateFor(speed: AudioSpeed) {
+  return SPEECH_SETTINGS.rate[speed];
+}
+
+// Text → utterances short enough for every engine, split after sentences, then phrases,
+// then words. Short text (nearly everything) is one utterance.
+export function splitForSpeech(text: string, max: number = SPEECH_SETTINGS.maxUtteranceChars): string[] {
+  const clean = text.replace(/\s+/g, " ").trim();
+  if (clean.length <= max) return clean ? [clean] : [];
+  const chunks: string[] = [];
+  let buffer = "";
+  const push = (piece: string) => {
+    if (!piece) return;
+    if (buffer && (buffer + " " + piece).length > max) {
+      chunks.push(buffer);
+      buffer = "";
+    }
+    if (piece.length <= max) {
+      buffer = buffer ? `${buffer} ${piece}` : piece;
+      return;
+    }
+    // One very long sentence: phrases, then words.
+    const phrases = piece.split(/(?<=[,;:])\s+/);
+    if (phrases.length > 1) phrases.forEach(push);
+    else
+      for (const word of piece.split(" ")) {
+        if (buffer && (buffer + " " + word).length > max) {
+          chunks.push(buffer);
+          buffer = "";
+        }
+        buffer = buffer ? `${buffer} ${word}` : word;
+      }
+  };
+  clean.split(/(?<=[.!?])\s+/).forEach(push);
+  if (buffer) chunks.push(buffer);
+  return chunks;
+}
+
+// ── Diagnostics ──────────────────────────────────────────────────────────────────────
+// Structured, content-free records (ids, codes, rates, voice names, lengths) for parents'
+// and admins' debugging in the browser console. Development logs everything; production
+// only failures, and at most a few per page.
+
+type LogFields = Record<string, string | number | boolean | null | undefined>;
+let logged = 0;
+const MAX_PRODUCTION_LOGS = 20;
+
+function logAudio(level: "info" | "warn", event: string, fields: LogFields = {}) {
+  const production = process.env.NODE_ENV === "production";
+  if (production && (level === "info" || logged >= MAX_PRODUCTION_LOGS)) return;
+  if (process.env.NODE_ENV === "test") return;
+  logged++;
+  const line = JSON.stringify({
+    timestamp: new Date().toISOString(),
+    level,
+    event: `audio.${event}`,
+    ...fields,
+  });
+  if (level === "warn") console.warn(line);
+  else console.info(line);
+}
+
+// ── Playback state (one store, read by useAudio) ─────────────────────────────────────
+
+const IDLE: AudioSnapshot = { state: "idle", requestId: 0, owner: null, source: null };
+let snapshot: AudioSnapshot = IDLE;
+const listeners = new Set<() => void>();
+
+function setSnapshot(next: Partial<AudioSnapshot>) {
+  snapshot = { ...snapshot, ...next };
+  for (const listener of listeners) listener();
+}
+
+export function subscribeAudio(listener: () => void) {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+export function getAudioSnapshot() {
+  return snapshot;
+}
+
+export function getServerAudioSnapshot() {
+  return IDLE;
+}
+
+// ── Engine setup ─────────────────────────────────────────────────────────────────────
+
+// Voices arrive asynchronously (Chrome, Safari): the choice is refreshed on
+// "voiceschanged" instead of assuming getVoices() is filled at the first utterance.
 let voice: SpeechSynthesisVoice | null = null;
-let listening = false;
+let setUp = false;
+// iOS speaks only after speech has been started inside a tap once; a silent utterance on
+// the first tap anywhere unlocks it, so speech that starts after loading (a question read
+// aloud when it appears) is heard too.
+let unlockUtterance: SpeechSynthesisUtterance | null = null;
+let unlocked = false;
+
+function refreshVoice() {
+  if (!isSpeechSynthesisAvailable()) return;
+  const voices = window.speechSynthesis.getVoices();
+  // An engine can briefly report no voices: keep the one already chosen.
+  if (voices.length) voice = pickVoice(voices);
+}
+
+function unlock() {
+  if (unlocked || !isSpeechSynthesisAvailable()) return;
+  unlocked = true;
+  const synth = window.speechSynthesis;
+  if (activeUtterance || synth.speaking || synth.pending) return;
+  const u = new SpeechSynthesisUtterance("");
+  u.volume = 0;
+  unlockUtterance = u;
+  const done = () => {
+    if (unlockUtterance === u) unlockUtterance = null;
+  };
+  u.onend = done;
+  u.onerror = done;
+  // Some engines never report an empty utterance's end.
+  setTimeout(done, 1000);
+  synth.speak(u);
+}
+
 function ensureSetup() {
-  if (listening || typeof window === "undefined") return;
-  listening = true;
+  if (setUp || typeof window === "undefined") return;
+  setUp = true;
   if (isSpeechSynthesisAvailable()) {
-    const refresh = () => {
-      voice = pickVoice(window.speechSynthesis.getVoices());
-    };
-    refresh();
-    window.speechSynthesis.addEventListener?.("voiceschanged", refresh);
+    refreshVoice();
+    window.speechSynthesis.addEventListener?.("voiceschanged", refreshVoice);
   }
-  // Leaving the page or hiding the app stops the sound (some browsers keep speaking).
+  window.addEventListener("pointerdown", unlock, { capture: true, passive: true });
+  window.addEventListener("keydown", unlock, { capture: true, passive: true });
+  // Leaving the page or hiding the app stops the sound (some browsers keep speaking; iOS
+  // leaves the engine stuck after the screen locks if it is not cancelled).
   window.addEventListener("pagehide", () => stopAudio());
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") stopAudio();
   });
 }
 
-let generation = 0;
-let currentAudio: HTMLAudioElement | null = null;
-let finishCurrent: (() => void) | null = null;
-
-export function stopAudio() {
-  generation++;
-  if (currentAudio) {
-    currentAudio.pause();
-    currentAudio = null;
-  }
-  // A paused clip fires no "ended": release whoever is waiting on it.
-  finishCurrent?.();
-  finishCurrent = null;
-  if (isSpeechSynthesisAvailable()) window.speechSynthesis.cancel();
+// Start loading the voice list early (the first press then gets the right voice).
+export function prepareAudio() {
+  ensureSetup();
+  if (isSpeechSynthesisAvailable()) window.speechSynthesis.getVoices();
 }
 
-function playRecorded(url: string, speed: AudioSpeed): Promise<boolean> {
-  return new Promise((resolve) => {
-    const audio = new Audio(url);
-    currentAudio = audio;
+// ── Requests and cancellation ────────────────────────────────────────────────────────
+
+let lastId = 0;
+// The request allowed to make sound. Bumped by every new request and by stopAudio.
+let current = 0;
+
+// Our utterance the engine is working on, kept referenced (Chrome stops reporting events
+// for an utterance that was garbage-collected) and with whoever waits for it to settle.
+let activeUtterance: SpeechSynthesisUtterance | null = null;
+const settleWaiters = new Set<() => void>();
+
+let clip: HTMLAudioElement | null = null;
+let releaseClip: (() => void) | null = null;
+
+// One reusable element: once a tap has started it, iOS lets it play again later.
+function clipElement() {
+  if (!clip) clip = new Audio();
+  return clip;
+}
+
+// Stops the engine and the clip. Returns a promise when the engine has to be waited for
+// (it was speaking), or null when nothing was playing — then a request in a tap can speak
+// straight away, still inside the tap (iOS needs that for the first sound).
+function halt(): Promise<void> | null {
+  if (clip && !clip.paused) clip.pause();
+  releaseClip?.();
+  releaseClip = null;
+  if (!isSpeechSynthesisAvailable()) return null;
+  const synth = window.speechSynthesis;
+  const ours = activeUtterance;
+  const onlyUnlock = !ours && unlockUtterance !== null;
+  if (!ours && (onlyUnlock || (!synth.speaking && !synth.pending))) return null;
+  const settled = new Promise<void>((resolve) => {
     let done = false;
-    const finish = (ok: boolean) => {
+    const finish = () => {
       if (done) return;
       done = true;
-      if (finishCurrent === release) finishCurrent = null;
-      resolve(ok);
+      clearTimeout(timer);
+      settleWaiters.delete(finish);
+      // One more task: an engine that processes cancel() late flushes its whole queue in
+      // the task it reports the cancel from.
+      setTimeout(resolve, 0);
     };
-    const release = () => finish(false);
-    finishCurrent = release;
+    const timer = setTimeout(finish, ours ? SPEECH_SETTINGS.cancelSettleMs : 100);
+    // Registered before cancel(): engines that cancel at once report it synchronously.
+    if (ours) settleWaiters.add(finish);
+  });
+  synth.cancel();
+  return settled;
+}
+
+// Stops whatever is playing. With an owner, only if that owner started it (a screen that
+// unmounts must not cut off another screen's sound).
+export function stopAudio(options: { owner?: AudioOwner } = {}) {
+  if (options.owner && snapshot.owner !== options.owner) return;
+  current = ++lastId;
+  void halt();
+  setSnapshot({ state: "idle", requestId: current, owner: null, source: null });
+}
+
+type Outcome = { outcome: "ended" | "interrupted" | "failed"; started: boolean; error?: string };
+
+function playRecorded(url: string, speed: AudioSpeed, id: number): Promise<Outcome> {
+  return new Promise((resolve) => {
+    const audio = clipElement();
+    let done = false;
+    const finish = (o: Outcome) => {
+      if (done) return;
+      done = true;
+      audio.onended = null;
+      audio.onerror = null;
+      audio.onplaying = null;
+      if (releaseClip === release) releaseClip = null;
+      resolve(o);
+    };
+    // A paused clip fires no "ended": whoever stops it releases the waiting request.
+    const release = () => finish({ outcome: "interrupted", started: true });
+    releaseClip = release;
+    audio.src = url;
     audio.playbackRate = speed === "slow" ? SPEECH_SETTINGS.recordedSlowPlaybackRate : 1;
-    audio.onended = () => finish(true);
-    audio.onerror = () => finish(false);
-    audio.play().catch(() => finish(false));
+    audio.onplaying = () => {
+      if (id === current) setSnapshot({ state: "playing", source: "asset" });
+    };
+    audio.onended = () => finish({ outcome: "ended", started: true });
+    audio.onerror = () => finish({ outcome: "failed", started: false, error: "asset_error" });
+    const played = audio.play();
+    if (played && typeof played.catch === "function")
+      played.catch((e: unknown) =>
+        finish({
+          outcome: "failed",
+          started: false,
+          error: e instanceof DOMException ? e.name : "play_rejected",
+        }),
+      );
   });
 }
 
-function speakSynthesized(text: string, speed: AudioSpeed): Promise<boolean> {
-  if (!isSpeechSynthesisAvailable() || text.trim() === "") return Promise.resolve(false);
+const INTERRUPTED = new Set(["interrupted", "canceled"]);
+
+function speakOnce(
+  text: string,
+  speed: AudioSpeed,
+  id: number,
+  chosen: SpeechSynthesisVoice | null | undefined,
+): Promise<Outcome> {
   return new Promise((resolve) => {
     const synth = window.speechSynthesis;
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = SPEECH_SETTINGS.locale;
-    utterance.rate = SPEECH_SETTINGS.rate[speed];
-    utterance.pitch = SPEECH_SETTINGS.pitch;
-    const chosen = voice ?? pickVoice(synth.getVoices());
-    if (chosen) utterance.voice = chosen;
-    // Some engines never fire onend; never leave a caller waiting forever.
-    const timeout = setTimeout(
-      () => resolve(true),
-      Math.max(3000, (text.length * 150) / SPEECH_SETTINGS.rate[speed]),
-    );
-    utterance.onend = () => {
-      clearTimeout(timeout);
-      resolve(true);
+    // Chrome on Android pauses the engine when the app was in the background.
+    if (synth.paused) synth.resume();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = SPEECH_SETTINGS.locale;
+    u.rate = rateFor(speed);
+    u.pitch = SPEECH_SETTINGS.pitch;
+    u.volume = SPEECH_SETTINGS.volume;
+    const v = chosen === undefined ? (voice ?? pickVoice(synth.getVoices())) : chosen;
+    if (v) u.voice = v;
+    activeUtterance = u;
+    const spokenAt = Date.now();
+    let started = false;
+    let settled = false;
+    let endTimer: ReturnType<typeof setTimeout> | undefined;
+    const finish = (outcome: Outcome["outcome"], error?: string) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(startTimer);
+      clearTimeout(endTimer);
+      if (activeUtterance === u) activeUtterance = null;
+      for (const waiter of [...settleWaiters]) waiter();
+      resolve({ outcome, started, error });
     };
-    utterance.onerror = (e) => {
-      clearTimeout(timeout);
-      // Cancelled by a newer request: it did play, it was just cut short.
-      resolve(e.error === "interrupted" || e.error === "canceled");
+    const onStart = () => {
+      if (started) return;
+      started = true;
+      clearTimeout(startTimer);
+      if (id === current) setSnapshot({ state: "playing", source: "tts" });
+      // Some engines never report the end: never leave a request waiting forever.
+      const expected = (text.length * 150) / rateFor(speed);
+      endTimer = setTimeout(() => finish("ended", "no_end"), Math.max(4000, expected * 2));
     };
-    synth.speak(utterance);
+    const startTimer = setTimeout(() => {
+      // An engine that speaks without reporting "start" is still speaking.
+      if (synth.speaking && activeUtterance === u) onStart();
+      else finish("failed", "no_start");
+    }, SPEECH_SETTINGS.startTimeoutMs);
+    u.onstart = onStart;
+    u.onend = () => {
+      if (!started && Date.now() - spokenAt < SPEECH_SETTINGS.droppedWithinMs)
+        finish("interrupted", "dropped");
+      else {
+        started = true;
+        finish("ended");
+      }
+    };
+    u.onerror = (e) => finish(INTERRUPTED.has(e.error) ? "interrupted" : "failed", e.error);
+    synth.speak(u);
   });
 }
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// Errors that mean "this voice cannot speak now" (an online voice offline, a voice that
+// was removed): the device's default voice is tried instead.
+const VOICE_ERRORS = new Set([
+  "network",
+  "synthesis-unavailable",
+  "synthesis-failed",
+  "voice-unavailable",
+  "language-unavailable",
+]);
+
+async function speakText(text: string, speed: AudioSpeed, id: number): Promise<boolean> {
+  if (!isSpeechSynthesisAvailable() || text.trim() === "") return false;
+  let heard = false;
+  for (const chunk of splitForSpeech(text)) {
+    if (id !== current) return heard;
+    let r = await speakOnce(chunk, speed, id, undefined);
+    if (id !== current) return heard || r.started;
+    // Still the newest request, yet cut short or never started: the engine processed an
+    // earlier cancel late, or lost it. Say it once more.
+    if (r.outcome === "interrupted" || r.error === "no_start") {
+      logAudio("warn", "utterance_lost", { requestId: id, reason: r.error, started: r.started });
+      if (r.error === "no_start") {
+        const settling = halt();
+        if (settling) await settling;
+      }
+      await wait(SPEECH_SETTINGS.retryDelayMs);
+      if (id !== current) return heard;
+      r = await speakOnce(chunk, speed, id, undefined);
+      if (id !== current) return heard || r.started;
+    }
+    if (r.outcome === "failed" && r.error && VOICE_ERRORS.has(r.error) && voice) {
+      logAudio("warn", "voice_failed", { requestId: id, voice: voice.name, error: r.error });
+      r = await speakOnce(chunk, speed, id, null);
+      if (id !== current) return heard || r.started;
+    }
+    if (r.outcome === "failed") {
+      logAudio("warn", "tts_failed", {
+        requestId: id,
+        error: r.error,
+        voice: voice?.name ?? null,
+        voices: window.speechSynthesis.getVoices().length,
+        rate: rateFor(speed),
+        chars: chunk.length,
+      });
+      continue;
+    }
+    heard ||= r.started || r.outcome === "ended";
+  }
+  return heard;
+}
 
 export type PlayOptions = {
   // Phonics sounds and letter names for the tokens in the text.
   sounds?: SoundTable;
   // Called as each item of a sequence starts (to highlight the sound being played).
   onItem?: (index: number) => void;
+  // The screen starting the request (see stopAudio).
+  owner?: AudioOwner;
 };
 
 function partsFor(request: AudioRequest, sounds: SoundTable): SpeechPart[] {
@@ -173,31 +492,56 @@ export async function playAudio(
   options: PlayOptions = {},
 ): Promise<PlayResult> {
   ensureSetup();
-  stopAudio();
-  if (isSpeechSynthesisAvailable()) window.speechSynthesis.getVoices();
-  const mine = generation;
+  // Also re-read here: some Safari versions never send "voiceschanged".
+  refreshVoice();
+  const id = ++lastId;
+  current = id;
+  const settling = halt();
+  setSnapshot({ state: "loading", requestId: id, owner: options.owner ?? null, source: null });
+  if (settling) await settling;
   const requests = Array.isArray(request) ? request : [request];
   const sounds = options.sounds ?? EMPTY_SOUND_TABLE;
   let played = false;
-  for (const [index, req] of requests.entries()) {
-    if (mine !== generation) return "interrupted";
-    if (index > 0) {
-      await wait(SPEECH_SETTINGS.sequenceGapMs);
-      if (mine !== generation) return "interrupted";
+  try {
+    for (const [index, req] of requests.entries()) {
+      if (id !== current) return "interrupted";
+      if (index > 0) {
+        await wait(SPEECH_SETTINGS.sequenceGapMs);
+        if (id !== current) return "interrupted";
+      }
+      options.onItem?.(index);
+      const speed = req.speed ?? "normal";
+      const missing = unresolvedTokens(req.text, sounds);
+      if (missing.length) logAudio("warn", "token_unresolved", { requestId: id, tokens: missing.join(" ") });
+      for (const part of partsFor(req, sounds)) {
+        if (id !== current) return "interrupted";
+        let ok = false;
+        if (part.kind === "asset") {
+          const r = await playRecorded(part.url, speed, id);
+          ok = r.outcome === "ended" || (r.outcome === "interrupted" && r.started);
+          if (r.outcome === "failed" && id === current) {
+            logAudio("warn", "asset_failed", { requestId: id, error: r.error, fallback: "tts" });
+            ok = await speakText(part.fallback, speed, id);
+          }
+        } else ok = await speakText(part.text, speed, id);
+        played ||= ok;
+      }
     }
-    options.onItem?.(index);
-    const speed = req.speed ?? "normal";
-    for (const part of partsFor(req, sounds)) {
-      if (mine !== generation) return "interrupted";
-      let ok = false;
-      if (part.kind === "asset") {
-        ok = await playRecorded(part.url, speed);
-        if (!ok && mine === generation) ok = await speakSynthesized(part.fallback, speed);
-      } else ok = await speakSynthesized(part.text, speed);
-      played ||= ok;
-    }
+  } catch (error) {
+    // A browser API that throws (an engine in a bad state): reported, never thrown.
+    logAudio("warn", "playback_error", {
+      requestId: id,
+      error: error instanceof Error ? error.name : "unknown",
+    });
   }
-  if (mine !== generation) return "interrupted";
+  if (id !== current) return "interrupted";
+  if (!played)
+    logAudio("warn", "unavailable", {
+      requestId: id,
+      tts: isSpeechSynthesisAvailable(),
+      voices: isSpeechSynthesisAvailable() ? window.speechSynthesis.getVoices().length : 0,
+    });
+  setSnapshot({ state: played ? "idle" : "unavailable", source: null });
   return played ? "played" : "unavailable";
 }
 
@@ -206,5 +550,5 @@ export async function playAudio(
 export type SpeakFn = (
   text: string | AudioRequest[],
   speed?: AudioSpeed,
-  options?: Omit<PlayOptions, "sounds">,
+  options?: Omit<PlayOptions, "sounds" | "owner">,
 ) => Promise<PlayResult>;

@@ -1,12 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import type { AudioSpeed, PlayResult } from "@/lib/audio/audio-service";
+import { stopAudio, type AudioSpeed, type PlayResult } from "@/lib/audio/audio-service";
 
-// Listen, Slow and Again (repeats the last one). Large, icon-first, always labelled. If
-// the device cannot play sound, a visible note says so: the words are always on screen,
-// so nothing is blocked.
+// What a child sees when a press could not be heard. The words are always on screen, so
+// nothing is blocked; trying again usually works (the engine was busy or still loading).
+export function AudioUnavailable({ className }: { className?: string }) {
+  return (
+    <p role="status" className={cn("text-muted w-full text-lg font-semibold", className)}>
+      <span aria-hidden>🔇 </span>Audio isn&apos;t available right now. Try again, or read the words.
+    </p>
+  );
+}
+
+// Listen, Slow and Again (repeats the last one), and Stop while something is playing.
+// Large, icon-first, always labelled. Each press restarts the same words from the
+// beginning (one voice at a time: the audio service stops the previous one first). Only
+// the latest press decides what the buttons show.
 export function AudioControls({
   text,
   speak,
@@ -19,26 +30,49 @@ export function AudioControls({
   className?: string;
 }) {
   const [last, setLast] = useState<AudioSpeed | null>(null);
+  const [playing, setPlaying] = useState<AudioSpeed | null>(null);
   const [silent, setSilent] = useState(false);
+  const run = useRef(0);
   if (!text) return null;
   const base = size === "lg" ? "min-h-16 px-5 text-xl rounded-2xl" : "min-h-12 px-4 text-lg rounded-xl";
   const play = (speed: AudioSpeed) => {
+    const mine = ++run.current;
     setLast(speed);
-    void speak(text, speed).then((r) => setSilent(r === "unavailable"));
+    setPlaying(speed);
+    setSilent(false);
+    void speak(text, speed).then((r) => {
+      if (mine !== run.current) return;
+      setPlaying(null);
+      setSilent(r === "unavailable");
+    });
   };
+  const stop = () => {
+    run.current++;
+    setPlaying(null);
+    stopAudio();
+  };
+  const active = (speed: AudioSpeed) => playing === speed && "ring-accent ring-4";
   return (
-    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+    <div className={cn("flex flex-wrap items-center gap-2", className)} data-playing={playing ?? undefined}>
       <button
         type="button"
         onClick={() => play("normal")}
-        className={cn("bg-primary flex items-center gap-2 font-bold text-white shadow-sm", base)}
+        className={cn(
+          "bg-primary flex items-center gap-2 font-bold text-white shadow-sm",
+          base,
+          active("normal"),
+        )}
       >
         <span aria-hidden>🔊</span> Listen
       </button>
       <button
         type="button"
         onClick={() => play("slow")}
-        className={cn("border-border bg-surface flex items-center gap-2 border-2 font-bold shadow-sm", base)}
+        className={cn(
+          "border-border bg-surface flex items-center gap-2 border-2 font-bold shadow-sm",
+          base,
+          active("slow"),
+        )}
       >
         <span aria-hidden>🐢</span> Slow
       </button>
@@ -54,11 +88,20 @@ export function AudioControls({
           <span aria-hidden>🔁</span> Again
         </button>
       ) : null}
-      {silent ? (
-        <p role="status" className="text-muted w-full text-lg font-semibold">
-          <span aria-hidden>🔇 </span>No sound right now. Read the words, or ask a grown-up.
-        </p>
+      {playing ? (
+        <button
+          type="button"
+          onClick={stop}
+          aria-label="Stop audio"
+          className={cn(
+            "border-border bg-surface flex items-center gap-2 border-2 font-bold shadow-sm",
+            base,
+          )}
+        >
+          <span aria-hidden>⏹️</span> Stop
+        </button>
       ) : null}
+      {silent ? <AudioUnavailable /> : null}
     </div>
   );
 }

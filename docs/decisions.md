@@ -555,3 +555,32 @@ Scaffolding is content: sentence frames with starters (KG3), labelled paragraph 
 
 **Consequences.** Raising expectations for a level is a `learning_rules` override. The same
 question behaves appropriately wherever a level uses it.
+
+## ADR-043 — One playback lifecycle: request ids, settle before speaking, owners
+
+**Context.** In production, Slow, Try again and Read again were unreliable. Every new
+request called `speechSynthesis.cancel()` and spoke the new utterance in the same tick.
+WebKit (iOS Safari) and Android Chrome process `cancel()` after the current task and
+remove an utterance spoken right after it, so the new sound was lost — and its
+"canceled" error was counted as played, so nothing reported it. Try again re-reads the
+question while the feedback is still being said, Slow is usually pressed while Listen
+(or the automatic prompt) is speaking, and Start again restarts a story mid-sentence: all
+cancel-then-speak. Read it again remounted the story without touching the audio, so the
+old reading went on under an idle screen. Component state also went stale: an older
+request finishing late set "not playing" while the newer one played, and any screen that
+unmounted stopped everybody's sound.
+
+**Decision.** Keep the single audio service and harden it (docs/audio-engine.md): every
+request has an id and only the current one may change anything; starting a request waits
+for the engine to confirm the previous utterance is gone (or speaks in the same tick when
+nothing plays, keeping iOS's tap requirement); an utterance lost while current is said
+once more; stuck engines time out; one playback state store is read by `useAudio`; each
+screen owns the sound it starts; voices on the device are preferred; long text is split;
+the first tap unlocks iOS speech; failures are reported to the child and logged without
+content. Tokens are parsed tolerantly and broken tokens are never spoken. Read it again
+restarts the reading when the child had listened.
+
+**Consequences.** No component calls a browser audio API, and no parallel audio code
+exists. Behaviour is checked against a modelled engine (immediate and deferred cancel)
+in unit and browser tests; real-device behaviour (iOS Safari, Android) still has to be
+confirmed on devices.

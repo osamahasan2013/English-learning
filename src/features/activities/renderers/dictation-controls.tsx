@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { AudioUnavailable } from "@/components/child/audio-controls";
 import type { AudioSpeed, PlayResult } from "@/lib/audio/audio-service";
 import { cn } from "@/lib/utils";
 
@@ -26,10 +27,18 @@ export function DictationControls({
   const [silent, setSilent] = useState(false);
   const left = limit === null ? null : Math.max(0, limit - played);
   const out = left === 0;
+  const run = useRef(0);
   const play = (speed: AudioSpeed) => {
     if (out) return;
+    const mine = ++run.current;
     setPlayed((n) => n + 1);
-    void speak(text, speed).then((r) => setSilent(r === "unavailable"));
+    setSilent(false);
+    void speak(text, speed).then((r) => {
+      if (mine !== run.current) return;
+      setSilent(r === "unavailable");
+      // A listen that could not be heard does not count.
+      if (r === "unavailable") setPlayed((n) => Math.max(0, n - 1));
+    });
   };
   const base =
     "flex min-h-16 items-center gap-2 rounded-2xl px-5 text-xl font-bold shadow-sm disabled:opacity-50";
@@ -69,11 +78,7 @@ export function DictationControls({
           )}
         </p>
       ) : null}
-      {silent ? (
-        <p role="status" className="text-muted text-lg font-semibold">
-          <span aria-hidden>🔇 </span>No sound right now. Ask a grown-up to read it.
-        </p>
-      ) : null}
+      {silent ? <AudioUnavailable className="text-center" /> : null}
     </div>
   );
 }

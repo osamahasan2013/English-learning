@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { AudioRequest, AudioSpeed, PlayResult, SpeakFn } from "@/lib/audio/audio-service";
+import { AudioUnavailable } from "@/components/child/audio-controls";
+import {
+  stopAudio,
+  type AudioRequest,
+  type AudioSpeed,
+  type PlayResult,
+  type SpeakFn,
+} from "@/lib/audio/audio-service";
 import type { PassageRef } from "@/lib/content/question-schemas";
 import type { ReadingPassage } from "@/lib/learning/lesson-payload";
 import { normalizeReadingWord, tokenizeWords } from "@/lib/learning/reading";
@@ -13,6 +20,12 @@ import { cn } from "@/lib/utils";
 // highlights each word (pointing at words as they are read). A recording of the whole text,
 // when there is one, plays instead without highlighting (its timing is unknown). Tapping a
 // word says it — and is reported as a word the child needed help with.
+//
+// Listen while it reads starts again from the first sentence; Slow restarts it slowly; a
+// tapped word or Stop ends the reading. Only the latest of these decides the buttons and
+// the highlight (an older reading that is cut short reports back late and is ignored).
+// The highlight follows the speech engine sentence by sentence (or word by word); browser
+// voices give no finer timing, so it is as exact as the engine allows, not word-perfect.
 //
 // Highlighting never relies on colour alone: the active sentence or word is also underlined
 // and bold; focus vocabulary is underlined with a dotted line.
@@ -32,6 +45,8 @@ type Props = {
   markWord?: string;
   onListen?: (listen: PassageListen) => void;
   onWordHelp?: (wordId: string | null, word: string) => void;
+  // Start reading aloud as soon as the text appears (Read it again, after listening).
+  autoListen?: AudioSpeed | null;
 };
 
 type Active = { sentence: number; word: number | null } | null;
@@ -45,33 +60,40 @@ export function PassageView({
   markWord,
   onListen,
   onWordHelp,
+  autoListen = null,
 }: Props) {
   const [active, setActive] = useState<Active>(null);
   const [playing, setPlaying] = useState(false);
   const [silent, setSilent] = useState(false);
-  const mounted = useRef(true);
-  useEffect(() => {
-    mounted.current = true;
-    return () => {
-      mounted.current = false;
-    };
-  }, []);
+  // The latest reading; anything from an older one is ignored.
+  const run = useRef(0);
 
   // Sentences in reading order, with their paragraph.
   const sentences = passage.paragraphs.flatMap((p, pi) => p.sentences.map((s, si) => ({ ...s, pi, si })));
   const marked = markWord ? normalizeReadingWord(markWord) : null;
   const focus = new Set(passage.focusWords);
 
-  const finish = (result: PlayResult) => {
-    if (!mounted.current) return;
-    setPlaying(false);
-    if (result !== "interrupted") setActive(null);
-    setSilent(result === "unavailable");
+  const begin = () => {
+    const mine = ++run.current;
+    const finish = (result: PlayResult) => {
+      if (mine !== run.current) return;
+      setPlaying(false);
+      setActive(null);
+      setSilent(result === "unavailable");
+    };
+    const at = (a: Active) => {
+      if (mine === run.current) setActive(a);
+    };
+    return { finish, at };
   };
 
-  function listen(speed: AudioSpeed) {
-    onListen?.({ speed });
+  // A replay for Read it again is part of the re-read, not a listen the child asked for.
+  function listen(speed: AudioSpeed, report = true) {
+    if (report) onListen?.({ speed });
     setPlaying(true);
+    setSilent(false);
+    setActive(null);
+    const { finish, at } = begin();
     if (passage.audioUrl) {
       const text = sentences.map((s) => s.text).join(" ");
       void speak([{ text, assetUrl: passage.audioUrl, speed }]).then(finish);
@@ -88,22 +110,43 @@ export function PassageView({
       void speak(
         items.map((i) => i.request),
         speed,
-        { onItem: (i) => mounted.current && setActive(items[i]?.at ?? null) },
+        { onItem: (i) => at(items[i]?.at ?? null) },
       ).then(finish);
       return;
     }
     void speak(
       sentences.map((s) => ({ text: s.text, speed })),
       speed,
-      { onItem: (i) => mounted.current && setActive({ sentence: i, word: null }) },
+      { onItem: (i) => at({ sentence: i, word: null }) },
     ).then(finish);
   }
 
   function sayWord(word: string) {
     const normalized = normalizeReadingWord(word);
     onWordHelp?.(passage.words[normalized] ?? null, normalized);
+    // The word replaces the reading (one voice at a time): the story's buttons are ready
+    // to start it again.
+    run.current++;
+    setPlaying(false);
+    setActive(null);
     void speak(word, "slow");
   }
+
+  function stop() {
+    run.current++;
+    setPlaying(false);
+    setActive(null);
+    stopAudio();
+  }
+
+  // Read it again: the new text starts reading by itself (still inside the child's tap).
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    if (!autoListen || autoStarted.current) return;
+    autoStarted.current = true;
+    listen(autoListen, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, when the text appears
+  }, []);
 
   let sentenceIndex = -1;
   const textSize = compact
@@ -154,11 +197,17 @@ export function PassageView({
           >
             <span aria-hidden>🐢</span> Slow
           </button>
-          {silent ? (
-            <p role="status" className="text-muted w-full text-center text-lg font-semibold">
-              <span aria-hidden>🔇 </span>No sound right now. Read the words, or ask a grown-up.
-            </p>
+          {playing ? (
+            <button
+              type="button"
+              onClick={stop}
+              aria-label="Stop audio"
+              className="border-border bg-surface flex min-h-16 items-center gap-2 rounded-2xl border-2 px-5 text-xl font-bold shadow-sm"
+            >
+              <span aria-hidden>⏹️</span> Stop
+            </button>
           ) : null}
+          {silent ? <AudioUnavailable className="text-center" /> : null}
         </div>
       ) : null}
 

@@ -62,7 +62,13 @@ export function letterToken(letter: string) {
   return `{@${l}}`;
 }
 
-const TOKEN = /\{\/([A-Z]{1,3}(?: [A-Z]{1,3})*)\/\}|\{@([a-z])\}/g;
+// Tokens are written by the content templates in canonical form ({/SH/}, {@s}); hand-made
+// ones are accepted in any case and with stray spaces ({/sh/}, {/ SH /}, {@S}) and read the
+// same way, so a typo never turns a sound into its letters.
+const TOKEN = /\{\/\s*([A-Za-z]{1,3}(?:\s+[A-Za-z]{1,3})*)\s*\/\}|\{@\s*([A-Za-z])\s*\}/g;
+// Anything else between braces, or a token that was never closed ("{/S/"), is broken:
+// never read aloud.
+const BROKEN_TOKEN = /\{[^{}]{0,40}\}|\{[@/][^{}\s]*/g;
 
 export type SpeechToken = { kind: "sound"; phonemes: string[] } | { kind: "letter"; letter: string };
 type Piece = { kind: "text"; text: string } | SpeechToken;
@@ -72,7 +78,11 @@ export function parseSpeech(text: string): Piece[] {
   let at = 0;
   for (const m of text.matchAll(TOKEN)) {
     if (m.index > at) pieces.push({ kind: "text", text: text.slice(at, m.index) });
-    pieces.push(m[1] ? { kind: "sound", phonemes: m[1].split(" ") } : { kind: "letter", letter: m[2] });
+    pieces.push(
+      m[1]
+        ? { kind: "sound", phonemes: m[1].trim().toUpperCase().split(/\s+/) }
+        : { kind: "letter", letter: m[2].toLowerCase() },
+    );
     at = m.index + m[0].length;
   }
   if (at < text.length) pieces.push({ kind: "text", text: text.slice(at) });
@@ -223,7 +233,7 @@ export function planSpeech(text: string, table: SoundTable, options: ResolveOpti
   };
   for (const piece of parseSpeech(text)) {
     if (piece.kind === "text") {
-      buffer += stripUnsafe(piece.text);
+      buffer += stripUnsafe(piece.text.replace(BROKEN_TOKEN, " "));
       continue;
     }
     const r =
@@ -237,6 +247,19 @@ export function planSpeech(text: string, table: SoundTable, options: ResolveOpti
   }
   flush();
   return parts;
+}
+
+// Tokens that resolve to nothing (a sound with no rendering, no keyword and no clip, or a
+// broken token): what is left of the text is still said, and the gap is logged.
+export function unresolvedTokens(text: string, table: SoundTable, options: ResolveOptions = {}): string[] {
+  const missing: string[] = [];
+  for (const piece of parseSpeech(text)) {
+    if (piece.kind === "sound") {
+      const r = resolveSound(piece.phonemes, table, options);
+      if (r.strategy === "none") missing.push(soundToken(piece.phonemes));
+    } else if (piece.kind === "text") missing.push(...(piece.text.match(BROKEN_TOKEN) ?? []));
+  }
+  return missing;
 }
 
 // The whole thing as synthesis would say it (no clips): for tests, audits and captions.

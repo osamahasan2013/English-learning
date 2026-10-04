@@ -13,6 +13,7 @@ import {
   speechFromDisplay,
   speechProblems,
   soundLabelLookup,
+  unresolvedTokens,
   visibleWords,
   type SoundTable,
 } from "@/lib/audio/pronunciation";
@@ -293,5 +294,50 @@ describe("the shipped phonics data", () => {
     expect(say(["EY"])).toBe("eigh");
     expect(say(["IH", "NG"])).toBe("ing");
     expect(say(["AE"])).toBe("the sound at the start of apple");
+  });
+});
+
+describe("token parsing (every supported form)", () => {
+  it("reads canonical sound and letter tokens", () => {
+    expect(parseSpeech("{/SH/} and {@s}")).toEqual([
+      { kind: "sound", phonemes: ["SH"] },
+      { kind: "text", text: " and " },
+      { kind: "letter", letter: "s" },
+    ]);
+    expect(parseSpeech("{/SH AH N/}")).toEqual([{ kind: "sound", phonemes: ["SH", "AH", "N"] }]);
+  });
+
+  it("normalizes case and stray spaces, so a typo never becomes letters", () => {
+    expect(parseSpeech("{/sh/}")).toEqual([{ kind: "sound", phonemes: ["SH"] }]);
+    expect(parseSpeech("{/ k s /}")).toEqual([{ kind: "sound", phonemes: ["K", "S"] }]);
+    expect(parseSpeech("{@S}")).toEqual([{ kind: "letter", letter: "s" }]);
+    expect(parseSpeech("{@ m }")).toEqual([{ kind: "letter", letter: "m" }]);
+    expect(speakableText("Say {/s/}.", table)).toBe("Say suh.");
+    expect(speakableText("It starts with {@S}.", table)).toBe("It starts with ess.");
+  });
+
+  it("never reads a broken token aloud", () => {
+    expect(speakableText("Say {/S1/} now", table)).toBe("Say now");
+    expect(speakableText("Say {sound} now", table)).toBe("Say now");
+    expect(speakableText("Say {/S/", table)).not.toMatch(/\{|\//);
+  });
+
+  it("reports tokens that resolve to nothing, and still says the rest", () => {
+    expect(unresolvedTokens("Write {/ZH/} and {oops}", table)).toEqual(["{/ZH/}", "{oops}"]);
+    expect(unresolvedTokens("Say {/S/} and {@s}", table)).toEqual([]);
+    expect(speakableText("Write the letters for {/ZH/}.", table)).toBe("Write the letters for.");
+  });
+
+  it("keeps letter names and sounds apart for the core phonics sounds", () => {
+    for (const [phonemes, letter] of [
+      [["S"], "s"],
+      [["M"], "m"],
+      [["K"], "k"],
+    ] as const) {
+      const sound = speakableText(soundToken(phonemes), table).toLowerCase();
+      const name = speakableText(letterToken(letter), table).toLowerCase();
+      expect(sound).not.toBe(name);
+      expect(findUnsafeSpeech(sound)).toEqual([]);
+    }
   });
 });

@@ -6,15 +6,21 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useRef,
   useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import {
+  getAudioSnapshot,
+  getServerAudioSnapshot,
   isSpeechSynthesisAvailable,
   playAudio,
+  prepareAudio,
   stopAudio,
+  subscribeAudio,
+  type AudioOwner,
   type AudioRequest,
+  type PlaybackState,
   type PlayOptions,
   type PlayResult,
 } from "@/lib/audio/audio-service";
@@ -33,40 +39,40 @@ export function useSoundTable() {
   return useContext(SoundTableContext);
 }
 
+// The playback state as the service knows it (one store for the whole app).
+export function useAudioSnapshot() {
+  return useSyncExternalStore(subscribeAudio, getAudioSnapshot, getServerAudioSnapshot);
+}
+
+// A screen's access to audio. The screen is the owner of what it starts: `speaking` and
+// `state` describe its own request (derived from the service, never kept separately), and
+// leaving the screen stops its sound — not a sound another screen started meanwhile.
 export function useAudio(table?: SoundTable) {
   const contextTable = useSoundTable();
   const sounds = table ?? contextTable;
-  const [speaking, setSpeaking] = useState(false);
+  const [owner] = useState<AudioOwner>(() => ({}));
   const [supported, setSupported] = useState(true);
-  const mounted = useRef(true);
+  const snapshot = useAudioSnapshot();
+  const mine = snapshot.owner === owner;
+  const state: PlaybackState = mine ? snapshot.state : "idle";
 
   useEffect(() => {
-    mounted.current = true;
     // eslint-disable-next-line react-hooks/set-state-in-effect -- browser capability is only known after mount
     setSupported(isSpeechSynthesisAvailable());
     // Voices load asynchronously in some browsers; touching the list starts loading.
-    if (isSpeechSynthesisAvailable()) window.speechSynthesis.getVoices();
-    // Leaving the screen stops whatever is playing (and any sequence in progress).
-    return () => {
-      mounted.current = false;
-      stopAudio();
-    };
-  }, []);
+    prepareAudio();
+    return () => stopAudio({ owner });
+  }, [owner]);
 
   const speak = useCallback(
-    async (
+    (
       request: AudioRequest | AudioRequest[],
-      options: Omit<PlayOptions, "sounds"> = {},
-    ): Promise<PlayResult> => {
-      setSpeaking(true);
-      try {
-        return await playAudio(request, { ...options, sounds });
-      } finally {
-        if (mounted.current) setSpeaking(false);
-      }
-    },
-    [sounds],
+      options: Omit<PlayOptions, "sounds" | "owner"> = {},
+    ): Promise<PlayResult> => playAudio(request, { ...options, sounds, owner }),
+    [sounds, owner],
   );
 
-  return { speak, speaking, supported, stop: stopAudio };
+  const stop = useCallback(() => stopAudio({ owner }), [owner]);
+
+  return { speak, speaking: state === "loading" || state === "playing", state, supported, stop };
 }
