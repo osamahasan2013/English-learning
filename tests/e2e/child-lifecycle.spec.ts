@@ -87,7 +87,12 @@ test("reset learning: progress starts again, the profile and grade stay, offline
   // The parent, on another device.
   const other = await secondDevice(browser, email);
   await other.page.goto(`/parent/dashboard?child=${lina}`);
-  await expect(other.page.getByText("Lessons completed").locator("..")).toContainText("1");
+  await expect(
+    other.page
+      .getByRole("region", { name: "Summary", exact: true })
+      .getByText("Lessons completed")
+      .locator(".."),
+  ).toContainText("1");
   await other.page.goto("/parent/children");
   await other.page.getByRole("link", { name: "Settings for Lina" }).click();
   await expect(other.page.getByRole("heading", { name: "Learning", exact: true })).toBeVisible();
@@ -114,7 +119,12 @@ test("reset learning: progress starts again, the profile and grade stay, offline
 
   // The dashboard shows a fresh start at once.
   await other.page.goto(`/parent/dashboard?child=${lina}`);
-  await expect(other.page.getByText("Lessons completed").locator("..")).toContainText("0");
+  await expect(
+    other.page
+      .getByRole("region", { name: "Summary", exact: true })
+      .getByText("Lessons completed")
+      .locator(".."),
+  ).toContainText("0");
 
   // The first device reconnects: its queued answers from before the reset are dropped.
   await page.context().setOffline(false);
