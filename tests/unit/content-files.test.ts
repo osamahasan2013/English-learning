@@ -274,6 +274,12 @@ describe("shipped content", () => {
                     new Set(phonemes.keys()),
                   );
                   if (speech.length) problems.push(`${seed}: speech: ${speech.join("; ")}`);
+                  // A pattern intro says the pattern's sound (naming its letters is not enough).
+                  if ("template" in q && q.template === "pattern_intro") {
+                    const said = String((e.content as { speech?: string }).speech ?? "");
+                    if (!/\{\s*\//.test(said))
+                      problems.push(`${seed}: intro does not say the sound: ${said}`);
+                  }
                   // A pattern question's word must really use the pattern's sound.
                   const target = "pattern" in e && e.pattern ? patternsByCode.get(e.pattern) : undefined;
                   const split = "word" in e && e.word ? splits.get(normalizeWord(e.word)) : undefined;

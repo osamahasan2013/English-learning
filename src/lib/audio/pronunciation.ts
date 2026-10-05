@@ -81,16 +81,14 @@ const LONE_LETTER = /(?<![\p{L}\p{N}'’\-{@/])([B-HJ-Zb-z])(?![\p{L}\p{N}'’\-
 const SPELLED = /(?<![\p{L}\p{N}'’\-])[A-Za-z](?:-[A-Za-z])+(?![\p{L}\p{N}'’\-])/gu;
 const spelledTokens = (run: string) => run.split("-").map(letterToken).join(" ");
 
-export function loneLetters(text: string): string[] {
-  return parseSpeech(text).flatMap((p) => {
-    if (p.kind !== "text") return [];
-    const t = p.text.replace(BROKEN_TOKEN, " ");
-    return [...[...t.matchAll(SPELLED)].map((m) => m[0]), ...[...t.matchAll(LONE_LETTER)].map((m) => m[1])];
-  });
-}
+// "a" is a word, except where it can only be the letter: next to another letter ("a and
+// {@i}", "{@e} and a", "a, {@i} and {@r}") or before a comma ("comes after a, they say"),
+// where the article never stands. Read as the article ("uh") it would be wrong. ("I see
+// a..." and a word tile "a" are the article.)
+const A_LETTER =
+  /(?<=\{@[a-z]\},?\s+(?:and|or)\s+|\{@[a-z]\},\s+)[aA](?![\p{L}\p{N}'’\-])|(?<![\p{L}\p{N}'’\-{@/])[aA](?=,?\s+(?:and|or)\s+\{@|,)/gu;
 
-// Lone letters → letter tokens (tokens already in the text are kept as they are).
-export function lettersAsTokens(text: string) {
+function lonesAsTokens(text: string) {
   return parseSpeech(text)
     .map((p) =>
       p.kind === "text"
@@ -100,6 +98,20 @@ export function lettersAsTokens(text: string) {
           : letterToken(p.letter),
     )
     .join("");
+}
+
+export function loneLetters(text: string): string[] {
+  const lone = parseSpeech(text).flatMap((p) => {
+    if (p.kind !== "text") return [];
+    const t = p.text.replace(BROKEN_TOKEN, " ");
+    return [...[...t.matchAll(SPELLED)].map((m) => m[0]), ...[...t.matchAll(LONE_LETTER)].map((m) => m[1])];
+  });
+  return [...lone, ...[...lonesAsTokens(text).matchAll(A_LETTER)].map((m) => m[0])];
+}
+
+// Lone letters → letter tokens (tokens already in the text are kept as they are).
+export function lettersAsTokens(text: string) {
+  return lonesAsTokens(text).replace(A_LETTER, "{@a}");
 }
 
 export type SpeechToken = { kind: "sound"; phonemes: string[] } | { kind: "letter"; letter: string };
@@ -250,7 +262,8 @@ export function speechFromDisplay(text: string, soundForLabel?: (label: string) 
         })
         .join("");
     })
-    .join("");
+    .join("")
+    .replace(A_LETTER, "{@a}");
 }
 
 function stripUnsafe(text: string) {

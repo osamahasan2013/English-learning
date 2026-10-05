@@ -18,7 +18,7 @@ import {
 } from "@/lib/content/vocabulary";
 import type { WordArea } from "@/lib/learning/vocabulary";
 import { buildSpellingHints, type SpellingActivity, type SpellingSegment } from "@/lib/learning/spelling";
-import { hasSpeechTokens, letterToken, speechFromDisplay } from "@/lib/audio/pronunciation";
+import { letterToken, speechFromDisplay, speechTokens } from "@/lib/audio/pronunciation";
 
 export type TemplateSegment = {
   grapheme: string;
@@ -289,7 +289,9 @@ function spellingSplit(word: TemplateWord, ctx: TemplateContext): SpellingSegmen
 // A pattern intro's speech: the explanation, then the sound and an example — unless the
 // explanation already says the sound (no "fuh, as in phone. fuh, as in phone.").
 function introSpeech(body: string, sound: string, example?: string) {
-  if (hasSpeechTokens(body)) return body.replace(/:\s*$/, ".");
+  // A body that already says the sound is complete; letter names alone ("{@a} and {@i}
+  // together say") still need the sound after them.
+  if (speechTokens(body).some((t) => t.kind === "sound")) return body.replace(/:\s*$/, ".");
   return `${body} ${sound}${example ? `, as in ${example}` : ""}.`;
 }
 function spellingHints(word: TemplateWord, ctx: TemplateContext, split = spellingSplit(word, ctx)) {

@@ -324,6 +324,16 @@ describe("a raw letter is never handed to the voice (Phase 8.3)", () => {
   it("display text read aloud: letters become names, /sounds/ become sound tokens", () => {
     expect(speechFromDisplay("The s here says /z/.", labels)).toBe("The {@s} here says {/Z/}.");
     expect(speechFromDisplay("This is the letter i.", labels)).toBe("This is the letter {@i}.");
+    // "a" is the letter where the article cannot stand: next to another letter, before a comma.
+    expect(speechFromDisplay("a and i together say", labels)).toBe("{@a} and {@i} together say");
+    expect(speechFromDisplay("e and a together often say /ee/", labels)).toBe(
+      "{@e} and {@a} together often say {/IY/}",
+    );
+    expect(speechFromDisplay("When r comes after a, they say", labels)).toBe(
+      "When {@r} comes after {@a}, they say",
+    );
+    for (const article of ["I see a cat.", "I see a...", "a", "Is it a cat or a dog?"])
+      expect(lettersAsTokens(article), article).toBe(article);
     expect(planSpeech(speechFromDisplay("The s here says /z/.", labels), table)).toEqual([
       { kind: "tts", text: "The S here says zuh.", role: "speech" },
     ]);
@@ -336,6 +346,7 @@ describe("a raw letter is never handed to the voice (Phase 8.3)", () => {
       expect.stringContaining('"z" alone'),
     ]);
     expect(speechProblems("Does the {@s} say {/S/}, or {/Z/}?", {})).toEqual([]);
+    expect(speechProblems("{@o} and a together say", {})).toEqual([expect.stringContaining('"a" alone')]);
     expect(speechProblems("", { left: [{ speech: "big C" }] })).toEqual([
       expect.stringContaining('"C" alone'),
     ]);
