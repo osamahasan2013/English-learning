@@ -233,16 +233,25 @@ export function summarizeTimings(
   for (const t of timings) byRequest.set(t.requestId, [...(byRequest.get(t.requestId) ?? []), t]);
   return [...byRequest.entries()].map(([requestId, rows]) => {
     const first = rows[0];
-    const done = requestId !== active && rows.every((r) => r.endedAt !== null);
+    // The request's own result when it has one (a request stopped between two pieces has
+    // only pieces that ended); otherwise inferred from its pieces.
+    const final = rows.find((r) => r.final)?.final;
+    const done = final ? true : requestId !== active && rows.every((r) => r.endedAt !== null);
     const ends = rows.map((r) => r.endedAt ?? 0);
     const spoken = rows.filter((r) => r.startedAt !== null && r.endedAt !== null);
     const outcome = !done
       ? "playing"
-      : rows.some((r) => r.outcome === "interrupted" && !r.retry && r === rows.at(-1))
-        ? "interrupted"
-        : rows.some((r) => r.outcome === "ended")
+      : final
+        ? final === "played"
           ? "heard"
-          : "failed";
+          : final === "interrupted"
+            ? "interrupted"
+            : "failed"
+        : rows.some((r) => r.outcome === "interrupted" && !r.retry && r === rows.at(-1))
+          ? "interrupted"
+          : rows.some((r) => r.outcome === "ended")
+            ? "heard"
+            : "failed";
     const main = rows.find((r) => r.role === "speech") ?? first;
     return {
       requestId,

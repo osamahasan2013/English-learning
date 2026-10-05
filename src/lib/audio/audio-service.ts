@@ -527,6 +527,9 @@ export type AudioTiming = {
   endedAt: number | null;
   outcome: Outcome["outcome"] | null;
   error: string | null;
+  // How the whole request ended (set on its pieces when playAudio returns): a request
+  // stopped in the silence between two pieces has only pieces that "ended".
+  final?: PlayResult;
 };
 
 let timingOn = false;
@@ -552,6 +555,20 @@ function updateTiming(t: AudioTiming | null, change: Partial<AudioTiming>) {
   Object.assign(t, change);
   timings = [...timings];
   emitTimings();
+}
+
+function finishTimings(requestId: number, result: PlayResult) {
+  if (!timingOn) return;
+  let changed = false;
+  for (const t of timings)
+    if (t.requestId === requestId) {
+      t.final = result;
+      changed = true;
+    }
+  if (changed) {
+    timings = [...timings];
+    emitTimings();
+  }
 }
 
 export function setAudioTimingLog(on: boolean) {
@@ -638,10 +655,20 @@ export async function playAudio(
   request: AudioRequest | AudioRequest[],
   options: PlayOptions = {},
 ): Promise<PlayResult> {
+  const id = ++lastId;
+  const result = await playRequest(id, request, options);
+  finishTimings(id, result);
+  return result;
+}
+
+async function playRequest(
+  id: number,
+  request: AudioRequest | AudioRequest[],
+  options: PlayOptions,
+): Promise<PlayResult> {
   ensureSetup();
   // Also re-read here: some Safari versions never send "voiceschanged".
   refreshVoice();
-  const id = ++lastId;
   current = id;
   const settling = halt();
   setSnapshot({ state: "loading", requestId: id, owner: options.owner ?? null, source: null });

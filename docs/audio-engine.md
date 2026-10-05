@@ -313,16 +313,23 @@ memory, and records no words (only their length).
 
 ## Real-device results
 
-**iPhone, iOS 18.7, Safari, voice Samantha (on device), KG1 — 2026-10-05**, 26 tests:
+**iPhone, iOS 18.7, Safari, voice Samantha (on device), KG1 — 2026-10-05, run 1**, 26 tests:
 letter names A, G, S, T, sounds /g/ /m/ /t/, the words gate, cat, the, the sentence, all
 ten reading lines, segmenting, blending and both intros PASS. One FAIL: /s/ ("should be
 nearer to “sah” than “suh”"), so /s/ is now rendered `sah` (espeak-ng `s'A:`, never the
 name `'Es`). Notes on the KG1 sentence and Reading Normal: "still somehow fast, especially
 for kids", so KG1 Normal went from rate 0.78 / 200 ms pauses / 600 ms sentence gaps to
 0.70 / 350 / 750, and KG1 Slow pauses from 380 to 450 ms to keep Slow clearly slower.
-Three Slow lines were cut short because the next test was started while they played; the
-page now compares Slow with Normal only when both played to the end. Still to confirm on
-the iPhone: /s/ and KG1 Normal speed; Android and a desktop browser not yet tested.
+
+**Same iPhone, run 2 (after those changes), KG1 and Grade 1**: every test marked PASS at
+both levels, including /s/ and the slower KG1 Normal (“The cat is at the gate.” 2.5 s at
+Normal, 4.6 s at Slow). Grade 1 Slow took 1.6–2.4× as long as Normal.
+
+Some runs were cut short because the next test was started while one was playing. The
+page compares Slow with Normal only when both played to the end, and the timing log now
+records how each request ended (`final`): a request stopped in the silence between two
+pieces has only pieces that ended normally and was reported as heard (one KG1 ratio,
+1.54×, came from such a partial run). Android and a desktop browser have not been tested.
 
 ## Recording priorities
 

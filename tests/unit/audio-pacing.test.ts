@@ -155,6 +155,16 @@ describe("audio check timing summary", () => {
     ]);
   });
 
+  it("a request stopped in the silence between two pieces is reported as interrupted", () => {
+    // Every logged piece ended normally; only the request's own result shows it was cut short
+    // (an iPhone run: "The apple | is" played, then the next test started before "red.").
+    const stopped = [row(0, { final: "interrupted" }), row(1, { final: "interrupted" })];
+    expect(summarizeTimings(stopped)[0]).toMatchObject({ outcome: "interrupted", pieces: 2 });
+    expect(summarizeTimings([row(0, { final: "played" }), row(1, { final: "played" })])[0].outcome).toBe(
+      "heard",
+    );
+  });
+
   it("a request still playing (between two pieces) is not reported as finished", () => {
     expect(summarizeTimings([row(0)], 7)[0]).toMatchObject({ outcome: "playing", elapsedMs: null });
   });

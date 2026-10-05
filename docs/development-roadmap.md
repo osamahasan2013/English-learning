@@ -169,8 +169,10 @@ words kept with their word, citation form for a word alone, no raw letters in sp
 (content fixed, importer and tests reject them, runtime guard), `explainSpeech`, the audio
 check grouped by meaning with PASS / FAIL results, dev-only `audio.request` logs, recording
 priorities (`npm run audio:priorities`). Tests: `audio-accuracy.test.ts` (plus updated
-pacing, service, pronunciation and e2e audio tests). Still to do: the listening test on a
-real iPhone, Android phone and desktop browser; recordings.
+pacing, service, pronunciation and e2e audio tests). Real iPhone (iOS 18.7, Safari): all
+tests PASS at KG1 and Grade 1 after two fixes from the first run (/s/ as `sah`, a slower
+KG1 Normal). Still to do: the listening test on an Android phone and a desktop browser;
+recordings.
 
 ## Phases
 

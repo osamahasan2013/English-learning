@@ -641,7 +641,31 @@ describe("pacing and audio intents", () => {
     });
     expect(log.every((t) => t.startedAt !== null && t.endedAt! >= t.startedAt!)).toBe(true);
     expect(JSON.stringify(log)).not.toMatch(/cat/);
+    expect(log.every((t) => t.final === "played")).toBe(true);
     setAudioTimingLog(false);
     expect(getAudioTimings()).toEqual([]);
+  });
+
+  it("the timing log marks a request stopped in the silence between two pieces", async () => {
+    setAudioTimingLog(true);
+    try {
+      const reading = playAudio(
+        { text: "The apple is red.", intent: "STORY_READING", speed: "slow" },
+        { pacing: kg1 },
+      );
+      // "The apple" and "is" play to the end; the next test starts during the pause before "red.".
+      for (const piece of ["The apple", "is"]) {
+        await vi.waitFor(() => expect(engine.current?.text).toBe(piece));
+        engine.finish();
+      }
+      await vi.advanceTimersByTimeAsync(50);
+      stopAudio();
+      expect(await reading).toBe("interrupted");
+      const log = getAudioTimings();
+      expect(log.map((t) => t.outcome)).toEqual(["ended", "ended"]);
+      expect(log.every((t) => t.final === "interrupted")).toBe(true);
+    } finally {
+      setAudioTimingLog(false);
+    }
   });
 });
