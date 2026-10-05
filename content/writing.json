@@ -1187,6 +1187,12 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "c",
+      "confusables": [
+        "lower-d",
+        "lower-g",
+        "lower-o",
+        "lower-q"
+      ],
       "formationTip": "Go round like c, then up and down.",
       "formationSpeech": "Round like a ball. Then a line down.",
       "sortOrder": 80
@@ -1353,6 +1359,12 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "hump",
+      "confusables": [
+        "lower-d",
+        "lower-h",
+        "lower-p",
+        "lower-q"
+      ],
       "formationTip": "Long line down, then round to make a tummy.",
       "formationSpeech": "Line down. Back up, and round.",
       "sortOrder": 90
@@ -1459,6 +1471,10 @@
       "completion": 0.7,
       "difficulty": 1,
       "family": "c",
+      "confusables": [
+        "lower-e",
+        "lower-o"
+      ],
       "formationTip": "Start near the top and curve round.",
       "formationSpeech": "Start at the top, and curve round.",
       "sortOrder": 100
@@ -1637,6 +1653,12 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "c",
+      "confusables": [
+        "lower-a",
+        "lower-b",
+        "lower-p",
+        "lower-q"
+      ],
       "formationTip": "Go round like c, then a tall line down.",
       "formationSpeech": "Round like a ball. Then a tall line down.",
       "sortOrder": 110
@@ -1771,6 +1793,9 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "c",
+      "confusables": [
+        "lower-c"
+      ],
       "formationTip": "Across the middle, then round like c.",
       "formationSpeech": "Across, then up and round.",
       "sortOrder": 120
@@ -1905,6 +1930,9 @@
       "completion": 0.7,
       "difficulty": 3,
       "family": "down",
+      "confusables": [
+        "lower-t"
+      ],
       "formationTip": "Curve over the top and down, then cross it.",
       "formationSpeech": "Over the top and down. Then across.",
       "sortOrder": 130
@@ -2111,6 +2139,11 @@
       "completion": 0.7,
       "difficulty": 3,
       "family": "c",
+      "confusables": [
+        "lower-a",
+        "lower-q",
+        "lower-y"
+      ],
       "formationTip": "Go round like c, then down below the line and hook.",
       "formationSpeech": "Round like a ball. Then down, and hook.",
       "sortOrder": 140
@@ -2253,6 +2286,10 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "hump",
+      "confusables": [
+        "lower-b",
+        "lower-n"
+      ],
       "formationTip": "Tall line down, then up and over the hump.",
       "formationSpeech": "Tall line down. Back up, over, and down.",
       "sortOrder": 150
@@ -2319,6 +2356,10 @@
       "completion": 0.7,
       "difficulty": 1,
       "family": "down",
+      "confusables": [
+        "lower-j",
+        "lower-l"
+      ],
       "formationTip": "Line down, then a dot on top.",
       "formationSpeech": "Line down. Then a dot.",
       "sortOrder": 160
@@ -2433,6 +2474,9 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "down",
+      "confusables": [
+        "lower-i"
+      ],
       "formationTip": "Line down below the line and hook, then a dot.",
       "formationSpeech": "Line down, and hook. Then a dot.",
       "sortOrder": 170
@@ -2629,6 +2673,10 @@
       "completion": 0.7,
       "difficulty": 1,
       "family": "down",
+      "confusables": [
+        "lower-i",
+        "lower-t"
+      ],
       "formationTip": "One tall line from the top down.",
       "formationSpeech": "Start at the top. One tall line down.",
       "sortOrder": 190
@@ -2827,6 +2875,10 @@
       "completion": 0.7,
       "difficulty": 3,
       "family": "hump",
+      "confusables": [
+        "lower-n",
+        "lower-w"
+      ],
       "formationTip": "Line down, then two humps.",
       "formationSpeech": "Line down. Then hump, and hump.",
       "sortOrder": 200
@@ -2949,6 +3001,12 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "hump",
+      "confusables": [
+        "lower-h",
+        "lower-m",
+        "lower-r",
+        "lower-u"
+      ],
       "formationTip": "Line down, then up and over one hump.",
       "formationSpeech": "Line down. Back up, over, and down.",
       "sortOrder": 210
@@ -3075,6 +3133,10 @@
       "completion": 0.7,
       "difficulty": 1,
       "family": "c",
+      "confusables": [
+        "lower-a",
+        "lower-c"
+      ],
       "formationTip": "Start at the top and go all the way round.",
       "formationSpeech": "Start at the top. All the way round.",
       "sortOrder": 220
@@ -3229,6 +3291,11 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "hump",
+      "confusables": [
+        "lower-b",
+        "lower-d",
+        "lower-q"
+      ],
       "formationTip": "Line down below the line, then round.",
       "formationSpeech": "Line down, below the line. Back up, and round.",
       "sortOrder": 230
@@ -3395,6 +3462,13 @@
       "completion": 0.7,
       "difficulty": 3,
       "family": "c",
+      "confusables": [
+        "lower-a",
+        "lower-b",
+        "lower-d",
+        "lower-g",
+        "lower-p"
+      ],
       "formationTip": "Go round like c, then a line down below the line.",
       "formationSpeech": "Round like a ball. Then down, below the line.",
       "sortOrder": 240
@@ -3489,6 +3563,9 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "hump",
+      "confusables": [
+        "lower-n"
+      ],
       "formationTip": "Line down, then up and over a little.",
       "formationSpeech": "Line down. Back up, and over.",
       "sortOrder": 250
@@ -3749,6 +3826,10 @@
       "completion": 0.7,
       "difficulty": 1,
       "family": "down",
+      "confusables": [
+        "lower-f",
+        "lower-l"
+      ],
       "formationTip": "Line down, then cross it.",
       "formationSpeech": "Line down. Then across.",
       "sortOrder": 270
@@ -3883,6 +3964,10 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "hump",
+      "confusables": [
+        "lower-n",
+        "lower-v"
+      ],
       "formationTip": "Down, round and up, then down again.",
       "formationSpeech": "Down, round, and up. Then down.",
       "sortOrder": 280
@@ -3961,6 +4046,10 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "slant",
+      "confusables": [
+        "lower-u",
+        "lower-y"
+      ],
       "formationTip": "Slant down, then slant up.",
       "formationSpeech": "Slant down. Slant up.",
       "sortOrder": 290
@@ -4079,6 +4168,9 @@
       "completion": 0.7,
       "difficulty": 3,
       "family": "slant",
+      "confusables": [
+        "lower-m"
+      ],
       "formationTip": "Down, up, down, up.",
       "formationSpeech": "Down, up, down, up.",
       "sortOrder": 300
@@ -4267,6 +4359,10 @@
       "completion": 0.7,
       "difficulty": 3,
       "family": "slant",
+      "confusables": [
+        "lower-g",
+        "lower-v"
+      ],
       "formationTip": "Short slant, then a long slant below the line.",
       "formationSpeech": "Short slant. Then a long slant down.",
       "sortOrder": 320
@@ -4515,6 +4611,9 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "slant",
+      "confusables": [
+        "upper-o"
+      ],
       "formationTip": "Slant down, slant down, then across.",
       "formationSpeech": "Slant down. Slant down. Then across.",
       "sortOrder": 340
@@ -4733,6 +4832,11 @@
       "completion": 0.7,
       "difficulty": 3,
       "family": "hump",
+      "confusables": [
+        "upper-d",
+        "upper-p",
+        "upper-r"
+      ],
       "formationTip": "Line down, then two bumps.",
       "formationSpeech": "Line down. Then bump, and bump.",
       "sortOrder": 350
@@ -4839,6 +4943,10 @@
       "completion": 0.7,
       "difficulty": 1,
       "family": "c",
+      "confusables": [
+        "upper-g",
+        "upper-o"
+      ],
       "formationTip": "Start near the top and curve round.",
       "formationSpeech": "Start at the top, and curve round.",
       "sortOrder": 360
@@ -4985,6 +5093,10 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "hump",
+      "confusables": [
+        "upper-b",
+        "upper-o"
+      ],
       "formationTip": "Line down, then one big bump.",
       "formationSpeech": "Line down. Then one big bump.",
       "sortOrder": 370
@@ -5139,6 +5251,10 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "down",
+      "confusables": [
+        "upper-f",
+        "upper-l"
+      ],
       "formationTip": "Line down, then across at the top, middle and bottom.",
       "formationSpeech": "Line down. Across, across, across.",
       "sortOrder": 380
@@ -5265,6 +5381,10 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "down",
+      "confusables": [
+        "upper-e",
+        "upper-p"
+      ],
       "formationTip": "Line down, then across at the top and middle.",
       "formationSpeech": "Line down. Across, and across.",
       "sortOrder": 390
@@ -5399,6 +5519,10 @@
       "completion": 0.7,
       "difficulty": 3,
       "family": "c",
+      "confusables": [
+        "upper-c",
+        "upper-o"
+      ],
       "formationTip": "Curve round like C, then a little line in.",
       "formationSpeech": "Curve round. Then a little line in.",
       "sortOrder": 400
@@ -5679,6 +5803,10 @@
       "completion": 0.7,
       "difficulty": 1,
       "family": "down",
+      "confusables": [
+        "upper-l",
+        "upper-t"
+      ],
       "formationTip": "Line down, then across the top and bottom.",
       "formationSpeech": "Line down. Across the top. Across the bottom.",
       "sortOrder": 420
@@ -6033,6 +6161,10 @@
       "completion": 0.7,
       "difficulty": 1,
       "family": "down",
+      "confusables": [
+        "upper-e",
+        "upper-i"
+      ],
       "formationTip": "Line down, then across.",
       "formationSpeech": "Line down, then across.",
       "sortOrder": 450
@@ -6223,6 +6355,10 @@
       "completion": 0.7,
       "difficulty": 3,
       "family": "slant",
+      "confusables": [
+        "upper-n",
+        "upper-w"
+      ],
       "formationTip": "Line down, then slant down, slant up, and down.",
       "formationSpeech": "Line down. Then down, up, and down.",
       "sortOrder": 460
@@ -6397,6 +6533,9 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "slant",
+      "confusables": [
+        "upper-m"
+      ],
       "formationTip": "Line down, then slant down and up.",
       "formationSpeech": "Line down. Then slant down, and up.",
       "sortOrder": 470
@@ -6523,6 +6662,13 @@
       "completion": 0.7,
       "difficulty": 1,
       "family": "c",
+      "confusables": [
+        "upper-a",
+        "upper-c",
+        "upper-d",
+        "upper-g",
+        "upper-q"
+      ],
       "formationTip": "Start at the top and go all the way round.",
       "formationSpeech": "Start at the top. All the way round.",
       "sortOrder": 480
@@ -6677,6 +6823,11 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "hump",
+      "confusables": [
+        "upper-b",
+        "upper-f",
+        "upper-r"
+      ],
       "formationTip": "Line down, then a bump at the top.",
       "formationSpeech": "Line down. Then a bump at the top.",
       "sortOrder": 490
@@ -6827,6 +6978,9 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "c",
+      "confusables": [
+        "upper-o"
+      ],
       "formationTip": "Round like O, then a little tail.",
       "formationSpeech": "All the way round. Then a little tail.",
       "sortOrder": 500
@@ -7013,6 +7167,10 @@
       "completion": 0.7,
       "difficulty": 3,
       "family": "hump",
+      "confusables": [
+        "upper-b",
+        "upper-p"
+      ],
       "formationTip": "Line down, a bump at the top, then a leg.",
       "formationSpeech": "Line down. A bump. Then a leg.",
       "sortOrder": 510
@@ -7289,6 +7447,9 @@
       "completion": 0.7,
       "difficulty": 1,
       "family": "down",
+      "confusables": [
+        "upper-i"
+      ],
       "formationTip": "Line down, then across the top.",
       "formationSpeech": "Line down. Then across the top.",
       "sortOrder": 530
@@ -7423,6 +7584,9 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "down",
+      "confusables": [
+        "upper-v"
+      ],
       "formationTip": "Down, round the bottom, and up.",
       "formationSpeech": "Down, round, and up.",
       "sortOrder": 540
@@ -7541,6 +7705,9 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "slant",
+      "confusables": [
+        "upper-u"
+      ],
       "formationTip": "Slant down, then slant up.",
       "formationSpeech": "Slant down. Slant up.",
       "sortOrder": 550
@@ -7723,6 +7890,9 @@
       "completion": 0.7,
       "difficulty": 3,
       "family": "slant",
+      "confusables": [
+        "upper-m"
+      ],
       "formationTip": "Down, up, down, up.",
       "formationSpeech": "Down, up, down, up.",
       "sortOrder": 560
@@ -8219,6 +8389,11 @@
       "completion": 0.7,
       "difficulty": 1,
       "family": "digit",
+      "confusables": [
+        "digit-6",
+        "digit-8",
+        "digit-9"
+      ],
       "formationTip": "Start at the top and go all the way round.",
       "formationSpeech": "Start at the top. All the way round.",
       "sortOrder": 600
@@ -8301,6 +8476,9 @@
       "completion": 0.7,
       "difficulty": 1,
       "family": "digit",
+      "confusables": [
+        "digit-7"
+      ],
       "formationTip": "A little slant up, then straight down.",
       "formationSpeech": "A little slant up. Then straight down.",
       "sortOrder": 610
@@ -8443,6 +8621,9 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "digit",
+      "confusables": [
+        "digit-5"
+      ],
       "formationTip": "Round the top, slant down, then across.",
       "formationSpeech": "Round the top. Slant down. Then across.",
       "sortOrder": 620
@@ -8609,6 +8790,9 @@
       "completion": 0.7,
       "difficulty": 3,
       "family": "digit",
+      "confusables": [
+        "digit-8"
+      ],
       "formationTip": "Round, and round again.",
       "formationSpeech": "Round, and round again.",
       "sortOrder": 630
@@ -8889,6 +9073,10 @@
       "completion": 0.7,
       "difficulty": 3,
       "family": "digit",
+      "confusables": [
+        "digit-2",
+        "digit-6"
+      ],
       "formationTip": "Line down, round the tummy, then a flag on top.",
       "formationSpeech": "Line down, and round. Then a flag on top.",
       "sortOrder": 650
@@ -9087,6 +9275,12 @@
       "completion": 0.7,
       "difficulty": 3,
       "family": "digit",
+      "confusables": [
+        "digit-0",
+        "digit-5",
+        "digit-8",
+        "digit-9"
+      ],
       "formationTip": "Curve down and round into a loop.",
       "formationSpeech": "Curve down, and round.",
       "sortOrder": 660
@@ -9181,6 +9375,9 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "digit",
+      "confusables": [
+        "digit-1"
+      ],
       "formationTip": "Across the top, then slant down.",
       "formationSpeech": "Across. Then slant down.",
       "sortOrder": 670
@@ -9403,6 +9600,11 @@
       "completion": 0.7,
       "difficulty": 4,
       "family": "digit",
+      "confusables": [
+        "digit-0",
+        "digit-3",
+        "digit-6"
+      ],
       "formationTip": "Make an S, then go back up.",
       "formationSpeech": "Curve round, and back up.",
       "sortOrder": 680
@@ -9561,6 +9763,10 @@
       "completion": 0.7,
       "difficulty": 2,
       "family": "digit",
+      "confusables": [
+        "digit-0",
+        "digit-6"
+      ],
       "formationTip": "Round like a ball, then a line down.",
       "formationSpeech": "Round like a ball. Then a line down.",
       "sortOrder": 690

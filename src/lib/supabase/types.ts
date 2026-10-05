@@ -140,6 +140,7 @@ export type Database = {
           spelling_analysis: Json | null;
           error_pattern_id: string | null;
           writing_analysis: Json | null;
+          partial_credit: number | null;
         };
         Insert: {
           id: string;
@@ -167,6 +168,7 @@ export type Database = {
           spelling_analysis?: Json | null;
           error_pattern_id?: string | null;
           writing_analysis?: Json | null;
+          partial_credit?: number | null;
         };
         Update: {
           id?: string;
@@ -194,6 +196,7 @@ export type Database = {
           spelling_analysis?: Json | null;
           error_pattern_id?: string | null;
           writing_analysis?: Json | null;
+          partial_credit?: number | null;
         };
         Relationships: [
           {
@@ -377,6 +380,14 @@ export type Database = {
           started_at: string;
           completed_at: string | null;
           received_at: string;
+          status: string;
+          item_ids: string[];
+          scope: Json;
+          origin: string;
+          learning_epoch: number;
+          expires_at: string | null;
+          last_activity_at: string | null;
+          previous_attempt_id: string | null;
         };
         Insert: {
           id: string;
@@ -387,6 +398,14 @@ export type Database = {
           started_at: string;
           completed_at?: string | null;
           received_at?: string;
+          status?: string;
+          item_ids?: string[];
+          scope?: Json;
+          origin?: string;
+          learning_epoch?: number;
+          expires_at?: string | null;
+          last_activity_at?: string | null;
+          previous_attempt_id?: string | null;
         };
         Update: {
           id?: string;
@@ -397,6 +416,14 @@ export type Database = {
           started_at?: string;
           completed_at?: string | null;
           received_at?: string;
+          status?: string;
+          item_ids?: string[];
+          scope?: Json;
+          origin?: string;
+          learning_epoch?: number;
+          expires_at?: string | null;
+          last_activity_at?: string | null;
+          previous_attempt_id?: string | null;
         };
         Relationships: [
           {
@@ -413,6 +440,87 @@ export type Database = {
             referencedRelation: "children";
             referencedColumns: ["id"];
           },
+          {
+            foreignKeyName: "assessment_attempts_previous_attempt_id_fkey";
+            columns: ["previous_attempt_id"];
+            isOneToOne: false;
+            referencedRelation: "assessment_attempts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      assessment_evidence: {
+        Row: {
+          assessment_attempt_id: string;
+          child_id: string;
+          skill_id: string;
+          domain: string;
+          level_id: string | null;
+          items_total: number;
+          items_correct: number;
+          items_skipped: number;
+          credit: number;
+          weight: number;
+          strength: string;
+          observed_at: string;
+        };
+        Insert: {
+          assessment_attempt_id: string;
+          child_id: string;
+          skill_id: string;
+          domain: string;
+          level_id?: string | null;
+          items_total: number;
+          items_correct: number;
+          items_skipped?: number;
+          credit: number;
+          weight: number;
+          strength: string;
+          observed_at: string;
+        };
+        Update: {
+          assessment_attempt_id?: string;
+          child_id?: string;
+          skill_id?: string;
+          domain?: string;
+          level_id?: string | null;
+          items_total?: number;
+          items_correct?: number;
+          items_skipped?: number;
+          credit?: number;
+          weight?: number;
+          strength?: string;
+          observed_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "assessment_evidence_assessment_attempt_id_fkey";
+            columns: ["assessment_attempt_id"];
+            isOneToOne: false;
+            referencedRelation: "assessment_attempts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "assessment_evidence_child_id_fkey";
+            columns: ["child_id"];
+            isOneToOne: false;
+            referencedRelation: "children";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "assessment_evidence_level_id_fkey";
+            columns: ["level_id"];
+            isOneToOne: false;
+            referencedRelation: "levels";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "assessment_evidence_skill_id_fkey";
+            columns: ["skill_id"];
+            isOneToOne: false;
+            referencedRelation: "skills";
+            referencedColumns: ["id"];
+          },
         ];
       };
       assessment_items: {
@@ -424,6 +532,9 @@ export type Database = {
           stage_label: string;
           sort_order: number;
           created_at: string;
+          domain: string | null;
+          level_id: string | null;
+          difficulty: number;
         };
         Insert: {
           id?: string;
@@ -433,6 +544,9 @@ export type Database = {
           stage_label?: string;
           sort_order?: number;
           created_at?: string;
+          domain?: string | null;
+          level_id?: string | null;
+          difficulty?: number;
         };
         Update: {
           id?: string;
@@ -442,6 +556,9 @@ export type Database = {
           stage_label?: string;
           sort_order?: number;
           created_at?: string;
+          domain?: string | null;
+          level_id?: string | null;
+          difficulty?: number;
         };
         Relationships: [
           {
@@ -449,6 +566,13 @@ export type Database = {
             columns: ["assessment_id"];
             isOneToOne: false;
             referencedRelation: "assessments";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "assessment_items_level_id_fkey";
+            columns: ["level_id"];
+            isOneToOne: false;
+            referencedRelation: "levels";
             referencedColumns: ["id"];
           },
           {
@@ -470,6 +594,10 @@ export type Database = {
           skill_scores: Json;
           suggested_level_id: string | null;
           created_at: string;
+          readiness: Json;
+          evidence_summary: Json;
+          partial: boolean;
+          comparison: Json | null;
         };
         Insert: {
           id?: string;
@@ -480,6 +608,10 @@ export type Database = {
           skill_scores?: Json;
           suggested_level_id?: string | null;
           created_at?: string;
+          readiness?: Json;
+          evidence_summary?: Json;
+          partial?: boolean;
+          comparison?: Json | null;
         };
         Update: {
           id?: string;
@@ -490,6 +622,10 @@ export type Database = {
           skill_scores?: Json;
           suggested_level_id?: string | null;
           created_at?: string;
+          readiness?: Json;
+          evidence_summary?: Json;
+          partial?: boolean;
+          comparison?: Json | null;
         };
         Relationships: [
           {
@@ -528,6 +664,7 @@ export type Database = {
           status: Database["public"]["Enums"]["content_status"];
           created_at: string;
           updated_at: string;
+          domains: string[];
         };
         Insert: {
           id?: string;
@@ -541,6 +678,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          domains?: string[];
         };
         Update: {
           id?: string;
@@ -554,6 +692,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          domains?: string[];
         };
         Relationships: [
           {
@@ -821,6 +960,7 @@ export type Database = {
           status: Database["public"]["Enums"]["content_status"];
           created_at: string;
           updated_at: string;
+          confusable_codes: string[];
         };
         Insert: {
           id?: string;
@@ -842,6 +982,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          confusable_codes?: string[];
         };
         Update: {
           id?: string;
@@ -863,6 +1004,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["content_status"];
           created_at?: string;
           updated_at?: string;
+          confusable_codes?: string[];
         };
         Relationships: [
 
@@ -913,6 +1055,93 @@ export type Database = {
         };
         Relationships: [
 
+        ];
+      };
+      instructional_readiness: {
+        Row: {
+          child_id: string;
+          domain: string;
+          current_level_id: string;
+          strongest_level_id: string | null;
+          next_level_id: string | null;
+          confidence: string;
+          source: string;
+          evidence: Json;
+          strengths: Json;
+          needs: Json;
+          prerequisite_gaps: Json;
+          assessment_attempt_id: string | null;
+          learning_epoch: number;
+          computed_at: string;
+        };
+        Insert: {
+          child_id: string;
+          domain: string;
+          current_level_id: string;
+          strongest_level_id?: string | null;
+          next_level_id?: string | null;
+          confidence: string;
+          source: string;
+          evidence?: Json;
+          strengths?: Json;
+          needs?: Json;
+          prerequisite_gaps?: Json;
+          assessment_attempt_id?: string | null;
+          learning_epoch?: number;
+          computed_at?: string;
+        };
+        Update: {
+          child_id?: string;
+          domain?: string;
+          current_level_id?: string;
+          strongest_level_id?: string | null;
+          next_level_id?: string | null;
+          confidence?: string;
+          source?: string;
+          evidence?: Json;
+          strengths?: Json;
+          needs?: Json;
+          prerequisite_gaps?: Json;
+          assessment_attempt_id?: string | null;
+          learning_epoch?: number;
+          computed_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "instructional_readiness_assessment_attempt_id_fkey";
+            columns: ["assessment_attempt_id"];
+            isOneToOne: false;
+            referencedRelation: "assessment_attempts";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "instructional_readiness_child_id_fkey";
+            columns: ["child_id"];
+            isOneToOne: false;
+            referencedRelation: "children";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "instructional_readiness_current_level_id_fkey";
+            columns: ["current_level_id"];
+            isOneToOne: false;
+            referencedRelation: "levels";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "instructional_readiness_next_level_id_fkey";
+            columns: ["next_level_id"];
+            isOneToOne: false;
+            referencedRelation: "levels";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "instructional_readiness_strongest_level_id_fkey";
+            columns: ["strongest_level_id"];
+            isOneToOne: false;
+            referencedRelation: "levels";
+            referencedColumns: ["id"];
+          },
         ];
       };
       learning_rules: {
@@ -3978,6 +4207,7 @@ export type Database = {
     };
     Functions: {
       archive_child: { Args: { p_child_id: string }; Returns: undefined };
+      assessment_item_exposure: { Args: { p_assessment_id: string; question_id: string; answers: string; children: string }; Returns: string };
       delete_child: { Args: { p_child_id: string; p_parent_id: string }; Returns: undefined };
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
       is_my_child: { Args: { p_child_id: string }; Returns: boolean };

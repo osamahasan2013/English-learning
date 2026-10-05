@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   compileRubric,
+  confusableProblems,
   glyphProblems,
   rubricTemplateSchema,
   glyphSchema,
@@ -58,8 +59,15 @@ function drawn(code: string, t: (p: Point) => Point = (p) => p, wobble = 0, reve
 }
 const trace = (target: string, strokes: number[][][], mode: "trace" | "write" = "trace", settings = KG1) => {
   const glyph = glyphByCode(target)!;
-  return evaluateTrace(glyph.strokes, strokes, traceSettingsFor(glyph, mode, { trace: true }, settings));
+  return evaluateTrace(
+    glyph.strokes,
+    strokes,
+    traceSettingsFor(glyph, mode, { trace: true }, settings),
+    glyph.confusables,
+  );
 };
+const LEVELS = [KG1, resolveWritingSettings("KG2"), KG3, G1, G2];
+const MODES = ["trace", "write"] as const;
 
 describe("tracing engine", () => {
   it("accepts every shipped glyph traced along its strokes, with a wobble, at every level", () => {
@@ -103,6 +111,132 @@ describe("tracing engine", () => {
     ["digit-6", "digit-9"],
   ])("rejects %s written as %s from memory", (target, wrong) => {
     expect(trace(target, drawn(wrong), "write").complete).toBe(false);
+  });
+
+  // Phase 9: glyph identity (tracing.ts → identityCheck). Shape matching alone accepted an o
+  // for a c (it covers all of c) and an E for an F; each glyph now lists its confusables.
+  describe("glyph identity", () => {
+    const REQUIRED: [string, string][] = [
+      ["lower-c", "lower-o"],
+      ["lower-b", "lower-d"],
+      ["lower-p", "lower-q"],
+      ["upper-a", "upper-o"],
+      ["upper-e", "upper-f"],
+      ["digit-6", "digit-9"],
+    ];
+
+    it.each(REQUIRED)(
+      "%s and %s are told apart both ways, at every level, traced and written",
+      { timeout: 60_000 },
+      (a, b) => {
+        for (const settings of LEVELS)
+          for (const mode of MODES)
+            for (const [target, wrong] of [
+              [a, b],
+              [b, a],
+            ])
+              for (const wobble of [0, 2]) {
+                const r = trace(
+                  target,
+                  drawn(wrong, (p) => p, wobble),
+                  mode,
+                  settings,
+                );
+                expect(r.complete, `${target} written as ${wrong} (${mode}, wobble ${wobble})`).toBe(false);
+              }
+      },
+    );
+
+    it("names the letter the child wrote instead", () => {
+      const r = trace("lower-c", drawn("lower-o"), "trace", G1);
+      expect(r).toMatchObject({ complete: false, identityOk: false, lookedLike: "lower-o" });
+      expect(r.issues).toContain("wrong_letter");
+      const f = trace("upper-f", drawn("upper-e"), "write", G1);
+      expect(f).toMatchObject({ identityOk: false, lookedLike: "upper-e" });
+    });
+
+    it(
+      "still accepts every letter with confusables written imperfectly, at every level",
+      { timeout: 60_000 },
+      () => {
+        for (const g of writingContent.glyphs.filter((x) => x.confusables.length > 0))
+          for (const settings of LEVELS)
+            for (const mode of MODES)
+              for (const wobble of [0, 1.5, 2.5]) {
+                const r = trace(
+                  g.code,
+                  drawn(g.code, (p) => p, wobble),
+                  mode,
+                  settings,
+                );
+                expect(r.complete, `${g.code} ${mode} wobble ${wobble}: ${r.issues.join(",")}`).toBe(true);
+              }
+      },
+    );
+
+    it("refuses every listed confusable, except the documented cases", { timeout: 60_000 }, () => {
+      // Known limits (docs/writing-engine.md): an o traced over an a's model (the a's stem lies
+      // along the o's side), and a dotless stick written from memory for i (with the size
+      // taken away, an l and a dotless i are the same stroke).
+      const KNOWN: Record<string, (typeof MODES)[number][]> = {
+        "lower-a<-lower-o": ["trace"],
+        "lower-o<-lower-a": ["write"],
+        "lower-i<-lower-l": ["write"],
+      };
+      for (const g of writingContent.glyphs)
+        for (const other of g.confusables)
+          for (const settings of LEVELS)
+            for (const mode of MODES) {
+              if (KNOWN[`${g.code}<-${other}`]?.includes(mode)) continue;
+              for (const wobble of [0, 2])
+                expect(
+                  trace(
+                    g.code,
+                    drawn(other, (p) => p, wobble),
+                    mode,
+                    settings,
+                  ).complete,
+                  `${g.code} written as ${other} (${mode}, wobble ${wobble})`,
+                ).toBe(false);
+            }
+    });
+
+    it("judges identity against the confusables given, not the device's opinion", () => {
+      // Without confusables (an old payload) the o passes for c — the server always loads them.
+      const bare = glyphByCode("lower-c", false)!;
+      const settings = traceSettingsFor(bare, "trace", { trace: true }, G1);
+      expect(evaluateTrace(bare.strokes, drawn("lower-o"), settings).complete).toBe(true);
+      expect(
+        evaluateTrace(bare.strokes, drawn("lower-o"), settings, glyphByCode("lower-c")!.confusables).complete,
+      ).toBe(false);
+    });
+
+    it("validates confusable lists: existing glyphs, same kind and case, listed both ways", () => {
+      const base = writingContent.glyphs.filter((g) => ["lower-c", "lower-o", "upper-o"].includes(g.code));
+      const glyphs = base.map((g) => ({ ...g, confusables: [] as string[] }));
+      const [c, o, O] = ["lower-c", "lower-o", "upper-o"].map((code) => glyphs.find((g) => g.code === code)!);
+      expect(confusableProblems(glyphs).size).toBe(0);
+      c.confusables = ["lower-o", "upper-o", "lower-zz", "lower-c"];
+      const problems = confusableProblems(glyphs).get("lower-c")!.join(" | ");
+      expect(problems).toContain('"lower-o" does not list "lower-c" back');
+      expect(problems).toContain('confusable "upper-o" is not a letter (lower case)');
+      expect(problems).toContain('confusable "lower-zz" is not a glyph');
+      expect(problems).toContain("cannot be its own confusable");
+      o.confusables = ["lower-c"];
+      c.confusables = ["lower-o"];
+      expect(confusableProblems([c, o, O]).size).toBe(0);
+      expect(confusableProblems(writingContent.glyphs).size).toBe(0);
+    });
+
+    it("keeps stroke order and direction rules when identity is checked", () => {
+      const reversed = drawn("lower-b", (p) => p, 0, true);
+      const required = { ...G1, trace: { ...G1.trace, strokeOrder: "required" as const } };
+      expect(trace("lower-b", reversed, "trace", required)).toMatchObject({
+        complete: false,
+        directionOk: false,
+      });
+      expect(trace("lower-b", reversed, "trace", G1).complete).toBe(true);
+    });
   });
 
   it("rejects scribbles, a corner mark and no ink", () => {

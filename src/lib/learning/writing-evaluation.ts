@@ -142,8 +142,16 @@ export function evaluateHandwriting(
     };
   }
   const traceSettings = traceSettingsFor(glyph, content.mode, answer, settings);
-  const result = evaluateTrace(glyph.strokes, response.strokes, traceSettings);
+  const result = evaluateTrace(glyph.strokes, response.strokes, traceSettings, glyph.confusables ?? []);
   return traceVerdict(glyph, content.mode, result, traceSettings);
+}
+
+// "That looks like a d." — the confusable's child-facing name when it is known.
+function lookedLikeHint(glyph: TraceGlyph, lookedLike: string | null) {
+  const other = glyph.confusables?.find((c) => c.code === lookedLike);
+  return other
+    ? `That looks like ${other.name}. Look at ${glyph.name} again.`
+    : `Look at ${glyph.name} again and write that letter.`;
 }
 
 export function traceVerdict(
@@ -162,6 +170,14 @@ export function traceVerdict(
         : "Go over every part of the letter.",
       critical: true,
       met: !result.issues.includes("missing_part") && !result.issues.includes("wrong_shape"),
+    },
+    {
+      id: "letter",
+      dimension: "letter",
+      label: "The right letter",
+      hint: lookedLikeHint(glyph, result.lookedLike),
+      critical: true,
+      met: result.identityOk || result.issues.includes("no_ink"),
     },
     {
       id: "on-letter",
@@ -205,7 +221,7 @@ export function traceVerdict(
     ? null
     : result.issues.includes("missing_part")
       ? "incomplete_trace"
-      : result.issues.includes("wrong_shape")
+      : result.issues.includes("wrong_shape") || result.issues.includes("wrong_letter")
         ? "WRONG_LETTER"
         : result.issues.includes("off_the_letter")
           ? "TRACE_OFF_LETTER"
@@ -229,6 +245,8 @@ export function traceVerdict(
         orderOk: result.orderOk,
         directionOk: result.directionOk,
         startOk: result.startOk,
+        identityOk: result.identityOk,
+        lookedLike: result.lookedLike,
         strokes: result.strokes.length,
       },
     },

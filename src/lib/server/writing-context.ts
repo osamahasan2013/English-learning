@@ -7,7 +7,7 @@ import {
   WRITING_QUESTION_TYPES,
   type WritingContext,
 } from "@/lib/learning/writing-evaluation";
-import { glyphFromRow, GLYPH_COLUMNS, type GlyphRow } from "@/lib/server/glyphs";
+import { attachConfusables, glyphFromRow, GLYPH_COLUMNS, type GlyphRow } from "@/lib/server/glyphs";
 import type { createAdminClient } from "@/lib/supabase/admin";
 
 type Db = ReturnType<typeof createAdminClient>;
@@ -69,10 +69,15 @@ export async function loadWritingContexts(
       .in("id", glyphIds)
       .eq("status", "published");
     if (error) throw error;
+    const withCodes: { glyph: TraceGlyph; codes: string[] }[] = [];
     for (const row of (data ?? []) as GlyphRow[]) {
       const glyph = glyphFromRow(row);
-      if (glyph) glyphs.set(row.id, glyph);
+      if (!glyph) continue;
+      glyphs.set(row.id, glyph);
+      withCodes.push({ glyph, codes: row.confusable_codes ?? [] });
     }
+    // Identity is judged against the confusables stored on the server, never sent by a device.
+    await attachConfusables(db, withCodes);
   }
   const lexicon = writing.some((q) => RUBRIC_TYPES.has(q.question_type)) ? await loadLexicon(db) : undefined;
 

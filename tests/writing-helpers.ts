@@ -18,10 +18,19 @@ export const rubricTemplates = new Map<string, RubricTemplate & { minRank: numbe
   writingFile.rubrics.map((r) => [r.code, { ...r, minRank: RANKS[r.minLevel], maxRank: RANKS[r.maxLevel] }]),
 );
 
-export function glyphByCode(code: string): TraceGlyph | null {
+// The glyph as the loaders build it: with its confusables' reference strokes attached
+// (withConfusables = false gives the bare glyph, as before Phase 9).
+export function glyphByCode(code: string, withConfusables = true): TraceGlyph | null {
   const g = writingFile.glyphs.find((x) => x.code === code);
   if (!g) return null;
+  const confusables = withConfusables
+    ? g.confusables.flatMap((c) => {
+        const other = writingFile.glyphs.find((x) => x.code === c);
+        return other ? [{ code: other.code, name: other.name, strokes: other.strokes }] : [];
+      })
+    : undefined;
   return {
+    confusables,
     code: g.code,
     kind: g.kind,
     character: g.character,

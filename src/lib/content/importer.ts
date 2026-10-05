@@ -30,7 +30,13 @@ import { BlueprintError, expandBlueprint } from "@/lib/content/lesson-blueprints
 import { validatePhonicsFile, type ValidationIssue } from "@/lib/content/phonics-validation";
 import { decomposeWord, segmentsUsePattern, type PatternInfo, type PhonemeInfo } from "@/lib/learning/phonics";
 import { parseQuestion } from "@/lib/content/question-schemas";
-import { compileWritingAnswer, glyphProblems, type RubricTemplate, type WritingFile } from "@/lib/content/writing-content";
+import {
+  compileWritingAnswer,
+  confusableProblems,
+  glyphProblems,
+  type RubricTemplate,
+  type WritingFile,
+} from "@/lib/content/writing-content";
 import { WRITING_QUESTION_TYPES } from "@/lib/learning/writing-evaluation";
 import { comprehensionQuestion } from "@/lib/content/reading-content";
 import {
@@ -1851,8 +1857,10 @@ export class ContentImporter {
 
     const glyphReport = this.entity("glyphs");
     const glyphRows: Row[] = [];
+    const confusion = confusableProblems(file.glyphs);
     for (const g of file.glyphs) {
-      const { errors, warnings } = glyphProblems(g);
+      const { errors: own, warnings } = glyphProblems(g);
+      const errors = [...own, ...(confusion.get(g.code) ?? [])];
       if (errors.length > 0) {
         glyphReport.invalid++;
         glyphReport.errors.push(`glyph ${g.code}: ${errors.join("; ")}`);
@@ -1873,6 +1881,7 @@ export class ContentImporter {
         completion: g.completion,
         difficulty: g.difficulty,
         family: g.family,
+        confusable_codes: g.confusables,
         formation_tip: g.formationTip,
         formation_speech: g.formationSpeech,
         sort_order: g.sortOrder,

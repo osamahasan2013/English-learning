@@ -50,7 +50,13 @@ export type TraceGlyph = {
   completion: number;
   formationTip: string;
   formationSpeech: string;
+  // Letters this one is easily confused with (glyph metadata, handwriting_glyphs
+  // .confusable_codes): their reference strokes, so the trace can be told apart from them.
+  confusables?: TraceCompetitor[];
 };
+
+// A glyph the child's letter must NOT look like (see identityCheck).
+export type TraceCompetitor = { code: string; name: string; strokes: GlyphStroke[] };
 
 // The child's strokes as recorded: integer points in the 0–100 box. The device keeps every
 // few pixels of each stroke (simplifyStroke), so an answer stays a few hundred numbers.
@@ -87,7 +93,10 @@ export type TraceIssue =
   | "wrong_shape"
   | "stroke_order"
   | "direction"
-  | "start_point";
+  | "start_point"
+  // The ink has the part that only a confusable letter has (o drawn for c, E for F), or
+  // lacks the part that tells this letter apart from it (c drawn for o).
+  | "wrong_letter";
 
 export type TraceResult = {
   // 0–1: length-weighted share of the reference covered by ink.
@@ -100,6 +109,10 @@ export type TraceResult = {
   orderOk: boolean;
   directionOk: boolean;
   startOk: boolean;
+  // Glyph identity: the ink is this letter, not one of its confusables.
+  identityOk: boolean;
+  // The confusable the ink looks like instead (its code), when identityOk is false.
+  lookedLike: string | null;
   complete: boolean;
   almost: boolean;
   issues: TraceIssue[];
@@ -260,6 +273,7 @@ export function evaluateTrace(
   reference: GlyphStroke[],
   drawn: number[][][],
   settings: TraceSettings,
+  confusables: TraceCompetitor[] = [],
 ): TraceResult {
   const childRaw = drawn.filter((s) => s.length > 0).map((s) => s.map(([x, y]) => [x, y] as Point));
   const refPaths = reference.map((s) => s.points);
@@ -271,6 +285,8 @@ export function evaluateTrace(
       orderOk: false,
       directionOk: false,
       startOk: false,
+      identityOk: false,
+      lookedLike: null,
       complete: false,
       almost: false,
       issues: ["no_ink"],
@@ -334,8 +350,13 @@ export function evaluateTrace(
   // Balance is about shape, not position: the ink is moved and scaled onto the letter first.
   const shaped = settings.align ? allInk : alignTo(childRaw, refPaths).flatMap(directedSamples);
   const balanced = distance(centroid(shaped), centroid(refAll)) <= Math.max(BALANCE_MIN, tol * BALANCE_SHARE);
+  const identity = identityCheck(refPaths, childRaw, settings, confusables);
   const formed =
-    coverage >= settings.completion && everyStroke && precision >= settings.minPrecision && balanced;
+    coverage >= settings.completion &&
+    everyStroke &&
+    precision >= settings.minPrecision &&
+    balanced &&
+    identity.ok;
   const orderRequired = settings.strokeOrder === "required";
   const complete = formed && (!orderRequired || (orderOk && directionOk && startOk));
   const almost =
@@ -347,6 +368,7 @@ export function evaluateTrace(
   if (!everyStroke || coverage < settings.completion) issues.push("missing_part");
   if (precision < settings.minPrecision) issues.push("off_the_letter");
   if (!balanced && !issues.includes("missing_part")) issues.push("wrong_shape");
+  if (!identity.ok) issues.push("wrong_letter");
   if (settings.strokeOrder !== "off") {
     if (!startOk) issues.push("start_point");
     if (!orderOk) issues.push("stroke_order");
@@ -359,10 +381,128 @@ export function evaluateTrace(
     orderOk,
     directionOk,
     startOk,
+    identityOk: identity.ok,
+    lookedLike: identity.lookedLike,
     complete,
     almost,
     issues,
   };
+}
+
+// ---- glyph identity ------------------------------------------------------------------------
+//
+// Shape matching with a tolerance cannot always tell a letter from a similar one: o drawn
+// for c covers all of c, an E covers all of an F, a b overlaps a d almost everywhere. Each
+// glyph therefore lists its confusables (glyph metadata: handwriting_glyphs.confusable_codes)
+// and the ink must be THIS letter, not one of them. Two deterministic rules, both on the
+// public reference strokes:
+//
+// 1. Best fit. The ink is compared with this letter and with each confusable (writing from
+//    memory: moved and scaled onto each letter's own box first). Fit = mean distance from
+//    the letter's samples to the ink + mean distance from the ink to the letter (each capped,
+//    so one stray mark cannot dominate). If a confusable fits better by more than
+//    IDENTITY_MARGIN, the child wrote that letter. A wobbly but correct letter fits its own
+//    reference best, whatever the wobble — the wobble costs every candidate alike.
+// 2. Containment. Where one letter is the other plus a part (c inside o, F inside E, n inside
+//    h, o inside a), that part decides: the confusable's extra part must stay empty, and this
+//    letter's extra part must carry ink — each measured as the median distance from the
+//    part's samples to the ink, compared with how closely the shared part was drawn (writing
+//    from memory is moved and scaled first, which shifts a wobbly letter everywhere a little).
+//
+// Calibrated against every listed pair at every level, tracing and writing
+// (tests/unit/writing.test.ts). Not handwriting recognition: no model, no learned weights.
+
+const IDENTITY_MARGIN = 0.5;
+const FIT_CAP = 15;
+// Parts of one letter farther than this from the other's strokes are its own.
+const IDENTITY_GAP = 6;
+const DREW_OTHER_WITHIN = 3;
+// An extra part needs at least this many samples (2 units apart) to count.
+const IDENTITY_MIN_SAMPLES = 3;
+// The containment rule is only applied when the shared part was drawn at least this closely.
+const PART_RULE_MAX_BASE = 2.5;
+// Writing from memory: moving and scaling the letter onto the box shifts its outer parts by
+// up to this much, so a part counts as missing only beyond it.
+const ALIGN_SLACK = 7;
+
+function samplesOf(paths: Point[][]): Point[] {
+  return paths.flatMap((path) => (pathLength(path) < DOT_LENGTH ? [path[0]] : resample(path, SAMPLE_STEP)));
+}
+
+function nearest(p: Point, set: Point[]) {
+  let best = Infinity;
+  for (const q of set) best = Math.min(best, distance(p, q));
+  return best;
+}
+
+function median(values: number[]) {
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.floor(sorted.length / 2)];
+}
+
+function meanDistance(a: Point[], b: Point[]) {
+  let total = 0;
+  for (const p of a) total += Math.min(FIT_CAP, nearest(p, b));
+  return a.length ? total / a.length : FIT_CAP;
+}
+
+// Both ways round: ink missing a part and ink with an extra part both cost.
+function fitTo(letter: Point[], ink: Point[]) {
+  return meanDistance(letter, ink) + meanDistance(ink, letter);
+}
+
+export function identityCheck(
+  reference: Point[][],
+  ink: Point[][],
+  settings: Pick<TraceSettings, "tolerance" | "align">,
+  confusables: TraceCompetitor[],
+): { ok: boolean; lookedLike: string | null } {
+  if (ink.length === 0 || confusables.length === 0) return { ok: true, lookedLike: null };
+  const own = samplesOf(reference);
+  const placed = samplesOf(settings.align ? alignTo(ink, reference) : ink);
+  const ownFit = fitTo(own, placed);
+  const missBeyond = Math.min(7, Math.max(4, settings.tolerance * 0.6));
+  // Scaling a letter written from memory onto the box moves its outer parts most.
+  const alignSlack = settings.align ? ALIGN_SLACK : 0;
+  // Every confusable the ink matches is noted; the one it fits best is named.
+  let lookedLike: { code: string; fit: number } | null = null;
+  const flag = (code: string, fit: number) => {
+    if (!lookedLike || fit < lookedLike.fit) lookedLike = { code, fit };
+  };
+  for (const competitor of confusables) {
+    const otherPaths = competitor.strokes.map((s) => s.points);
+    const other = samplesOf(otherPaths);
+    // 1. Best fit, each letter in its own box.
+    const otherFit = fitTo(other, samplesOf(settings.align ? alignTo(ink, otherPaths) : ink));
+    if (otherFit + IDENTITY_MARGIN < ownFit) {
+      flag(competitor.code, otherFit);
+      continue;
+    }
+    // 2. Containment: only one of the two letters has a part of its own.
+    const onlyOther = other.filter((p) => nearest(p, own) > IDENTITY_GAP);
+    const onlyOwn = own.filter((p) => nearest(p, other) > IDENTITY_GAP);
+    const hasOther = onlyOther.length >= IDENTITY_MIN_SAMPLES;
+    const hasOwn = onlyOwn.length >= IDENTITY_MIN_SAMPLES;
+    if (hasOther === hasOwn) continue;
+    // Judged against how closely the shared part was drawn: writing from memory is moved and
+    // scaled first, which shifts a wobbly letter a little everywhere, not just in one part.
+    const shared = own.filter((p) => nearest(p, other) <= IDENTITY_GAP);
+    const base = shared.length ? median(shared.map((p) => nearest(p, placed))) : 0;
+    // Too imprecise to call it the other letter: the best-fit rule alone decides.
+    if (base > PART_RULE_MAX_BASE) continue;
+    if (
+      hasOther &&
+      median(onlyOther.map((p) => nearest(p, placed))) <= Math.max(DREW_OTHER_WITHIN, base * 1.25)
+    )
+      flag(competitor.code, otherFit);
+    else if (
+      hasOwn &&
+      median(onlyOwn.map((p) => nearest(p, placed))) > Math.max(missBeyond, base * 2, alignSlack)
+    )
+      flag(competitor.code, otherFit);
+  }
+  const found = lookedLike as { code: string; fit: number } | null;
+  return found ? { ok: false, lookedLike: found.code } : { ok: true, lookedLike: null };
 }
 
 function round3(n: number) {

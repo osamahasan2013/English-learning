@@ -15,7 +15,7 @@ import {
   type SpellingActivity,
 } from "@/lib/learning/spelling";
 import type { LearningRules } from "@/lib/learning/rules";
-import { glyphFromRow, GLYPH_COLUMNS } from "@/lib/server/glyphs";
+import { attachConfusables, glyphFromRow, GLYPH_COLUMNS } from "@/lib/server/glyphs";
 import type { TraceGlyph } from "@/lib/learning/tracing";
 import { resolveWritingSettings, WRITING_QUESTION_TYPES } from "@/lib/learning/writing-evaluation";
 import type { FeedbackKind, FeedbackMessage } from "@/lib/learning/feedback";
@@ -572,10 +572,15 @@ async function loadQuestionSupport(supabase: Supabase, questions: QuestionRow[])
       .in("code", [...glyphCodes])
       .eq("status", "published");
     if (glyphError) throw glyphError;
+    const withCodes: { glyph: TraceGlyph; codes: string[] }[] = [];
     for (const row of glyphRows ?? []) {
       const glyph = glyphFromRow(row);
-      if (glyph) glyphs.set(glyph.code, glyph);
+      if (!glyph) continue;
+      glyphs.set(glyph.code, glyph);
+      withCodes.push({ glyph, codes: row.confusable_codes ?? [] });
     }
+    // The device checks identity too (instant feedback); the server re-checks with its own.
+    await attachConfusables(supabase, withCodes);
   }
 
   return { answers, patterns, tileSounds, passage, glyphs };

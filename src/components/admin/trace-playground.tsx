@@ -29,7 +29,12 @@ export function TracePlayground({
   const settings = levels.find((l) => l.level === level)?.settings;
   const result: TraceResult | null =
     settings && strokes.length > 0
-      ? evaluateTrace(glyph.strokes, strokes, traceSettingsFor(glyph, mode, { trace: true }, settings))
+      ? evaluateTrace(
+          glyph.strokes,
+          strokes,
+          traceSettingsFor(glyph, mode, { trace: true }, settings),
+          glyph.confusables ?? [],
+        )
       : null;
 
   const point = (e: PointerEvent<SVGSVGElement>): Point => {

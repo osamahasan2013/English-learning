@@ -212,6 +212,10 @@ export type WritingAnalysis = {
     orderOk?: boolean;
     directionOk?: boolean;
     startOk?: boolean;
+    // Glyph identity (tracing.ts → identityCheck): the ink is this letter, or it looked like
+    // the confusable named.
+    identityOk?: boolean;
+    lookedLike?: string | null;
     strokes?: number;
   };
   // Story writing: the order was right.

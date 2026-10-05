@@ -202,7 +202,7 @@ export async function checkWritingKey(
       const v = traceVerdict(
         key.glyph,
         key.traceMode,
-        evaluateTrace(key.glyph.strokes, response.strokes, key.settings),
+        evaluateTrace(key.glyph.strokes, response.strokes, key.settings, key.glyph.confusables ?? []),
         key.settings,
       );
       return { isCorrect: v.isCorrect, almost: v.almost, writing: v.analysis };

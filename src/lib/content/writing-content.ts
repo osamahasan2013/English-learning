@@ -43,6 +43,12 @@ export const glyphSchema = z
     completion: z.number().min(0.3).max(0.98).default(0.7),
     difficulty: z.number().int().min(1).max(10).default(1),
     family: z.string().max(20).default(""),
+    // Glyphs this one is easily confused with (same kind and case): the trace must not look
+    // like them (tracing.ts → identityCheck). Listed both ways round.
+    confusables: z
+      .array(z.string().regex(/^[a-z0-9-]{2,60}$/))
+      .max(12)
+      .default([]),
     formationTip: z.string().max(200).default(""),
     formationSpeech: z.string().max(300).default(""),
     sortOrder: z.number().int().default(0),
@@ -85,6 +91,24 @@ export type WritingFile = z.infer<typeof writingFileSchema>;
 // ---- glyph validation ------------------------------------------------------------------
 
 // Problems that make a glyph unusable (errors) and doubts for an admin (warnings).
+// Confusable lists across the whole glyph set: every code exists, is another glyph of the
+// same kind and case, and the relation is listed both ways round.
+export function confusableProblems(glyphs: GlyphInput[]): Map<string, string[]> {
+  const byCode = new Map(glyphs.map((g) => [g.code, g]));
+  const problems = new Map<string, string[]>();
+  const add = (code: string, message: string) => problems.set(code, [...(problems.get(code) ?? []), message]);
+  for (const g of glyphs)
+    for (const code of g.confusables) {
+      const other = byCode.get(code);
+      if (!other) add(g.code, `confusable "${code}" is not a glyph`);
+      else if (code === g.code) add(g.code, "a glyph cannot be its own confusable");
+      else if (other.kind !== g.kind || other.case !== g.case)
+        add(g.code, `confusable "${code}" is not a ${g.kind}${g.case === "none" ? "" : ` (${g.case} case)`}`);
+      else if (!other.confusables.includes(g.code)) add(g.code, `"${code}" does not list "${g.code}" back`);
+    }
+  return problems;
+}
+
 export function glyphProblems(glyph: GlyphInput): { errors: string[]; warnings: string[] } {
   const errors = [...glyphStrokeProblems(glyph.strokes)];
   const warnings: string[] = [];

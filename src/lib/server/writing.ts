@@ -10,7 +10,7 @@ import {
   type WritingAttemptFact,
   type WritingSkillFact,
 } from "@/lib/learning/writing-report";
-import { glyphFromRow, GLYPH_COLUMNS, type GlyphRow } from "@/lib/server/glyphs";
+import { attachConfusables, glyphFromRow, GLYPH_COLUMNS, type GlyphRow } from "@/lib/server/glyphs";
 import { createClient } from "@/lib/supabase/server";
 
 // Writing screens: the child's writing home and the parent's writing report. Everything is
@@ -318,9 +318,12 @@ export async function loadAdminGlyph(code: string) {
     supabase.from("questions").select("id", { count: "exact", head: true }).eq("glyph_id", data.id),
     supabase.from("content_flags").select("message").eq("entity", "glyph").eq("entity_key", code),
   ]);
+  const glyph = glyphFromRow(data as GlyphRow);
+  // The admin try-it pad checks identity against the confusables, as children's answers are.
+  if (glyph) await attachConfusables(supabase, [{ glyph, codes: (data as GlyphRow).confusable_codes ?? [] }]);
   return {
     row: data,
-    glyph: glyphFromRow(data as GlyphRow),
+    glyph,
     questions: count ?? 0,
     flags: (flags.data ?? []).map((f) => f.message),
   };
