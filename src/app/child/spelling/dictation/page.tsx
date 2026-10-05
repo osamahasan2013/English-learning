@@ -46,5 +46,5 @@ export default async function DictationPage() {
       </div>
     );
   }
-  return <LessonPlayer payload={payload} childId={child.id} />;
+  return <LessonPlayer payload={payload} childId={child.id} learningEpoch={child.learning_epoch} />;
 }

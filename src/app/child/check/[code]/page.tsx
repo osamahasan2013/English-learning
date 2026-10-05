@@ -29,5 +29,5 @@ export default async function CheckPage(props: PageProps<"/child/check/[code]">)
       </div>
     );
   }
-  return <LessonPlayer payload={payload} childId={child.id} />;
+  return <LessonPlayer payload={payload} childId={child.id} learningEpoch={child.learning_epoch} />;
 }

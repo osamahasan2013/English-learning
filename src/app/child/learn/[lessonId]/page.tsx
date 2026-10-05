@@ -28,5 +28,12 @@ export default async function LessonPage(props: PageProps<"/child/learn/[lessonI
       </div>
     );
   }
-  return <LessonPlayer payload={payload} childId={child.id} readiness={readiness} />;
+  return (
+    <LessonPlayer
+      payload={payload}
+      childId={child.id}
+      learningEpoch={child.learning_epoch}
+      readiness={readiness}
+    />
+  );
 }

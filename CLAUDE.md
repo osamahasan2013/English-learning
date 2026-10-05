@@ -79,7 +79,8 @@ tests/unit, tests/e2e    Vitest and Playwright
 
 - Server-only modules start with `import "server-only"`. The service-role client
   (`src/lib/supabase/admin.ts`) is used only by the progress writer (after an ownership
-  check) and the lesson loader (to build digest-only answer keys; ADR-021).
+  check), the lesson loader (to build digest-only answer keys; ADR-021) and the child
+  lifecycle actions (delete child / reset learning, after an ownership check; ADR-046).
 - Correct answers never reach the browser in plain text: `questions.answer` is not readable
   by signed-in users, and renderers get a `reveal` from the answer key, never the answer.
 - Engine numbers (mastery bands, tries, review, scoring) live in `src/lib/learning/rules.ts`

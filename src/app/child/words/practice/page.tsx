@@ -42,5 +42,5 @@ export default async function PractiseMyWordsPage() {
       </div>
     );
   }
-  return <LessonPlayer payload={payload} childId={child.id} />;
+  return <LessonPlayer payload={payload} childId={child.id} learningEpoch={child.learning_epoch} />;
 }

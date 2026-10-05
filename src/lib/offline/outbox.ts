@@ -1,3 +1,4 @@
+import { clearChildLocalData } from "@/lib/offline/child-data";
 import { getLearningDb, type OutboxItem } from "@/lib/offline/db";
 import { MAX_EVENTS_PER_REQUEST, type SyncEvent, type SyncResponse } from "@/lib/offline/sync-protocol";
 
@@ -9,6 +10,9 @@ import { MAX_EVENTS_PER_REQUEST, type SyncEvent, type SyncResponse } from "@/lib
 //   * 401                        → stays pending until the parent signs in again
 //   * server "rejected" an event → marked failed, kept, counted in the UI
 //   * 400/403 for the batch      → every event in it marked failed with the reason
+//   * 410 for the batch          → the child was deleted: this device's data for the child
+//                                   is removed (child-data.ts); it can never be stored
+//   * "obsolete" for an event    → recorded before the child's learning was reset: removed
 
 export async function enqueue(childId: string, event: SyncEvent) {
   await getLearningDb().outbox.put({
@@ -77,6 +81,10 @@ async function doFlush(fetcher: Fetcher): Promise<FlushResult> {
     }
 
     if (response.status === 401) return { state: "unauthenticated", sent, failed };
+    if (response.status === 410) {
+      await clearChildLocalData(childId);
+      continue;
+    }
     if (response.status === 429 || response.status >= 500) {
       await bumpTries(batch, `http_${response.status}`);
       return { state: "retry_later", sent, failed };
@@ -102,6 +110,7 @@ async function doFlush(fetcher: Fetcher): Promise<FlushResult> {
           await db.outbox.update(item.id, { status: "failed", lastError: result.reason ?? "rejected" });
           failed += 1;
         } else {
+          // stored, duplicate, or obsolete (from before a learning reset): done with it.
           await db.outbox.delete(item.id);
           sent += 1;
         }

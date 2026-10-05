@@ -26,6 +26,8 @@ applied). TypeScript types in `src/lib/supabase/types.ts` are generated
 | `20261007100200_pronunciation_keywords.sql`           | A sound's `keyword` may list up to four words (the first not on screen is used, so a question never names its own answer)                                                                                                                                                                                                                                                                                  |
 | `20261008100100_reading_engine.sql`                   | Phase 7 reading: `reading_skill_types`, `reading_content_types`, `skills.reading_skill_code`, story reading metadata and analysis (type, genre, topic, band, time, image, recording, tags, `text_stats`, `decodable_pct`, `unknown_words`, unique title per level), `story_words`, `story_phonics_patterns`, `story_reading_skills`, `reading_sessions`, reading review key/reason, `story` review flags   |
 | `20261009100100_writing_engine.sql`                   | Phase 8 writing: `writing_skill_types`, `skills.writing_skill_code`, `handwriting_glyphs` (ordered strokes, guide, tolerance, completion; unique per character, case and script), `questions.glyph_id`, `writing_rubrics` (admin-only), `activity_attempts.writing_analysis`, `review_items.glyph_id` with the `writing` key and `writing_letter` reason, `glyph` / `writing_rubric` content flags, grants |
+| `20261010100100_recorded_audio.sql`                   | Phase 8.2 recorded audio: `audio_assets` kinds, content keys, versions, metadata; letter-name recordings separate from sounds                                                                                                                                                                                                                                                                              |
+| `20261011100100_child_lifecycle.sql`                  | Phase 8.4: `children.learning_epoch` and `learning_reset_at`; `delete_child(child, parent)` and `reset_child_learning(child, parent)` (`security definer`, service role only, ownership re-checked, one transaction each)                                                                                                                                                                                  |
 
 ## Conventions
 
@@ -43,10 +45,10 @@ applied). TypeScript types in `src/lib/supabase/types.ts` are generated
 
 ### Identity and family
 
-| Table      | Purpose                                                                                                                                                                                                                                                                       |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `profiles` | One per auth user; `role` (`parent`/`admin`), display name, locale, validated IANA time zone (from the browser at sign-up). Created by trigger on `auth.users`.                                                                                                               |
-| `children` | Child profiles (`parent_id`, name, avatar key, optional DOB, `grade_level_id` chosen by parent, `current_level_id` learned at, `daily_minutes` ∈ {10,15,20,30,45}, `placement_score`, `learning_preferences`, soft delete `deleted_at`). Age is derived from DOB, not stored. |
+| Table      | Purpose                                                                                                                                                                                                                                                                                                                                                   |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `profiles` | One per auth user; `role` (`parent`/`admin`), display name, locale, validated IANA time zone (from the browser at sign-up). Created by trigger on `auth.users`.                                                                                                                                                                                           |
+| `children` | Child profiles (`parent_id`, name, avatar key, optional DOB, `grade_level_id` chosen by parent, `current_level_id` learned at, `daily_minutes` ∈ {10,15,20,30,45}, `placement_score`, `learning_preferences`, `learning_epoch` and `learning_reset_at` (Phase 8.4 learning reset), legacy soft delete `deleted_at`). Age is derived from DOB, not stored. |
 
 ### Reference content
 
@@ -154,19 +156,29 @@ assessments 1─* assessment_items *─1 questions
 
 ## Security (RLS)
 
-| Data                    | anon | parent (authenticated)                                               | admin                                          | service role |
-| ----------------------- | ---- | -------------------------------------------------------------------- | ---------------------------------------------- | ------------ |
-| Published content       | —    | read (except `questions.answer`)                                     | read/write (except reading `questions.answer`) | all          |
-| Draft/archived content  | —    | —                                                                    | read/write                                     | all          |
-| Own profile             | —    | read; update name/locale/time zone                                   | same                                           | all          |
-| Own children            | —    | read, insert, update (listed columns), archive via `archive_child()` | no access                                      | all          |
-| Own children's progress | —    | read                                                                 | no access                                      | all (writes) |
-| Other families          | —    | nothing                                                              | nothing                                        | all          |
+| Data                    | anon | parent (authenticated)                                                        | admin                                          | service role |
+| ----------------------- | ---- | ----------------------------------------------------------------------------- | ---------------------------------------------- | ------------ |
+| Published content       | —    | read (except `questions.answer`)                                              | read/write (except reading `questions.answer`) | all          |
+| Draft/archived content  | —    | —                                                                             | read/write                                     | all          |
+| Own profile             | —    | read; update name/locale/time zone                                            | same                                           | all          |
+| Own children            | —    | read, insert, update (listed columns); delete / reset through the server only | no access                                      | all          |
+| Own children's progress | —    | read                                                                          | no access                                      | all (writes) |
+| Other families          | —    | nothing                                                                       | nothing                                        | all          |
 
 Helpers: `is_admin()`, `is_my_child(child_id)` (both `security definer`, fixed
 `search_path`), `is_valid_time_zone(name)`. My Words: `set_word_saved(child, word, saved)`
 and `note_word_seen(child, word)` (`security definer`; the child must be the caller's and
 the word published; only the saved/seen columns change — ADR-032).
+
+Child lifecycle (Phase 8.4, ADR-046): `delete_child(child, parent)` deletes the child row
+(every child-owned table cascades); `reset_child_learning(child, parent)` deletes the
+child's rows in every table that references `children`, sets the learning level back to
+the grade, clears `placement_score` and increments `learning_epoch` (returned). Both are
+executable by the service role only — the parent's server action calls them after its own
+ownership check — and raise `CHILD_NOT_FOUND` when the child isn't that parent's. Parents
+have no update grant on `learning_epoch` / `learning_reset_at`. The SQL test
+`012_child_lifecycle.sql` fails if a table referencing `children` doesn't cascade or isn't
+reset. `archive_child()` (soft delete) remains in the database but is no longer used.
 
 Rules enforced by the database, whatever the client sends:
 

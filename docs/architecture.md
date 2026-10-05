@@ -83,8 +83,10 @@ pages re-check).
 
 - One parent account → up to 12 child profiles (`children`), each with its own grade,
   learning level, daily minutes and progress. Create/edit via Server Actions in
-  `app/parent/child-actions.ts`; removal is a soft delete through `archive_child()`, which
-  keeps history but hides the child and its progress.
+  `app/parent/child-actions.ts`. Deleting a child and resetting a child's learning are
+  separate, permanent operations in the child's settings ("Child lifecycle" below). The
+  older soft delete (`archive_child()`, `deleted_at`) is no longer offered; children archived
+  before Phase 8.4 stay hidden.
 - Switching: the dashboard switcher (`?child=`) changes which child's progress is shown;
   "Start learning as …" (`enterChildMode`) sets the httpOnly active-child cookie after an
   ownership check; the grown-up gate returns to the dashboard to pick another child.
@@ -545,6 +547,65 @@ Full detail, limitations and the pronunciation matrix: [audio.md](audio.md).
   (`AudioControls`). When nothing can be heard, "Audio isn't available right now" shows,
   and nothing waits for audio, so a lesson can always be finished.
 
+## Child lifecycle (Phase 8.4)
+
+Two parent-only operations in **Children → Settings** for a child, deliberately separate
+(ADR-046):
+
+- **Reset learning** (section "Learning"): start the child's learning journey again from
+  the beginning. Confirmation dialog naming the child and their grade.
+- **Delete child** (section "Danger zone"): permanently delete the child and all of their
+  data. Confirmation dialog in which the parent types the child's name.
+
+Both run on the server (`deleteChild` / `resetChildLearning` in
+`app/parent/child-actions.ts` → `src/lib/server/child-lifecycle.ts`): the parent comes
+from the verified session; the child id from the browser is re-checked with the parent's
+own RLS client (another family's child is not found); then a database function
+(`delete_child`, `reset_child_learning`, service role only) re-checks the parent id and does
+the whole operation in one transaction. The browser cannot call those functions, and
+success is reported only after the transaction committed — on failure nothing changes
+and the dialog says so. Afterwards the device forgets its data for the child
+(`clearChildLocalData`: unsynced events, lessons in progress, the learning session; shared
+lesson content stays), the parent pages are revalidated and refreshed, and a deleted child's
+active-child cookie is cleared.
+
+| Data (table)                                                                                          | Delete child      | Reset learning              | Why                                                                                                                                                                     |
+| ----------------------------------------------------------------------------------------------------- | ----------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `children` row: id, name, avatar, date of birth, parent, `grade_level_id`, daily minutes, preferences | deleted           | **kept**                    | Identity, ownership and profile settings.                                                                                                                               |
+| `children.current_level_id`, `placement_score`                                                        | deleted           | back to the grade / cleared | Adaptive state (where the child is learning), not the school grade — as for a new child.                                                                                |
+| `children.learning_epoch`, `learning_reset_at`                                                        | deleted           | moved on                    | Lets the sync layer recognise events from before the reset.                                                                                                             |
+| `activity_attempts`, `lesson_runs`, `assessment_attempts`, `assessment_results`, `reading_sessions`   | deleted (cascade) | deleted                     | History. Every derived cache is recomputed from it (rule 4), so keeping it would bring the old progress back at the next answer; an old Phonics Check would still show. |
+| `learning_sessions`                                                                                   | deleted           | deleted                     | Totals recomputed from the events above.                                                                                                                                |
+| `activity_progress`, `lesson_progress`, `subject_progress`, `level_progress`                          | deleted           | deleted                     | Derived progress.                                                                                                                                                       |
+| `skill_mastery`, `review_items`                                                                       | deleted           | deleted                     | Derived mastery and the review queue (the daily plan and recommendations are computed from these on each request, so they start fresh).                                 |
+| `word_progress` (incl. My Words), `word_area_progress`, `spelling_progress`                           | deleted           | deleted                     | Word, area and spelling mastery; My Words is rebuilt as the child meets words again.                                                                                    |
+| `reward_events`, `child_achievements`                                                                 | deleted           | deleted                     | Stars and badges earned on the old journey.                                                                                                                             |
+| Parent account (`auth.users`, `profiles`), other children                                             | kept              | kept                        | Never touched.                                                                                                                                                          |
+| Curriculum and shared content (levels … questions, words, stories, assets, achievement definitions)   | kept              | kept                        | Shared by everyone.                                                                                                                                                     |
+| On the device: outbox events, saved lesson runs, learning session                                     | removed           | removed                     | Could otherwise resurrect old state.                                                                                                                                    |
+| On the device: cached lesson payloads, display preferences                                            | kept              | kept                        | Shared content / device settings.                                                                                                                                       |
+
+There is no separate historical store: a reset keeps no copy of the old journey. That is a
+known limitation of V1 (the caches are computed from the history, with no epoch filter);
+a future phase that needs to keep it would scope every recompute to the current epoch
+rather than add a second progress system.
+
+**Stale events.** Every learning event carries the child's `learning_epoch` from when it
+was recorded (the child pages pass it to the lesson player). The progress writer marks an
+event from an older epoch — or, for events queued by an app version without epochs, one
+that happened before `learning_reset_at` — as `obsolete`: never stored, and dropped by the
+device. A deleted child has no row at all: the sync route answers **410** and the device
+removes everything it held for that child (another family's child stays a 403, and those
+events are kept, since they may belong to whoever signs in next). An event batch already in
+flight at the very moment of a reset can still land (the writer is not one transaction);
+that window is the length of one request.
+
+**Phase 9.** A deleted child does not exist anywhere. A reset child is indistinguishable
+from a new child of the same grade except for `learning_epoch` / `learning_reset_at`: no
+mastery, review, assessment results or rewards remain, so nothing old can be read as
+current instructional readiness. "Reset → take a placement assessment" can call the
+existing placement flow after `reset_child_learning()`; it needs no other change here.
+
 ## Offline / PWA
 
 - Manifest (`src/app/manifest.ts`), icons in `public/icons` (generated by
@@ -561,6 +622,9 @@ Full detail, limitations and the pronunciation matrix: [audio.md](audio.md).
   client-side offline loader.
 - Signing out deletes saved pages and cached lessons from the device but keeps unsynced
   answers (they can only be accepted for a child of the parent who signs in next).
+- Deleting a child or resetting their learning removes this device's events, saved runs
+  and session for the child; other devices drop theirs when the server answers 410 /
+  `obsolete` (see "Child lifecycle").
 
 ## Security
 

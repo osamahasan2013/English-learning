@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { ACTIVE_CHILD_COOKIE, getOwnedChild, requireParentMode, requireUser } from "@/lib/auth/session";
 import { errorMessage, logger } from "@/lib/logging";
+import { deleteChildForParent, resetChildLearningForParent } from "@/lib/server/child-lifecycle";
 import { listPublishedLevels } from "@/lib/server/family-data";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_CHILDREN_PER_FAMILY, readChildProfileForm } from "@/lib/validation/family";
@@ -96,18 +97,50 @@ export async function updateChild(
   redirect(`/parent/dashboard?child=${childId}`);
 }
 
-export async function archiveChild(childId: string) {
+// Child lifecycle (Phase 8.4, ADR-046). Two separate actions; the server decides what each
+// one removes, the child id from the browser is re-verified, and success is reported only
+// after the database transaction committed. The client then clears this device's data for
+// the child (src/lib/offline/child-data.ts) and refreshes.
+export type LifecycleActionResult = { ok: true } | { ok: false; message: string };
+
+const sameName = (a: string, b: string) => a.trim().toLocaleLowerCase() === b.trim().toLocaleLowerCase();
+
+export async function deleteChild(childId: string, confirmName: string): Promise<LifecycleActionResult> {
   const user = await requireParentMode();
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("archive_child", { p_child_id: childId });
-  if (error) {
-    logger.error("children.archive_failed", { userId: user.id, childId, message: errorMessage(error) });
-    throw new Error("Could not remove the profile.");
-  }
+  const child = await getOwnedChild(childId);
+  if (!child) return { ok: false, message: "This profile was not found." };
+  // The typed name is checked here too: deleting needs the parent's explicit confirmation.
+  if (!sameName(confirmName, child.name)) return { ok: false, message: `Type ${child.name} to confirm.` };
+  const result = await deleteChildForParent(user.id, child.id);
+  if (!result.ok)
+    return {
+      ok: false,
+      message:
+        result.reason === "not_found"
+          ? "This profile was not found."
+          : "We couldn't delete the profile. Nothing was changed. Please try again.",
+    };
   const store = await cookies();
-  if (store.get(ACTIVE_CHILD_COOKIE)?.value === childId) store.delete(ACTIVE_CHILD_COOKIE);
+  if (store.get(ACTIVE_CHILD_COOKIE)?.value === child.id) store.delete(ACTIVE_CHILD_COOKIE);
   revalidatePath("/parent", "layout");
-  redirect("/parent/dashboard");
+  revalidatePath("/child", "layout");
+  return { ok: true };
+}
+
+export async function resetChildLearning(childId: string): Promise<LifecycleActionResult> {
+  const user = await requireParentMode();
+  const result = await resetChildLearningForParent(user.id, childId);
+  if (!result.ok)
+    return {
+      ok: false,
+      message:
+        result.reason === "not_found"
+          ? "This profile was not found."
+          : "We couldn't reset the learning. Nothing was changed. Please try again.",
+    };
+  revalidatePath("/parent", "layout");
+  revalidatePath("/child", "layout");
+  return { ok: true };
 }
 
 // Hands the device to a child: remembers which child is learning (httpOnly cookie,

@@ -4,13 +4,15 @@ import { errorMessage, logger } from "@/lib/logging";
 import { MAX_EVENTS_PER_REQUEST, syncRequestSchema } from "@/lib/offline/sync-protocol";
 import { processSyncBatch } from "@/lib/server/progress-writer";
 import { rateLimit } from "@/lib/server/rate-limit";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 // Receives learning events from the device outbox (src/lib/offline/outbox.ts).
 //
 // Authorization: the child id in the body is never trusted. The child is looked up with
 // the parent's own RLS-scoped client, which only returns children of the signed-in parent;
-// only then are events written (with the service role) for that child.
+// only then are events written (with the service role) for that child. Events recorded
+// before the child's learning was reset come back "obsolete" (progress-writer.ts).
 
 const MAX_BODY_BYTES = 512 * 1024;
 
@@ -65,6 +67,19 @@ export async function POST(request: NextRequest) {
     .eq("id", parsed.data.childId)
     .maybeSingle();
   if (!child) {
+    // A child that no longer exists at all was deleted (Phase 8.4): 410 tells the device to
+    // drop its queued events for that child — they can never be stored. A child that exists
+    // but is not this parent's (or is archived) stays a 403, and the device keeps the
+    // events (they may belong to another family signed in on the same device).
+    const { data: existing } = await createAdminClient()
+      .from("children")
+      .select("id")
+      .eq("id", parsed.data.childId)
+      .maybeSingle();
+    if (!existing) {
+      logger.warn("sync.child_deleted", { userId: user.id });
+      return NextResponse.json({ error: "child_deleted" }, { status: 410 });
+    }
     logger.warn("sync.child_not_owned", { userId: user.id });
     return NextResponse.json({ error: "child_not_found" }, { status: 403 });
   }

@@ -64,8 +64,12 @@ export default async function ChildrenPage() {
                     >
                       Progress
                     </Link>
-                    <Link href={`/parent/children/${child.id}`} className={buttonClasses("ghost", "md")}>
-                      Edit
+                    <Link
+                      href={`/parent/children/${child.id}`}
+                      className={buttonClasses("ghost", "md")}
+                      aria-label={`Settings for ${child.name}`}
+                    >
+                      Settings
                     </Link>
                   </div>
                 </Card>

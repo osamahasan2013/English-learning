@@ -33,7 +33,7 @@ test("a parent manages several children and switches between them", async ({ pag
   await expect(page.getByRole("heading", { name: "Leo" })).toBeVisible();
 });
 
-test("a parent edits a child's grade and level, and removes a child", async ({ page }) => {
+test("a parent edits a child's grade and level, and deletes a child", async ({ page }) => {
   await registerParent(page);
   const mia = await addChild(page, "Mia", /Kindergarten 1/);
   await page.goto("/parent/children/new");
@@ -63,8 +63,9 @@ test("a parent edits a child's grade and level, and removes a child", async ({ p
   expect(await leoProfile()).toEqual(leoBefore);
 
   await page.goto(`/parent/children/${mia}`);
-  await page.getByRole("button", { name: /Remove Mia Rose/ }).click();
-  await page.getByRole("button", { name: "Yes, remove" }).click();
+  await page.getByRole("button", { name: "Delete Mia Rose…" }).click();
+  await page.getByLabel("Type Mia Rose to confirm").fill("Mia Rose");
+  await page.getByRole("button", { name: "Delete Mia Rose", exact: true }).click();
   await expect(page).toHaveURL(/\/parent\/dashboard/);
   await expect(page.getByRole("heading", { level: 1, name: "Leo" })).toBeVisible();
   await page.goto(`/parent/children/${mia}`);

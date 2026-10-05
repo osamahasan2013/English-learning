@@ -8,10 +8,15 @@ import { responseSchema } from "@/lib/content/question-schemas";
 
 const uuid = z.string().uuid();
 const timestamp = z.string().datetime({ offset: true });
+// The child's learning epoch when the event was recorded (Phase 8.4): a reset moves the
+// epoch on, and the server treats events from an earlier epoch as obsolete. Optional so
+// events queued by an older app version still sync (they are compared by time instead).
+const epoch = z.number().int().min(0).max(1_000_000).optional();
 
 export const attemptEventSchema = z.object({
   kind: z.literal("attempt"),
   id: uuid,
+  epoch,
   questionId: uuid,
   lessonRunId: uuid.nullable(),
   // Answers given in an assessment (e.g. the Phonics Check) name the assessment and the
@@ -32,6 +37,7 @@ export const attemptEventSchema = z.object({
 export const lessonRunEventSchema = z.object({
   kind: z.literal("lesson_run"),
   id: uuid,
+  epoch,
   lessonId: uuid,
   sessionId: uuid.nullable().optional(),
   startedAt: timestamp,
@@ -42,6 +48,7 @@ export const lessonRunEventSchema = z.object({
 export const assessmentRunEventSchema = z.object({
   kind: z.literal("assessment_run"),
   id: uuid,
+  epoch,
   assessmentId: uuid,
   sessionId: uuid.nullable().optional(),
   startedAt: timestamp,
@@ -53,6 +60,7 @@ export const assessmentRunEventSchema = z.object({
 export const readingEventSchema = z.object({
   kind: z.literal("reading"),
   id: uuid,
+  epoch,
   storyId: uuid,
   lessonId: uuid.nullable(),
   lessonRunId: uuid.nullable(),
@@ -98,8 +106,13 @@ export const syncRequestSchema = z.object({
 export type SyncRequest = z.infer<typeof syncRequestSchema>;
 
 // stored = written now; duplicate = already stored earlier (safe to drop locally);
+// obsolete = recorded before the child's learning was reset (dropped locally, never stored);
 // rejected = will never be accepted (kept on the device and shown to the parent).
-export type SyncResult = { id: string; status: "stored" | "duplicate" | "rejected"; reason?: string };
+export type SyncResult = {
+  id: string;
+  status: "stored" | "duplicate" | "obsolete" | "rejected";
+  reason?: string;
+};
 
 export type SyncResponse = {
   results: SyncResult[];

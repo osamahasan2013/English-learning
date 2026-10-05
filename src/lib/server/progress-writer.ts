@@ -40,6 +40,7 @@ import {
 } from "@/lib/learning/spelling";
 import { deriveReadingWordReview, readingKey } from "@/lib/learning/reading";
 import { deriveLetterReview, writingKey } from "@/lib/learning/writing";
+import { isObsoleteEvent } from "@/lib/learning/learning-reset";
 import type { LearningRules } from "@/lib/learning/rules";
 import { scoreLesson } from "@/lib/learning/scoring";
 import type { MasteryStatus } from "@/lib/learning/mastery";
@@ -81,7 +82,23 @@ export async function processSyncBatch(
   const rules = await loadLearningRules(db);
   const results = new Map<string, SyncResult>();
 
-  const sessionEvents = await attachSessions(db, childId, events, now);
+  // Events recorded before the child's learning was reset are obsolete (Phase 8.4): never
+  // stored, so a device that was offline during a reset cannot restore the old progress.
+  const { data: child, error: childError } = await db
+    .from("children")
+    .select("learning_epoch, learning_reset_at")
+    .eq("id", childId)
+    .maybeSingle();
+  if (childError) throw childError;
+  if (!child) throw new Error("child_not_found");
+  const resetState = { learningEpoch: child.learning_epoch, learningResetAt: child.learning_reset_at };
+  const current = events.filter((e) => {
+    if (!isObsoleteEvent(e, resetState)) return true;
+    results.set(e.id, { id: e.id, status: "obsolete", reason: "learning_reset" });
+    return false;
+  });
+
+  const sessionEvents = await attachSessions(db, childId, current, now);
   const usable = await attachAssessmentAttempts(db, childId, sessionEvents, now, results);
   const attempts = usable.filter((e): e is AttemptEvent => e.kind === "attempt");
   const runs = usable.filter((e): e is LessonRunEvent => e.kind === "lesson_run");

@@ -663,6 +663,8 @@ export type Database = {
           deleted_at: string | null;
           created_at: string;
           updated_at: string;
+          learning_epoch: number;
+          learning_reset_at: string | null;
         };
         Insert: {
           id?: string;
@@ -678,6 +680,8 @@ export type Database = {
           deleted_at?: string | null;
           created_at?: string;
           updated_at?: string;
+          learning_epoch?: number;
+          learning_reset_at?: string | null;
         };
         Update: {
           id?: string;
@@ -693,6 +697,8 @@ export type Database = {
           deleted_at?: string | null;
           created_at?: string;
           updated_at?: string;
+          learning_epoch?: number;
+          learning_reset_at?: string | null;
         };
         Relationships: [
           {
@@ -3972,10 +3978,12 @@ export type Database = {
     };
     Functions: {
       archive_child: { Args: { p_child_id: string }; Returns: undefined };
+      delete_child: { Args: { p_child_id: string; p_parent_id: string }; Returns: undefined };
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
       is_my_child: { Args: { p_child_id: string }; Returns: boolean };
       is_valid_time_zone: { Args: { p_name: string }; Returns: boolean };
       note_word_seen: { Args: { p_child_id: string; p_word_id: string }; Returns: undefined };
+      reset_child_learning: { Args: { p_child_id: string; p_parent_id: string }; Returns: number };
       set_word_saved: { Args: { p_child_id: string; p_word_id: string; p_saved: boolean }; Returns: undefined };
     };
     Enums: {

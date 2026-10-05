@@ -642,3 +642,38 @@ surest of; reading is slightly less segmented at Slow (articles attached). Conte
 names a letter must say `{@x}`. Whether a given iOS voice now sounds right still has to be
 confirmed by a person with the audio check on the device; recordings (none exist yet)
 remain the only way to get pure sounds and a fixed voice.
+
+## ADR-046 — Child lifecycle and learning reset
+
+**Context.** Parents need to permanently delete a child and, separately, to start a child's
+learning again from the beginning, before Phase 9 builds assessment and adaptive learning
+on top of the progress data. The only existing option was a soft delete that kept all data
+hidden. Every child-owned table already referenced `children` with `ON DELETE CASCADE`.
+The derived caches (lesson progress, mastery, review, words, spelling, sessions) are
+recomputed from the history (attempts, runs, sittings, readings), with no notion of
+"before / after a reset". Devices queue events offline and sync them later, possibly after
+a deletion or a reset.
+
+**Decision.** Two separate operations, each one database transaction in a `security
+definer` function executable by the service role only: `delete_child(child, parent)`
+removes the child row (all child data cascades); `reset_child_learning(child, parent)`
+removes the child's rows in every table referencing `children`, returns the learning level
+to the grade, clears the placement score, and increments the child's `learning_epoch`
+(`learning_reset_at` records when). Server actions authenticate the parent, re-check
+ownership with the parent's RLS client, and pass the verified parent id, which the function
+checks again; the browser never calls the functions. A reset deletes the history too:
+keeping it would let the next recompute restore the old progress. Events carry the epoch
+they were recorded in; the progress writer marks older events (or, without an epoch, events
+from before `learning_reset_at`) `obsolete`, and the sync route answers 410 for a child that
+no longer exists; the device drops both. The parent UI separates "Learning → Reset learning"
+from "Danger zone → Delete child" (typed-name confirmation). A SQL test fails if a new
+table referencing `children` doesn't cascade or isn't reset. The soft delete is no longer
+offered.
+
+**Consequences.** Delete and reset are permanent; a reset keeps no copy of the old journey
+(documented limitation — keeping one later means scoping every recompute to the current
+epoch, not a second progress system). A reset child looks to Phase 9 exactly like a new
+child of the same grade, so no stale mastery, review, assessment or recommendation can be
+read as current. Offline devices cannot resurrect deleted or reset data; events from a
+device that was offline during a reset are lost by design. A batch already in flight at the
+instant of a reset can still land (the writer is not one transaction).

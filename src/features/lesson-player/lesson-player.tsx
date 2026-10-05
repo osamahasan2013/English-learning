@@ -56,10 +56,14 @@ type Achievement = { code: string; title: string; emoji: string };
 export function LessonPlayer({
   payload,
   childId,
+  learningEpoch,
   readiness = null,
 }: {
   payload: LessonPayload;
   childId: string;
+  // The child's learning epoch (children.learning_epoch), stamped on every event so the
+  // server can tell events from before a learning reset (Phase 8.4).
+  learningEpoch: number;
   readiness?: PrerequisiteCheck | null;
 }) {
   const [run, setRun] = useState<{
@@ -90,6 +94,7 @@ export function LessonPlayer({
       key={run.key}
       payload={payload}
       childId={childId}
+      learningEpoch={learningEpoch}
       readiness={readiness}
       saved={run.saved}
       preview={run.preview}
@@ -107,6 +112,7 @@ export function LessonPlayer({
 function LessonRun({
   payload,
   childId,
+  learningEpoch,
   readiness,
   saved,
   preview: startAsPreview,
@@ -115,6 +121,7 @@ function LessonRun({
 }: {
   payload: LessonPayload;
   childId: string;
+  learningEpoch: number;
   readiness: PrerequisiteCheck | null;
   saved: SavedRun | null;
   preview: boolean;
@@ -240,6 +247,7 @@ function LessonRun({
         ? {
             kind: "assessment_run",
             id: runId,
+            epoch: learningEpoch,
             assessmentId: assessment.id,
             sessionId: sessionId(),
             startedAt,
@@ -248,6 +256,7 @@ function LessonRun({
         : {
             kind: "lesson_run",
             id: runId,
+            epoch: learningEpoch,
             lessonId: payload.lesson.id,
             sessionId: sessionId(),
             startedAt,
@@ -266,6 +275,7 @@ function LessonRun({
     void recordEvent(childId, {
       kind: "attempt",
       id: newId(),
+      epoch: learningEpoch,
       questionId: step.questionId,
       lessonRunId: assessment || practice ? null : runId,
       assessmentId: assessment?.id ?? null,
@@ -320,6 +330,7 @@ function LessonRun({
     void recordEvent(childId, {
       kind: "reading",
       id: newId(),
+      epoch: learningEpoch,
       storyId: report.storyId,
       lessonId: assessment || practice ? null : payload.lesson.id,
       lessonRunId: assessment || practice ? null : runId,

@@ -174,6 +174,21 @@ tests PASS at KG1 and Grade 1 after two fixes from the first run (/s/ as `sah`, 
 KG1 Normal). Still to do: the listening test on an Android phone and a desktop browser;
 recordings.
 
+## Phase 8.4 — child lifecycle
+
+Delete a child and reset a child's learning, as two separate parent-only operations in the
+child's settings (ADR-046, [architecture.md](architecture.md) → "Child lifecycle"):
+migration `20261011100100` (`learning_epoch`, `learning_reset_at`, `delete_child()`,
+`reset_child_learning()` — service role only, ownership re-checked, one transaction each),
+server module `src/lib/server/child-lifecycle.ts`, confirmation dialogs (typed name for
+delete), device clean-up (`clearChildLocalData`), stale-event protection (events carry the
+learning epoch; obsolete events and a deleted child's 410 are dropped by the device). The
+old soft delete is no longer offered. Tests: SQL `012_child_lifecycle.sql`, integration
+`child-lifecycle.test.ts`, unit `child-lifecycle.test.ts`, e2e `child-lifecycle.spec.ts`
+(two devices: offline answers from before a reset / deletion cannot bring anything back).
+Phase 9 integration point: "reset → placement" calls the existing placement flow after
+`reset_child_learning()`.
+
 ## Phases
 
 | #   | Phase                       | Status | Notes / next steps                                                                                                                                                                                                                                                        |

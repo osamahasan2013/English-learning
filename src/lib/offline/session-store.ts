@@ -25,3 +25,13 @@ export function currentSessionId(childId: string, timeoutMinutes: number, now = 
   }
   return next.id;
 }
+
+// Forgets the device's session for a child (deleted, or learning reset).
+export function forgetSession(childId: string) {
+  memory.delete(childId);
+  try {
+    localStorage.removeItem(key(childId));
+  } catch {
+    // Ignored, see above.
+  }
+}
