@@ -543,8 +543,8 @@ export const DEFAULT_RULES: LearningRules = {
     defaultLevel: "KG3",
     levels: {
       KG1: {
-        normal: { rate: 0.78, chunk: "phrase", maxWords: 4, pauseMs: 200, sentenceGapMs: 600 },
-        slow: { rate: 0.62, chunk: "word", maxWords: 1, pauseMs: 380, sentenceGapMs: 900 },
+        normal: { rate: 0.7, chunk: "phrase", maxWords: 4, pauseMs: 350, sentenceGapMs: 750 },
+        slow: { rate: 0.62, chunk: "word", maxWords: 1, pauseMs: 450, sentenceGapMs: 900 },
       },
       KG2: {
         normal: { rate: 0.8, chunk: "phrase", maxWords: 4, pauseMs: 180, sentenceGapMs: 550 },

@@ -95,7 +95,7 @@ offline) and the child layout provides the child's level elsewhere.
 
 | Level   | Normal                                  | Slow                                    |
 | ------- | --------------------------------------- | --------------------------------------- |
-| KG1     | 0.78, phrases ≤ 4 words, 200 ms, 600 ms | 0.62, word by word, 380 ms, 900 ms      |
+| KG1     | 0.70, phrases ≤ 4 words, 350 ms, 750 ms | 0.62, word by word, 450 ms, 900 ms      |
 | KG2     | 0.80, phrases ≤ 4 words, 180 ms, 550 ms | 0.64, word by word, 340 ms, 850 ms      |
 | KG3     | 0.83, whole sentences, —, 500 ms        | 0.66, phrases ≤ 2 words, 350 ms, 800 ms |
 | Grade 1 | 0.88, whole sentences, —, 450 ms        | 0.70, phrases ≤ 2 words, 330 ms, 750 ms |
@@ -110,7 +110,7 @@ each word" about 50–70; adult conversation is 150+. The youngest hear short ph
 Normal (natural, with breathing room) and single words at Slow (the "finger under each
 word" reading teachers model); from KG3 Normal is whole sentences, and Slow pairs of words —
 deliberate but still phrased, not robotic. For "The cat is at the gate." Slow adds at
-least 560 ms of silence at every level (1.9 s at KG1) on top of the lower rate, so it is
+least 560 ms of silence at every level (1.35 s at KG1) on top of the lower rate, so it is
 audibly slower even on an engine that ignores the rate. Phrases are chosen as a whole per
 clause (balanced, close to `maxWords`: "The cat is | at the gate.", not "The cat | is at
 the gate."), never split a function word from its word ("to the park." stays together;
@@ -146,7 +146,7 @@ browser speech synthesis. The chain is deterministic, per request and per token:
 
 1. **Recorded clip** for the whole request (`assetUrl`) or for a token (a phoneme,
    pattern sound or letter clip in the sound table).
-2. **Speech synthesis** of the resolver's rendering (`suh`, `ee`, `shun`, the word, the
+2. **Speech synthesis** of the resolver's rendering (`sah`, `ee`, `shun`, the word, the
    sentence). A clip that fails (missing file, offline, blocked) falls back to this.
 3. **Keyword** for sounds no voice can say ("the sound at the start of apple").
 4. **Nothing** for a token with no safe rendering — the rest of the text is still said,
@@ -310,6 +310,19 @@ This human listening test on an iPhone, an Android phone and a desktop browser i
 acceptance test for audio accuracy — the automated tests cannot hear. Nothing is stored
 or sent; the timing log (`setAudioTimingLog`) is on only while the page is open, in
 memory, and records no words (only their length).
+
+## Real-device results
+
+**iPhone, iOS 18.7, Safari, voice Samantha (on device), KG1 — 2026-10-05**, 26 tests:
+letter names A, G, S, T, sounds /g/ /m/ /t/, the words gate, cat, the, the sentence, all
+ten reading lines, segmenting, blending and both intros PASS. One FAIL: /s/ ("should be
+nearer to “sah” than “suh”"), so /s/ is now rendered `sah` (espeak-ng `s'A:`, never the
+name `'Es`). Notes on the KG1 sentence and Reading Normal: "still somehow fast, especially
+for kids", so KG1 Normal went from rate 0.78 / 200 ms pauses / 600 ms sentence gaps to
+0.70 / 350 / 750, and KG1 Slow pauses from 380 to 450 ms to keep Slow clearly slower.
+Three Slow lines were cut short because the next test was started while they played; the
+page now compares Slow with Normal only when both played to the end. Still to confirm on
+the iPhone: /s/ and KG1 Normal speed; Android and a desktop browser not yet tested.
 
 ## Recording priorities
 

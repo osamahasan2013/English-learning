@@ -291,7 +291,7 @@ export type PlanOptions = ResolveOptions & {
 //
 // A RUN of sounds ("gate. {/G/}, {/EY/}, {/T/}. gate.") is split into parts of their own
 // with a gap around each, so it is never one breath that sounds like "gate g a t gate".
-// A single sound or a letter name inside a sentence stays in the sentence ("It says suh, as
+// A single sound or a letter name inside a sentence stays in the sentence ("It says sah, as
 // in sun.", "This is the letter S."): read on its own it would be a one-syllable utterance,
 // which voices pronounce without context and iOS often clips at the start (a letter name
 // alone was misheard on an iPhone). A token that is the whole text is a part of its own

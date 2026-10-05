@@ -299,7 +299,7 @@ test("the grown-ups' audio check: letter name vs sound vs word, Normal vs Slow, 
   // the SOUND is the sound; a word is the word — never letters or sounds.
   for (const l of ["A", "G", "S", "T"]) expect(await play(`letter-${l.toLowerCase()}`)).toEqual([`${l}.`]);
   expect(await play("phoneme-g")).toEqual(["guh"]);
-  expect(await play("phoneme-s")).toEqual(["suh"]);
+  expect(await play("phoneme-s")).toEqual(["sah"]);
   expect(await play("word-gate")).toEqual(["gate."]);
   expect(await play("word-the")).toEqual(["the."]);
   expect(await play("segmenting")).toEqual(["guh", "eigh", "tuh"]);
@@ -325,5 +325,7 @@ test("the grown-ups' audio check: letter name vs sound vs word, Normal vs Slow, 
   expect(copied).toMatch(
     /reading-1-slow \[KG1\] PASS · intent STORY_READING · target The cat is at the gate\. · source tts · rate 0.62 · 4 pieces/,
   );
-  expect(copied).toMatch(/KG1 Slow \/ Normal “The cat is at the gate\.”: [\d.]+×/);
+  expect(copied).toMatch(
+    /KG1 Slow \/ Normal “The cat is at the gate\.”: Slow took [\d.]+× as long as Normal/,
+  );
 });

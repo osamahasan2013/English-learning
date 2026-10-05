@@ -9,11 +9,11 @@ How the app decides what to say, and why phonics sounds are never spoken as lett
 | **Grapheme**                   | What is written: one or more letters that stand for a sound | `sh`, `igh`, `a_e`       | `phonics_patterns.pattern`, `word_segments.grapheme`                             |
 | **Phoneme**                    | A speech sound, as an ARPAbet code (IPA alongside)          | `SH` = /ʃ/, `AE` = /æ/   | `phonemes`, `phonics_pattern_sounds.phonemes`, `word_segments.phonemes`          |
 | **Letter name**                | What a letter is called in the alphabet                     | s → "S" (said "ess")     | `phonics_patterns.letter_name` / `letter_name_say_as`                            |
-| **Speech-synthesis rendering** | Text a browser voice reads aloud to produce a sound         | /s/ → `suh`, /iː/ → `ee` | `phonemes.say_as`, `phonics_pattern_sounds.say_as`                               |
+| **Speech-synthesis rendering** | Text a browser voice reads aloud to produce a sound         | /s/ → `sah`, /iː/ → `ee` | `phonemes.say_as`, `phonics_pattern_sounds.say_as`                               |
 | **Recorded asset**             | A real audio file in Supabase Storage (`content-audio`)     | `audio/phonemes/s.mp3`   | `audio_assets` (+ `audio_asset_id` on phonemes, pattern sounds, patterns, words) |
 
 A letter's **name** and its **sound** are different things and are stored and spoken
-separately: "This is the letter S. It says suh, as in sun." A **word** is said whole
+separately: "This is the letter S. It says sah, as in sun." A **word** is said whole
 ("gate"), never spelled out; **segmenting** (g … ay … t) and **blending** (g … ay … t …
 gate) happen only when an activity asks for them. These are audio intents
 ([audio-engine.md](audio-engine.md)): each is paced on its own, and a sound, a letter name
@@ -48,7 +48,7 @@ Tokens are read in any case and with spaces (`{/sh/}`, `{ /SH/ }`, `{@S}`, `{ @s
 keep their kind; broken ones (`{sound}`, an unclosed `{/S/`) are never spoken. When
 played, each token keeps its role (`phoneme` or `letter_name`); a run of sounds is split
 into pieces with a short silence around each, while a single sound or letter name stays
-inside its sentence ("It says suh, as in sun.") and a token alone is a piece of its own
+inside its sentence ("It says sah, as in sun.") and a token alone is a piece of its own
 (Phase 8.3, [audio-engine.md](audio-engine.md)); captions (`speakableText`) read as one line.
 
 ## The resolver
@@ -60,7 +60,8 @@ inside its sentence ("It says suh, as in sun.") and a token alone is a piece of 
 2. **Speech synthesis** — the rendering stored in the database, checked to produce the
    sound and never letter names. Quality is recorded per sound:
    - `pure` — the sound alone (`ee`, `oh`, `ah`, `er`, `ing`, `shun`, `eigh` for /eɪ/);
-   - `approximate` — the sound plus a short "uh" (`suh`, `buh`, `shuh`, `thuh`). Browser
+   - `approximate` — the sound plus a short vowel (`buh`, `shuh`, `thuh`; /s/ is `sah`, which
+     listeners on an iPhone heard as closer to the sound than `suh`). Browser
      voices cannot say an isolated consonant.
 3. **Keyword** — for sounds no browser voice can produce from text (the short vowels /æ/
    /ɛ/ /ɪ/, /ʊ/ as in book, /aʊ/ as in cow, /ks/, /ɪd/), the app says "the sound at the
@@ -117,7 +118,7 @@ behind Chrome and Firefox on Linux). `-x` phoneme output: `'Es` = "ess", `'eItS`
 | LETTER_A | A_LONG /eɪ/      | `ay` → `'aI`                                         | `eigh` → `'eI`                                                             | tts (pure)        |
 | LETTER_B | B /b/            | `buh` → `b'V`                                        | `buh` → `b'V`                                                              | tts (approximate) |
 | LETTER_C | C_HARD /k/       | `kuh` → `k'V`                                        | `kuh` → `k'V`                                                              | tts (approximate) |
-| LETTER_C | C_SOFT /s/       | `sss` → `,Es,Es'Es`                                  | `suh` → `s'V`                                                              | tts (approximate) |
+| LETTER_C | C_SOFT /s/       | `sss` → `,Es,Es'Es`                                  | `sah` → `s'A:`                                                             | tts (approximate) |
 | LETTER_D | D /d/            | `duh` → `d'V`                                        | `duh` → `d'V`                                                              | tts (approximate) |
 | LETTER_E | E_SHORT /ɛ/      | `eh` → `'eI`                                         | `the sound at the start of egg` → `D@2 s'aUnd at D@2 st'A@t Vv 'Eg`        | keyword (keyword) |
 | LETTER_E | E_LONG /iː/      | `ee` → `'i:`                                         | `ee` → `'i:`                                                               | tts (pure)        |
@@ -137,7 +138,7 @@ behind Chrome and Firefox on Linux). `-x` phoneme output: `'Es` = "ess", `'eItS`
 | LETTER_P | P /p/            | `puh` → `p'V`                                        | `puh` → `p'V`                                                              | tts (approximate) |
 | LETTER_Q | Q /kw/           | `kwuh` → `kw'V`                                      | `kwuh` → `kw'V`                                                            | tts (approximate) |
 | LETTER_R | R /ɹ/            | `rrr` → `,A@r,A@r'A@`                                | `ruh` → `r'V`                                                              | tts (approximate) |
-| LETTER_S | S /s/            | `sss` → `,Es,Es'Es`                                  | `suh` → `s'V`                                                              | tts (approximate) |
+| LETTER_S | S /s/            | `sss` → `,Es,Es'Es`                                  | `sah` → `s'A:`                                                             | tts (approximate) |
 | LETTER_S | S_Z /z/          | `zzz` → `z,i:z,i:z'i:`                               | `zuh` → `z'V`                                                              | tts (approximate) |
 | LETTER_T | T /t/            | `tuh` → `t'V`                                        | `tuh` → `t'V`                                                              | tts (approximate) |
 | LETTER_U | U_SHORT /ʌ/      | `uh` → `'V`                                          | `uh` → `'V`                                                                | tts (pure)        |
@@ -179,7 +180,7 @@ behind Chrome and Firefox on Linux). `-x` phoneme output: `'Es` = "ess", `'eItS`
 | ED       | ED_T /t/         | `t, as in jumped` → `t'i: az In dZ'Vmpt`             | `tuh` → `t'V`                                                              | tts (approximate) |
 | ED       | ED_D /d/         | `d, as in played` → `d'i: az In pl'eId`              | `duh` → `d'V`                                                              | tts (approximate) |
 | ED       | ED_ID /ɪd/       | `id, as in painted` → `aId'i: az In p'eIntI#d`       | `the sound at the end of painted` → `D@2 s'aUnd at DI2; 'End Vv p'eIntI#d` | keyword (keyword) |
-| ENDING_S | ENDING_S_S /s/   | `sss, as in cats` → `,Es,Es'Es az In k'ats`          | `suh` → `s'V`                                                              | tts (approximate) |
+| ENDING_S | ENDING_S_S /s/   | `sss, as in cats` → `,Es,Es'Es az In k'ats`          | `sah` → `s'A:`                                                             | tts (approximate) |
 | ENDING_S | ENDING_S_Z /z/   | `zzz, as in dogs` → `z,i:z,i:z'i: az In d'0gz`       | `zuh` → `z'V`                                                              | tts (approximate) |
 | ES       | ES /ɪz/          | `iz, as in boxes` → `'Iz az In b'0ksI#z`             | `iz` → `'Iz`                                                               | tts (pure)        |
 | TION     | TION /ʃən/       | `shun, as in station` → `S'Vn az In st'eIS@n`        | `shun` → `S'Vn`                                                            | tts (pure)        |

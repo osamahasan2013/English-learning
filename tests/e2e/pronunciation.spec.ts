@@ -4,10 +4,10 @@ import { addChild, answerQuestion, lessonQuestions, registerParent, startLesson 
 // What the browser is actually asked to say, end to end: lesson content from the database
 // (sound tokens) → the sound table in the payload → the pronunciation resolver → the
 // browser's speech synthesis. A fake engine records every utterance. Phonics sounds must
-// be spoken as sounds (suh, shuh), letter names as names (the capital letter, which every
+// be spoken as sounds (sah, shuh), letter names as names (the capital letter, which every
 // voice reads as its name), and never as raw tokens or letter strings (sss, th). Since
 // Phase 8.3 a letter name or a single sound stays inside its sentence ("This is the letter
-// S." / "It says suh, as in sun."), so the checks look for those pieces in order.
+// S." / "It says sah, as in sun."), so the checks look for those pieces in order.
 
 async function recordSpeech(page: Page) {
   await page.addInitScript(() => {
@@ -56,9 +56,9 @@ test("phonics sounds are spoken as sounds and letter names as names", async ({ p
   const { lessonId: letterS } = await lessonQuestions("kg1-letter-s-1");
   await page.goto(`/child/learn/${letterS}`);
   await startLesson(page);
-  await expect.poll(() => saidInOrder(page, ["This is the letter S.", "It says suh, as in sun."])).toBe(true);
+  await expect.poll(() => saidInOrder(page, ["This is the letter S.", "It says sah, as in sun."])).toBe(true);
   await page.getByRole("button", { name: /sound/i }).first().click();
-  await expect.poll(async () => (await spoken(page)).at(-1)).toBe("suh");
+  await expect.poll(async () => (await spoken(page)).at(-1)).toBe("sah");
   // Each page load starts a new recording: keep what this page said.
   const all = await spoken(page);
 

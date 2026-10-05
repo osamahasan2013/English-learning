@@ -1,6 +1,12 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { AUDIO_CHECK_ITEMS, describeDevice, formatResults } from "@/lib/audio/audio-check";
+import {
+  AUDIO_CHECK_ITEMS,
+  describeDevice,
+  formatResults,
+  slowNormalRatio,
+  type RequestSummary,
+} from "@/lib/audio/audio-check";
 import { citationForm } from "@/lib/audio/audio-service";
 import { chunkText, paceFor, resolveAudioPacing } from "@/lib/audio/pacing";
 import {
@@ -126,9 +132,9 @@ describe("G, every way it is taught", () => {
 describe("S", () => {
   it("letter name S vs phoneme /s/", () => {
     expect(planSpeech("{@s}", table)).toEqual([{ kind: "tts", text: "S.", role: "letter_name" }]);
-    expect(planSpeech("{/S/}", table)).toEqual([{ kind: "tts", text: "suh", role: "phoneme" }]);
+    expect(planSpeech("{/S/}", table)).toEqual([{ kind: "tts", text: "sah", role: "phoneme" }]);
     expect(planSpeech("It starts with {@s}. It says {/S/}, as in sun.", table)).toEqual([
-      { kind: "tts", text: "It starts with S. It says suh, as in sun.", role: "speech" },
+      { kind: "tts", text: "It starts with S. It says sah, as in sun.", role: "speech" },
     ]);
   });
 });
@@ -200,12 +206,12 @@ describe("speech tokens are validated", () => {
 
   it("tokens inside punctuation, repeated tokens and mixed sentences keep their meaning", () => {
     expect(planSpeech("(It says {/S/}!)", table)).toEqual([
-      { kind: "tts", text: "(It says suh!)", role: "speech" },
+      { kind: "tts", text: "(It says sah!)", role: "speech" },
     ]);
     // A run of sounds — even the same one twice — is split into separate sounds.
     expect(planSpeech("{/S/} {/S/}", table)).toEqual([
-      { kind: "tts", text: "suh", role: "phoneme" },
-      { kind: "tts", text: "suh", role: "phoneme" },
+      { kind: "tts", text: "sah", role: "phoneme" },
+      { kind: "tts", text: "sah", role: "phoneme" },
     ]);
     expect(explainSpeech("The letter {@g} says {/G/} in gate.", table)).toEqual([
       { role: "speech", target: "The letter", source: "tts", rendering: "The letter" },
@@ -267,6 +273,30 @@ describe("audio check (/parent/audio-check)", () => {
       expect(item.requests.map((r) => r.intent)).toEqual(["STORY_READING"]);
       expect(roles(item.id)).toEqual(["speech"]);
     }
+  });
+
+  it("compares Slow with Normal only when both played to the end", () => {
+    const run = (elapsedMs: number, outcome: RequestSummary["outcome"]): RequestSummary => ({
+      requestId: 1,
+      intent: "STORY_READING",
+      speed: "normal",
+      level: "KG1",
+      rates: [0.7],
+      pieces: 2,
+      retries: 0,
+      pacedSilenceMs: 0,
+      elapsedMs,
+      speakingMs: elapsedMs,
+      voice: "Samantha",
+      outcome,
+    });
+    expect(slowNormalRatio(run(2000, "heard"), run(4000, "heard")).ratio).toBe(2);
+    // An iPhone run where the next test started during Slow: 1.29× is not a real ratio.
+    expect(slowNormalRatio(run(2223, "heard"), run(2870, "interrupted"))).toEqual({
+      ratio: null,
+      note: expect.stringContaining("Slow did not play to the end"),
+    });
+    expect(slowNormalRatio(undefined, run(1, "heard")).ratio).toBeNull();
   });
 
   it("reports the device without anything personal, and formats results to share", () => {

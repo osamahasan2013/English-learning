@@ -511,7 +511,7 @@ Full detail, limitations and the pronunciation matrix: [audio.md](audio.md).
 - **What to say** is decided by the pronunciation resolver (`src/lib/audio/pronunciation.ts`,
   pure). Content stores **speech tokens** for phonics sounds (`{/S/}`) and letter names
   (`{@s}`), never letters for a voice to read. Each token resolves to a recorded clip,
-  else a speech-synthesis rendering checked to say the sound (`suh`, `ee`, `shun`), else a
+  else a speech-synthesis rendering checked to say the sound (`sah`, `ee`, `shun`), else a
   keyword ("the sound at the start of apple"), else silence. It is never spoken as letter
   names. The table comes from the database (`src/lib/server/sound-table.ts`); the child
   layout provides it, and lesson payloads carry a copy for offline play.

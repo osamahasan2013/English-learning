@@ -260,3 +260,22 @@ export function summarizeTimings(
     };
   });
 }
+
+// Slow ÷ Normal elapsed time for one sentence — only when both were heard to the end. A run
+// stopped early (the next test started while it was playing) measures only the part that
+// played, which would make Slow look barely slower than Normal.
+export function slowNormalRatio(normal?: RequestSummary, slow?: RequestSummary) {
+  if (!normal || !slow) return { ratio: null, note: "play it at Normal and Slow to compare." };
+  if (normal.outcome !== "heard" || slow.outcome !== "heard")
+    return {
+      ratio: null,
+      note: `${[normal.outcome !== "heard" && "Normal", slow.outcome !== "heard" && "Slow"]
+        .filter(Boolean)
+        .join(" and ")} did not play to the end — play it again and let it finish to compare.`,
+    };
+  const ratio = Math.round((slow.elapsedMs! / normal.elapsedMs!) * 100) / 100;
+  return {
+    ratio,
+    note: `Slow took ${ratio}× as long as Normal (${slow.elapsedMs} ms vs ${normal.elapsedMs} ms).`,
+  };
+}

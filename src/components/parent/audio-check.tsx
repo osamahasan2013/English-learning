@@ -15,6 +15,7 @@ import {
   AUDIO_CHECK_ITEMS,
   describeDevice,
   formatResults,
+  slowNormalRatio,
   summarizeTimings,
   type AudioCheckGroup,
   type AudioCheckItem,
@@ -127,16 +128,10 @@ export function AudioCheck({ sounds, pacing }: { sounds: SoundTable; pacing: Rec
 
   // Slow vs Normal for each reading sentence played at both speeds.
   const ratios = AUDIO_CHECK_ITEMS.filter((i) => i.group === "READING" && i.id.endsWith("-normal")).map(
-    (i) => {
-      const n = summary(i.id);
-      const s = summary(i.id.replace(/-normal$/, "-slow"));
-      return {
-        target: i.target,
-        normal: n?.elapsedMs ?? null,
-        slow: s?.elapsedMs ?? null,
-        ratio: n?.elapsedMs && s?.elapsedMs ? Math.round((s.elapsedMs / n.elapsedMs) * 100) / 100 : null,
-      };
-    },
+    (i) => ({
+      target: i.target,
+      ...slowNormalRatio(summary(i.id), summary(i.id.replace(/-normal$/, "-slow"))),
+    }),
   );
 
   async function copy() {
@@ -163,8 +158,8 @@ export function AudioCheck({ sounds, pacing }: { sounds: SoundTable; pacing: Rec
       },
     });
     const ratioLines = ratios
-      .filter((r) => r.ratio)
-      .map((r) => `${level} Slow / Normal “${r.target}”: ${r.ratio}× (${r.slow} ms vs ${r.normal} ms)`);
+      .filter((r) => !r.note.startsWith("play it at"))
+      .map((r) => `${level} Slow / Normal “${r.target}”: ${r.note}`);
     try {
       await navigator.clipboard.writeText([text, ...ratioLines].join("\n"));
       setCopied(true);
@@ -314,10 +309,7 @@ export function AudioCheck({ sounds, pacing }: { sounds: SoundTable; pacing: Rec
         <ul className="space-y-1" data-ratio>
           {ratios.map((r) => (
             <li key={r.target}>
-              “{r.target}”:{" "}
-              {r.ratio
-                ? `Slow took ${r.ratio}× as long as Normal (${r.slow} ms vs ${r.normal} ms).`
-                : "play it at Normal and Slow to compare."}
+              “{r.target}”: {r.note}
             </li>
           ))}
         </ul>

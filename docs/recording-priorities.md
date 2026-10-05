@@ -22,7 +22,7 @@ word in its citation form.
 | # | Content key | What | Level | Score | Imp. | Freq. | TTS risk | Ambiguity | Why |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | `phoneme:IH` | sound /ɪ/ (i) | KG1 | 13.7 | 3.0 | 2.2 (4 pattern sounds) | 3.0 | 2.5 | TTS keyword (keyword “itch insect igloo”); short i vs short e |
-| 2 | `phoneme:S` | sound /s/ (s) | KG1 | 13.5 | 3.0 | 3.0 (8 pattern sounds) | 2.0 | 2.5 | TTS approximate ("suh"); /s/ vs the name S |
+| 2 | `phoneme:S` | sound /s/ (s) | KG1 | 13.5 | 3.0 | 3.0 (8 pattern sounds) | 2.0 | 2.5 | TTS approximate ("sah"); /s/ vs the name S |
 | 3 | `phoneme:EH` | sound /ɛ/ (e) | KG1 | 13.4 | 3.0 | 1.9 (3 pattern sounds) | 3.0 | 2.5 | TTS keyword (keyword “egg elephant elbow”); short e vs short i |
 | 4 | `phoneme:N` | sound /n/ (n) | KG1 | 13.3 | 3.0 | 2.8 (7 pattern sounds) | 2.0 | 2.5 | TTS approximate ("nuh"); /n/ vs /m/ |
 | 5 | `phoneme:K` | sound /k/ (k) | KG1 | 13.2 | 3.0 | 2.7 (6 pattern sounds) | 2.0 | 2.5 | TTS approximate ("kuh"); /k/ vs /g/ |
@@ -47,7 +47,7 @@ word in its citation form.
 | 24 | `phoneme:Z` | sound /z/ (z) | KG1 | 12.7 | 3.0 | 2.2 (4 pattern sounds) | 2.0 | 2.5 | TTS approximate ("zuh"); /z/ vs /s/ |
 | 25 | `word:the` | word “the” | KG2 | 12.5 | 2.5 | 3.0 (1894 in content) | 2.0 | 2.5 | “thuh”/“thee”; clipped alone |
 | 26 | `phoneme:AE` | sound /æ/ (a) | KG1 | 12.4 | 3.0 | 0.9 (1 pattern sound) | 3.0 | 2.5 | TTS keyword (keyword “apple ant axe”); short a vs short e |
-| 27 | `word:a` | word “a” | KG2 | 12.4 | 2.5 | 2.9 (1599 in content) | 2.0 | 2.5 | “uh”/“ay”; mistaken for the letter name A |
+| 27 | `word:a` | word “a” | KG2 | 12.4 | 2.5 | 2.9 (1598 in content) | 2.0 | 2.5 | “uh”/“ay”; mistaken for the letter name A |
 | 28 | `phoneme:D` | sound /d/ (d) | KG1 | 12.4 | 3.0 | 1.9 (3 pattern sounds) | 2.0 | 2.5 | TTS approximate ("duh"); /d/ vs /t/ /b/ |
 | 29 | `word:and` | word “and” | KG2 | 12.2 | 2.5 | 2.7 (870 in content) | 2.0 | 2.5 | reduced to “n” |
 | 30 | `letter_name:i` | letter name I | KG1 | 12.0 | 3.0 | 2.5 (every letter lesson, alphabet and spelling feedback) | 1.5 | 2.0 | isolated one-syllable name; confusable: I/Y |
@@ -62,7 +62,7 @@ word in its citation form.
 | 39 | `word:to` | word “to” | KG2 | 11.9 | 2.5 | 2.4 (447 in content) | 2.0 | 2.5 | “tuh” vs “two/too” |
 | 40 | `word:is` | word “is” | KG2 | 11.9 | 2.5 | 2.4 (381 in content) | 2.0 | 2.5 | short, clipped alone |
 | 41 | `phoneme:R` | sound /ɹ/ (r) | KG1 | 11.8 | 3.0 | 2.8 (7 pattern sounds) | 2.0 | 1.0 | TTS approximate ("ruh") |
-| 42 | `word:I` | word “I” | KG2 | 11.8 | 2.5 | 2.3 (353 in content) | 2.0 | 2.5 | the letter name I |
+| 42 | `word:I` | word “I” | KG2 | 11.8 | 2.5 | 2.3 (352 in content) | 2.0 | 2.5 | the letter name I |
 | 43 | `phoneme:L` | sound /l/ (l) | KG1 | 11.7 | 3.0 | 2.7 (6 pattern sounds) | 2.0 | 1.0 | TTS approximate ("luh") |
 | 44 | `word:of` | word “of” | KG2 | 11.6 | 2.5 | 2.1 (198 in content) | 2.0 | 2.5 | “uv”, reduced |
 | 45 | `phoneme:P` | sound /p/ (p) | KG1 | 11.4 | 3.0 | 0.9 (1 pattern sound) | 2.0 | 2.5 | TTS approximate ("puh"); /p/ vs /b/ |
@@ -113,7 +113,7 @@ word in its citation form.
 | 90 | `phoneme:CH` | sound /tʃ/ (ch) | KG3 | 8.9 | 3.0 | 0.9 (1 pattern sound) | 2.0 | 1.0 | TTS approximate ("chuh") |
 | 91 | `word:went` | word “went” (irregular) | KG3 | 8.8 | 2.5 | 1.3 (26 in content) | 1.0 | 2.0 | irregular spelling |
 | 92 | `word:look` | word “look” | KG2 | 8.8 | 2.5 | 1.8 (83 in content) | 1.0 | 1.0 | sight word |
-| 93 | `word:like` | word “like” | KG2 | 8.7 | 2.5 | 1.7 (79 in content) | 1.0 | 1.0 | sight word |
+| 93 | `word:like` | word “like” | KG2 | 8.8 | 2.5 | 1.8 (81 in content) | 1.0 | 1.0 | sight word |
 | 94 | `word:be` | word “be” (irregular) | GRADE2 | 8.7 | 2.5 | 1.2 (18 in content) | 2.0 | 2.0 | irregular spelling |
 | 95 | `word:from` | word “from” (irregular) | GRADE1 | 8.6 | 2.5 | 1.6 (60 in content) | 1.0 | 2.0 | irregular spelling |
 | 96 | `word:that` | word “that” | KG3 | 8.6 | 2.5 | 2.1 (209 in content) | 1.0 | 1.0 | sight word |

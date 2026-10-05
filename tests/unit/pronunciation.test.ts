@@ -287,7 +287,7 @@ describe("the shipped phonics data", () => {
 
   it("the key sounds use the renderings checked with espeak-ng", () => {
     const say = (p: string[]) => resolveSound(p, shipped).text;
-    expect(say(["S"])).toBe("suh");
+    expect(say(["S"])).toBe("sah");
     expect(say(["M"])).toBe("muh");
     expect(say(["SH"])).toBe("shuh");
     expect(say(["CH"])).toBe("chuh");
