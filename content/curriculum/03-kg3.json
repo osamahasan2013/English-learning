@@ -629,7 +629,7 @@
               "emoji": "🎂",
               "minutes": 7,
               "difficulty": 4,
-              "introSpeech": "Let's learn a–e!",
+              "introSpeech": "Let's learn {@a} with magic {@e}!",
               "blueprint": {
                 "name": "phonics_pattern",
                 "pattern": "A_E",
@@ -679,7 +679,7 @@
               "emoji": "🪁",
               "minutes": 7,
               "difficulty": 4,
-              "introSpeech": "Let's learn i–e!",
+              "introSpeech": "Let's learn {@i} with magic {@e}!",
               "blueprint": {
                 "name": "phonics_pattern",
                 "pattern": "I_E",
@@ -729,7 +729,7 @@
               "emoji": "🦴",
               "minutes": 7,
               "difficulty": 4,
-              "introSpeech": "Let's learn o–e!",
+              "introSpeech": "Let's learn {@o} with magic {@e}!",
               "blueprint": {
                 "name": "phonics_pattern",
                 "pattern": "O_E",

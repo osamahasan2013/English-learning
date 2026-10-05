@@ -21,7 +21,7 @@ ten,KG2,kg2-spell-cvc,CVC,2,LETTER_E,no,no,,,tn;tin,,cvc;short-e
 zip,KG2,kg2-spell-cvc,CVC,2,LETTER_I,no,no,,,zp;sip,,cvc;short-i
 the,KG2,kg2-spell-tricky,HIGH_FREQUENCY,1,TH,yes,yes,e,The e here says uh.,thu;da,,tricky
 and,KG2,kg2-spell-tricky,HIGH_FREQUENCY,1,,yes,no,,,an;nd,,
-is,KG2,kg2-spell-tricky,HIGH_FREQUENCY,1,,yes,yes,s,The s here says z.,iz,,tricky
+is,KG2,kg2-spell-tricky,HIGH_FREQUENCY,1,,yes,yes,s,The s here says /z/.,iz,,tricky
 see,KG2,kg2-spell-tricky,HIGH_FREQUENCY,1,EE,yes,no,,Two e letters say ee.,se;sea,,
 go,KG2,kg2-spell-tricky,HIGH_FREQUENCY,1,,yes,no,,,goe,,
 my,KG2,kg2-spell-tricky,HIGH_FREQUENCY,1,LETTER_Y,yes,no,,The y here says eye.,mi;mie,,

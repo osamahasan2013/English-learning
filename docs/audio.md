@@ -8,12 +8,12 @@ How the app decides what to say, and why phonics sounds are never spoken as lett
 | ------------------------------ | ----------------------------------------------------------- | ------------------------ | -------------------------------------------------------------------------------- |
 | **Grapheme**                   | What is written: one or more letters that stand for a sound | `sh`, `igh`, `a_e`       | `phonics_patterns.pattern`, `word_segments.grapheme`                             |
 | **Phoneme**                    | A speech sound, as an ARPAbet code (IPA alongside)          | `SH` = /ʃ/, `AE` = /æ/   | `phonemes`, `phonics_pattern_sounds.phonemes`, `word_segments.phonemes`          |
-| **Letter name**                | What a letter is called in the alphabet                     | s → "ess", h → "aitch"   | `phonics_patterns.letter_name` / `letter_name_say_as`                            |
+| **Letter name**                | What a letter is called in the alphabet                     | s → "S" (said "ess")     | `phonics_patterns.letter_name` / `letter_name_say_as`                            |
 | **Speech-synthesis rendering** | Text a browser voice reads aloud to produce a sound         | /s/ → `suh`, /iː/ → `ee` | `phonemes.say_as`, `phonics_pattern_sounds.say_as`                               |
 | **Recorded asset**             | A real audio file in Supabase Storage (`content-audio`)     | `audio/phonemes/s.mp3`   | `audio_assets` (+ `audio_asset_id` on phonemes, pattern sounds, patterns, words) |
 
 A letter's **name** and its **sound** are different things and are stored and spoken
-separately: "This is the letter ess. It says suh, as in sun." A **word** is said whole
+separately: "This is the letter S. It says suh, as in sun." A **word** is said whole
 ("gate"), never spelled out; **segmenting** (g … ay … t) and **blending** (g … ay … t …
 gate) happen only when an activity asks for them. These are audio intents
 ([audio-engine.md](audio-engine.md)): each is paced on its own, and a sound, a letter name
@@ -33,17 +33,23 @@ The templates write tokens for every sound (blending units, segmenting cards, mi
 sounds, pattern intros, "which one starts with …?" prompts, word-builder tiles, the Word
 Explorer's sound strip). Authored speech in content files must use them too: the
 importer and `npm test` reject speech containing a bare letter group (`sss`, `sh`, `th`,
-`ng`, `st`…), because only the author knows whether the letters or the sound is meant.
+`ng`, `st`…) or a letter standing alone (`s and h`, `big C`, `says z`, `o-f`; "a", "A"
+and "I" are words), because only the author knows whether the letter's name or its sound
+is meant: `{@s}` or `{/Z/}` (Phase 8.3). A letter name is rendered as the capital letter
+("G"), which every voice reads as its name; `letterNameSayAs` in `phonics.json` must be
+the capital.
 
 Display text read aloud (a pattern's child explanation, an authored spelling hint) is
-converted by `speechFromDisplay`: `/k/` becomes the sound token and a letter group such
-as `ch` becomes letter names ("The ch in school says /k/." → "The C aitch in school says
-kuh.").
+converted by `speechFromDisplay`: `/k/` becomes the sound token, and a letter group such
+as `ch` or a lone letter becomes letter names ("The ch in school says /k/." → "The {@c}
+{@h} in school says {/K/}." → "The C H in school says kuh.").
 
 Tokens are read in any case and with spaces (`{/sh/}`, `{ /SH/ }`, `{@S}`, `{ @s }`) and
 keep their kind; broken ones (`{sound}`, an unclosed `{/S/`) are never spoken. When
-played, each token is a piece of its own (role `phoneme` or `letter_name`) with a short
-silence around it; captions (`speakableText`) still read as one line.
+played, each token keeps its role (`phoneme` or `letter_name`); a run of sounds is split
+into pieces with a short silence around each, while a single sound or letter name stays
+inside its sentence ("It says suh, as in sun.") and a token alone is a piece of its own
+(Phase 8.3, [audio-engine.md](audio-engine.md)); captions (`speakableText`) read as one line.
 
 ## The resolver
 

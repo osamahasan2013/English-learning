@@ -36,6 +36,10 @@ export function validatePhonicsFile(file: PhonicsFile, levelCodes: ReadonlySet<s
     if (p.type === "letter") {
       if (!p.uppercase) err(p.code, "letter_uppercase", "a letter needs its uppercase form");
       if (!p.letterName) err(p.code, "letter_name", "a letter needs its name (kept apart from its sound)");
+      // The voice reads a letter's name from the capital letter (pronunciation.ts); the
+      // stored rendering must say the same, so data and speech can never disagree.
+      if (p.letterNameSayAs && p.letterNameSayAs !== p.pattern.toUpperCase())
+        err(p.code, "letter_name_say_as", `a letter's spoken name is its capital (${p.pattern.toUpperCase()}), not "${p.letterNameSayAs}"`);
       if (p.pattern.length !== 1) err(p.code, "letter_length", "a letter pattern is one letter");
     }
     if (p.pattern.includes("_") && p.type !== "silent_e") err(p.code, "split_type", "only silent_e patterns may be split (a_e)");

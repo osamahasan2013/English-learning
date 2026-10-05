@@ -66,7 +66,7 @@ export function renderFeedback(message: FeedbackMessage, vars: { answer?: string
       .replace(/\{pattern\}/g, pattern)
       .replace(/\s+([.!?])/g, "$1")
       .trim();
-  // Shown as capitals (SH); said as the letters' NAMES ({@s} {@h} → "ess aitch"), since
+  // Shown as capitals (SH); said as the letters' NAMES ({@s} {@h} → "S H"), since
   // the message is about which letters to write — a voice would misread "SH" anyway.
   const letters = [...(vars.pattern ?? "").toLowerCase()].filter((c) => /[a-z]/.test(c));
   const text = fill(message.text, (vars.pattern ?? "").toUpperCase());

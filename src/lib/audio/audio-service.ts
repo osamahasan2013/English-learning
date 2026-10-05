@@ -23,6 +23,7 @@ import {
 } from "@/lib/audio/pacing";
 import {
   EMPTY_SOUND_TABLE,
+  explainSpeech,
   planSpeech,
   unresolvedTokens,
   type SoundTable,
@@ -601,6 +602,12 @@ function partsFor(request: AudioRequest, sounds: SoundTable): SpeechPart[] {
   return [{ kind: "asset", url: request.assetUrl, fallback, role: "speech" }];
 }
 
+// "the" → "the.", "gate" → "gate." (a word with its own punctuation is left alone).
+export function citationForm(word: string) {
+  const w = word.trim();
+  return /^[\p{L}'-]+$/u.test(w) ? `${w}.` : w;
+}
+
 const PHONICS_INTENTS = new Set<AudioIntent>(["PHONEME", "LETTER_NAME"]);
 const READING_INTENTS = new Set<AudioIntent>(["STORY_READING", "SENTENCE"]);
 
@@ -656,6 +663,25 @@ export async function playAudio(
       const missing = unresolvedTokens(req.text, sounds);
       if (missing.length) logAudio("warn", "token_unresolved", { requestId: id, tokens: missing.join(" ") });
       const parts = partsFor(req, sounds);
+      // Development only: what each request means and where its sound comes from — roles,
+      // tokens and sources, never the words (no child content).
+      if (process.env.NODE_ENV === "development") {
+        const explained = req.assetUrl ? [] : explainSpeech(req.text, sounds);
+        logAudio("info", "request", {
+          requestId: id,
+          intent,
+          speed,
+          level: pacing.level,
+          roles: explained.map((e) => e.role).join(" ") || "speech",
+          tokens: explained
+            .filter((e) => e.role !== "speech")
+            .map((e) => e.target)
+            .join(" "),
+          sources: req.assetUrl ? "recorded" : explained.map((e) => e.source).join(" "),
+          voice: voice?.name ?? null,
+          lang: voice?.lang ?? SPEECH_SETTINGS.locale,
+        });
+      }
       // Words of the item already covered by earlier parts (for onChunk).
       let wordsBefore = 0;
       for (const [pi, part] of parts.entries()) {
@@ -696,7 +722,10 @@ export async function playAudio(
             retry: false,
           });
         } else {
-          const chunks = chunkText(part.text, pace, SPEECH_SETTINGS.maxUtteranceChars);
+          // A word said on its own ("the", "gate") ends with a full stop, so the voice gives
+          // its whole citation form instead of a clipped or rising fragment.
+          const said = partIntent === "WORD" ? citationForm(part.text) : part.text;
+          const chunks = chunkText(said, pace, SPEECH_SETTINGS.maxUtteranceChars);
           for (const [ci, chunk] of chunks.entries()) {
             if (id !== current) return "interrupted";
             if (chunk.pauseBeforeMs > 0) {

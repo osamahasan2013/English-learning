@@ -28,7 +28,7 @@
               "emoji": "🍎",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter a!",
+              "introSpeech": "Let's meet the letter {@a}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_A",
@@ -75,7 +75,7 @@
               "emoji": "⚽",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter b!",
+              "introSpeech": "Let's meet the letter {@b}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_B",
@@ -122,7 +122,7 @@
               "emoji": "🐱",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter c!",
+              "introSpeech": "Let's meet the letter {@c}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_C",
@@ -169,7 +169,7 @@
               "emoji": "🐶",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter d!",
+              "introSpeech": "Let's meet the letter {@d}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_D",
@@ -216,7 +216,7 @@
               "emoji": "🥚",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter e!",
+              "introSpeech": "Let's meet the letter {@e}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_E",
@@ -263,7 +263,7 @@
               "emoji": "🐟",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter f!",
+              "introSpeech": "Let's meet the letter {@f}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_F",
@@ -310,7 +310,7 @@
               "emoji": "🐐",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter g!",
+              "introSpeech": "Let's meet the letter {@g}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_G",
@@ -357,7 +357,7 @@
               "emoji": "🎩",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter h!",
+              "introSpeech": "Let's meet the letter {@h}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_H",
@@ -404,7 +404,7 @@
               "emoji": "🐞",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter i!",
+              "introSpeech": "Let's meet the letter {@i}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_I",
@@ -451,7 +451,7 @@
               "emoji": "🍯",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter j!",
+              "introSpeech": "Let's meet the letter {@j}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_J",
@@ -498,7 +498,7 @@
               "emoji": "🪁",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter k!",
+              "introSpeech": "Let's meet the letter {@k}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_K",
@@ -545,7 +545,7 @@
               "emoji": "🦁",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter l!",
+              "introSpeech": "Let's meet the letter {@l}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_L",
@@ -592,7 +592,7 @@
               "emoji": "🌙",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter m!",
+              "introSpeech": "Let's meet the letter {@m}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_M",
@@ -639,7 +639,7 @@
               "emoji": "🥅",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter n!",
+              "introSpeech": "Let's meet the letter {@n}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_N",
@@ -686,7 +686,7 @@
               "emoji": "🐙",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter o!",
+              "introSpeech": "Let's meet the letter {@o}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_O",
@@ -733,7 +733,7 @@
               "emoji": "🐷",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter p!",
+              "introSpeech": "Let's meet the letter {@p}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_P",
@@ -780,7 +780,7 @@
               "emoji": "👸",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter q!",
+              "introSpeech": "Let's meet the letter {@q}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_Q",
@@ -827,7 +827,7 @@
               "emoji": "🐰",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter r!",
+              "introSpeech": "Let's meet the letter {@r}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_R",
@@ -874,7 +874,7 @@
               "emoji": "☀️",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter s!",
+              "introSpeech": "Let's meet the letter {@s}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_S",
@@ -921,7 +921,7 @@
               "emoji": "⛺",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter t!",
+              "introSpeech": "Let's meet the letter {@t}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_T",
@@ -968,7 +968,7 @@
               "emoji": "☂️",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter u!",
+              "introSpeech": "Let's meet the letter {@u}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_U",
@@ -1015,7 +1015,7 @@
               "emoji": "🚐",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter v!",
+              "introSpeech": "Let's meet the letter {@v}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_V",
@@ -1062,7 +1062,7 @@
               "emoji": "🕸️",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter w!",
+              "introSpeech": "Let's meet the letter {@w}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_W",
@@ -1109,7 +1109,7 @@
               "emoji": "📦",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter x!",
+              "introSpeech": "Let's meet the letter {@x}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_X",
@@ -1157,7 +1157,7 @@
               "emoji": "🧶",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter y!",
+              "introSpeech": "Let's meet the letter {@y}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_Y",
@@ -1204,7 +1204,7 @@
               "emoji": "🦓",
               "minutes": 4,
               "difficulty": 1,
-              "introSpeech": "Let's meet the letter z!",
+              "introSpeech": "Let's meet the letter {@z}!",
               "blueprint": {
                 "name": "letter_sound",
                 "pattern": "LETTER_Z",
@@ -1625,34 +1625,34 @@
                           {
                             "id": "big-a",
                             "text": "A",
-                            "speech": "big A"
+                            "speech": "big {@a}"
                           },
                           {
                             "id": "big-c",
                             "text": "C",
-                            "speech": "big C"
+                            "speech": "big {@c}"
                           },
                           {
                             "id": "big-t",
                             "text": "T",
-                            "speech": "big T"
+                            "speech": "big {@t}"
                           }
                         ],
                         "right": [
                           {
                             "id": "small-t",
                             "text": "t",
-                            "speech": "small t"
+                            "speech": "small {@t}"
                           },
                           {
                             "id": "small-a",
                             "text": "a",
-                            "speech": "small a"
+                            "speech": "small {@a}"
                           },
                           {
                             "id": "small-c",
                             "text": "c",
-                            "speech": "small c"
+                            "speech": "small {@c}"
                           }
                         ]
                       },
@@ -1683,34 +1683,34 @@
                           {
                             "id": "big-m",
                             "text": "M",
-                            "speech": "big M"
+                            "speech": "big {@m}"
                           },
                           {
                             "id": "big-s",
                             "text": "S",
-                            "speech": "big S"
+                            "speech": "big {@s}"
                           },
                           {
                             "id": "big-b",
                             "text": "B",
-                            "speech": "big B"
+                            "speech": "big {@b}"
                           }
                         ],
                         "right": [
                           {
                             "id": "small-s",
                             "text": "s",
-                            "speech": "small s"
+                            "speech": "small {@s}"
                           },
                           {
                             "id": "small-b",
                             "text": "b",
-                            "speech": "small b"
+                            "speech": "small {@b}"
                           },
                           {
                             "id": "small-m",
                             "text": "m",
-                            "speech": "small m"
+                            "speech": "small {@m}"
                           }
                         ]
                       },

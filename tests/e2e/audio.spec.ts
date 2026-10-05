@@ -170,9 +170,10 @@ for (const [mode, device] of RUNS) {
       // A tapped word stops the story; the story's buttons are ready to start again.
       t = await now(page);
       await story.getByRole("button", { name: "shell", exact: true }).first().click();
-      await eventually(page, (log) => startsAfter(log, t).some((e) => e.text === "shell"));
+      // A tapped word is a WORD: said whole, in its citation form ("shell.").
+      await eventually(page, (log) => startsAfter(log, t).some((e) => e.text === "shell."));
       await page.waitForTimeout(1200);
-      expect(startsAfter(await speechLog(page), t).map((e) => e.text)).toEqual(["shell"]);
+      expect(startsAfter(await speechLog(page), t).map((e) => e.text)).toEqual(["shell."]);
       await expect(story.getByRole("button", { name: /^(🔊 )?Listen$/ })).toBeVisible();
 
       // Read it again: the story starts over from the first sentence (at the last speed, Slow).
@@ -215,8 +216,10 @@ test("phonics sounds are never spoken as letter names", async ({ page }) => {
   expect(said.length).toBeGreaterThan(0);
   for (const text of said) {
     expect(text, text).not.toMatch(/\{|\}|\/[A-Z]+\//);
-    expect(text, text).not.toMatch(/\b(ess aitch|s h|aitch)\b/i);
+    // Letters may be NAMED ("S and H together"), but the sound is never letter names.
+    expect(text, text).not.toMatch(/\b(says?|sound:?)\s+(S H|ess aitch|s h)\b/i);
   }
+  expect(said.some((t) => /\bshuh\b/.test(t))).toBe(true);
 });
 
 test("no voices on the device: the child is told, and the lesson still works", async ({ page }) => {
@@ -266,7 +269,7 @@ test("a spelling intro says the word and its sounds as separate pieces, never on
   expect(overlaps(await speechLog(page))).toEqual([]);
 });
 
-test("the grown-ups' audio check: Normal vs Slow, letter name vs sound vs word, timings", async ({
+test("the grown-ups' audio check: letter name vs sound vs word, Normal vs Slow, results", async ({
   page,
   context,
 }) => {
@@ -286,21 +289,41 @@ test("the grown-ups' audio check: Normal vs Slow, letter name vs sound vs word, 
     await expect(card(id).locator("[data-timing]")).toContainText(/heard/, { timeout: 15_000 });
     return heard(await speechLog(page)).map((e) => e.text);
   };
-  expect(await play("reading-normal")).toEqual(["The cat is", "at the gate."]);
-  expect(await play("reading-slow")).toEqual(["The", "cat", "is", "at", "the", "gate."]);
-  const ratio = Number((await page.locator("[data-ratio]").innerText()).match(/([\d.]+)×/)![1]);
-  expect(ratio).toBeGreaterThan(1.5);
-  expect(await play("letter-name")).toEqual(["jee"]);
-  expect(await play("phoneme")).toEqual(["guh"]);
-  expect(await play("word")).toEqual(["gate"]);
+  // What each test means, and where its sound comes from (no recordings: the device voice).
+  await expect(card("letter-g").locator("[data-intent]")).toHaveText("LETTER_NAME");
+  await expect(card("letter-g").locator("[data-target]")).toHaveText("G");
+  await expect(card("letter-g").locator("[data-source]")).toHaveText("device voice (TTS)");
+  await expect(card("phoneme-g").locator("[data-intent]")).toHaveText("PHONEME");
+  await expect(card("word-the").locator("[data-intent]")).toHaveText("WORD");
+  // The letter NAME is the capital letter with a full stop (its whole name, not clipped);
+  // the SOUND is the sound; a word is the word — never letters or sounds.
+  for (const l of ["A", "G", "S", "T"]) expect(await play(`letter-${l.toLowerCase()}`)).toEqual([`${l}.`]);
+  expect(await play("phoneme-g")).toEqual(["guh"]);
+  expect(await play("phoneme-s")).toEqual(["suh"]);
+  expect(await play("word-gate")).toEqual(["gate."]);
+  expect(await play("word-the")).toEqual(["the."]);
   expect(await play("segmenting")).toEqual(["guh", "eigh", "tuh"]);
-  expect(await play("blending")).toEqual(["guh", "eigh", "tuh", "gate"]);
-  await card("reading-slow")
-    .getByRole("button", { name: /Sounds right/ })
-    .click();
+  expect(await play("blending")).toEqual(["guh", "eigh", "tuh", "gate."]);
+  expect(await play("letter-intro")).toEqual(["This is the letter G.", "It says guh, as in goat."]);
+  // Reading: "the" always with its word, at Normal and at Slow.
+  expect(await play("reading-1-normal")).toEqual(["The cat is", "at the gate."]);
+  expect(await play("reading-1-slow")).toEqual(["The cat", "is", "at", "the gate."]);
+  const ratio = Number((await page.locator("[data-ratio] li").first().innerText()).match(/([\d.]+)×/)![1]);
+  expect(ratio).toBeGreaterThan(1.5);
+  await card("letter-g").getByRole("button", { name: "❌ FAIL" }).click();
+  await card("letter-g").getByRole("textbox").fill("heard S");
+  await card("reading-1-slow").getByRole("button", { name: "✅ PASS" }).click();
   await page.getByRole("button", { name: /Copy results/ }).click();
   await expect(page.getByRole("status").filter({ hasText: "Copied." })).toBeVisible();
   const copied = await page.evaluate(() => navigator.clipboard.readText());
-  expect(copied).toMatch(/KG1 Reading — Slow: pass \| rate 0.62 \| pieces 6/);
-  expect(copied).toMatch(/Slow \/ Normal elapsed: [\d.]+×/);
+  expect(copied).toMatch(/^Word Garden audio check — \d{4}-\d\d-\d\dT/);
+  // The tablet project emulates an iPad (its user agent); the voice is the fake engine's.
+  expect(copied).toMatch(/Device: iOS [\d.]+, Safari · voice: Fake Samantha \(on device\) · locale: en-US/);
+  expect(copied).toContain(
+    "letter-g [KG1] FAIL · intent LETTER_NAME · target G · source tts · note: heard S",
+  );
+  expect(copied).toMatch(
+    /reading-1-slow \[KG1\] PASS · intent STORY_READING · target The cat is at the gate\. · source tts · rate 0.62 · 4 pieces/,
+  );
+  expect(copied).toMatch(/KG1 Slow \/ Normal “The cat is at the gate\.”: [\d.]+×/);
 });

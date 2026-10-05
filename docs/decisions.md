@@ -611,3 +611,34 @@ overridable in `learning_rules` without a release. Phonics speech is clearer eve
 browser voices, but pure phonemes still need recordings. Automated tests check pieces,
 rates, gaps and order against a modelled engine; how it sounds can only be judged on
 devices.
+
+## ADR-045 — Letter names as engine-native capitals, sounds kept in context, function words kept with their word
+
+**Context.** On a real iPhone the letter name G was heard as "S" and "the" in reading
+sentences was often unclear. Inspection of what the voice was given (Phase 8.2) showed:
+every letter-name token was spoken as its own one-syllable utterance of a spelled nonce
+word ("jee", "ess", from `letterNameSayAs`); single sounds were isolated the same way;
+word-by-word Slow at KG1 / KG2 spoke "The", "the" and "a" as utterances of their own and
+phrases could end on "to" or "the"; and 601 speech strings still contained raw letters
+("s and h", "big C", "It starts with b.", "Does the s say s, or z?") whose meaning (name or
+sound) was left to the voice. One-syllable context-free utterances are the case voices
+pronounce least reliably, and iOS can clip their onset.
+
+**Decision.** Without a new engine, resolver or hook: a letter name is rendered as the
+capital letter (every engine's lexicon has it), from the one A–Z table, inline in its
+sentence, and alone as "G."; `letterNameSayAs` must be the capital (validated). A single
+sound stays in its sentence; only a run of sounds is split. Articles and possessives always
+stay with their noun, phrases never end on a function word, a phrase grouping is chosen
+per clause, a letter name is never a piece on its own, and a word alone is said in its
+citation form ("the."). A raw letter in speech is a content error (importer, tests); the
+generators emit letter tokens; at play time a left-over lone letter is rendered from the
+A–Z table. Sounds with no safe rendering stay keyword or nothing — never a letter name.
+The audio check page groups tests by meaning, shows intent / target / source / voice /
+locale and records PASS / FAIL with notes; `npm run audio:priorities` ranks what to record
+first.
+
+**Consequences.** Letter names and "the" are given to every voice in the form it is
+surest of; reading is slightly less segmented at Slow (articles attached). Content that
+names a letter must say `{@x}`. Whether a given iOS voice now sounds right still has to be
+confirmed by a person with the audio check on the device; recordings (none exist yet)
+remain the only way to get pure sounds and a fixed voice.

@@ -2106,6 +2106,15 @@ export class ContentImporter {
     const lessons = skills.flatMap(({ skill }) =>
       skill.lessons.map((l, i) => ({ skill, lesson: l, order: i })),
     );
+    // Spoken lesson intros say letters by name and sounds by token, never as raw letters.
+    for (const { lesson } of lessons) {
+      const speech = speechProblems(lesson.introSpeech ?? "", {});
+      if (speech.length) {
+        const report = this.entity("lessons");
+        report.invalid++;
+        report.errors.push(`lesson ${lesson.code}: intro speech: ${speech.join("; ")}`);
+      }
+    }
     const lessonIds = await this.sync(
       "lessons",
       "lessons",
@@ -2166,6 +2175,13 @@ export class ContentImporter {
         })),
       )
       .filter(({ activity, code }) => {
+        const speech = speechProblems(activity.instructionsSpeech ?? "", {});
+        if (speech.length) {
+          const report = this.entity("activities");
+          report.invalid++;
+          report.errors.push(`activity ${code}: instructions speech: ${speech.join("; ")}`);
+          return false;
+        }
         const config = parseActivityConfig(activity.type, activity.config);
         if (config.ok) return true;
         const report = this.entity("activities");

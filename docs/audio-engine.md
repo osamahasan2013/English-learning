@@ -1,8 +1,9 @@
 # Audio engine — playback lifecycle and pacing
 
-How sound is played (Phase 8.1) and paced for children (Phase 8.2). **What** is said
-(tokens, the pronunciation resolver, the pronunciation matrix) is in [audio.md](audio.md).
-Decision records: ADR-043 (lifecycle), ADR-044 (intents, pacing, recorded audio).
+How sound is played (Phase 8.1), paced for children (Phase 8.2) and kept semantically
+exact (Phase 8.3). **What** is said (tokens, the pronunciation resolver, the pronunciation
+matrix) is in [audio.md](audio.md). Decision records: ADR-043 (lifecycle), ADR-044
+(intents, pacing, recorded audio), ADR-045 (letter names, sounds and function words).
 
 There is one audio system: `src/lib/audio/` — `pronunciation.ts` (pure: text → clips and
 utterances, each tagged speech / phoneme / letter name), `pacing.ts` (pure: intents and
@@ -24,19 +25,62 @@ intent decides the pacing, never the words:
 | `WORD`          | a whole word ("gate")                       | one piece at the level's rate — **never spelled out**             |
 | `SENTENCE`      | a sentence to hear (a word's example)       | level pace (sentence / phrase / word)                             |
 | `STORY_READING` | a story read aloud                          | level pace; the highlight follows each piece                      |
-| `LETTER_NAME`   | a letter's name ("jee")                     | phonics rate, a piece of its own                                  |
-| `PHONEME`       | a sound (/g/ → "guh")                       | phonics rate, a piece of its own                                  |
+| `LETTER_NAME`   | a letter's name (the capital: "G")          | phonics rate alone ("G."); inside a sentence, in the sentence     |
+| `PHONEME`       | a sound (/g/ → "guh")                       | phonics rate alone; a run of sounds is split into pieces          |
 | `SEGMENTING`    | sequence: a word's sounds one by one        | `itemGapMs` between the sounds                                    |
 | `BLENDING`      | sequence: the sounds, then the whole word   | `itemGapMs` between the sounds, `wordGapMs` before the whole word |
 
 Segmenting and blending are explicit (`PlayOptions.sequence`): a word is only ever broken
-into sounds when an activity asks for it. Inside any text, sound and letter-name tokens
-are separate parts (`planSpeech`) with `tokenGapMs` of silence around them, so "gate.
-{/G/}, {/EY/}, {/T/}. gate." is heard as five pieces — "gate … guh … eigh … tuh … gate" —
-not one breath that sounds like "gate g a t gate". A part keeps its role (speech /
+into sounds when an activity asks for it. Inside a text, a **run** of sound tokens (two or
+more with only punctuation between them) becomes separate parts (`planSpeech`) with
+`tokenGapMs` of silence around them, so "gate. {/G/}, {/EY/}, {/T/}. gate." is heard as five
+pieces — "gate … guh … eigh … tuh … gate" — not one breath that sounds like "gate g a t
+gate". A single sound or a letter name inside a sentence stays in the sentence ("This is
+the letter G." / "It says guh, as in goat."): said alone it would be a one-syllable
+utterance, which is what iOS mispronounced or clipped (Phase 8.3, below). A token that is
+the whole text, and any recording, is a part of its own. A part keeps its role (speech /
 phoneme / letter_name) all the way to the engine (and to the timing log): a sound is
 resolved by `resolveSound` and can never become a letter name; a letter name by
 `resolveLetter` and never shares a clip with the sound.
+
+## Semantic accuracy (Phase 8.3)
+
+On a real iPhone the letter name G was heard as "S", and "the" in reading sentences was
+often unclear. What the voice was given (Phase 8.2) explains both: every letter-name token
+was its own utterance of a spelled nonce word ("jee", "ess") — a one-syllable request with
+no context, which voices pronounce unpredictably and iOS often clips at the onset ("jee"
+without its start is close to "ee"; "ess" and "eff" differ only in the final consonant) —
+and Slow at KG1 / KG2 spoke "The", "the" and "a" as utterances of their own, where voices
+use a stressed or clipped form. The rules now:
+
+| Meaning              | What the voice is given                                                                                                                                                        |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| LETTER_NAME          | the **capital letter** (`{@g}` → "G"; A–Z from `phonics.json`, `letterNameSayAs` = capital, validated); alone "G."                                                             |
+| PHONEME              | the sound's rendering (`{/G/}` → "guh"), a keyword phrase, or nothing — **never** the letter or its name                                                                       |
+| WORD                 | the word with a full stop ("gate.", "the.") — its whole citation form, never spelled or split                                                                                  |
+| SEGMENTING/BLENDING  | each sound a request of its own; blending ends with the WORD                                                                                                                   |
+| SENTENCE / STORY     | the level's pieces; **articles and possessives always stay with their noun** ("the gate", even word by word); in phrases no piece ends on a function word ("to", "of", "and"…) |
+| INSTRUCTION/FEEDBACK | whole sentences at Normal, phrases of three words or more at Slow; a letter name never a piece on its own                                                                      |
+
+- **Engine-native letter names.** Every engine has a lexicon entry for a capital letter;
+  spelled names ("jee", "zee", "aitch") are guesses at nonce words. The name is rendered
+  from the one A–Z table, never typed into content.
+- **No raw letters.** A letter standing alone in speech ("s and h", "big C", "o-f") is a
+  letter name by definition: content must say `{@s}` (or a sound token when it means the
+  sound — "Does the {@s} say {/S/}, or {/Z/}?"). The importer rejects raw letters in
+  question speech, lesson intros and activity instructions (`speechProblems`); generators
+  emit tokens (`spellLetters`, `spellOut`, `speechFromDisplay`); at play time any left-over
+  lone letter is rendered from the A–Z table (`lettersAsTokens`) — never handed to the
+  voice raw. "a", "A" and "I" are words.
+- **No letter name as a phoneme fallback.** A sound with no safe rendering is a keyword
+  phrase ("the sound at the start of apple") or silence and `audio.token_unresolved`.
+- `explainSpeech(text, table)` says, per token, its role, target, source (recorded / tts /
+  keyword / none) and rendering — used by the audio check page and the tests.
+
+High-frequency words ("the", "a", "an", "is", "to", "of", "and") use the ordinary word
+path: in a sentence they lean on the next word; alone (a tapped word, a sight-word card)
+they are a WORD in citation form ("the.") or a recording from `audio_assets`
+(`word:the`). No word is replaced by another to hide a pronunciation.
 
 ## Reading pacing (the `audio` learning rules)
 
@@ -51,7 +95,7 @@ offline) and the child layout provides the child's level elsewhere.
 
 | Level   | Normal                                  | Slow                                    |
 | ------- | --------------------------------------- | --------------------------------------- |
-| KG1     | 0.78, phrases ≤ 3 words, 200 ms, 600 ms | 0.62, word by word, 380 ms, 900 ms      |
+| KG1     | 0.78, phrases ≤ 4 words, 200 ms, 600 ms | 0.62, word by word, 380 ms, 900 ms      |
 | KG2     | 0.80, phrases ≤ 4 words, 180 ms, 550 ms | 0.64, word by word, 340 ms, 850 ms      |
 | KG3     | 0.83, whole sentences, —, 500 ms        | 0.66, phrases ≤ 2 words, 350 ms, 800 ms |
 | Grade 1 | 0.88, whole sentences, —, 450 ms        | 0.70, phrases ≤ 2 words, 330 ms, 750 ms |
@@ -67,8 +111,11 @@ Normal (natural, with breathing room) and single words at Slow (the "finger unde
 word" reading teachers model); from KG3 Normal is whole sentences, and Slow pairs of words —
 deliberate but still phrased, not robotic. For "The cat is at the gate." Slow adds at
 least 560 ms of silence at every level (1.9 s at KG1) on top of the lower rate, so it is
-audibly slower even on an engine that ignores the rate. Phrases are balanced ("I see | a
-cat.", not "I see a | cat.") and punctuation stays on its word so intonation is kept.
+audibly slower even on an engine that ignores the rate. Phrases are chosen as a whole per
+clause (balanced, close to `maxWords`: "The cat is | at the gate.", not "The cat | is at
+the gate."), never split a function word from its word ("to the park." stays together;
+word-by-word Slow reads "The cat | is | at | the gate."), and punctuation stays on its word
+so intonation is kept.
 
 The service reports each piece as it starts (`onChunk`), so the story highlight follows
 the words being said; the request ids of 8.1 keep an interrupted reading from
@@ -248,15 +295,30 @@ sound; hiding the app (`visibilitychange`), locking the screen or leaving the pa
 ## Audio check (real devices)
 
 `/parent/audio-check` (linked from parent Settings) plays fixed test lines through the
-same service, voices and pacing children get — Reading Normal and Slow at any level, the
-letter name G, the sound /g/, the word "gate", segmenting, blending and the "gate" spelling
-intro — shows the device's voice, and for each line what the engine did: rate, pieces,
-paced silence, elapsed and speaking time, outcome, retries. It compares Slow with Normal
-(× as long) and copies the results as text to share. The grown-up marks each line as
-sounding right or wrong: this human listening test on an iPhone, an Android phone and a
-desktop browser is the acceptance test for audio quality — the automated tests cannot
-hear. The timing log (`setAudioTimingLog`) is on only while the page is open, in memory,
-and records no words (only their length).
+same service, voices and pacing children get, grouped by meaning: **letter names** A, G,
+S, T; **sounds** /g/ /s/ /m/ /t/; **words** gate, cat, the; a **sentence**; five
+**reading** sentences ("The cat is at the gate." …) at Normal and Slow; **segmenting** and
+**blending** "gate"; the "gate" spelling intro and the letter-G intro. Each test shows what
+it is for (intent, target), where its sound comes from (recorded / device voice /
+keyword, from `explainSpeech`), the voice and locale, and in an expandable section the
+token-by-token rendering and what the engine did (rate, pieces, paced silence, elapsed and
+speaking time, outcome, retries). The grown-up marks PASS or FAIL with an optional note;
+"Copy results" gives one line per test (test id, level, verdict, intent, target, source,
+note, timings) under a header with the timestamp, OS, browser, voice and locale
+(`describeDevice`, `formatResults`) and the Slow / Normal ratio of each reading sentence.
+This human listening test on an iPhone, an Android phone and a desktop browser is the
+acceptance test for audio accuracy — the automated tests cannot hear. Nothing is stored
+or sent; the timing log (`setAudioTimingLog`) is on only while the page is open, in
+memory, and records no words (only their length).
+
+## Recording priorities
+
+`npm run audio:priorities` ranks every letter name, sound, pattern sound and
+high-frequency / irregular word by importance, frequency in the content, TTS risk,
+ambiguity and level, and writes the order to record clips in
+([recording-priorities.md](recording-priorities.md), regenerated from the content).
+Letter names (rhyming B/C/D/E/G/P/T/V/Z), keyword and approximate sounds and "the" / "a"
+/ "and" / "to" / "is" / "of" / "an" come first. Nothing is recorded or invented here.
 
 ## Diagnostics
 
@@ -264,7 +326,9 @@ Structured console records, content-free (ids, codes, voice names, rates, length
 codes — never the words, a child's answer or anything personal): `audio.utterance_lost`,
 `audio.voice_failed`, `audio.tts_failed`, `audio.asset_failed`, `audio.token_unresolved`,
 `audio.unavailable`, `audio.playback_error`. Development logs every record; production
-only failures, at most 20 per page.
+only failures, at most 20 per page. In development each request also logs `audio.request`:
+request id, intent, speed, level, the roles of its parts, its token codes (`{@g}`,
+`{/G/}`), their sources, voice and language — never the words.
 
 ## Tests
 
@@ -275,6 +339,12 @@ only failures, at most 20 per page.
 - `tests/unit/pronunciation.test.ts` — every token form (`{@s}`, `{@S}`, `{ @s }`, `{/s/}`,
   `{/S/}`, `{ /s/ }`, `{/sh/}`…), broken and unresolved tokens, letter names vs sounds
   with their roles (G, S, C, T), letter-name and sound clips never swapped.
+- `tests/unit/audio-accuracy.test.ts` (Phase 8.3), against the real `phonics.json`: A–Z
+  letter names (capital, never one of the letter's sounds), G and S in every mode (name,
+  sound, word, segmenting, blending), "the" / "a" never a piece alone or at a piece end at
+  any level and speed, letter names never a piece alone in instructions, raw letters
+  rendered as names and rejected in content, token validation, `explainSpeech`, the audio
+  check items and results. 59 of its 65 tests fail against the Phase 8.2 code.
 - `tests/unit/audio-pacing.test.ts` — per-level pacing, Slow slower than Normal at every
   level by rate AND silence, pieces and word offsets, intents, rule overrides, the
   audio-check summary.
@@ -299,6 +369,12 @@ only failures, at most 20 per page.
 - iOS Safari: the rate makes little audible difference (reported on a real iPhone), which
   is why Slow relies on pieces and pauses; each utterance also adds a small start-up gap
   of its own on iOS, so word-by-word reading is a little slower there than the numbers.
+- The iPhone "G heard as S" and unclear "the" are explained by what the voice was given
+  (one-syllable, context-free utterances) and fixed by construction; whether a particular
+  iOS voice now sounds right can only be confirmed with the audio check on the device.
+- Voice choice is a preference list (on-device en-US voices such as Samantha / Aria first,
+  then any en-US, then any English voice) — never a hard-coded single voice, so a device
+  without the preferred voices still gets its best local voice.
 - Isolated consonants from speech synthesis are approximate ("guh"); only recordings give
   pure sounds. Long a /EY/ sounds like the letter name A — that is correct phonics ("a_e
   says its name"), which is why the pieces must be separate.

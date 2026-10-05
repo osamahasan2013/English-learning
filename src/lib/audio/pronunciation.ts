@@ -4,7 +4,7 @@
 // templates:
 //
 //   {/S/}, {/SH AH N/}   a SOUND: a sequence of ARPAbet phonemes (the phonics sound /s/)
-//   {@s}                 a LETTER NAME: the alphabet name of a letter ("ess")
+//   {@s}                 a LETTER NAME: the alphabet name of a letter (said from the capital "S")
 //
 // A token is never spoken as its letters. Each one resolves, in order, to
 //   1. a recorded clip (audio_assets), when one exists;
@@ -36,7 +36,7 @@ export type LetterEntry = { name: string; assetUrl?: string | null };
 export type SoundTable = {
   // Keyed by the phoneme sequence: "S", "SH AH N".
   sounds: Record<string, SoundEntry>;
-  // Keyed by the lowercase letter: "s" → "ess".
+  // Keyed by the lowercase letter (name: the capital letter, "S"; an optional NAME clip).
   letters: Record<string, LetterEntry>;
 };
 
@@ -69,6 +69,38 @@ const TOKEN = /\{\s*\/\s*([A-Za-z]{1,3}(?:\s+[A-Za-z]{1,3})*)\s*\/\s*\}|\{\s*@\s
 // Anything else between braces, or a token that was never closed ("{/S/"), is broken:
 // never read aloud.
 const BROKEN_TOKEN = /\{[^{}]{0,40}\}|\{\s*[@/][^{}\s]*/g;
+
+// A letter standing alone in words ("s and h", "big C", "It starts with b."): a voice reads
+// it as the letter's name, so that is what it is — a letter name, rendered from the A–Z
+// table like a {@s} token, never handed to the voice as a raw letter. "a", "A" and "I" are
+// words. A letter inside a word, after an apostrophe ("let's") or joined with a hyphen
+// ("T-shirt") is not alone.
+const LONE_LETTER = /(?<![\p{L}\p{N}'’\-{@/])([B-HJ-Zb-z])(?![\p{L}\p{N}'’\-}])/gu;
+
+// Letters spelled with hyphens ("o-f", "y-o-u") are letter names too.
+const SPELLED = /(?<![\p{L}\p{N}'’\-])[A-Za-z](?:-[A-Za-z])+(?![\p{L}\p{N}'’\-])/gu;
+const spelledTokens = (run: string) => run.split("-").map(letterToken).join(" ");
+
+export function loneLetters(text: string): string[] {
+  return parseSpeech(text).flatMap((p) => {
+    if (p.kind !== "text") return [];
+    const t = p.text.replace(BROKEN_TOKEN, " ");
+    return [...[...t.matchAll(SPELLED)].map((m) => m[0]), ...[...t.matchAll(LONE_LETTER)].map((m) => m[1])];
+  });
+}
+
+// Lone letters → letter tokens (tokens already in the text are kept as they are).
+export function lettersAsTokens(text: string) {
+  return parseSpeech(text)
+    .map((p) =>
+      p.kind === "text"
+        ? p.text.replace(SPELLED, spelledTokens).replace(LONE_LETTER, (l: string) => letterToken(l))
+        : p.kind === "sound"
+          ? soundToken(p.phonemes)
+          : letterToken(p.letter),
+    )
+    .join("");
+}
 
 export type SpeechToken = { kind: "sound"; phonemes: string[] } | { kind: "letter"; letter: string };
 type Piece = { kind: "text"; text: string } | SpeechToken;
@@ -156,11 +188,21 @@ export function resolveSound(
   return { text: "", assetUrl: null, strategy: "none", quality: null };
 }
 
-// A letter's NAME. Without a table entry a single capital letter is read as its name
-// by every speech engine, which is exactly the alphabet path wanted here.
+// A letter's NAME (Phase 8.3). Speech synthesis is given the capital letter itself: every
+// engine reads a capital letter as the letter's name from its own lexicon ("G" → /dʒiː/),
+// while a spelled-out name ("jee", "ess") is a made-up word the engine has to guess, and
+// guesses differ between voices (on an iPhone "jee" was heard as another letter). The
+// spelled name stays in the table for people (letter_name_say_as, display) but is never
+// what the voice reads. A recording of the letter's name wins over both.
 export function resolveLetter(letter: string, table: SoundTable): { text: string; assetUrl: string | null } {
   const entry = table.letters[letter.toLowerCase()];
-  return { text: entry?.name || letter.toUpperCase(), assetUrl: entry?.assetUrl ?? null };
+  return { text: letter.toUpperCase(), assetUrl: entry?.assetUrl ?? null };
+}
+
+// The letter-name rendering for every letter, A–Z, as the voice receives it.
+export function letterNameSpeech(letter: string) {
+  if (!/^[A-Za-z]$/.test(letter)) throw new Error(`not a letter: ${letter}`);
+  return letter.toUpperCase();
 }
 
 // Words a speech engine reads as LETTER NAMES instead of a sound: one consonant repeated
@@ -199,9 +241,12 @@ export function speechFromDisplay(text: string, soundForLabel?: (label: string) 
         .map((p) => {
           if (p.kind !== "text") return p.kind === "sound" ? soundToken(p.phonemes) : letterToken(p.letter);
           const bad = new Set(findUnsafeSpeech(p.text));
-          return p.text.replace(/[A-Za-z]+/g, (w) =>
-            bad.has(w.toLowerCase()) ? [...w.toLowerCase()].map(letterToken).join(" ") : w,
-          );
+          return p.text
+            .replace(/[A-Za-z]+/g, (w) =>
+              bad.has(w.toLowerCase()) ? [...w.toLowerCase()].map(letterToken).join(" ") : w,
+            )
+            .replace(SPELLED, spelledTokens)
+            .replace(LONE_LETTER, (l: string) => letterToken(l));
         })
         .join("");
     })
@@ -229,13 +274,36 @@ export type PlanOptions = ResolveOptions & {
   separateTokens?: boolean;
 };
 
-// Text → the clips and utterances to play, in order. Each sound and letter name is a part
-// of its own, so it is never run into the words around it ("gate. {/G/}, {/EY/}, {/T/}.
-// gate." is five parts, not one breath that sounds like "gate g a t gate"). Unsafe words
-// left in plain text (content imported before this check existed) are dropped: silence is
-// better than teaching a letter name as a sound.
+// Text → the clips and utterances to play, in order.
+//
+// A RUN of sounds ("gate. {/G/}, {/EY/}, {/T/}. gate.") is split into parts of their own
+// with a gap around each, so it is never one breath that sounds like "gate g a t gate".
+// A single sound or a letter name inside a sentence stays in the sentence ("It says suh, as
+// in sun.", "This is the letter S."): read on its own it would be a one-syllable utterance,
+// which voices pronounce without context and iOS often clips at the start (a letter name
+// alone was misheard on an iPhone). A token that is the whole text is a part of its own
+// (a letter name alone is read as "G." so the voice gives it its full citation form). A
+// recording always splits. The role of a part says what it is: words, a sound, a letter
+// name — it is decided by the resolver, never inferred from the text. Unsafe words left in
+// plain text (content imported before this check existed) are dropped: silence is better
+// than teaching a letter name as a sound.
 export function planSpeech(text: string, table: SoundTable, options: PlanOptions = {}): SpeechPart[] {
   const separate = options.separateTokens ?? true;
+  const pieces = parseSpeech(lettersAsTokens(text));
+  const meaningful = (p: Piece) => p.kind !== "text" || /[A-Za-z0-9]/.test(p.text.replace(BROKEN_TOKEN, ""));
+  const tokens = pieces.filter((p) => p.kind !== "text");
+  const alone = tokens.length === 1 && pieces.filter(meaningful).length === 1;
+  // Is the token at `i` next to another sound token, with only punctuation between them?
+  const inRun = (i: number) => {
+    for (const step of [-1, 1]) {
+      for (let j = i + step; j >= 0 && j < pieces.length; j += step) {
+        const p = pieces[j];
+        if (p.kind === "sound") return true;
+        if (meaningful(p)) break;
+      }
+    }
+    return false;
+  };
   const parts: SpeechPart[] = [];
   let buffer = "";
   const flush = () => {
@@ -248,10 +316,10 @@ export function planSpeech(text: string, table: SoundTable, options: PlanOptions
     if (t && /[A-Za-z0-9]/.test(t)) parts.push({ kind: "tts", text: t, role: "speech" });
     buffer = "";
   };
-  for (const piece of parseSpeech(text)) {
+  pieces.forEach((piece, i) => {
     if (piece.kind === "text") {
       buffer += stripUnsafe(piece.text.replace(BROKEN_TOKEN, " "));
-      continue;
+      return;
     }
     const role: SpeechRole = piece.kind === "sound" ? "phoneme" : "letter_name";
     const r =
@@ -261,13 +329,57 @@ export function planSpeech(text: string, table: SoundTable, options: PlanOptions
     if (r.assetUrl) {
       flush();
       parts.push({ kind: "asset", url: r.assetUrl, fallback: r.text, role });
-    } else if (separate) {
+    } else if (separate && (alone || (piece.kind === "sound" && inRun(i)))) {
       flush();
-      if (r.text) parts.push({ kind: "tts", text: r.text, role });
+      if (r.text)
+        parts.push({ kind: "tts", text: alone && role === "letter_name" ? `${r.text}.` : r.text, role });
     } else buffer += r.text;
-  }
+  });
   flush();
   return parts;
+}
+
+// How a text will be spoken, token by token, before anything plays (the audio check page,
+// tests, debugging): what each token is, what it resolves to and from which source.
+export type SpeechExplanation = {
+  role: SpeechRole;
+  target: string;
+  source: "recorded" | "tts" | "keyword" | "none";
+  rendering: string;
+};
+
+export function explainSpeech(
+  text: string,
+  table: SoundTable,
+  options: ResolveOptions = {},
+): SpeechExplanation[] {
+  return parseSpeech(lettersAsTokens(text)).flatMap((p): SpeechExplanation[] => {
+    if (p.kind === "text") {
+      const t = stripUnsafe(p.text.replace(BROKEN_TOKEN, " ")).replace(/\s+/g, " ").trim();
+      return /[A-Za-z0-9]/.test(t) ? [{ role: "speech", target: t, source: "tts", rendering: t }] : [];
+    }
+    if (p.kind === "letter") {
+      const r = resolveLetter(p.letter, table);
+      return [
+        {
+          role: "letter_name",
+          target: letterToken(p.letter),
+          source: r.assetUrl ? "recorded" : "tts",
+          rendering: r.text,
+        },
+      ];
+    }
+    const r = resolveSound(p.phonemes, table, options);
+    const source =
+      r.strategy === "asset"
+        ? "recorded"
+        : r.strategy === "keyword"
+          ? "keyword"
+          : r.strategy === "tts"
+            ? "tts"
+            : "none";
+    return [{ role: "phoneme", target: soundToken(p.phonemes), source, rendering: r.text }];
+  });
 }
 
 // Tokens that resolve to nothing (a sound with no rendering, no keyword and no clip, or a
@@ -356,6 +468,15 @@ export function speechProblems(
   for (const text of texts) {
     for (const word of findUnsafeSpeech(text))
       problems.push(`"${word}" would be read as letter names (use a sound token)`);
+    // A letter standing alone is neither a name nor a sound for certain: a voice guesses
+    // ("g" alone can be read as "gram"; "says z" means the sound /z/ but is read "zee").
+    // Content says which it is: {@g} for its name, a sound token for its sound.
+    for (const l of new Set(loneLetters(text)))
+      problems.push(
+        `"${l}" alone is ambiguous (use ${spelledTokens(l.toLowerCase())} for its name or a sound token)`,
+      );
+    for (const broken of text.replace(TOKEN, " ").match(BROKEN_TOKEN) ?? [])
+      problems.push(`"${broken}" is not a valid speech token`);
     if (knownPhonemes)
       for (const token of speechTokens(text))
         if (token.kind === "sound")

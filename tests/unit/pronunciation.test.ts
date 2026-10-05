@@ -43,10 +43,10 @@ const table: SoundTable = buildSoundTable(
 );
 
 describe("letter name vs phoneme", () => {
-  it("a letter-name request says the letter's NAME", () => {
-    expect(speakableText(letterToken("s"), table)).toBe("ess");
-    expect(resolveLetter("h", table).text).toBe("aitch");
-    // Without a table entry a single capital is read as its name by every engine.
+  it("a letter-name request says the letter's NAME: the capital letter, which every voice reads as its name", () => {
+    expect(speakableText(letterToken("s"), table)).toBe("S");
+    // The spelled name in the table ("aitch") is for people; the voice gets the capital.
+    expect(resolveLetter("h", table).text).toBe("H");
     expect(resolveLetter("b", table).text).toBe("B");
   });
 
@@ -73,7 +73,7 @@ describe("letter name vs phoneme", () => {
 
   it("the same letter can be taught both ways, explicitly", () => {
     expect(speakableText("This is the letter {@s}. It says {/S/}, as in sun.", table)).toBe(
-      "This is the letter ess. It says suh, as in sun.",
+      "This is the letter S. It says suh, as in sun.",
     );
   });
 });
@@ -155,12 +155,11 @@ describe("recorded audio", () => {
     expect(planSpeech(soundToken(["M"]), withClip)).toEqual([{ kind: "tts", text: "muh", role: "phoneme" }]);
   });
 
-  it("every sound is a part of its own: never run into the words around it", () => {
+  it("a recorded sound splits the sentence; a single sound without a clip stays in it", () => {
     expect(planSpeech("Which one starts with {/S/}, or {/M/}?", withClip)).toEqual([
       { kind: "tts", text: "Which one starts with", role: "speech" },
       { kind: "asset", url: "https://x/s.mp3", fallback: "suh", role: "phoneme" },
-      { kind: "tts", text: "or", role: "speech" },
-      { kind: "tts", text: "muh", role: "phoneme" },
+      { kind: "tts", text: "or muh?", role: "speech" },
     ]);
     // Captions still read as one line.
     expect(speakableText("Which one starts with {/S/}, or {/M/}?", withClip)).toBe(
@@ -199,7 +198,7 @@ describe("unsafe speech", () => {
   it("display text read aloud: /k/ is the sound, ch the letters", () => {
     const speech = speechFromDisplay("The ch in school says /k/.", (l) => (l === "k" ? ["K"] : undefined));
     expect(speech).toBe("The {@c} {@h} in school says {/K/}.");
-    expect(speakableText(speech, table)).toBe("The C aitch in school says kuh.");
+    expect(speakableText(speech, table)).toBe("The C H in school says kuh.");
   });
 
   it("reads sound labels written between slashes, splitting only unambiguous ones", () => {
@@ -318,7 +317,7 @@ describe("token parsing (every supported form)", () => {
     expect(parseSpeech("{@S}")).toEqual([{ kind: "letter", letter: "s" }]);
     expect(parseSpeech("{@ m }")).toEqual([{ kind: "letter", letter: "m" }]);
     expect(speakableText("Say {/s/}.", table)).toBe("Say suh.");
-    expect(speakableText("It starts with {@S}.", table)).toBe("It starts with ess.");
+    expect(speakableText("It starts with {@S}.", table)).toBe("It starts with S.");
   });
 
   it("never reads a broken token aloud", () => {
@@ -363,20 +362,22 @@ describe("letter name vs sound keep their meaning (Phase 8.2)", () => {
     ],
   );
 
-  for (const [letter, phonemes, name, sound] of [
-    ["s", ["S"], "ess", "suh"],
-    ["c", ["K"], "see", "kuh"],
-    ["t", ["T"], "tee", "tuh"],
+  for (const [letter, phonemes, sound] of [
+    ["s", ["S"], "suh"],
+    ["c", ["K"], "kuh"],
+    ["t", ["T"], "tuh"],
   ] as const) {
-    it(`${letter.toUpperCase()} (letter name "${name}") ≠ /${phonemes[0].toLowerCase()}/ (sound "${sound}")`, () => {
-      expect(planSpeech(letterToken(letter), t)).toEqual([{ kind: "tts", text: name, role: "letter_name" }]);
+    it(`${letter.toUpperCase()} (letter name) ≠ /${phonemes[0].toLowerCase()}/ (sound "${sound}")`, () => {
+      expect(planSpeech(letterToken(letter), t)).toEqual([
+        { kind: "tts", text: `${letter.toUpperCase()}.`, role: "letter_name" },
+      ]);
       expect(planSpeech(soundToken(phonemes), t)).toEqual([{ kind: "tts", text: sound, role: "phoneme" }]);
     });
   }
 
   it("G: the letter's NAME recording and the SOUND recording are never swapped", () => {
     expect(planSpeech("{@g}", t)).toEqual([
-      { kind: "asset", url: "https://x/name-g.mp3", fallback: "jee", role: "letter_name" },
+      { kind: "asset", url: "https://x/name-g.mp3", fallback: "G", role: "letter_name" },
     ]);
     expect(planSpeech("{/G/}", t)).toEqual([
       { kind: "asset", url: "https://x/sound-g.mp3", fallback: "guh", role: "phoneme" },
@@ -394,7 +395,7 @@ describe("letter name vs sound keep their meaning (Phase 8.2)", () => {
 
   it("tokens in any case or spacing keep their kind", () => {
     for (const token of ["{@s}", "{@S}", "{ @s }", "{@ s}"])
-      expect(planSpeech(token, t), token).toEqual([{ kind: "tts", text: "ess", role: "letter_name" }]);
+      expect(planSpeech(token, t), token).toEqual([{ kind: "tts", text: "S.", role: "letter_name" }]);
     for (const token of ["{/s/}", "{/S/}", "{/ s /}", "{/ S/}"])
       expect(planSpeech(token, t), token).toEqual([{ kind: "tts", text: "suh", role: "phoneme" }]);
     for (const broken of ["{/s", "{@", "{sound}", "{/S1/}", "{@ss}"])
@@ -410,7 +411,7 @@ it("{ /s/ } and { @s } (spaces inside the braces) are tokens too", () => {
     [{ letter: "s", name: "ess" }],
   );
   expect(planSpeech("{ /s/ }", t)).toEqual([{ kind: "tts", text: "suh", role: "phoneme" }]);
-  expect(planSpeech("{ @s }", t)).toEqual([{ kind: "tts", text: "ess", role: "letter_name" }]);
+  expect(planSpeech("{ @s }", t)).toEqual([{ kind: "tts", text: "S.", role: "letter_name" }]);
   expect(
     planSpeech("{ /SH/ }", buildSoundTable([{ phonemes: ["SH"], tts: "shuh", quality: "approximate" }])),
   ).toEqual([{ kind: "tts", text: "shuh", role: "phoneme" }]);

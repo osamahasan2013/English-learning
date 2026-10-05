@@ -1342,7 +1342,7 @@
                   "stage": "guided_practice",
                   "title": "s or z?",
                   "instructions": "What does the s say?",
-                  "instructionsSpeech": "What does the s say?",
+                  "instructionsSpeech": "What does the {@s} say?",
                   "questions": [
                     {
                       "template": "pick_pattern_sound",

@@ -32,7 +32,7 @@
               "emoji": "🐱",
               "minutes": 6,
               "difficulty": 2,
-              "introSpeech": "Let's blend sounds into words with a!",
+              "introSpeech": "Let's blend sounds into words with {@a}!",
               "blueprint": {
                 "name": "cvc_blending",
                 "pattern": "LETTER_A",
@@ -78,7 +78,7 @@
               "emoji": "🐷",
               "minutes": 6,
               "difficulty": 2,
-              "introSpeech": "Let's blend sounds into words with i!",
+              "introSpeech": "Let's blend sounds into words with {@i}!",
               "blueprint": {
                 "name": "cvc_blending",
                 "pattern": "LETTER_I",
@@ -124,7 +124,7 @@
               "emoji": "🐶",
               "minutes": 6,
               "difficulty": 2,
-              "introSpeech": "Let's blend sounds into words with o!",
+              "introSpeech": "Let's blend sounds into words with {@o}!",
               "blueprint": {
                 "name": "cvc_blending",
                 "pattern": "LETTER_O",
@@ -170,7 +170,7 @@
               "emoji": "☀️",
               "minutes": 6,
               "difficulty": 2,
-              "introSpeech": "Let's blend sounds into words with u!",
+              "introSpeech": "Let's blend sounds into words with {@u}!",
               "blueprint": {
                 "name": "cvc_blending",
                 "pattern": "LETTER_U",
@@ -216,7 +216,7 @@
               "emoji": "🛏️",
               "minutes": 6,
               "difficulty": 2,
-              "introSpeech": "Let's blend sounds into words with e!",
+              "introSpeech": "Let's blend sounds into words with {@e}!",
               "blueprint": {
                 "name": "cvc_blending",
                 "pattern": "LETTER_E",
@@ -950,7 +950,7 @@
                     {
                       "type": "SORT",
                       "prompt": "Short a or short i?",
-                      "promptSpeech": "Is the middle sound a, or i? Sort the words.",
+                      "promptSpeech": "Is the middle sound like in cat, or like in pig? Sort the words.",
                       "explanation": "Listen for the middle sound: b-a-t has a, p-i-n has i.",
                       "content": {
                         "groups": [

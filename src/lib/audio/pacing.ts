@@ -12,8 +12,8 @@ import { DEFAULT_RULES, type AudioRules, type ReadingPace } from "@/lib/learning
 //   WORD         a whole word ("gate") — never spelled out
 //   SENTENCE     a sentence to read, hear or write
 //   STORY_READING a story or text read aloud, paced for the child's level
-//   LETTER_NAME  a letter's name ("jee")
-//   PHONEME      a sound (/g/ — never "jee")
+//   LETTER_NAME  a letter's name (the capital letter: "G")
+//   PHONEME      a sound (/g/ → "guh" — never the letter name)
 //   SEGMENTING   a word's sounds one by one (g … ay … t), with clear gaps
 //   BLENDING     the sounds, then the whole word (g … ay … t … gate)
 export const AUDIO_INTENTS = [
@@ -54,8 +54,8 @@ export function resolveAudioPacing(
 export const DEFAULT_AUDIO_PACING = resolveAudioPacing();
 
 // Stories and sentences follow the level. Instructions and feedback are natural
-// sentences at Normal (sounds and letter names inside them are still pieces of their own)
-// and phrases at Slow — never word by word (that sounds broken). A word is one piece.
+// sentences at Normal and phrases of three words or more at Slow — never word by word
+// (that sounds broken). A word is one piece.
 export function paceFor(intent: AudioIntent, speed: AudioSpeedName, pacing: AudioPacing): ReadingPace {
   const pace = pacing.reading[speed];
   if (intent === "STORY_READING" || intent === "SENTENCE") return pace;
@@ -64,8 +64,7 @@ export function paceFor(intent: AudioIntent, speed: AudioSpeedName, pacing: Audi
     return { ...pace, rate: pacing.phonics.rate[speed], chunk: "sentence" };
   // Instructions, feedback, and the words of a segmenting / blending sequence.
   if (speed === "normal") return { ...pace, chunk: "sentence" };
-  if (pace.chunk === "word") return { ...pace, chunk: "phrase", maxWords: Math.max(pace.maxWords, 3) };
-  return pace;
+  return { ...pace, chunk: "phrase", maxWords: Math.max(pace.maxWords, 3) };
 }
 
 export type SpeechChunk = {
@@ -84,23 +83,104 @@ export function countWords(text: string) {
   return text.split(/\s+/).filter(isWord).length;
 }
 
-// Phrases of at most `max` words, balanced (7 words in threes → 3, 2, 2 rather than 3, 3,
-// 1), never splitting after a comma's natural break.
-function phrases(words: string[], max: number): string[][] {
-  const groups: string[][] = [];
-  let clause: string[] = [];
-  const flush = () => {
-    if (clause.length === 0) return;
-    const n = Math.ceil(clause.length / max);
-    const size = Math.ceil(clause.length / n);
-    for (let i = 0; i < clause.length; i += size) groups.push(clause.slice(i, i + size));
-    clause = [];
-  };
-  for (const w of words) {
-    clause.push(w);
-    if (/[,;:]$/.test(w)) flush();
+// Words that lean on the word after them (Phase 8.3). Read on their own, or left at the end
+// of a piece, voices give them a strange stressed or clipped form — "the" alone was hard to
+// understand on an iPhone. Articles and possessives always stay with their noun ("the
+// gate", "a ball", "my dog"), even word by word; in phrases, no piece ends on any of them.
+const ARTICLES = new Set(["a", "an", "the", "my", "your", "his", "her", "its", "our", "their"]);
+const LEANERS = new Set([
+  ...ARTICLES,
+  "at",
+  "in",
+  "on",
+  "to",
+  "of",
+  "for",
+  "with",
+  "by",
+  "from",
+  "into",
+  "up",
+  "and",
+  "or",
+  "but",
+  "this",
+  "that",
+]);
+
+const bare = (w: string) => w.toLowerCase().replace(/[^\p{L}']/gu, "");
+// A letter's name inside a sentence ("the letter S.", "learn S H.") — never a piece on its
+// own: a one-syllable name read alone is what iOS clipped (Phase 8.3). "I" and "A" are words.
+const letterName = (w: string) => /^[B-HJ-Z][,;:.!?…]*$/.test(w);
+// Ends a clause or sentence: a word with punctuation after it never leans forward.
+const closes = (w: string) => /[,;:.!?…]$/.test(w);
+
+// Tokens → units that are never split: a leaning word joined to the word after it (and
+// any loose punctuation to the word before).
+function units(tokens: string[], leaners: ReadonlySet<string>): string[][] {
+  const out: string[][] = [];
+  let pending: string[] = [];
+  for (const t of tokens) {
+    if ((!isWord(t) || letterName(t)) && (pending.length || out.length)) {
+      if (pending.length) pending.push(t);
+      else out[out.length - 1].push(t);
+      continue;
+    }
+    pending.push(t);
+    if (leaners.has(bare(t)) && !closes(t)) continue;
+    out.push(pending);
+    pending = [];
   }
-  flush();
+  if (pending.length) {
+    if (out.length && pending.every((t) => leaners.has(bare(t)) || !isWord(t)))
+      out[out.length - 1].push(...pending);
+    else out.push(pending);
+  }
+  return out;
+}
+
+const wordsIn = (group: string[]) => group.filter(isWord).length;
+
+// Phrases of about `max` words, never splitting a unit, never across a comma's natural
+// break. The grouping is chosen as a whole (each clause is short, so all groupings are
+// weighed): few pieces, close to `max` words each, balanced ("The cat is | at the gate.",
+// not "The cat | is at the gate."). A piece may run one word over `max` when that keeps a
+// phrase together, at a cost, so Normal stays phrased and Slow stays deliberate.
+function phrases(tokens: string[], max: number): string[][] {
+  const groups: string[][] = [];
+  const PIECE = 12;
+  const OVER = 12;
+  const best = (clause: string[][]) => {
+    const n = clause.length;
+    const words = clause.map(wordsIn);
+    const cost: number[] = [0, ...Array<number>(n).fill(Infinity)];
+    const from: number[] = Array<number>(n + 1).fill(0);
+    for (let end = 1; end <= n; end++) {
+      let k = 0;
+      for (let start = end - 1; start >= 0; start--) {
+        k += words[start];
+        const single = end - start === 1;
+        if (!single && k > max + 1) break;
+        const c = cost[start] + PIECE + Math.max(0, k - max) * OVER + 0.5 * k * k;
+        if (c < cost[end]) {
+          cost[end] = c;
+          from[end] = start;
+        }
+      }
+    }
+    const cut: string[][] = [];
+    for (let end = n; end > 0; end = from[end]) cut.unshift(clause.slice(from[end], end).flat());
+    groups.push(...cut);
+  };
+  let clause: string[][] = [];
+  for (const u of units(tokens, LEANERS)) {
+    clause.push(u);
+    if (/[,;:]$/.test(u[u.length - 1])) {
+      best(clause);
+      clause = [];
+    }
+  }
+  if (clause.length) best(clause);
   return groups;
 }
 
@@ -115,19 +195,14 @@ export function chunkText(text: string, pace: ReadingPace, maxChars = 200): Spee
   sentences.forEach((sentence, si) => {
     const tokens = sentence.split(" ").filter(Boolean);
     let groups: string[][];
-    if (pace.chunk === "word") {
-      // Words, with any loose punctuation kept on the word before it.
-      groups = [];
-      for (const t of tokens) {
-        if (!isWord(t) && groups.length) groups[groups.length - 1].push(t);
-        else groups.push([t]);
-      }
-    } else if (pace.chunk === "phrase") groups = phrases(tokens, pace.maxWords);
+    // Word by word: each word, with articles and possessives kept on their noun.
+    if (pace.chunk === "word") groups = units(tokens, ARTICLES);
+    else if (pace.chunk === "phrase") groups = phrases(tokens, pace.maxWords);
     else groups = [tokens];
     // A sentence longer than an engine safely reads in one go is split at phrases.
     groups = groups.flatMap((g) => (g.join(" ").length > maxChars ? phrases(g, 12) : [g]));
     groups.forEach((g, gi) => {
-      const count = g.filter(isWord).length;
+      const count = wordsIn(g);
       chunks.push({
         text: g.join(" "),
         wordStart: wordIndex,

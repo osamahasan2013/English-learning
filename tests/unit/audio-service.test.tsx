@@ -267,9 +267,9 @@ describe("playAudio", () => {
       });
 
       it("Slow while Listen is speaking: the same words again, slowly, and heard", async () => {
-        const listen = playAudio({ text: "The cat sat." });
+        const listen = playAudio({ text: "The cat sat.", intent: "STORY_READING" });
         await vi.waitFor(() => expect(engine.current?.text).toBe("The cat sat."));
-        const slow = playAudio({ text: "The cat sat.", speed: "slow" });
+        const slow = playAudio({ text: "The cat sat.", speed: "slow", intent: "STORY_READING" });
         expect(await listen).toBe("interrupted");
         // Slow restarts the same words from the beginning, slower and in short phrases.
         await vi.waitFor(() => expect(engine.current?.rate).toBe(rateFor("slow")));
@@ -463,10 +463,10 @@ describe("useAudio", () => {
   it("a screen that closes does not stop the sound another screen started", async () => {
     let first: Promise<unknown> | null = null;
     let second: Promise<unknown> | null = null;
-    const a = render(<Speaker text="from a" onSpeak={(p) => (first ??= p)} />);
-    await vi.waitFor(() => expect(engine.current?.text).toBe("from a"));
-    render(<Speaker text="from b" onSpeak={(p) => (second ??= p)} />);
-    await vi.waitFor(() => expect(engine.current?.text).toBe("from b"));
+    const a = render(<Speaker text="from one" onSpeak={(p) => (first ??= p)} />);
+    await vi.waitFor(() => expect(engine.current?.text).toBe("from one"));
+    render(<Speaker text="from two" onSpeak={(p) => (second ??= p)} />);
+    await vi.waitFor(() => expect(engine.current?.text).toBe("from two"));
     act(() => a.unmount());
     await finishCurrent();
     expect(await first).toBe("interrupted");
@@ -519,18 +519,33 @@ describe("pacing and audio intents", () => {
 
   it("a letter name and a sound stay different things all the way to the engine", async () => {
     setAudioTimingLog(true);
-    await playThrough(playAudio({ text: "This is {@g}. It says {/G/}." }, { sounds: phonics, pacing: kg1 }));
-    const said = engine.spoken.map((u) => u.text);
-    expect(said).toEqual(["This is", "jee", "It says", "guh"]);
-    expect(getAudioTimings().map((t) => t.role)).toEqual(["speech", "letter_name", "speech", "phoneme"]);
-    setAudioTimingLog(false);
+    try {
+      // On their own (a letter tile, a sound button): separate requests, separate meanings.
+      await playThrough(playAudio({ text: "{@g}", intent: "LETTER_NAME" }, { sounds: phonics, pacing: kg1 }));
+      await playThrough(playAudio({ text: "{/G/}", intent: "PHONEME" }, { sounds: phonics, pacing: kg1 }));
+      expect(engine.spoken.map((u) => u.text)).toEqual(["G.", "guh"]);
+      expect(getAudioTimings().map((t) => [t.role, t.intent])).toEqual([
+        ["letter_name", "LETTER_NAME"],
+        ["phoneme", "PHONEME"],
+      ]);
+      // Inside a sentence, each stays in context (a one-syllable utterance is clipped and
+      // guessed at by some voices) — and is still the name, or the sound, never the other.
+      engine.spoken = [];
+      await playThrough(
+        playAudio({ text: "This is {@g}. It says {/G/}." }, { sounds: phonics, pacing: kg1 }),
+      );
+      expect(engine.spoken.map((u) => u.text)).toEqual(["This is G.", "It says guh."]);
+    } finally {
+      setAudioTimingLog(false);
+    }
   });
 
   it("a word is said whole, never spelled out, unless a blend is asked for", async () => {
     await playThrough(
       playAudio({ text: "gate", intent: "WORD", speed: "slow" }, { sounds: phonics, pacing: kg1 }),
     );
-    expect(engine.spoken.map((u) => u.text)).toEqual(["gate"]);
+    // Said whole, with a full stop for its citation form; never letters or sounds.
+    expect(engine.spoken.map((u) => u.text)).toEqual(["gate."]);
   });
 
   it("a blend: sounds with clear gaps, a longer gap, then the whole word", async () => {
@@ -541,7 +556,7 @@ describe("pacing and audio intents", () => {
       { text: "gate", intent: "WORD" as const, speed: "slow" as const },
     ];
     await playThrough(playAudio(sequence, { sounds: phonics, pacing: kg1, sequence: "BLENDING" }));
-    expect(engine.spoken.map((u) => u.text)).toEqual(["guh", "eigh", "tuh", "gate"]);
+    expect(engine.spoken.map((u) => u.text)).toEqual(["guh", "eigh", "tuh", "gate."]);
     const [g1, g2gap, beforeWord] = gaps();
     expect(g1).toBeGreaterThanOrEqual(kg1.phonics.itemGapMs.slow);
     expect(g2gap).toBeGreaterThanOrEqual(kg1.phonics.itemGapMs.slow);
@@ -560,11 +575,12 @@ describe("pacing and audio intents", () => {
     await playThrough(
       playAudio({ text: "The cat is at the gate.", intent: "STORY_READING", speed: "slow" }, { pacing: kg1 }),
     );
-    expect(engine.spoken.map((u) => u.text)).toEqual(["The", "cat", "is", "at", "the", "gate."]);
+    // Word by word, with "the" never on its own (Phase 8.3).
+    expect(engine.spoken.map((u) => u.text)).toEqual(["The cat", "is", "at", "the gate."]);
     expect(engine.spoken.every((u) => u.rate === kg1.reading.slow.rate)).toBe(true);
     for (const gap of gaps()) expect(gap).toBeGreaterThanOrEqual(kg1.reading.slow.pauseMs);
     // Slow takes clearly longer even with an engine that ignores the rate entirely.
-    expect(Date.now() - engine.times[0]).toBeGreaterThan(normalEnd - normalStart + 1500);
+    expect(Date.now() - engine.times[0]).toBeGreaterThan(normalEnd - normalStart + 900);
   });
 
   it("Grade 2 story reading: Normal reads whole sentences", async () => {
@@ -586,8 +602,7 @@ describe("pacing and audio intents", () => {
     expect(pieces).toEqual([
       [0, 0, 1],
       [0, 1, 1],
-      [0, 2, 1],
-      [0, 3, 1],
+      [0, 2, 2],
     ]);
   });
 
@@ -596,13 +611,13 @@ describe("pacing and audio intents", () => {
       { text: "The cat is at the gate.", intent: "STORY_READING", speed: "slow" },
       { pacing: kg1 },
     );
-    await vi.waitFor(() => expect(engine.current?.text).toBe("The"));
+    await vi.waitFor(() => expect(engine.current?.text).toBe("The cat"));
     engine.finish();
-    await vi.waitFor(() => expect(engine.current?.text).toBe("cat"));
+    await vi.waitFor(() => expect(engine.current?.text).toBe("is"));
     const second = playAudio({ text: "It naps.", intent: "STORY_READING", speed: "slow" }, { pacing: kg1 });
     expect(await first).toBe("interrupted");
     expect(await playThrough(second)).toBe("played");
-    expect(engine.spoken.map((u) => u.text)).toEqual(["The", "cat", "It", "naps."]);
+    expect(engine.spoken.map((u) => u.text)).toEqual(["The cat", "is", "It", "naps."]);
   });
 
   it("the timing log records rate, pieces, pauses, start and end — and no words", async () => {
@@ -612,14 +627,14 @@ describe("pacing and audio intents", () => {
       playAudio({ text: "I see a cat.", intent: "STORY_READING", speed: "slow" }, { pacing: kg1 }),
     );
     const log = getAudioTimings();
-    expect(log).toHaveLength(4);
+    expect(log).toHaveLength(3);
     expect(log[1]).toMatchObject({
       intent: "STORY_READING",
       speed: "slow",
       level: "KG1",
       rate: kg1.reading.slow.rate,
       piece: 1,
-      pieces: 4,
+      pieces: 3,
       pauseBeforeMs: kg1.reading.slow.pauseMs,
       chars: 3,
       outcome: "ended",

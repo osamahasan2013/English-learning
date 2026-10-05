@@ -160,6 +160,18 @@ audio check page with a timing log. Tests: `audio-pacing.test.ts`, the pacing bl
 `audio.spec.ts`. Still to do: the listening test on a real iPhone, Android phone and desktop
 browser; recordings.
 
+## Phase 8.3 — audio accuracy
+
+Letter names, sounds and high-frequency words given to the voice in their surest form
+(ADR-045, [audio-engine.md](audio-engine.md)): letter names as engine-native capitals from
+the A–Z table (inline; alone "G."), single sounds in context and runs split, function
+words kept with their word, citation form for a word alone, no raw letters in speech
+(content fixed, importer and tests reject them, runtime guard), `explainSpeech`, the audio
+check grouped by meaning with PASS / FAIL results, dev-only `audio.request` logs, recording
+priorities (`npm run audio:priorities`). Tests: `audio-accuracy.test.ts` (plus updated
+pacing, service, pronunciation and e2e audio tests). Still to do: the listening test on a
+real iPhone, Android phone and desktop browser; recordings.
+
 ## Phases
 
 | #   | Phase                       | Status | Notes / next steps                                                                                                                                                                                                                                                        |

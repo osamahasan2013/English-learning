@@ -530,10 +530,15 @@ Full detail, limitations and the pronunciation matrix: [audio.md](audio.md).
   teaches (instruction, feedback, word, sentence, story, letter name, phoneme, segmenting,
   blending). Speed is the `audio` learning rules per level — rate AND piece size (sentence
   / phrase / word) AND pauses — so Slow is audibly slower even where the engine barely
-  honours the rate (iOS Safari). Sounds and letter names are pieces of their own, never run
-  into words; words are never spelled out unless an activity segments or blends. Lesson
-  payloads carry their level's pacing; the child layout provides the child's level.
-  `/parent/audio-check` is the listening test for real devices.
+  honours the rate (iOS Safari). A run of sounds is split into pieces; words are never
+  spelled out unless an activity segments or blends. Lesson payloads carry their level's
+  pacing; the child layout provides the child's level. `/parent/audio-check` is the
+  listening test for real devices.
+- **Semantic accuracy** (Phase 8.3, ADR-045): a letter name is the capital letter from
+  the A–Z table (inline in its sentence, "G." alone), a sound is its rendering or a
+  keyword and never a letter name, a word alone is said in its citation form, articles stay
+  with their noun and phrases never end on a function word; raw letters in speech are
+  rejected by the importer and rendered as names at play time.
 - **Recordings** (`audio_assets` in the `content-audio` bucket) replace synthesis per
   phoneme, pattern sound or word with no component change.
 - Every spoken item has **Listen**, **Slow** and **Again**, and **Stop** while playing

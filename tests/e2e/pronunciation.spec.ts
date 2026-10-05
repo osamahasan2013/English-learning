@@ -4,9 +4,10 @@ import { addChild, answerQuestion, lessonQuestions, registerParent, startLesson 
 // What the browser is actually asked to say, end to end: lesson content from the database
 // (sound tokens) → the sound table in the payload → the pronunciation resolver → the
 // browser's speech synthesis. A fake engine records every utterance. Phonics sounds must
-// be spoken as sounds (suh, shuh), letter names as names (ess, aitch), and never as raw
-// tokens or letter strings (sss, th). Each sound and letter name is an utterance of its
-// own (Phase 8.2), so the checks look for runs of pieces in order.
+// be spoken as sounds (suh, shuh), letter names as names (the capital letter, which every
+// voice reads as its name), and never as raw tokens or letter strings (sss, th). Since
+// Phase 8.3 a letter name or a single sound stays inside its sentence ("This is the letter
+// S." / "It says suh, as in sun."), so the checks look for those pieces in order.
 
 async function recordSpeech(page: Page) {
   await page.addInitScript(() => {
@@ -55,7 +56,7 @@ test("phonics sounds are spoken as sounds and letter names as names", async ({ p
   const { lessonId: letterS } = await lessonQuestions("kg1-letter-s-1");
   await page.goto(`/child/learn/${letterS}`);
   await startLesson(page);
-  await expect.poll(() => saidInOrder(page, ["This is the letter", "ess", "It says", "suh"])).toBe(true);
+  await expect.poll(() => saidInOrder(page, ["This is the letter S.", "It says suh, as in sun."])).toBe(true);
   await page.getByRole("button", { name: /sound/i }).first().click();
   await expect.poll(async () => (await spoken(page)).at(-1)).toBe("suh");
   // Each page load starts a new recording: keep what this page said.
@@ -64,7 +65,7 @@ test("phonics sounds are spoken as sounds and letter names as names", async ({ p
   // The sh lesson: the intro names the letters and says the sound.
   const { lessonId: sh } = await lessonQuestions("kg3-sh-1");
   await page.goto(`/child/learn/${sh}`);
-  await expect.poll(() => saidInOrder(page, ["Let's learn", "ess", "aitch", "It says", "shuh"])).toBe(true);
+  await expect.poll(() => saidInOrder(page, ["Let's learn S H.", "It says shuh!"])).toBe(true);
   all.push(...(await spoken(page)));
 
   expect(all.length).toBeGreaterThan(3);
@@ -98,6 +99,6 @@ test("a sound named by a keyword never names one of the answer choices", async (
     await page.getByRole("button", { name: /^Next/ }).click();
   }
   await expect
-    .poll(() => saidInOrder(page, ["Which one starts with", "the sound at the start of ant"]))
+    .poll(() => saidInOrder(page, ["Which one starts with the sound at the start of ant?"]))
     .toBe(true);
 });

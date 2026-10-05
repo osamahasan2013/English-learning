@@ -5,53 +5,102 @@
 
 import type { AudioIntent, AudioTiming } from "@/lib/audio/audio-service";
 
+export type AudioCheckGroup =
+  "LETTER NAME" | "PHONEME" | "WORD" | "SENTENCE" | "READING" | "SEGMENTING" | "BLENDING" | "INSTRUCTION";
+
 export type AudioCheckItem = {
   id: string;
+  group: AudioCheckGroup;
   label: string;
+  // What is being taught, as the audio service receives it.
+  intent: AudioIntent | "SEGMENTING" | "BLENDING";
+  target: string;
   // What a grown-up should hear.
   expect: string;
   requests: { text: string; intent: AudioIntent; speed: "normal" | "slow" }[];
   sequence?: "SEGMENTING" | "BLENDING";
 };
 
-const SENTENCE = "The cat is at the gate.";
+const letter = (l: string, sound: string): AudioCheckItem => ({
+  id: `letter-${l}`,
+  group: "LETTER NAME",
+  label: `Letter name: ${l.toUpperCase()}`,
+  intent: "LETTER_NAME",
+  target: l.toUpperCase(),
+  expect: `The NAME of the letter ${l.toUpperCase()} — not another letter, and not its sound (${sound}).`,
+  requests: [{ text: `{@${l}}`, intent: "LETTER_NAME", speed: "normal" }],
+});
+
+const phoneme = (code: string, label: string, name: string): AudioCheckItem => ({
+  id: `phoneme-${label}`,
+  group: "PHONEME",
+  label: `Sound: /${label}/`,
+  intent: "PHONEME",
+  target: `/${label}/`,
+  expect: `The SOUND /${label}/ — not the letter name ${name}. (Browser voices add a short "uh"; a recording would be pure.)`,
+  requests: [{ text: `{/${code}/}`, intent: "PHONEME", speed: "normal" }],
+});
+
+const word = (w: string, note: string): AudioCheckItem => ({
+  id: `word-${w}`,
+  group: "WORD",
+  label: `Word: ${w}`,
+  intent: "WORD",
+  target: w,
+  expect: `Just the word “${w}” — ${note}`,
+  requests: [{ text: w, intent: "WORD", speed: "normal" }],
+});
+
+const READING = [
+  "The cat is at the gate.",
+  "The dog is in the sun.",
+  "The big cat can run.",
+  "The apple is red.",
+  "The boy has a ball.",
+];
+
+const reading = (sentence: string, i: number, speed: "normal" | "slow"): AudioCheckItem => ({
+  id: `reading-${i + 1}-${speed}`,
+  group: "READING",
+  label: `Reading ${i + 1} — ${speed === "normal" ? "Normal" : "Slow"}`,
+  intent: "STORY_READING",
+  target: sentence,
+  expect:
+    speed === "normal"
+      ? `“${sentence}” — natural and clear, every word (including “the”) easy to hear, not too fast.`
+      : `“${sentence}” — clearly slower than Normal, small pauses, still natural; “the” always with its word.`,
+  requests: [{ text: sentence, intent: "STORY_READING", speed }],
+});
 
 export const AUDIO_CHECK_ITEMS: AudioCheckItem[] = [
+  letter("a", "the a in apple"),
+  letter("g", "/g/ as in goat"),
+  letter("s", "/s/ as in sun"),
+  letter("t", "/t/ as in top"),
+  phoneme("G", "g", "G"),
+  phoneme("S", "s", "S"),
+  phoneme("M", "m", "M"),
+  phoneme("T", "t", "T"),
+  word("gate", "not spelled out, no letters, no separate sounds."),
+  word("cat", "not spelled out."),
+  word("the", "clearly the word “the” (“thuh” or “thee” are both fine), not cut off."),
   {
-    id: "reading-normal",
-    label: "Reading — Normal",
-    expect: "“The cat is at the gate.” — clear, unhurried, every word easy to hear.",
-    requests: [{ text: SENTENCE, intent: "STORY_READING", speed: "normal" }],
+    id: "sentence",
+    group: "SENTENCE",
+    label: "Sentence",
+    intent: "SENTENCE",
+    target: READING[0],
+    expect: `“${READING[0]}” — every word understood without guessing.`,
+    requests: [{ text: READING[0], intent: "SENTENCE", speed: "normal" }],
   },
-  {
-    id: "reading-slow",
-    label: "Reading — Slow",
-    expect:
-      "The same sentence, clearly slower than Normal, with small pauses between words or pairs of words.",
-    requests: [{ text: SENTENCE, intent: "STORY_READING", speed: "slow" }],
-  },
-  {
-    id: "letter-name",
-    label: "Letter name: G",
-    expect: "The NAME of the letter: “jee”.",
-    requests: [{ text: "{@g}", intent: "LETTER_NAME", speed: "normal" }],
-  },
-  {
-    id: "phoneme",
-    label: "Sound: /g/",
-    expect: "The SOUND /g/ (“guh”), not “jee”.",
-    requests: [{ text: "{/G/}", intent: "PHONEME", speed: "normal" }],
-  },
-  {
-    id: "word",
-    label: "Word: gate",
-    expect: "Just “gate” — not spelled out, no letters.",
-    requests: [{ text: "gate", intent: "WORD", speed: "normal" }],
-  },
+  ...READING.flatMap((s, i) => [reading(s, i, "normal"), reading(s, i, "slow")]),
   {
     id: "segmenting",
-    label: "Segmenting: g / ay / t",
-    expect: "Three separate sounds with clear gaps: “guh … eigh … tuh”.",
+    group: "SEGMENTING",
+    label: "Segmenting: gate → /g/ /ā/ /t/",
+    intent: "SEGMENTING",
+    target: "gate",
+    expect: "Three separate sounds with clear gaps: “guh … eigh … tuh” — no letter names.",
     requests: [
       { text: "{/G/}", intent: "PHONEME", speed: "slow" },
       { text: "{/EY/}", intent: "PHONEME", speed: "slow" },
@@ -61,7 +110,10 @@ export const AUDIO_CHECK_ITEMS: AudioCheckItem[] = [
   },
   {
     id: "blending",
-    label: "Blending: g + ay + t → gate",
+    group: "BLENDING",
+    label: "Blending: /g/ + /ā/ + /t/ → gate",
+    intent: "BLENDING",
+    target: "gate",
     expect: "The three sounds with gaps, a longer pause, then the whole word “gate”.",
     requests: [
       { text: "{/G/}", intent: "PHONEME", speed: "slow" },
@@ -73,11 +125,85 @@ export const AUDIO_CHECK_ITEMS: AudioCheckItem[] = [
   },
   {
     id: "spelling-intro",
+    group: "INSTRUCTION",
     label: "Spelling intro (gate)",
+    intent: "INSTRUCTION",
+    target: "gate. {/G/}, {/EY/}, {/T/}. gate.",
     expect: "“gate” … “guh” … “eigh” … “tuh” … “gate”, each part separate — never one fast run.",
     requests: [{ text: "gate. {/G/}, {/EY/}, {/T/}. gate.", intent: "INSTRUCTION", speed: "normal" }],
   },
+  {
+    id: "letter-intro",
+    group: "INSTRUCTION",
+    label: "Letter intro (G)",
+    intent: "INSTRUCTION",
+    target: "This is the letter {@g}. It says {/G/}, as in goat.",
+    expect: "“This is the letter G. It says guh, as in goat.” — the NAME G, then the SOUND /g/.",
+    requests: [
+      { text: "This is the letter {@g}. It says {/G/}, as in goat.", intent: "INSTRUCTION", speed: "normal" },
+    ],
+  },
 ];
+
+// The browser and system, from the user agent (for the results; nothing personal).
+export function describeDevice(userAgent: string) {
+  const os = /iPhone|iPad|iPod/.test(userAgent)
+    ? `iOS${userAgent.match(/OS (\d+[_\d]*)/)?.[1] ? ` ${userAgent.match(/OS (\d+[_\d]*)/)![1].replace(/_/g, ".")}` : ""}`
+    : /Android/.test(userAgent)
+      ? `Android${userAgent.match(/Android (\d+(\.\d+)?)/)?.[1] ? ` ${userAgent.match(/Android (\d+(\.\d+)?)/)![1]}` : ""}`
+      : /Mac OS X/.test(userAgent)
+        ? "macOS"
+        : /Windows/.test(userAgent)
+          ? "Windows"
+          : /Linux/.test(userAgent)
+            ? "Linux"
+            : "unknown";
+  const browser = /CriOS\//.test(userAgent)
+    ? "Chrome (iOS)"
+    : /FxiOS\//.test(userAgent)
+      ? "Firefox (iOS)"
+      : /EdgA?\//.test(userAgent)
+        ? "Edge"
+        : /Chrome\//.test(userAgent)
+          ? "Chrome"
+          : /Firefox\//.test(userAgent)
+            ? "Firefox"
+            : /Safari\//.test(userAgent)
+              ? "Safari"
+              : "unknown";
+  return { os, browser };
+}
+
+export type AudioCheckResult = {
+  testId: string;
+  intent: string;
+  target: string;
+  verdict: "PASS" | "FAIL" | null;
+  note: string;
+  source: string;
+  level: string;
+};
+
+// The results as plain text to paste back (one line per test that was played or marked).
+export function formatResults(args: {
+  at: string;
+  device: { os: string; browser: string };
+  voice: string;
+  locale: string;
+  results: readonly AudioCheckResult[];
+  timing: (testId: string, level: string) => string;
+}) {
+  return [
+    `Word Garden audio check — ${args.at}`,
+    `Device: ${args.device.os}, ${args.device.browser} · voice: ${args.voice} · locale: ${args.locale}`,
+    ...args.results.map(
+      (r) =>
+        `${r.testId} [${r.level}] ${r.verdict ?? "NOT MARKED"} · intent ${r.intent} · target ${r.target} · source ${r.source}${
+          r.note ? ` · note: ${r.note}` : ""
+        }${args.timing(r.testId, r.level)}`,
+    ),
+  ].join("\n");
+}
 
 export type RequestSummary = {
   requestId: number;

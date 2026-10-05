@@ -42,14 +42,8 @@ describe("pacing per level", () => {
     const g2 = resolveAudioPacing(DEFAULT_RULES.audio, "GRADE2").reading;
     expect(kg1.normal.rate).toBeLessThan(g2.normal.rate);
     expect(chunkText(SAMPLE, kg1.normal).length).toBeGreaterThan(chunkText(SAMPLE, g2.normal).length);
-    expect(chunkText(SAMPLE, kg1.slow).map((c) => c.text)).toEqual([
-      "The",
-      "cat",
-      "is",
-      "at",
-      "the",
-      "gate.",
-    ]);
+    // Word by word for the youngest at Slow — with "the" kept on its noun (Phase 8.3).
+    expect(chunkText(SAMPLE, kg1.slow).map((c) => c.text)).toEqual(["The cat", "is", "at", "the gate."]);
     expect(chunkText(SAMPLE, g2.normal).map((c) => c.text)).toEqual([SAMPLE]);
   });
 
@@ -69,10 +63,11 @@ describe("chunkText", () => {
   const pace = { rate: 0.8, chunk: "phrase" as const, maxWords: 3, pauseMs: 200, sentenceGapMs: 600 };
 
   it("reads phrases of balanced size, keeping punctuation on its word", () => {
+    // Never a piece that ends on "to" or "the": "to the park." stays together.
     expect(chunkText("The big red dog ran to the park.", pace).map((c) => c.text)).toEqual([
       "The big red",
-      "dog ran to",
-      "the park.",
+      "dog ran",
+      "to the park.",
     ]);
     expect(chunkText("Look, a cat!", pace).map((c) => c.text)).toEqual(["Look,", "a cat!"]);
   });
@@ -91,8 +86,7 @@ describe("chunkText", () => {
     expect(words.map((c) => [c.text, c.wordStart, c.wordCount])).toEqual([
       ["I", 0, 1],
       ["see", 1, 1],
-      ["a", 2, 1],
-      ["cat.", 3, 1],
+      ["a cat.", 2, 2],
       ["It", 4, 1],
       ["naps.", 5, 1],
     ]);

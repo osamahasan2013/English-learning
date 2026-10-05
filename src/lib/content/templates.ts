@@ -212,6 +212,11 @@ function soundLabelFor(ctx: TemplateContext, phonemes: string[] | undefined, fal
   const labels = (phonemes ?? []).map((c) => ctx.phoneme?.(c)?.label).filter((l): l is string => !!l);
   return labels.length ? labels.join("") : fallback;
 }
+// Letters said one by one, by their names (letter tokens, never raw letters): "ed" → {@e} {@d}.
+function spellLetters(letters: string) {
+  return [...letters].map((l) => (/^[a-z]$/i.test(l) ? letterToken(l) : l)).join(" ");
+}
+
 function displayPattern(p: TemplatePattern) {
   return p.type === "letter" ? `${p.pattern.toUpperCase()} ${p.pattern}` : p.pattern;
 }
@@ -390,7 +395,7 @@ export const TEMPLATES: Record<string, Expander> = {
         heading: w.word,
         display: w.word,
         body,
-        speech: optStr(params, "speech") ?? `${w.word}. ${body}`,
+        speech: optStr(params, "speech") ?? `${w.word}. ${speechFromDisplay(body, ctx.soundForLabel)}`,
         examples: w.emoji ? [{ text: w.word, emoji: w.emoji }] : [],
       },
       answer: null,
@@ -455,13 +460,15 @@ export const TEMPLATES: Record<string, Expander> = {
     const upper = params.case === "upper";
     const show = (l: string) => (upper ? l.toUpperCase() : l.toLowerCase());
     const letters = seededShuffle([pattern.pattern, ...strList(params, "distractors")], ctx.seed);
-    const name = pattern.letterNameSayAs || pattern.letterName || pattern.pattern;
+    // Letter NAMES as letter tokens ({@g}), resolved by the audio resolver — never the bare
+    // letter as ordinary text for a voice to guess at.
+    const nameOf = (l: string) => (/^[a-z]$/i.test(l) ? letterToken(l) : pattern.letterNameSayAs || l);
     return {
       type: "MULTIPLE_CHOICE",
       prompt: `Find the letter ${show(pattern.pattern)}`,
-      promptSpeech: `Find the ${upper ? "big" : "small"} letter ${name}`,
+      promptSpeech: `Find the ${upper ? "big" : "small"} letter ${nameOf(pattern.pattern)}.`,
       pattern: pattern.code,
-      content: { options: letters.map((l) => ({ id: optionId(l), text: show(l), speech: l })) },
+      content: { options: letters.map((l) => ({ id: optionId(l), text: show(l), speech: nameOf(l) })) },
       answer: { accepted: [optionId(pattern.pattern)] },
     };
   },
@@ -494,7 +501,7 @@ export const TEMPLATES: Record<string, Expander> = {
     return {
       type: "MULTIPLE_CHOICE",
       prompt: `What sound does ${pattern.pattern} make in ${target.word}?`,
-      promptSpeech: `${target.word}. What sound does ${pattern.pattern.split("").join(" ")} make?`,
+      promptSpeech: `${target.word}. What sound does ${spellLetters(pattern.pattern)} make?`,
       word: target.word,
       pattern: pattern.code,
       content: {
@@ -544,7 +551,7 @@ export const TEMPLATES: Record<string, Expander> = {
     });
     const upper = pattern.uppercase ?? pattern.pattern.toUpperCase();
     const name = pattern.letterName || pattern.pattern;
-    // The letter's NAME as a letter token ({@s} → "ess"), never its sound.
+    // The letter's NAME as a letter token ({@s} → "S"), never its sound.
     const nameSpeech = /^[a-z]$/.test(pattern.pattern) ? letterToken(pattern.pattern) : pattern.letterNameSayAs || name;
     const first = examples[0]?.text;
     const soundLabel = soundLabelFor(ctx, sound.phonemes, pattern.pattern);
@@ -579,10 +586,14 @@ export const TEMPLATES: Record<string, Expander> = {
     const left = patterns.map((p) => ({
       id: `big-${p.pattern}`,
       text: p.uppercase ?? p.pattern.toUpperCase(),
-      speech: `big ${p.letterNameSayAs || p.pattern}`,
+      speech: `big ${/^[a-z]$/.test(p.pattern) ? letterToken(p.pattern) : p.letterNameSayAs || p.pattern}`,
     }));
     const right = seededShuffle(
-      patterns.map((p) => ({ id: `small-${p.pattern}`, text: p.pattern, speech: `small ${p.letterNameSayAs || p.pattern}` })),
+      patterns.map((p) => ({
+        id: `small-${p.pattern}`,
+        text: p.pattern,
+        speech: `small ${/^[a-z]$/.test(p.pattern) ? letterToken(p.pattern) : p.letterNameSayAs || p.pattern}`,
+      })),
       ctx.seed,
       true,
     );
@@ -1230,7 +1241,7 @@ Object.assign(TEMPLATES, {
             ? `Listen for “${focus.grapheme}”.`
             : "Say each sound, then spell it.",
         speech: tricky
-          ? `${target.word}. The tricky part is spelled ${[...tricky].join(" ")}. ${target.word}.`
+          ? `${target.word}. The tricky part is spelled ${spellLetters(tricky)}. ${target.word}.`
           : `${target.word}. ${sounds.join(", ")}. ${target.word}.`,
         examples: [
           {

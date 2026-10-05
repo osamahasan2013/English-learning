@@ -62,7 +62,7 @@
       "position": "any",
       "uppercase": "B",
       "letterName": "bee",
-      "letterNameSayAs": "bee",
+      "letterNameSayAs": "B",
       "relations": []
     },
     {
@@ -99,7 +99,7 @@
       "position": "any",
       "uppercase": "C",
       "letterName": "see",
-      "letterNameSayAs": "see",
+      "letterNameSayAs": "C",
       "relations": []
     },
     {
@@ -127,7 +127,7 @@
       "position": "any",
       "uppercase": "D",
       "letterName": "dee",
-      "letterNameSayAs": "dee",
+      "letterNameSayAs": "D",
       "relations": []
     },
     {
@@ -164,7 +164,7 @@
       "position": "any",
       "uppercase": "E",
       "letterName": "ee",
-      "letterNameSayAs": "ee",
+      "letterNameSayAs": "E",
       "relations": []
     },
     {
@@ -192,7 +192,7 @@
       "position": "any",
       "uppercase": "F",
       "letterName": "ef",
-      "letterNameSayAs": "ef",
+      "letterNameSayAs": "F",
       "relations": []
     },
     {
@@ -229,7 +229,7 @@
       "position": "any",
       "uppercase": "G",
       "letterName": "jee",
-      "letterNameSayAs": "jee",
+      "letterNameSayAs": "G",
       "relations": []
     },
     {
@@ -257,7 +257,7 @@
       "position": "any",
       "uppercase": "H",
       "letterName": "aitch",
-      "letterNameSayAs": "aitch",
+      "letterNameSayAs": "H",
       "relations": []
     },
     {
@@ -294,7 +294,7 @@
       "position": "any",
       "uppercase": "I",
       "letterName": "eye",
-      "letterNameSayAs": "eye",
+      "letterNameSayAs": "I",
       "relations": []
     },
     {
@@ -322,7 +322,7 @@
       "position": "any",
       "uppercase": "J",
       "letterName": "jay",
-      "letterNameSayAs": "jay",
+      "letterNameSayAs": "J",
       "relations": []
     },
     {
@@ -350,7 +350,7 @@
       "position": "any",
       "uppercase": "K",
       "letterName": "kay",
-      "letterNameSayAs": "kay",
+      "letterNameSayAs": "K",
       "relations": []
     },
     {
@@ -378,7 +378,7 @@
       "position": "any",
       "uppercase": "L",
       "letterName": "el",
-      "letterNameSayAs": "el",
+      "letterNameSayAs": "L",
       "relations": []
     },
     {
@@ -406,7 +406,7 @@
       "position": "any",
       "uppercase": "M",
       "letterName": "em",
-      "letterNameSayAs": "em",
+      "letterNameSayAs": "M",
       "relations": []
     },
     {
@@ -434,7 +434,7 @@
       "position": "any",
       "uppercase": "N",
       "letterName": "en",
-      "letterNameSayAs": "en",
+      "letterNameSayAs": "N",
       "relations": []
     },
     {
@@ -471,7 +471,7 @@
       "position": "any",
       "uppercase": "O",
       "letterName": "oh",
-      "letterNameSayAs": "oh",
+      "letterNameSayAs": "O",
       "relations": []
     },
     {
@@ -499,7 +499,7 @@
       "position": "any",
       "uppercase": "P",
       "letterName": "pee",
-      "letterNameSayAs": "pee",
+      "letterNameSayAs": "P",
       "relations": []
     },
     {
@@ -530,7 +530,7 @@
       "position": "any",
       "uppercase": "Q",
       "letterName": "cue",
-      "letterNameSayAs": "cue",
+      "letterNameSayAs": "Q",
       "relations": []
     },
     {
@@ -558,7 +558,7 @@
       "position": "any",
       "uppercase": "R",
       "letterName": "ar",
-      "letterNameSayAs": "ar",
+      "letterNameSayAs": "R",
       "relations": []
     },
     {
@@ -595,7 +595,7 @@
       "position": "any",
       "uppercase": "S",
       "letterName": "ess",
-      "letterNameSayAs": "ess",
+      "letterNameSayAs": "S",
       "relations": []
     },
     {
@@ -623,7 +623,7 @@
       "position": "any",
       "uppercase": "T",
       "letterName": "tee",
-      "letterNameSayAs": "tee",
+      "letterNameSayAs": "T",
       "relations": []
     },
     {
@@ -663,7 +663,7 @@
       "position": "any",
       "uppercase": "U",
       "letterName": "you",
-      "letterNameSayAs": "you",
+      "letterNameSayAs": "U",
       "relations": []
     },
     {
@@ -691,7 +691,7 @@
       "position": "any",
       "uppercase": "V",
       "letterName": "vee",
-      "letterNameSayAs": "vee",
+      "letterNameSayAs": "V",
       "relations": []
     },
     {
@@ -719,7 +719,7 @@
       "position": "any",
       "uppercase": "W",
       "letterName": "double you",
-      "letterNameSayAs": "double you",
+      "letterNameSayAs": "W",
       "relations": []
     },
     {
@@ -751,7 +751,7 @@
       "position": "any",
       "uppercase": "X",
       "letterName": "ex",
-      "letterNameSayAs": "ex",
+      "letterNameSayAs": "X",
       "relations": []
     },
     {
@@ -797,7 +797,7 @@
       "position": "any",
       "uppercase": "Y",
       "letterName": "why",
-      "letterNameSayAs": "why",
+      "letterNameSayAs": "Y",
       "relations": []
     },
     {
@@ -825,7 +825,7 @@
       "position": "any",
       "uppercase": "Z",
       "letterName": "zee",
-      "letterNameSayAs": "zee",
+      "letterNameSayAs": "Z",
       "relations": []
     },
     {

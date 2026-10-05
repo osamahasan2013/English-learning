@@ -1,3 +1,4 @@
+import { letterToken } from "@/lib/audio/pronunciation";
 import { computeMastery, type MasteryStatus } from "@/lib/learning/mastery";
 import type { ReviewItemRow } from "@/lib/learning/review-queue";
 import { DEFAULT_RULES, type InputMethod, type LearningRules } from "@/lib/learning/rules";
@@ -855,7 +856,9 @@ export const HINT_KINDS = [
 export type HintKind = (typeof HINT_KINDS)[number];
 export type SpellingHint = { kind: HintKind; text: string; speech: string; show?: string };
 
-const spellOut = (letters: string) => [...letters].join(" ");
+// Letters said one by one, by their NAMES (letter tokens; never raw letters a voice guesses at).
+const spellOut = (letters: string) =>
+  [...letters].map((l) => (/^[a-z]$/i.test(l) ? letterToken(l) : l)).join(" ");
 
 // Progressive hints, from least to most help (never the whole word):
 //   1. listen again   2. say it slowly   3. how many sounds?   (authored hints)

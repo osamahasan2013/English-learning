@@ -1176,7 +1176,7 @@
               "emoji": "🐱",
               "minutes": 6,
               "difficulty": 6,
-              "introSpeech": "Add s, or es, to mean more than one!",
+              "introSpeech": "Add {@s}, or {@e} {@s}, to mean more than one!",
               "activities": [
                 {
                   "type": "INTRO",
@@ -1238,7 +1238,7 @@
                   "stage": "guided_practice",
                   "title": "Two sounds",
                   "instructions": "Does the s say s, or z?",
-                  "instructionsSpeech": "Does the s say s, or z?",
+                  "instructionsSpeech": "Does the {@s} say {/S/}, or {/Z/}?",
                   "questions": [
                     {
                       "template": "sort_by_sound",
@@ -1727,7 +1727,7 @@
               "description": "Spell: cake, gate, bike, home, nose, cube.",
               "emoji": "🎂",
               "minutes": 8,
-              "introSpeech": "Let's spell! Spell magic e words.",
+              "introSpeech": "Let's spell! Spell magic {@e} words.",
               "blueprint": {
                 "name": "spelling_set",
                 "words": [
