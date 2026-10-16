@@ -55,6 +55,26 @@ describe("outbox", () => {
     expect(body.events.map((e: SyncEvent) => e.id)).toEqual([uuid(1), uuid(2)]);
   });
 
+  it("a sync requested while a failing flush is in flight runs again right after it (reconnect)", async () => {
+    await enqueue(CHILD, attempt(uuid(1)));
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    // The first flush started offline: its request hangs, then fails.
+    const offline = vi.fn(async () => {
+      await gate;
+      throw new TypeError("Failed to fetch");
+    });
+    const first = flushOutbox(offline);
+    // Back online: a second request arrives while the first is still in flight.
+    const online = respond(200, { results: [{ id: uuid(1), status: "stored" }], newAchievements: [] });
+    const second = flushOutbox(online);
+    release();
+    expect(await first).toEqual({ state: "done", sent: 1, failed: 0 });
+    expect(await second).toEqual({ state: "done", sent: 1, failed: 0 });
+    expect(online).toHaveBeenCalledTimes(1);
+    expect(await pendingCount()).toBe(0);
+  });
+
   it("keeps everything when offline", async () => {
     await enqueue(CHILD, attempt(uuid(1)));
     const fetcher = vi.fn(async () => {

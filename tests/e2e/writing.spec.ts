@@ -144,7 +144,7 @@ test("a child writes letters, words and sentences, fixes a mistake, and the pare
   // The parent sees the writing card and the report with the child's own sentence.
   await page.goto("/child/home");
   await passParentGate(page);
-  await expect(page.getByRole("heading", { name: "Writing" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Writing", level: 2 })).toBeVisible();
   await page.getByRole("link", { name: /Writing progress/ }).click();
   await expect(page).toHaveURL(/\/parent\/writing\?child=/);
   await expect(page.locator("#main").getByText(text)).toBeVisible();

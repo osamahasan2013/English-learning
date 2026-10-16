@@ -70,7 +70,8 @@ test("the app is installable, a visited lesson reopens offline, and other pages 
   await expect(page).toHaveURL(/\/child\/home/);
   await page.evaluate(() => navigator.serviceWorker.ready.then(() => true));
 
-  await page.getByRole("link", { name: /Next/ }).click();
+  // The first "Next" link is the big recommendation at the top of the home screen.
+  await page.getByRole("link", { name: /Next/ }).first().click();
   await startLesson(page);
   const lessonUrl = page.url();
   // A full load while the worker controls the page stores the page for offline use.

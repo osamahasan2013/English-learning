@@ -43,11 +43,27 @@ export type FlushResult =
 type Fetcher = (input: string, init: RequestInit) => Promise<Response>;
 
 let flushing: Promise<FlushResult> | null = null;
+let rerun: Fetcher | null = null;
 
-// Serialised: concurrent callers share one in-flight flush.
+// Serialised: concurrent callers share one in-flight flush. A request that arrives while a
+// flush is running (the device just came back online while a flush started offline was
+// still failing) runs one more flush right after it, instead of waiting for the next timer.
 export function flushOutbox(fetcher: Fetcher = (i, init) => fetch(i, init)): Promise<FlushResult> {
-  flushing ??= doFlush(fetcher).finally(() => {
+  if (flushing) {
+    rerun = fetcher;
+    return flushing;
+  }
+  flushing = (async () => {
+    let result = await doFlush(fetcher);
+    while (rerun && result.state !== "unauthenticated") {
+      const next = rerun;
+      rerun = null;
+      result = await doFlush(next);
+    }
+    return result;
+  })().finally(() => {
     flushing = null;
+    rerun = null;
   });
   return flushing;
 }

@@ -168,7 +168,7 @@ test("a parent starts Find My Level; the child takes it offline without feedback
   const history = page.getByRole("heading", { name: "Check history" }).locator("..");
   await expect(history).toContainText("Find My Level");
   await expect(history).toContainText("Completed");
-  await expect(page.getByText("No check is waiting.")).toBeVisible();
+  await expect(page.locator("#main").getByText("No check is waiting.")).toBeVisible();
 });
 
 test("a parent can cancel a waiting check; its answers stay as practice", async ({ page }) => {
@@ -179,7 +179,7 @@ test("a parent can cancel a waiting check; its answers stay as practice", async 
   await expect(page.getByText(/The check is ready/)).toBeVisible();
   await page.getByRole("button", { name: "Cancel check" }).click();
   await expect(page.getByText(/The check was cancelled/)).toBeVisible();
-  await expect(page.getByText("No check is waiting.")).toBeVisible();
+  await expect(page.locator("#main").getByText("No check is waiting.")).toBeVisible();
   const { data } = await admin.from("assessment_attempts").select("status").eq("child_id", childId);
   expect(data!.map((s) => s.status)).toEqual(["abandoned"]);
   const history = page.getByRole("heading", { name: "Check history" }).locator("..");
