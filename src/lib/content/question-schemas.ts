@@ -421,7 +421,12 @@ export const linesResponseSchema = z.object({
   order: z.array(z.string().max(40)).max(10).optional(),
 });
 // Most specific shapes first: z.union keeps the first match and drops unknown keys.
+// "I don't know" (Phase 9): only accepted inside an assessment sitting whose blueprint
+// allows skipping; it is stored as a wrong answer with error type "skipped".
+export const skippedResponseSchema = z.object({ skipped: z.literal(true) }).strict();
+
 export const responseSchema = z.union([
+  skippedResponseSchema,
   strokesResponseSchema,
   linesResponseSchema,
   valueResponseSchema,

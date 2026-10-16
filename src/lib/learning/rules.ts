@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 // The engine's tunable numbers. Defaults live here; an admin can override any of them
-// per rule set in the `learning_rules` table (code = mastery | prerequisites | review |
-// player | scoring | vocabulary | spelling |
-// reading | writing), which the server merges over these defaults. Every value is
+// per rule set in the `learning_rules` table (code = assessment | adaptive | mastery |
+// prerequisites | review | player | scoring | vocabulary | spelling | reading | writing |
+// audio), which the server merges over these defaults. Every value is
 // documented in docs/curriculum.md so parent-facing explanations can quote it.
 
 const statuses = ["NOT_STARTED", "LEARNING", "PRACTICING", "ALMOST_MASTERED", "MASTERED"] as const;
@@ -37,6 +37,114 @@ export const masteryRulesSchema = z.object({
   ),
   // After a wrong latest answer the skill comes back this soon, whatever its status.
   afterMistakeReviewDays: days,
+  // Controlled regression (Phase 9): once MASTERED, a skill keeps that status after a slip.
+  // It drops only when its score falls more than holdMargin below the mastered bar, or when
+  // at least minRecentErrors of the latest five first tries are wrong — never on one answer.
+  regression: z.object({
+    holdMargin: z.number().min(0).max(50),
+    minRecentErrors: z.number().int().min(1).max(5),
+  }),
+});
+
+export const CONFIDENCE_LEVELS = ["INSUFFICIENT", "LOW", "MEDIUM", "HIGH"] as const;
+export type Confidence = (typeof CONFIDENCE_LEVELS)[number];
+
+// Assessment (Phase 9): how answers in a sitting become evidence, evidence becomes
+// instructional readiness, and how sure the engine may say it is. docs/curriculum.md →
+// "Assessment and readiness" quotes every number.
+export const assessmentRulesSchema = z.object({
+  // A section (a domain at one level) is passed at this weighted percentage.
+  sectionPassPercent: z.number().min(1).max(100),
+  // An item the child had already practised (outside assessments) before the sitting counts
+  // less as evidence: after `lightAfter` earlier answers it weighs `lightWeight`, after
+  // `heavyAfter` it weighs `heavyWeight`.
+  contamination: z.object({
+    lightAfter: z.number().int().min(1).max(20),
+    heavyAfter: z.number().int().min(1).max(50),
+    lightWeight: z.number().min(0).max(1),
+    heavyWeight: z.number().min(0).max(1),
+  }),
+  // Per skill in a sitting: secure at/above securePercent, developing at/above
+  // developingPercent, weak below; fewer than minItems weighted items is insufficient.
+  evidence: z.object({
+    securePercent: z.number().min(1).max(100),
+    developingPercent: z.number().min(0).max(100),
+    minItems: z.number().min(0.5).max(10),
+  }),
+  // Confidence of a domain's readiness from its deciding evidence (weighted items and
+  // distinct skills at the deciding levels, consistency, recency).
+  confidence: z.object({
+    lowItems: z.number().min(0.5).max(50),
+    mediumItems: z.number().min(1).max(50),
+    highItems: z.number().min(1).max(100),
+    mediumSkills: z.number().int().min(1).max(20),
+    highSkills: z.number().int().min(1).max(20),
+    // Evidence older than this lowers confidence by one step.
+    recentDays: z.number().int().min(1).max(365),
+  }),
+  // Advancement through practice: a domain level counts as secure when this share of its
+  // active skills (at least minSkills, each with minAttempts first tries) is ALMOST_MASTERED
+  // or MASTERED and none of them is weak. Completing lessons alone never advances a level.
+  advancement: z.object({
+    securedShare: z.number().min(0.1).max(1),
+    minSkills: z.number().int().min(1).max(20),
+    minAttempts: z.number().int().min(1).max(50),
+  }),
+  // A skill measured on at least minItems items with less than belowPercent right becomes an
+  // assessment gap: a review item (assessment_gap) and a prerequisite to repair, for
+  // lookbackDays or until practice/re-assessment shows it secure.
+  gap: z.object({
+    minItems: z.number().min(1).max(20),
+    belowPercent: z.number().min(1).max(100),
+    lookbackDays: z.number().int().min(1).max(365),
+    priority: z.number().min(0).max(100),
+  }),
+  // A gap is ready for a re-check after this many first tries since the sitting with at
+  // least this recent accuracy.
+  reassessment: z.object({
+    minPracticeAfter: z.number().int().min(1).max(50),
+    recentAccuracy: z.number().min(1).max(100),
+  }),
+  // An unfinished sitting expires after this long (its answers stay as practice evidence).
+  sittingExpiryHours: z
+    .number()
+    .int()
+    .min(1)
+    .max(24 * 60),
+  // Phonics evidence may inform reading and spelling readiness (low confidence, marked
+  // "inferred") when those domains have no evidence of their own. Never copies mastery.
+  inferFromPhonics: z.boolean(),
+});
+
+// Adaptive recommendations (Phase 9): one engine (adaptive.ts) for the child home, the
+// daily plan and the parent dashboard.
+export const adaptiveRulesSchema = z.object({
+  // The learning zone: share of the day's minutes for each kind of work.
+  zone: z
+    .object({
+      review: z.number().min(0).max(1),
+      repair: z.number().min(0).max(1),
+      target: z.number().min(0).max(1),
+      stretch: z.number().min(0).max(1),
+    })
+    .refine((z) => Math.abs(z.review + z.repair + z.target + z.stretch - 1) < 0.001, {
+      message: "zone shares must add up to 1",
+    }),
+  // New lessons considered per domain (the next ones on its path).
+  targetLessonsPerDomain: z.number().int().min(1).max(10),
+  // Stretch (a first look at the next level) once this share of the current level's skills
+  // is secure and readiness is at least stretchMinConfidence.
+  stretchAfterCoverage: z.number().min(0).max(1),
+  stretchMinConfidence: z.enum(CONFIDENCE_LEVELS),
+  // A lesson finished less than this long ago is not suggested again (repetition fatigue),
+  // unless it is the practice for an urgent gap.
+  fatigueHours: z.number().min(0).max(240),
+  // Skills at least this important (1–5) make an overdue review urgent.
+  importantSkill: z.number().int().min(1).max(5),
+  overdueDays: z.number().min(0).max(60),
+  // Below this readiness confidence a domain is taught at the child's learning level.
+  minReadinessConfidence: z.enum(CONFIDENCE_LEVELS),
+  maxRecommendations: z.number().int().min(1).max(20),
 });
 
 export const prerequisiteRulesSchema = z.object({
@@ -284,7 +392,12 @@ export type ReviewRules = z.infer<typeof reviewRulesSchema>;
 export type PlayerRules = z.infer<typeof playerRulesSchema>;
 export type ScoringRules = z.infer<typeof scoringRulesSchema>;
 
+export type AssessmentRules = z.infer<typeof assessmentRulesSchema>;
+export type AdaptiveRules = z.infer<typeof adaptiveRulesSchema>;
+
 export type LearningRules = {
+  assessment: AssessmentRules;
+  adaptive: AdaptiveRules;
   mastery: MasteryRules;
   prerequisites: PrerequisiteRules;
   review: ReviewRules;
@@ -298,6 +411,28 @@ export type LearningRules = {
 };
 
 export const DEFAULT_RULES: LearningRules = {
+  assessment: {
+    sectionPassPercent: 75,
+    contamination: { lightAfter: 1, heavyAfter: 3, lightWeight: 0.75, heavyWeight: 0.5 },
+    evidence: { securePercent: 75, developingPercent: 50, minItems: 1 },
+    confidence: { lowItems: 2, mediumItems: 5, highItems: 8, mediumSkills: 2, highSkills: 3, recentDays: 60 },
+    advancement: { securedShare: 0.8, minSkills: 3, minAttempts: 4 },
+    gap: { minItems: 2, belowPercent: 50, lookbackDays: 60, priority: 80 },
+    reassessment: { minPracticeAfter: 4, recentAccuracy: 80 },
+    sittingExpiryHours: 168,
+    inferFromPhonics: true,
+  },
+  adaptive: {
+    zone: { review: 0.25, repair: 0.25, target: 0.4, stretch: 0.1 },
+    targetLessonsPerDomain: 2,
+    stretchAfterCoverage: 0.6,
+    stretchMinConfidence: "MEDIUM",
+    fatigueHours: 20,
+    importantSkill: 4,
+    overdueDays: 1,
+    minReadinessConfidence: "LOW",
+    maxRecommendations: 6,
+  },
   mastery: {
     bands: { practicing: 40, almostMastered: 70, mastered: 90 },
     windowSize: 30,
@@ -308,6 +443,7 @@ export const DEFAULT_RULES: LearningRules = {
     confidenceAttempts: 20,
     reviewIntervalDays: { NOT_STARTED: 0, LEARNING: 1, PRACTICING: 2, ALMOST_MASTERED: 4, MASTERED: 7 },
     afterMistakeReviewDays: 1,
+    regression: { holdMargin: 10, minRecentErrors: 2 },
   },
   prerequisites: { minStatus: "PRACTICING", previewSteps: 3 },
   review: { minAttempts: 4, weakBelowScore: 70, missedWordLookbackDays: 14, maxOpenItems: 10 },
@@ -573,6 +709,8 @@ export const DEFAULT_RULES: LearningRules = {
 };
 
 const schemas = {
+  assessment: assessmentRulesSchema,
+  adaptive: adaptiveRulesSchema,
   mastery: masteryRulesSchema,
   prerequisites: prerequisiteRulesSchema,
   review: reviewRulesSchema,

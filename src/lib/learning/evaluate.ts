@@ -47,6 +47,8 @@ export type ErrorType =
   // Select-all: only right options chosen, but not all of them.
   | "missed_choice"
   | "invalid_response"
+  // "I don't know" in an assessment (Phase 9).
+  | "skipped"
   // Spelling answers are classified by the spelling engine (spelling.ts).
   | SpellingErrorType
   // Writing answers (writing.ts, tracing.ts).
@@ -137,6 +139,8 @@ export function evaluateResponse(
   writing?: WritingContext,
 ): EvaluationResult {
   if (answer === null) return correct;
+  // "I don't know" in an assessment: an honest skip, never right.
+  if ("skipped" in response) return { isCorrect: false, almost: false, errorType: "skipped" };
 
   if (WRITING_QUESTION_TYPES.has(questionType)) {
     if (!writing) return invalid;
@@ -242,6 +246,52 @@ export function evaluateResponse(
     default:
       return { isCorrect: false, almost: false, errorType: "wrong_choice" };
   }
+}
+
+// Assessment evidence (Phase 9): the share of an answer that was right, 0–1, from the same
+// canonical forms as the verdict. A right answer is 1; a choice is right or wrong; set and
+// sequence answers earn the share of parts right (a wrong choice in a select-all costs one
+// right one); written answers the share of their critical checks met; a trace its coverage
+// when it was the right letter. Mastery never uses this — only assessment evidence does.
+export function partialCredit(
+  questionType: string,
+  answer: AnswerSpec | null,
+  response: QuestionResponse,
+  result: EvaluationResult,
+): number {
+  if (result.isCorrect) return 1;
+  if (answer === null || "skipped" in response) return 0;
+  const share = (right: number, total: number) =>
+    total <= 0 ? 0 : Math.round((1000 * Math.max(0, Math.min(right, total))) / total) / 1000;
+  if (result.writing) {
+    const trace = result.writing.trace;
+    if (trace && trace.method === "draw")
+      return trace.identityOk === false
+        ? 0
+        : Math.min(0.9, share(Math.round((trace.coverage ?? 0) * 100), 100));
+    const critical = result.writing.criteria.filter((c) => c.critical);
+    return Math.min(0.9, share(critical.filter((c) => c.met === true).length, critical.length));
+  }
+  if ("correct" in answer && "sequence" in response) {
+    const expected = new Set(answer.correct.map(canonicalOption));
+    const given = new Set(response.sequence.map(canonicalOption));
+    const right = [...given].filter((o) => expected.has(o)).length;
+    return share(right - (given.size - right), expected.size);
+  }
+  if ("pairs" in answer && "pairs" in response) {
+    const expected = new Set(answer.pairs.map(canonicalPair));
+    return share(response.pairs.map(canonicalPair).filter((p) => expected.has(p)).length, expected.size);
+  }
+  if ("acceptedSequences" in answer && "sequence" in response) {
+    const target = answer.acceptedSequences[0];
+    return share(
+      response.sequence.filter(
+        (t, i) => i < target.length && canonicalPosition(i, t) === canonicalPosition(i, target[i]),
+      ).length,
+      target.length,
+    );
+  }
+  return 0;
 }
 
 // Classifies a wrong spelling so parents see *how* it was wrong, not just that it was.

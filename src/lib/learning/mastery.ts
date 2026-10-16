@@ -118,13 +118,7 @@ export function computeMastery(
     100 * evidence * (rules.recentWeight * recentAccuracy + (1 - rules.recentWeight) * windowAccuracy),
   );
   const practiceDays = new Set(window.map((a) => localDate(a.at, input.timeZone ?? "UTC"))).size;
-  const status = statusForScore({
-    masteryScore,
-    attempts,
-    practiceDays,
-    masteryThreshold: input.masteryThreshold,
-    rules,
-  });
+  const status = heldStatus(window, attempts, input, rules);
 
   const lastPracticedAt = sorted[0].at;
   const lastWasWrong = !sorted[0].isCorrect;
@@ -149,6 +143,50 @@ export function computeMastery(
     nextReviewAt,
     lastPracticedAt,
   };
+}
+
+// Status with controlled regression (rules.regression). The window is replayed answer by
+// answer, oldest first: once MASTERED, a skill keeps that status after a slip and drops only
+// when its score falls more than holdMargin below the mastered bar or minRecentErrors of the
+// latest five answers are wrong. Promotion is unchanged (evidence, score and practice days),
+// so one lucky answer never masters a skill and one mistake never un-masters it. Replaying
+// stored history keeps the result a pure function of the history (no stored previous state).
+function heldStatus(
+  window: { isCorrect: boolean; at: Date; id: string }[],
+  totalAttempts: number,
+  input: MasteryInput,
+  rules: MasteryRules,
+): MasteryStatus {
+  const chronological = [...window].reverse();
+  const masteredAt = Math.max(rules.bands.mastered, input.masteryThreshold);
+  const timeZone = input.timeZone ?? "UTC";
+  const extra = totalAttempts - window.length;
+  let status: MasteryStatus = "NOT_STARTED";
+  for (let k = 1; k <= chronological.length; k++) {
+    const prefix = chronological.slice(0, k);
+    const recent = prefix.slice(-rules.recentSize);
+    const ratio = (list: typeof prefix) => list.filter((a) => a.isCorrect).length / list.length;
+    const score = round(
+      100 *
+        Math.min(1, prefix.length / rules.fullEvidenceAttempts) *
+        (rules.recentWeight * ratio(recent) + (1 - rules.recentWeight) * ratio(prefix)),
+    );
+    const raw = statusForScore({
+      masteryScore: score,
+      attempts: prefix.length + extra,
+      practiceDays: new Set(prefix.map((a) => localDate(a.at, timeZone))).size,
+      masteryThreshold: input.masteryThreshold,
+      rules,
+    });
+    const recentErrors = prefix.slice(-5).filter((a) => !a.isCorrect).length;
+    const hold: boolean =
+      status === "MASTERED" &&
+      masteryRank(raw) < masteryRank("MASTERED") &&
+      score >= masteredAt - rules.regression.holdMargin &&
+      recentErrors < rules.regression.minRecentErrors;
+    status = hold ? "MASTERED" : raw;
+  }
+  return status;
 }
 
 // 0..100, higher = review sooner. Weakness dominates; recent mistakes, being overdue and

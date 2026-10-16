@@ -2,8 +2,9 @@ import {
   questionTypeSchemas,
   isSupportedQuestionType,
   type AnswerSpec,
+  type QuestionResponse,
 } from "@/lib/content/question-schemas";
-import { evaluateResponse } from "@/lib/learning/evaluate";
+import { evaluateResponse, partialCredit } from "@/lib/learning/evaluate";
 import { analyzeAnswer, type AnswerAnalysis } from "@/lib/learning/spelling";
 import { masteryRank, type MasteryStatus } from "@/lib/learning/mastery";
 import { DEFAULT_RULES, type ScoringRules } from "@/lib/learning/rules";
@@ -68,6 +69,8 @@ export type AttemptRowResult =
         hints_used: number;
         spelling_analysis: AnswerAnalysis | null;
         writing_analysis: WritingAnalysis | null;
+        // Assessment answers: the share right (evidence only; mastery uses is_correct).
+        partial_credit: number | null;
       };
       // The phonics pattern the spelling mistake was in (resolved to an id by the writer).
       errorPatternCode: string | null;
@@ -101,7 +104,12 @@ export function buildAttemptRow(
   // Writing questions: the level's writing settings, the glyph of a handwriting question
   // and the known words (spelling in open-ended writing). Without it they are rejected.
   writing?: Omit<WritingContext, "content">,
+  // Assessment sitting answers (Phase 9): whether "I don't know" is allowed.
+  sitting?: { allowSkip: boolean },
 ): AttemptRowResult {
+  const skipped = "skipped" in event.response;
+  if (skipped && !(event.assessmentAttemptId && sitting?.allowSkip))
+    return { ok: false, reason: "skip_not_allowed" };
   if (!isSupportedQuestionType(question.question_type))
     return { ok: false, reason: "unsupported_question_type" };
   const schemas = questionTypeSchemas[question.question_type];
@@ -109,12 +117,14 @@ export function buildAttemptRow(
     return { ok: false, reason: "question_not_scored" };
   const answer = schemas.answer.safeParse(question.answer);
   if (!answer.success) return { ok: false, reason: "question_answer_invalid" };
-  const response = schemas.response.safeParse(event.response);
+  const response = skipped
+    ? ({ success: true, data: event.response } as const)
+    : schemas.response.safeParse(event.response);
   if (!response.success) return { ok: false, reason: "response_shape_invalid" };
 
   const isWriting = WRITING_QUESTION_TYPES.has(question.question_type);
-  if (isWriting && !writing) return { ok: false, reason: "writing_context_missing" };
-  if (question.question_type === "TRACING" && !writing?.glyph)
+  if (isWriting && !writing && !skipped) return { ok: false, reason: "writing_context_missing" };
+  if (question.question_type === "TRACING" && !writing?.glyph && !skipped)
     return { ok: false, reason: "glyph_unavailable" };
   const result = evaluateResponse(
     question.question_type,
@@ -125,17 +135,20 @@ export function buildAttemptRow(
   // Spelling answers: the server's own analysis (normalised answer, letter diff, category,
   // pattern) from the stored answer and the question's grapheme split. The verdict stays
   // the evaluator's; the child's text stays as typed in `response`.
-  const analysis = isWriting
-    ? null
-    : analyzeAnswer(
-        { type: question.question_type, content: question.content ?? {} },
-        response.data as { value?: string; sequence?: string[] },
-        {
-          expected: "accepted" in answer.data ? answer.data.accepted : undefined,
-          requirePunctuation: "requirePunctuation" in answer.data && answer.data.requirePunctuation === true,
-        },
-      );
+  const analysis =
+    isWriting || skipped
+      ? null
+      : analyzeAnswer(
+          { type: question.question_type, content: question.content ?? {} },
+          response.data as { value?: string; sequence?: string[] },
+          {
+            expected: "accepted" in answer.data ? answer.data.accepted : undefined,
+            requirePunctuation:
+              "requirePunctuation" in answer.data && answer.data.requirePunctuation === true,
+          },
+        );
   const errorType = result.isCorrect ? null : (analysis?.category ?? result.errorType);
+  const inSitting = !!event.assessmentAttemptId;
   return {
     ok: true,
     errorPatternCode: result.isCorrect ? null : (analysis?.patternCode ?? null),
@@ -146,8 +159,10 @@ export function buildAttemptRow(
       question_version: question.version,
       question_type: question.question_type,
       skill_id: question.skill_id,
-      activity_id: question.activity_id,
-      lesson_id: question.lesson_id,
+      // An answer in an assessment sitting is evidence, not lesson practice: it counts for
+      // skill mastery (first tries) but not for the lesson or activity it was taken from.
+      activity_id: inSitting ? null : question.activity_id,
+      lesson_id: inSitting ? null : question.lesson_id,
       word_id: question.word_id,
       lesson_run_id: event.assessmentAttemptId ? null : event.lessonRunId,
       assessment_attempt_id: event.assessmentAttemptId ?? null,
@@ -164,6 +179,9 @@ export function buildAttemptRow(
       spelling_analysis: analysis,
       // Writing answers: what the checks found (the child's text stays in `response`).
       writing_analysis: result.writing ?? null,
+      partial_credit: inSitting
+        ? partialCredit(question.question_type, answer.data, response.data as QuestionResponse, result)
+        : null,
     },
   };
 }

@@ -9,6 +9,9 @@ import { DEFAULT_RULES, type ReviewRules } from "@/lib/learning/rules";
 //     (deriveSpellingReview / derivePatternReview in spelling.ts);
 //   * reading: words a child keeps tapping for help in texts (deriveReadingWordReview);
 //   * writing: letters a child keeps forming wrongly (deriveLetterReview in writing.ts);
+//   * assessment (Phase 9): a skill a completed check found weak (enough items, few right —
+//     never one wrong answer) is due now with at least the gap priority, until practice
+//     secures it or a later check finds it secure;
 //   * items that no longer apply are resolved, not deleted.
 // Priority 0–100 (higher first) reuses the skill's review priority from mastery.ts.
 
@@ -25,7 +28,9 @@ export type ReviewReason =
   // Reading (reading.ts): a word the child keeps tapping for help while reading.
   | "reading_word"
   // Writing (writing.ts): a letter the child keeps forming wrongly.
-  | "writing_letter";
+  | "writing_letter"
+  // Assessment (assessment-evidence.ts → isAssessmentGap): a check found the skill weak.
+  | "assessment_gap";
 
 export type SkillReviewInput = {
   skillId: string;
@@ -39,6 +44,8 @@ export type SkillReviewInput = {
   nextReviewAt: string | null;
   // Wrong answers among the latest five first tries.
   recentErrors: number;
+  // An open assessment gap on this skill (rules.assessment.gap), with its review priority.
+  assessmentGap?: { priority: number } | null;
 };
 
 export type ReviewItemRow = {
@@ -68,19 +75,24 @@ export function deriveSkillReviewItem(
 ): ReviewItemRow | null {
   if (!skill.active || skill.attempts === 0 || skill.status === "NOT_STARTED") return null;
   const weak = skill.attempts >= rules.minAttempts && skill.masteryScore < rules.weakBelowScore;
-  const reason: ReviewReason = weak
-    ? "weak_skill"
-    : skill.recentErrors >= RECENT_ERRORS_FOR_REVIEW
-      ? "recent_errors"
-      : "due_review";
+  const reason: ReviewReason = skill.assessmentGap
+    ? "assessment_gap"
+    : weak
+      ? "weak_skill"
+      : skill.recentErrors >= RECENT_ERRORS_FOR_REVIEW
+        ? "recent_errors"
+        : "due_review";
   const due = reason === "due_review" && skill.nextReviewAt ? skill.nextReviewAt : now.toISOString();
+  const priority = skill.assessmentGap
+    ? Math.max(skill.reviewPriority, skill.assessmentGap.priority)
+    : skill.reviewPriority;
   return {
     item_key: skillKey(skill.skillId),
     skill_id: skill.skillId,
     word_id: null,
     phonics_pattern_id: skill.phonicsPatternId,
     lesson_id: skill.lessonId,
-    priority: Math.round(skill.reviewPriority * 100) / 100,
+    priority: Math.round(priority * 100) / 100,
     due_at: due,
     reason,
     status: "open",
