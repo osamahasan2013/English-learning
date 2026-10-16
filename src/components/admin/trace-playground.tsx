@@ -143,6 +143,10 @@ export function TracePlayground({
           <dd>
             {result.orderOk ? "✓" : "✗"} · {result.directionOk ? "✓" : "✗"} · {result.startOk ? "✓" : "✗"}
           </dd>
+          <dt className="text-muted">Letter</dt>
+          <dd>
+            {result.identityOk ? "✓ this letter" : `✗ looks like ${result.lookedLike ?? "another letter"}`}
+          </dd>
           <dt className="text-muted">Issues</dt>
           <dd>{result.issues.join(", ") || "—"}</dd>
         </dl>

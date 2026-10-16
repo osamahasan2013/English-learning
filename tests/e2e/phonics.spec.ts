@@ -111,6 +111,9 @@ test("a child learns phonics from letters to digraphs, takes the Sound Check, an
   await openSection(page, "Practice");
   await page.getByRole("link", { name: /Sound Check/ }).click();
   await expect(page).toHaveURL(/\/child\/check\/phonics-check/);
+  // Start opens a sitting on the server (which selects the items), then plays it.
+  await page.getByRole("button", { name: /^Start/ }).click();
+  await expect(page).toHaveURL(/\/child\/assess\//);
   const check = await checkQuestions("phonics-check");
   await playLesson(page, check.questions, true);
   await waitForSynced(page);
@@ -120,7 +123,8 @@ test("a child learns phonics from letters to digraphs, takes the Sound Check, an
     .eq("child_id", childId);
   expect(results).toHaveLength(1);
   expect(Number(results![0].overall_score)).toBe(100);
-  expect(Object.keys(results![0].dimension_scores as object)).toContain("Digraphs");
+  const sections = Object.values(results![0].dimension_scores as Record<string, { label: string }>);
+  expect(sections.map((x) => x.label)).toContain("Digraphs");
 
   // Mastery: stars, never percentages.
   await openSection(page, "Mastery");
@@ -141,7 +145,7 @@ test("a child learns phonics from letters to digraphs, takes the Sound Check, an
   // Parent dashboard: phonics percentages and the Sound Check result per area.
   await page.goto("/child/home");
   await passParentGate(page);
-  const phonicsCard = page.getByRole("heading", { name: "Phonics", exact: true }).locator("../..");
+  const phonicsCard = page.getByRole("heading", { name: "Phonics", exact: true, level: 2 }).locator("../..");
   await expect(phonicsCard).toContainText(/Letter sounds\s*\d+%/);
   await expect(phonicsCard).toContainText("Digraphs");
   await expect(page.getByText(/Phonics Check: 100%/)).toBeVisible();

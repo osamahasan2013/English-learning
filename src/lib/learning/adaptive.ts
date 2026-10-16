@@ -180,16 +180,16 @@ export function recommend(input: AdaptiveInput): AdaptiveRecommendation[] {
     if (!key) return;
     const existing = drafts.get(key);
     if (existing) {
-      if (PRIORITY_ORDER.indexOf(priority) < PRIORITY_ORDER.indexOf(existing.priority)) {
+      const same = (r: RecommendationReason) => r.code === reason.code && r.skillTitle === reason.skillTitle;
+      // The deciding reason leads (the child's message is built from the first one).
+      const outranks =
+        PRIORITY_ORDER.indexOf(priority) < PRIORITY_ORDER.indexOf(existing.priority) ||
+        (priority === existing.priority && KIND_ORDER.indexOf(kind) < KIND_ORDER.indexOf(existing.kind));
+      if (outranks) {
         existing.priority = priority;
         existing.kind = kind;
-      } else if (
-        priority === existing.priority &&
-        KIND_ORDER.indexOf(kind) < KIND_ORDER.indexOf(existing.kind)
-      )
-        existing.kind = kind;
-      if (!existing.reasons.some((r) => r.code === reason.code && r.skillTitle === reason.skillTitle))
-        existing.reasons.push(reason);
+        existing.reasons = [reason, ...existing.reasons.filter((r) => !same(r))];
+      } else if (!existing.reasons.some(same)) existing.reasons.push(reason);
       existing.sortKey = Math.min(existing.sortKey, sortKey);
       return;
     }
@@ -210,15 +210,23 @@ export function recommend(input: AdaptiveInput): AdaptiveRecommendation[] {
     });
   };
 
-  // A prerequisite that is not ready: weak, an assessment gap, or practised and still below
-  // PRACTICING. Never practised prerequisites from a lower level are assumed known.
-  const blockingPrerequisites = (skillId: string, levelRank: number) =>
+  // A prerequisite GAP (repaired first): an assessment gap, or practised enough to judge
+  // (review minAttempts) and weak / still below PRACTICING. A prerequisite not practised
+  // enough yet is not a gap: from a lower level it is assumed known; at the same level or
+  // above it is still being learned, so the lesson that needs it waits (the path teaches the
+  // prerequisite first).
+  const judged = (s: AdaptiveSkill) => s.attempts >= reviewRules.minAttempts;
+  const blockingPrerequisites = (skillId: string) =>
     (input.prerequisites.get(skillId) ?? []).filter((p) => {
       const pre = input.skills.get(p);
       if (gapIds.has(p)) return true;
-      if (!pre) return false;
-      if (pre.attempts === 0) return pre.levelRank >= levelRank;
+      if (!pre || !judged(pre)) return false;
       return isWeak(pre) || masteryRank(pre.status) < masteryRank("PRACTICING");
+    });
+  const unlearnedPrerequisites = (skillId: string, levelRank: number) =>
+    (input.prerequisites.get(skillId) ?? []).filter((p) => {
+      const pre = input.skills.get(p);
+      return !!pre && !judged(pre) && !gapIds.has(p) && pre.levelRank >= levelRank;
     });
 
   const repair = (prereqId: string, forSkillId: string, sortKey: number) => {
@@ -239,12 +247,15 @@ export function recommend(input: AdaptiveInput): AdaptiveRecommendation[] {
     const path = input.lessons
       .filter((l) => l.domain === d.domain && l.levelRank === d.rank)
       .sort((a, b) => a.pathOrder - b.pathOrder);
-    const targets = path
+    const open = path
       .filter((l) => input.lessonStates.get(l.lessonId)?.status !== "COMPLETED")
-      .filter((l) => input.skills.get(l.skillId)?.status !== "MASTERED")
-      .slice(0, rules.targetLessonsPerDomain);
+      .filter((l) => input.skills.get(l.skillId)?.status !== "MASTERED");
+    // Lessons whose prerequisites are learned (or only need repair); if none, the first open
+    // lesson (played as a preview, as the lesson page does).
+    const ready = open.filter((l) => unlearnedPrerequisites(l.skillId, d.rank).length === 0);
+    const targets = (ready.length > 0 ? ready : open).slice(0, rules.targetLessonsPerDomain);
     targets.forEach((lesson, i) => {
-      for (const pre of blockingPrerequisites(lesson.skillId, d.rank))
+      for (const pre of blockingPrerequisites(lesson.skillId))
         repair(pre, lesson.skillId, domainIndex * 10 + i);
       add(
         lesson,
@@ -286,7 +297,7 @@ export function recommend(input: AdaptiveInput): AdaptiveRecommendation[] {
     .filter((s) => s.attempts >= reviewRules.minAttempts && (isWeak(s) || s.recentErrors >= 2))
     .sort((a, b) => a.masteryScore - b.masteryScore || (a.skillId < b.skillId ? -1 : 1));
   struggling.forEach((s, i) => {
-    const repaired = blockingPrerequisites(s.skillId, s.levelRank).some((p) => repair(p, s.skillId, i));
+    const repaired = blockingPrerequisites(s.skillId).some((p) => repair(p, s.skillId, i));
     if (repaired) return;
     const lesson = input.practiceLesson.get(s.skillId);
     const repeated = s.recentErrors >= 2;

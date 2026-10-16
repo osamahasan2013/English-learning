@@ -646,6 +646,37 @@ describe("adaptive recommendations", () => {
     expect(recs[0].parentMessage).toContain("comes before long-vowels");
   });
 
+  it("never calls a not-yet-learned prerequisite at the same level a gap: the lesson needing it waits", () => {
+    // A new child: vowel-teams needs long-vowels, which comes earlier on the same path.
+    const input = base({ prerequisites: new Map([["vowel-teams", ["long-vowels"]]]) });
+    const recs = recommend(input);
+    expect(recs.some((r) => r.kind === "repair")).toBe(false);
+    const phonics = recs.filter((r) => r.domain === "PHONICS" && r.kind === "target");
+    expect(phonics.map((r) => r.lessonId)).toEqual(["ph-long"]);
+    expect(phonics[0].childMessage).toBe("You're ready for something new!");
+  });
+
+  it("does not repair a prerequisite the child has only just started", () => {
+    const input = base({ prerequisites: new Map([["vowel-teams", ["long-vowels"]]]) });
+    (input.skills as Map<string, AdaptiveSkill>).set(
+      "long-vowels",
+      skill("long-vowels", { levelRank: 4, status: "LEARNING", masteryScore: 50, attempts: 2 }),
+    );
+    expect(recommend(input).some((r) => r.kind === "repair")).toBe(false);
+  });
+
+  it("leads with the deciding reason when a target is upgraded to a repair", () => {
+    const input = base({ prerequisites: new Map([["vowel-teams", ["long-vowels"]]]) });
+    (input.skills as Map<string, AdaptiveSkill>).set(
+      "long-vowels",
+      skill("long-vowels", { levelRank: 4, status: "LEARNING", masteryScore: 30, attempts: 8 }),
+    );
+    const top = recommend(input).find((r) => r.lessonId === "ph-long")!;
+    expect(top).toMatchObject({ kind: "repair", priority: "high" });
+    expect(top.reasons[0].code).toBe("prerequisite_gap");
+    expect(top.childMessage).toBe("Let's practise long-vowels first.");
+  });
+
   it("treats an assessment gap as a blocking prerequisite and an urgent review", () => {
     const input = base({
       gaps: [{ skillId: "short-vowels", percent: 30, attemptsSince: 0, correctSince: 0 }],

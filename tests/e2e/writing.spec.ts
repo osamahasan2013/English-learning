@@ -197,4 +197,28 @@ test("admins manage writing content: glyphs, rubrics and a try-it pad; parents c
     await page.mouse.up();
   }
   await expect(page.getByText("✅ complete")).toBeVisible();
+  await expect(page.getByText("✓ this letter")).toBeVisible();
+
+  // Glyph identity (ADR-049): a closed "o" on the "c" pad covers the c's path but is a
+  // different letter, so it is not accepted.
+  await page.goto("/admin/writing/glyphs/lower-c");
+  const cPad = page.getByRole("img", { name: /Drawing pad for small c/ });
+  await cPad.scrollIntoViewIfNeeded();
+  const cBox = (await cPad.boundingBox())!;
+  const { data: o } = await admin.from("handwriting_glyphs").select("strokes").eq("code", "lower-o").single();
+  for (const s of o!.strokes as { points: [number, number][] }[]) {
+    await page.mouse.move(
+      cBox.x + (s.points[0][0] / 100) * cBox.width,
+      cBox.y + (s.points[0][1] / 100) * cBox.height,
+    );
+    await page.mouse.down();
+    for (const [x, y] of s.points.slice(1))
+      await page.mouse.move(cBox.x + (x / 100) * cBox.width, cBox.y + (y / 100) * cBox.height, {
+        steps: 3,
+      });
+    await page.mouse.up();
+  }
+  await expect(page.getByText("✗ looks like lower-o")).toBeVisible();
+  await expect(page.getByText("✅ complete")).toHaveCount(0);
+  await expect(page.getByText(/wrong_letter/)).toBeVisible();
 });

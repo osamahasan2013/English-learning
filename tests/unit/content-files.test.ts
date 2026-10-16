@@ -352,8 +352,10 @@ describe("shipped content", () => {
             content: e.content,
             answer: e.answer,
             word: (q as { word?: string }).word ?? null,
+            promptSpeech: "promptSpeech" in e ? String(e.promptSpeech ?? "") : null,
           };
         },
+        phonemes: new Set(phonemes.keys()),
       });
       issues.push(...result.errors.map((e) => `${e.key}: ${e.message}`));
     }

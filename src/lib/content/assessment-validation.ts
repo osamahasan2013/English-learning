@@ -1,3 +1,4 @@
+import { speechProblems } from "@/lib/audio/pronunciation";
 import { blueprintSchema, sectionStage, type Blueprint } from "@/lib/learning/assessment-blueprint";
 import { itemDifficulty } from "@/lib/learning/item-difficulty";
 
@@ -18,12 +19,20 @@ export type AssessmentInput = {
   }[];
 };
 
-export type ExpandedItem = { type: string; content: unknown; answer: unknown; word?: string | null };
+export type ExpandedItem = {
+  type: string;
+  content: unknown;
+  answer: unknown;
+  word?: string | null;
+  promptSpeech?: string | null;
+};
 
 export type AssessmentRefs = {
   skills: ReadonlyMap<string, { levelCode: string | null }>;
   levelCodes: ReadonlySet<string>;
   levelRank: (code: string) => number;
+  // Phoneme codes the audio system knows (speech tokens are checked against them).
+  phonemes?: ReadonlySet<string>;
   expand: (question: AssessmentInput["stages"][number]["questions"][number], code: string) => ExpandedItem;
 };
 
@@ -113,6 +122,9 @@ export function validateAssessment(
       if (NOT_ASSESSABLE.has(expanded.type))
         errors.push({ key, message: `${where}: ${expanded.type} cannot be assessed automatically` });
       if (expanded.answer === null) errors.push({ key, message: `${where}: has no answer` });
+      // Spoken through the one audio system: sound and letter-name tokens, never bare letters.
+      for (const problem of speechProblems(expanded.promptSpeech ?? "", expanded.content, refs.phonemes))
+        errors.push({ key, message: `${where}: speech: ${problem}` });
       const fingerprint = stable({ type: expanded.type, content: expanded.content, answer: expanded.answer });
       const twin = seen.get(fingerprint);
       if (twin) errors.push({ key, message: `${where}: duplicate of ${twin}` });

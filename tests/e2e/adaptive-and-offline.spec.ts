@@ -32,9 +32,11 @@ test("a weak skill becomes a practice recommendation and a review item", async (
   await page.getByRole("link", { name: "Home", exact: true }).click();
   await expect(page.getByRole("heading", { name: /Today/ }).locator("..")).toContainText("Practice");
 
-  // Parent: "Practice SH" recommendation.
+  // Parent: the adaptive engine's recommendation, with the rule behind it.
   await passParentGate(page);
-  await expect(page.getByText("Practice SH")).toBeVisible();
+  const next = page.getByRole("heading", { name: "What to practise next" }).locator("..");
+  await expect(next).toContainText(/sh/i);
+  await expect(next).toContainText(/not secure yet|were not right/);
 });
 
 test("answers given offline are kept on the device and synced exactly once after reconnecting", async ({

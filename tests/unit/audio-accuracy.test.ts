@@ -404,3 +404,77 @@ describe("a letter name is never a piece on its own inside a sentence", () => {
           }
       });
 });
+
+// Phase 9: checks are spoken through the same audio system as lessons. Assessment items go
+// through the same speech validation at import (src/lib/content/assessment-validation.ts),
+// and the prompts a check uses keep their meaning: a letter NAME stays a name, a SOUND stays
+// a sound, "the" stays attached to its sentence.
+describe("assessment items use the one audio system (Phase 9)", () => {
+  const assessmentsFile = JSON.parse(readFileSync("content/assessments.json", "utf8")) as {
+    assessments: { stages: { questions: Record<string, unknown>[] }[] }[];
+  };
+  const prompts = assessmentsFile.assessments
+    .flatMap((a) => a.stages.flatMap((s) => s.questions))
+    .map((q) => q.promptSpeech)
+    .filter((p): p is string => typeof p === "string");
+
+  it("every authored assessment prompt is safe speech (no bare letters, valid tokens)", () => {
+    const known = new Set(phonics.phonemes.map((p) => p.code));
+    expect(prompts.length).toBeGreaterThan(0);
+    for (const p of prompts) expect(speechProblems(p, {}, known), p).toEqual([]);
+  });
+
+  it("a check that names G or S says the name; one that asks for the sound says the sound", () => {
+    expect(planSpeech("Find the letter {@g}.", table)).toEqual([
+      { kind: "tts", text: "Find the letter G.", role: "speech" },
+    ]);
+    expect(planSpeech("{@s}", table)).toEqual([{ kind: "tts", text: "S.", role: "letter_name" }]);
+    // A sound inside a sentence is rendered as the sound (never the letter name G / "jee").
+    const inSentence = planSpeech("Which word starts with {/G/}?", table);
+    const said = inSentence.map((p) => (p.kind === "tts" ? p.text : "")).join(" ");
+    expect(said).toContain("guh");
+    expect(said).not.toMatch(/\bG\b|jee/i);
+    expect(planSpeech("{/S/}", table)[0]).toMatchObject({ role: "phoneme" });
+  });
+
+  it("segmenting and blending gate in a check: three sounds, then the whole word", () => {
+    const parts = planSpeech("gate. {/G/}, {/EY/}, {/T/}. gate.", table);
+    expect(parts.map((p) => p.role)).toEqual(["speech", "phoneme", "phoneme", "phoneme", "speech"]);
+  });
+
+  it('sentence prompts read "the" inside the sentence, never alone', () => {
+    const pace = paceFor("STORY_READING", "slow", resolveAudioPacing(DEFAULT_RULES.audio, "KG2"));
+    for (const p of prompts.filter((t) => /\bthe\b/i.test(t)))
+      for (const piece of chunkText(p, pace))
+        expect(/^(the|a|an)$/i.test(piece.text.replace(/[^\p{L}\s]/gu, "").trim()), p).toBe(false);
+  });
+
+  it("an assessment item with a bare letter in its speech is rejected at import", async () => {
+    const { validateAssessment } = await import("@/lib/content/assessment-validation");
+    const result = validateAssessment(
+      {
+        code: "t",
+        type: "skill_check",
+        config: {
+          version: 2,
+          childTitle: "Test",
+          feedback: "none",
+          sections: [{ code: "s1", label: "S", domain: "PHONICS", level: "KG1", stage: 1, draw: 1 }],
+        },
+        stages: [{ stage: 1, label: "S", skill: "k", questions: [{ code: "q" }] }],
+      },
+      {
+        skills: new Map([["k", { levelCode: null }]]),
+        levelCodes: new Set(["KG1"]),
+        levelRank: () => 1,
+        expand: () => ({
+          type: "MULTIPLE_CHOICE",
+          content: { options: [{ id: "a", text: "a" }] },
+          answer: { accepted: ["a"] },
+          promptSpeech: "Which letter says g?",
+        }),
+      },
+    );
+    expect(result.errors.map((e) => e.message).join(" ")).toMatch(/speech/);
+  });
+});

@@ -2318,8 +2318,15 @@ export class ContentImporter {
         expand: (q, code) => {
           const row = built.get(q.code ?? code);
           if (!row) throw new Error("the question could not be built (see the questions report)");
-          return { type: String(row.question_type), content: row.content, answer: row.answer ?? null, word: q.word ?? null };
+          return {
+            type: String(row.question_type),
+            content: row.content,
+            answer: row.answer ?? null,
+            word: q.word ?? null,
+            promptSpeech: row.prompt_speech ? String(row.prompt_speech) : null,
+          };
         },
+        phonemes: this.phonemeInfo ? new Set(this.phonemeInfo.keys()) : undefined,
       });
       for (const w of checked.warnings)
         this.flag({ entity: "assessment", entity_key: a.code, rule: "assessment_check", severity: "warning", message: w.message });
