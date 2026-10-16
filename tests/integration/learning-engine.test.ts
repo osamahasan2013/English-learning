@@ -1,11 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import type { AnswerSpec, QuestionResponse } from "@/lib/content/question-schemas";
-import {
-  getNextLesson,
-  getRecommendedLessons,
-  type CatalogLesson,
-  type EngineInput,
-} from "@/lib/learning/engine";
+import { getNextLesson, type CatalogLesson, type EngineInput } from "@/lib/learning/engine";
 import type { MasteryStatus } from "@/lib/learning/mastery";
 import { starsFor } from "@/lib/learning/scoring";
 import type { AttemptEvent, LessonRunEvent, SyncEvent } from "@/lib/offline/sync-protocol";
@@ -363,6 +358,5 @@ describe("learning engine (real database)", () => {
     const next = getNextLesson(input);
     expect(next).not.toBeNull();
     expect(next!.lessonId).not.toBe(lesson.lessonId); // completed lessons are not offered as "next"
-    expect(getRecommendedLessons(input)[0].reason).toBe("next");
   });
 });

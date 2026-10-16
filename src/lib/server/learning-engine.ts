@@ -3,14 +3,12 @@ import "server-only";
 import { cache } from "react";
 import {
   getNextLesson as pickNextLesson,
-  getRecommendedLessons as pickRecommendedLessons,
   lessonPrerequisiteCheck,
   type CatalogLesson,
   type EngineInput,
   type LessonState,
 } from "@/lib/learning/engine";
 import type { MasteryStatus } from "@/lib/learning/mastery";
-import { weakSkills, type SkillMasterySummary } from "@/lib/learning/recommendations";
 import { dueReviewItems, type ReviewItemSummary, type ReviewReason } from "@/lib/learning/review-queue";
 import { loadLearningRules } from "@/lib/server/learning-rules";
 import { createClient } from "@/lib/supabase/server";
@@ -179,44 +177,9 @@ export async function getNextLesson(childId: string) {
   return pickNextLesson(await loadEngineInput(childId));
 }
 
-export async function getRecommendedLessons(childId: string, limit = 4) {
-  return pickRecommendedLessons(await loadEngineInput(childId), limit);
-}
-
 export async function getReviewItems(childId: string, limit = 10): Promise<ReviewItemSummary[]> {
   const input = await loadEngineInput(childId);
   return dueReviewItems(input.reviewItems, input.now, limit);
-}
-
-export type WeakSkill = SkillMasterySummary & { accuracy: number };
-
-export async function getWeakSkills(childId: string): Promise<WeakSkill[]> {
-  const input = await loadEngineInput(childId);
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("skill_mastery")
-    .select(
-      "skill_id, status, mastery_score, accuracy, attempts, review_priority, next_review_at, skills(title, child_title, is_active)",
-    )
-    .eq("child_id", childId);
-  if (error) throw error;
-  const skills = (data ?? [])
-    .map((row) => {
-      const skill = Array.isArray(row.skills) ? row.skills[0] : row.skills;
-      return {
-        skillId: row.skill_id,
-        title: skill?.child_title || skill?.title || "",
-        active: skill?.is_active ?? true,
-        status: row.status,
-        masteryScore: Number(row.mastery_score),
-        accuracy: Number(row.accuracy),
-        attempts: row.attempts,
-        reviewPriority: Number(row.review_priority),
-        nextReviewAt: row.next_review_at,
-      };
-    })
-    .filter((s) => s.active);
-  return weakSkills(skills, input.rules!.review);
 }
 
 // Whether the child is ready for a lesson (for the lesson page).

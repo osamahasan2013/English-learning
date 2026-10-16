@@ -8,6 +8,7 @@ import { APP_SHORT_NAME } from "@/lib/app-info";
 const NAV: NavItem[] = [
   { href: "/parent/dashboard", label: "Dashboard" },
   { href: "/parent/children", label: "Children" },
+  { href: "/parent/assessments", label: "Checks" },
   { href: "/parent/phonics", label: "Phonics" },
   { href: "/parent/words", label: "Words" },
   { href: "/parent/spelling", label: "Spelling" },

@@ -189,11 +189,24 @@ out += `    };
     Functions: {
 `;
 for (const f of functions) {
-  const args = f.args.filter((a) => a.name);
+  // proargnames also lists OUT/TABLE columns (paired with no input type): inputs only.
+  const args = f.args.filter((a) => a.name && a.type);
   const argsType = args.length
     ? `{ ${args.map((a) => `${a.name}: ${scalar(a.type)}`).join("; ")} }`
     : "Record<PropertyKey, never>";
-  const result = f.result === "void" ? "undefined" : scalar(f.result);
+  const table = /^TABLE\((.*)\)$/.exec(f.result);
+  const result =
+    f.result === "void"
+      ? "undefined"
+      : table
+        ? `{ ${table[1]
+            .split(", ")
+            .map((col) => {
+              const [name, ...type] = col.split(" ");
+              return `${name}: ${scalar(type.join(" "))}`;
+            })
+            .join("; ")} }[]`
+        : scalar(f.result);
   out += `${indent(6)}${f.name}: { Args: ${argsType}; Returns: ${result} };\n`;
 }
 out += `    };

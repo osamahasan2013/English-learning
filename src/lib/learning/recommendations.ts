@@ -1,10 +1,9 @@
 import type { MasteryStatus } from "@/lib/learning/mastery";
 import { DEFAULT_RULES, type ReviewRules } from "@/lib/learning/rules";
 
-// Turns stored skill mastery into the parent's "what is difficult / what to practise next"
-// and the child's review choices. Rule-based and explainable (docs/curriculum.md).
-
-export const RECOMMENDATION_RULES = { maxRecommendations: 3 } as const;
+// Skill summaries from stored mastery: which skills are weak or going well, and which to
+// bring back in review. Recommendations (what to do next) come only from the adaptive
+// engine (src/lib/learning/adaptive.ts, ADR-048).
 
 export type SkillMasterySummary = {
   skillId: string;
@@ -48,13 +47,4 @@ export function reviewCandidates<T extends SkillMasterySummary>(
         Number(weakIds.has(b.skillId)) - Number(weakIds.has(a.skillId)) ||
         b.reviewPriority - a.reviewPriority,
     );
-}
-
-export function practiceRecommendations<T extends SkillMasterySummary>(
-  skills: T[],
-  rules: ReviewRules = DEFAULT_RULES.review,
-) {
-  return weakSkills(skills, rules)
-    .slice(0, RECOMMENDATION_RULES.maxRecommendations)
-    .map((s) => ({ skill: s, message: `Practice ${s.title}` }));
 }

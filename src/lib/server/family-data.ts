@@ -3,12 +3,7 @@ import "server-only";
 import { cache } from "react";
 import { currentStreak, dailyActivity, safeTimeZone, totalMinutes } from "@/lib/learning/analytics";
 import type { MasteryStatus } from "@/lib/learning/mastery";
-import {
-  practiceRecommendations,
-  strongSkills,
-  weakSkills,
-  type SkillMasterySummary,
-} from "@/lib/learning/recommendations";
+import { strongSkills, type SkillMasterySummary } from "@/lib/learning/recommendations";
 import { WORD_LEARNED_CORRECT_COUNT } from "@/lib/learning/progress-derivation";
 import { createClient } from "@/lib/supabase/server";
 import type { Tables } from "@/lib/supabase/types";
@@ -200,9 +195,7 @@ export async function loadChildProgress(
       };
     }),
     skills: [...skills].sort((a, b) => (b.lastPracticedAt ?? "").localeCompare(a.lastPracticedAt ?? "")),
-    weak: weakSkills(skills),
     strong: strongSkills(skills),
-    recommendations: practiceRecommendations(skills),
     accuracyByDimension: [...byDimension]
       .filter(([, v]) => v.attempts > 0)
       .map(([dimension, v]) => ({

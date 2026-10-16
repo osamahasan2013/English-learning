@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  practiceRecommendations,
   reviewCandidates,
   strongSkills,
   weakSkills,
@@ -28,9 +27,9 @@ const skills = [
   skill({ skillId: "th", masteryScore: 47, status: "LEARNING", reviewPriority: 60 }),
 ];
 
-describe("recommendations", () => {
-  it("recommends practising the weak skill", () => {
-    expect(practiceRecommendations(skills)).toEqual([{ skill: skills[2], message: "Practice TH" }]);
+describe("skill summaries", () => {
+  it("finds the weak skill", () => {
+    expect(weakSkills(skills).map((s) => s.skillId)).toEqual(["th"]);
   });
 
   it("does not call a skill weak without enough evidence", () => {

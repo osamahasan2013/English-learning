@@ -4207,7 +4207,7 @@ export type Database = {
     };
     Functions: {
       archive_child: { Args: { p_child_id: string }; Returns: undefined };
-      assessment_item_exposure: { Args: { p_assessment_id: string; question_id: string; answers: string; children: string }; Returns: string };
+      assessment_item_exposure: { Args: { p_assessment_id: string }; Returns: { question_id: string; answers: number; children: number }[] };
       delete_child: { Args: { p_child_id: string; p_parent_id: string }; Returns: undefined };
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean };
       is_my_child: { Args: { p_child_id: string }; Returns: boolean };

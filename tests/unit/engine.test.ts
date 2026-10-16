@@ -1,12 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { parseActivityConfig } from "@/lib/content/activity-config";
 import { parseQuestion } from "@/lib/content/question-schemas";
-import {
-  getNextLesson,
-  getRecommendedLessons,
-  type CatalogLesson,
-  type EngineInput,
-} from "@/lib/learning/engine";
+import { getNextLesson, type CatalogLesson, type EngineInput } from "@/lib/learning/engine";
 import {
   FALLBACK_FEEDBACK,
   feedbackKind,
@@ -207,42 +202,6 @@ describe("lesson selection", () => {
       lessonStates: new Map([["l1", { status: "COMPLETED", bestStars: 1 }]]),
     });
     expect(getNextLesson(done)).toBeNull();
-  });
-
-  it("recommends continuing, then next, then due reviews, with reasons", () => {
-    const recs = getRecommendedLessons(
-      input({
-        lessonStates: new Map([["l3", { status: "IN_PROGRESS", bestStars: 0 }]]),
-        reviewItems: [
-          {
-            itemKey: "skill:s9",
-            skillId: "s9",
-            wordId: null,
-            lessonId: "old",
-            priority: 80,
-            dueAt: "2026-09-29T00:00:00Z",
-            reason: "weak_skill",
-            status: "open",
-            lessonTitle: "Old lesson",
-          },
-          {
-            itemKey: "skill:s8",
-            skillId: "s8",
-            wordId: null,
-            lessonId: "later",
-            priority: 90,
-            dueAt: "2026-10-09T00:00:00Z",
-            reason: "due_review",
-            status: "open",
-          },
-        ],
-      }),
-    );
-    expect(recs.map((r) => [r.lessonId, r.reason])).toEqual([
-      ["l3", "continue"],
-      ["l1", "next"],
-      ["old", "review"],
-    ]);
   });
 });
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ActivityChart } from "@/components/parent/activity-chart";
+import { ReadinessGrid, RecommendationList } from "@/components/parent/assessment-report";
 import { EnterChildModeButton } from "@/components/parent/enter-child-mode-button";
 import { SkillBadge } from "@/components/parent/skill-badge";
 import { Alert } from "@/components/ui/alert";
@@ -20,6 +21,7 @@ import { ReadingSummaryCard } from "@/components/parent/reading-report";
 import { WritingSummaryCard } from "@/components/parent/writing-report";
 import { loadReadingReport } from "@/lib/server/reading";
 import { loadWritingReport } from "@/lib/server/writing";
+import { loadAdaptive } from "@/lib/server/adaptive";
 import { ageFromDateOfBirth, cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -31,7 +33,7 @@ export default async function DashboardPage(props: PageProps<"/parent/dashboard"
 
   const child = children.find((c) => c.id === childParam) ?? children[0];
   const timeZone = profile?.timezone ?? "UTC";
-  const [progress, dimensionNames, phonics, phonicsCheck, vocabulary, spelling, reading, writing] =
+  const [progress, dimensionNames, phonics, phonicsCheck, vocabulary, spelling, reading, writing, adaptive] =
     await Promise.all([
       loadChildProgress(child.id, timeZone, new Date(), child.current_level_id),
       listDimensionNames(),
@@ -41,7 +43,9 @@ export default async function DashboardPage(props: PageProps<"/parent/dashboard"
       loadSpellingReport(child.id),
       loadReadingReport(child.id, child.current_level_id),
       loadWritingReport(child.id, child.current_level_id),
+      loadAdaptive(child.id),
     ]);
+  const noEvidence = adaptive.readiness.every((r) => r.source === "default");
   const phonicsStarted = phonics.stages.filter((s) => s.started > 0);
   const age = ageFromDateOfBirth(child.date_of_birth);
 
@@ -133,6 +137,29 @@ export default async function DashboardPage(props: PageProps<"/parent/dashboard"
         />
       </section>
 
+      <Card className="space-y-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <CardTitle>Level by area</CardTitle>
+          <Link href={`/parent/assessments?child=${child.id}`} className="text-primary text-sm font-semibold">
+            Checks and levels →
+          </Link>
+        </div>
+        {noEvidence ? (
+          <p className="bg-accent-soft rounded-xl p-3 text-sm">
+            No evidence yet, so every area starts at the school grade. A short “Find My Level” check (from{" "}
+            <Link href={`/parent/assessments?child=${child.id}`} className="font-semibold underline">
+              Checks and levels
+            </Link>
+            ) finds where {child.name} should start in each area.
+          </p>
+        ) : null}
+        <ReadinessGrid
+          readiness={adaptive.readiness}
+          gradeName={child.grade?.name ?? null}
+          timeZone={timeZone}
+        />
+      </Card>
+
       <Card className="space-y-4">
         <CardTitle>Progress by subject · {child.level?.name}</CardTitle>
         {progress.subjectProgress.length === 0 ? (
@@ -171,25 +198,10 @@ export default async function DashboardPage(props: PageProps<"/parent/dashboard"
 
         <Card className="space-y-3">
           <CardTitle>What to practise next</CardTitle>
-          {progress.recommendations.length > 0 ? (
-            <ul className="space-y-2">
-              {progress.recommendations.map((r) => (
-                <li key={r.skill.skillId} className="bg-warning-soft rounded-xl p-3">
-                  <p className="text-warning font-bold">{r.message}</p>
-                  <p className="text-muted text-sm">
-                    {Math.round(r.skill.masteryScore)}% recently, over {r.skill.attempts} answers. It will
-                    come up more often in
-                    {` ${child.name}'s`} daily review.
-                  </p>
-                </li>
-              ))}
-            </ul>
-          ) : progress.skills.length === 0 ? (
-            <p className="text-muted">Recommendations appear after {child.name} completes a few lessons.</p>
+          {adaptive.recommendations.length > 0 ? (
+            <RecommendationList recommendations={adaptive.recommendations.slice(0, 4)} />
           ) : (
-            <p className="text-muted">
-              Nothing is difficult right now. {child.name} can keep going with new lessons.
-            </p>
+            <p className="text-muted">Recommendations appear after {child.name} completes a few lessons.</p>
           )}
           {progress.strong.length > 0 ? (
             <div>
@@ -287,8 +299,11 @@ export default async function DashboardPage(props: PageProps<"/parent/dashboard"
             ) : null}
             {progress.assessmentResults.length === 0 ? (
               <p className="text-muted">
-                No assessments yet. Your child can take the Phonics Check from Phonics → Practice; lesson
-                results above already track each skill.
+                No checks yet. Start one from{" "}
+                <Link href={`/parent/assessments?child=${child.id}`} className="font-semibold underline">
+                  Checks and levels
+                </Link>
+                ; lesson results above already track each skill.
               </p>
             ) : (
               <ul>
