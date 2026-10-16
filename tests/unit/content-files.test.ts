@@ -15,6 +15,8 @@ import {
 } from "@/lib/content/content-schemas";
 import { normalizeWord, parseSpellingCsv, parseWordsCsv } from "@/lib/content/csv";
 import { parseActivityConfig } from "@/lib/content/activity-config";
+import { validateAssessment } from "@/lib/content/assessment-validation";
+import { parseBlueprint, sectionStage } from "@/lib/learning/assessment-blueprint";
 import { parseQuestion, type AnswerSpec, type QuestionResponse } from "@/lib/content/question-schemas";
 import { buildAnswerKey, checkWithKey, revealAnswer } from "@/lib/learning/answer-key";
 import { evaluateResponse } from "@/lib/learning/evaluate";
@@ -299,20 +301,77 @@ describe("shipped content", () => {
   });
 
   it("has valid assessment questions and sentence/story files", () => {
-    for (const a of assessments.assessments)
-      for (const stage of a.stages)
+    for (const a of assessments.assessments) {
+      const blueprint = parseBlueprint(a.config);
+      for (const stage of a.stages) {
+        // Each item is built at the level its section measures, as the importer does.
+        const level = blueprint?.sections.find((s) => sectionStage(blueprint, s) === stage.stage)?.level;
         stage.questions.forEach((q, i) => {
-          const e = expand(q, `${a.code}-s${stage.stage}-q${i + 1}`);
+          const e = expand(q, `${a.code}-s${stage.stage}-q${i + 1}`, level);
+          const answer = WRITING_QUESTION_TYPES.has(e.type)
+            ? compileAnswer(e.type, e.answer, level)
+            : e.answer;
           expect(
-            parseQuestion(e.type, e.content, e.answer).ok,
+            parseQuestion(e.type, e.content, answer).ok,
             `${a.code} stage ${stage.stage} q${i + 1}`,
           ).toBe(true);
         });
+      }
+    }
     expect(() => sentencesFileSchema.parse(json("sentences.json"))).not.toThrow();
     expect(() => storiesFileSchema.parse(json("stories.json"))).not.toThrow();
     const sight = sightWordsFileSchema.parse(json("sight-words.json"));
     for (const list of sight.lists)
       for (const w of list.words) expect(wordBank.has(normalizeWord(w)), w).toBe(true);
+  });
+
+  // Phase 9: every shipped assessment passes the importer's content checks (blueprint, pool
+  // sizes, duplicates, unsupported types, unknown skills and levels).
+  it("has valid assessment blueprints and assessment content", () => {
+    const skillLevels = new Map<string, { levelCode: string | null }>();
+    for (const file of curriculum)
+      for (const unit of file.units)
+        for (const skill of unit.skills) skillLevels.set(skill.code, { levelCode: file.level });
+    const levelCodes = new Set(curriculum.map((f) => f.level));
+    const issues: string[] = [];
+    const types = new Set<string>();
+    for (const a of assessments.assessments) {
+      types.add(a.type);
+      const blueprint = parseBlueprint(a.config);
+      const result = validateAssessment(a, {
+        skills: skillLevels,
+        levelCodes,
+        levelRank: (code) => levelRanks.get(code) ?? 1,
+        expand: (q, code) => {
+          const level = blueprint?.sections.find((s) =>
+            code.includes(`-s${sectionStage(blueprint, s)}-`),
+          )?.level;
+          const e = expand(q as QuestionInput, code, level);
+          return {
+            type: e.type,
+            content: e.content,
+            answer: e.answer,
+            word: (q as { word?: string }).word ?? null,
+          };
+        },
+      });
+      issues.push(...result.errors.map((e) => `${e.key}: ${e.message}`));
+    }
+    expect(issues).toEqual([]);
+    // One engine, every assessment type in use.
+    expect([...types].sort()).toEqual([
+      "diagnostic",
+      "end_of_unit",
+      "placement",
+      "progress_check",
+      "reassessment",
+      "review_check",
+      "skill_check",
+    ]);
+    const placement = assessments.assessments.find((a) => a.type === "placement")!;
+    const sections = parseBlueprint(placement.config)!.sections;
+    // Every domain at every level, so placement is domain-specific.
+    expect(new Set(sections.map((s) => `${s.domain}:${s.level}`)).size).toBe(25);
   });
 
   it("has a valid, strict configuration for every activity", () => {

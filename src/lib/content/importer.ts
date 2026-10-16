@@ -30,6 +30,8 @@ import { BlueprintError, expandBlueprint } from "@/lib/content/lesson-blueprints
 import { validatePhonicsFile, type ValidationIssue } from "@/lib/content/phonics-validation";
 import { decomposeWord, segmentsUsePattern, type PatternInfo, type PhonemeInfo } from "@/lib/learning/phonics";
 import { parseQuestion } from "@/lib/content/question-schemas";
+import { domainsOf, parseBlueprint, sectionStage } from "@/lib/learning/assessment-blueprint";
+import { validateAssessment } from "@/lib/content/assessment-validation";
 import {
   compileWritingAnswer,
   confusableProblems,
@@ -2257,27 +2259,21 @@ export class ContentImporter {
     ]);
     await this.loadBanksFromDatabase();
     await this.loadWritingRefs();
-    this.currentLevelRank = undefined;
+    this.flagScopes.add("assessment");
     const report = this.entity("assessments");
-    const rows: Row[] = [];
-    for (const a of file.assessments) {
-      try {
-        rows.push({
-          code: a.code,
-          title: a.title,
-          description: a.description,
-          assessment_type: a.type,
-          level_id: a.level ? this.lookup("levels", a.level, "level") : null,
-          config: a.config,
-          status: a.status,
-        });
-      } catch (error) {
-        report.invalid++;
-        report.errors.push(`assessment ${a.code}: ${(error as Error).message}`);
-      }
-    }
-    const assessmentIds = await this.sync("assessments", "assessments", ["code"], rows);
+    const ranks = (await this.loadVocabularyRefs()).levelRanks;
+    const spellingRules = (await this.rules()).spelling;
+    // Skill → the level it is taught at (for the section level check).
+    const skillRows = await fetchAll(this.db, "skills", "code,units(levels(code))");
+    const skillLevels = new Map<string, { levelCode: string | null }>(
+      skillRows.map((r) => {
+        const unit = (Array.isArray(r.units) ? r.units[0] : r.units) as { levels?: unknown } | null;
+        const level = (Array.isArray(unit?.levels) ? unit?.levels[0] : unit?.levels) as { code?: string } | null;
+        return [String(r.code), { levelCode: level?.code ?? null }];
+      }),
+    );
 
+    const rows: Row[] = [];
     const questionRows: Row[] = [];
     const itemRows: {
       assessmentCode: string;
@@ -2285,10 +2281,20 @@ export class ContentImporter {
       stage: number;
       label: string;
       order: number;
+      domain: string;
+      levelCode: string | null;
+      difficulty: number;
     }[] = [];
-    for (const a of file.assessments.filter((x) => assessmentIds.has(x.code))) {
-      let order = 0;
+    for (const a of file.assessments) {
+      const blueprint = parseBlueprint(a.config);
+      // Each item is built in the context of the level its section measures (spelling input,
+      // distractor difficulty, dictation punctuation).
+      const built = new Map<string, Row>();
       for (const stage of a.stages) {
+        const section = blueprint?.sections.find((s) => sectionStage(blueprint, s) === stage.stage);
+        const level = section?.level ?? a.level;
+        this.currentLevelRank = level ? ranks.get(level) : undefined;
+        this.currentSpellingLevel = level ? spellingRules.levels[level] : undefined;
         let skillId: string;
         try {
           skillId = this.lookup("skills", stage.skill, "skill");
@@ -2299,26 +2305,82 @@ export class ContentImporter {
         stage.questions.forEach((q, i) => {
           const code = q.code ?? `${a.code}-s${stage.stage}-q${i + 1}`;
           const row = this.buildQuestion(q, code, skillId, null, "MULTIPLE_CHOICE");
-          if (!row) return;
-          questionRows.push({ ...row, sort_order: order });
-          itemRows.push({
-            assessmentCode: a.code,
-            questionCode: code,
-            stage: stage.stage,
-            label: stage.label,
-            order: order++,
-          });
+          if (row) built.set(code, row);
+        });
+      }
+      this.currentLevelRank = undefined;
+      this.currentSpellingLevel = undefined;
+
+      const checked = validateAssessment(a, {
+        skills: skillLevels,
+        levelCodes: new Set(this.idMap("levels").keys()),
+        levelRank: (code) => ranks.get(code) ?? 1,
+        expand: (q, code) => {
+          const row = built.get(q.code ?? code);
+          if (!row) throw new Error("the question could not be built (see the questions report)");
+          return { type: String(row.question_type), content: row.content, answer: row.answer ?? null, word: q.word ?? null };
+        },
+      });
+      for (const w of checked.warnings)
+        this.flag({ entity: "assessment", entity_key: a.code, rule: "assessment_check", severity: "warning", message: w.message });
+      if (!checked.result) {
+        report.invalid++;
+        for (const e of checked.errors) report.errors.push(`assessment ${a.code}: ${e.message}`);
+        continue;
+      }
+      try {
+        rows.push({
+          code: a.code,
+          title: a.title,
+          description: a.description,
+          assessment_type: a.type,
+          level_id: a.level ? this.lookup("levels", a.level, "level") : null,
+          config: checked.result.blueprint,
+          // Re-checks, review and unit checks follow the skills they check: no fixed domain.
+          domains: ["skills", "review", "unit"].includes(checked.result.blueprint.pool)
+            ? []
+            : domainsOf(checked.result.blueprint),
+          status: a.status,
+        });
+      } catch (error) {
+        report.invalid++;
+        report.errors.push(`assessment ${a.code}: ${(error as Error).message}`);
+        continue;
+      }
+      let order = 0;
+      for (const item of checked.result.items) {
+        const stage = a.stages.find((s) => s.stage === item.stage)!;
+        const q = stage.questions[item.index];
+        const code = q.code ?? `${a.code}-s${stage.stage}-q${item.index + 1}`;
+        const row = built.get(code);
+        if (!row) continue;
+        questionRows.push({ ...row, sort_order: order });
+        itemRows.push({
+          assessmentCode: a.code,
+          questionCode: code,
+          stage: stage.stage,
+          label: stage.label,
+          order: order++,
+          domain: item.domain,
+          levelCode: item.levelCode,
+          difficulty: item.difficulty,
         });
       }
     }
+    const assessmentIds = await this.sync("assessments", "assessments", ["code"], rows);
     const questionIds = await this.sync("questions", "questions", ["code"], questionRows);
-    const items = itemRows.map((i) => ({
-      assessment_id: assessmentIds.get(i.assessmentCode),
-      question_id: questionIds.get(i.questionCode),
-      stage: i.stage,
-      stage_label: i.label,
-      sort_order: i.order,
-    }));
+    const items = itemRows
+      .filter((i) => assessmentIds.has(i.assessmentCode))
+      .map((i) => ({
+        assessment_id: assessmentIds.get(i.assessmentCode),
+        question_id: questionIds.get(i.questionCode),
+        stage: i.stage,
+        stage_label: i.label,
+        sort_order: i.order,
+        domain: i.domain,
+        level_id: i.levelCode ? this.lookup("levels", i.levelCode, "level") : null,
+        difficulty: i.difficulty,
+      }));
     await this.syncLinks("assessment_items", "assessment_id", [...assessmentIds.values()], items, [
       "assessment_id",
       "question_id",

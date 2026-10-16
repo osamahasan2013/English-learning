@@ -295,7 +295,9 @@ export async function scoreSittings(
         .select("question_id")
         .eq("child_id", childId)
         .in("question_id", questionIds)
-        .lt("attempted_at", sitting.started_at),
+        .lt("attempted_at", sitting.started_at)
+        // Never the sitting's own answers (device clocks can put them before the start).
+        .or(`assessment_attempt_id.is.null,assessment_attempt_id.neq.${run.id}`),
     ]);
     if (questions.error || tries.error || prior.error) throw questions.error ?? tries.error ?? prior.error;
     const answered = new Map((tries.data ?? []).map((t) => [t.question_id, t]));
@@ -417,18 +419,16 @@ export async function scoreSittings(
       observed.map((i) => ({ isCorrect: i.outcome === "correct" })),
       rules.scoring,
     );
-    const { error: rewardError } = await db
-      .from("reward_events")
-      .upsert(
-        {
-          child_id: childId,
-          source_type: "assessment",
-          source_id: run.id,
-          points: score.points,
-          stars: score.stars,
-        },
-        { onConflict: "child_id,source_type,source_id", ignoreDuplicates: true },
-      );
+    const { error: rewardError } = await db.from("reward_events").upsert(
+      {
+        child_id: childId,
+        source_type: "assessment",
+        source_id: run.id,
+        points: score.points,
+        stars: score.stars,
+      },
+      { onConflict: "child_id,source_type,source_id", ignoreDuplicates: true },
+    );
     if (rewardError) throw rewardError;
     results.set(run.id, { id: run.id, status: "stored" });
     logger.info("assessment.scored", {

@@ -138,6 +138,14 @@ alter table public.review_items add constraint review_items_reason_check check (
   'assessment_gap'
 ));
 
+-- Content checks on assessments (importer: assessment-validation.ts) become content flags.
+alter table public.content_flags drop constraint content_flags_entity_check;
+alter table public.content_flags add constraint content_flags_entity_check
+  check (entity in (
+    'word', 'phonics_pattern', 'question', 'lesson', 'sentence', 'spelling_word', 'story',
+    'glyph', 'writing_rubric', 'assessment'
+  ));
+
 -- ---------------------------------------------------------------------------------------
 -- Handwriting: glyph identity
 

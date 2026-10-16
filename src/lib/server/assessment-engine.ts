@@ -459,7 +459,11 @@ async function planSitting(
     // section (a section's domain narrows the skills; its level defaults to the domain's
     // instructional level).
     const readiness = await loadReadinessLevels(db, args.childId);
-    for (const section of blueprint.sections) {
+    // A domain-scoped sitting (a diagnostic of one area) uses that domain's sections only.
+    const scoped = args.scope.domain
+      ? blueprint.sections.filter((s) => s.domain === args.scope.domain)
+      : blueprint.sections;
+    for (const section of scoped) {
       const level =
         levelByCode(section.level) ??
         args.levels.find((l) => l.id === (readiness.get(section.domain) ?? args.currentLevelId)) ??

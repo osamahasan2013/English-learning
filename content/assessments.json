@@ -4,64 +4,254 @@
       "code": "find-my-level",
       "title": "Find My Level",
       "type": "placement",
-      "description": "A short, friendly check that goes from letters to reading and suggests a starting level. It is a guide, not a test score.",
+      "description": "A friendly check across phonics, reading, vocabulary, spelling and writing. It suggests where to start teaching in each area — a starting point, not a test score or a school grade.",
+      "status": "published",
       "config": {
-        "startLevelCode": "KG1",
-        "stages": [
+        "version": 2,
+        "childTitle": "Find My Level",
+        "emoji": "🧭",
+        "feedback": "none",
+        "allowSkip": true,
+        "pool": "authored",
+        "stopping": {
+          "rule": "level_ladder",
+          "startOffset": -1
+        },
+        "maxItems": 75,
+        "breakEvery": 8,
+        "reviewGaps": true,
+        "sections": [
           {
+            "code": "phonics-kg1",
+            "label": "Letters and sounds",
+            "domain": "PHONICS",
+            "level": "KG1",
             "stage": 1,
-            "label": "Letters",
-            "passPercent": 80,
-            "levelOnPass": "KG1"
+            "draw": 3,
+            "maxPerSkill": 2
           },
           {
+            "code": "phonics-kg2",
+            "label": "Short vowels and blending",
+            "domain": "PHONICS",
+            "level": "KG2",
             "stage": 2,
-            "label": "Sounds",
-            "passPercent": 80,
-            "levelOnPass": "KG2"
+            "draw": 3,
+            "maxPerSkill": 2
           },
           {
-            "stage": 3,
-            "label": "CVC words",
-            "passPercent": 75,
-            "levelOnPass": "KG2"
-          },
-          {
-            "stage": 4,
-            "label": "Blending",
-            "passPercent": 75,
-            "levelOnPass": "KG3"
-          },
-          {
-            "stage": 5,
+            "code": "phonics-kg3",
             "label": "Digraphs",
-            "passPercent": 75,
-            "levelOnPass": "KG3"
+            "domain": "PHONICS",
+            "level": "KG3",
+            "stage": 3,
+            "draw": 3,
+            "maxPerSkill": 2
           },
           {
+            "code": "phonics-grade1",
+            "label": "Vowel teams and r-controlled vowels",
+            "domain": "PHONICS",
+            "level": "GRADE1",
+            "stage": 4,
+            "draw": 3,
+            "maxPerSkill": 2
+          },
+          {
+            "code": "phonics-grade2",
+            "label": "Longer words",
+            "domain": "PHONICS",
+            "level": "GRADE2",
+            "stage": 5,
+            "draw": 3,
+            "maxPerSkill": 2
+          },
+          {
+            "code": "reading-kg1",
+            "label": "Listening",
+            "domain": "READING",
+            "level": "KG1",
             "stage": 6,
-            "label": "Sight words",
-            "passPercent": 75,
-            "levelOnPass": "GRADE1"
+            "draw": 3,
+            "maxPerSkill": 2
           },
           {
+            "code": "reading-kg2",
+            "label": "Sight words and sentences",
+            "domain": "READING",
+            "level": "KG2",
             "stage": 7,
-            "label": "Sentences",
-            "passPercent": 75,
-            "levelOnPass": "GRADE1"
+            "draw": 3,
+            "maxPerSkill": 2
           },
           {
+            "code": "reading-kg3",
+            "label": "Reading sentences",
+            "domain": "READING",
+            "level": "KG3",
             "stage": 8,
-            "label": "Reading",
-            "passPercent": 70,
-            "levelOnPass": "GRADE2"
+            "draw": 3,
+            "maxPerSkill": 2
+          },
+          {
+            "code": "reading-grade1",
+            "label": "Stories: details and main idea",
+            "domain": "READING",
+            "level": "GRADE1",
+            "stage": 9,
+            "draw": 3,
+            "maxPerSkill": 2
+          },
+          {
+            "code": "reading-grade2",
+            "label": "Stories: cause, inference and summary",
+            "domain": "READING",
+            "level": "GRADE2",
+            "stage": 10,
+            "draw": 3,
+            "maxPerSkill": 2
+          },
+          {
+            "code": "vocabulary-kg1",
+            "label": "Words for things",
+            "domain": "VOCABULARY",
+            "level": "KG1",
+            "stage": 11,
+            "draw": 3,
+            "maxPerSkill": 3
+          },
+          {
+            "code": "vocabulary-kg2",
+            "label": "Food, toys and transport",
+            "domain": "VOCABULARY",
+            "level": "KG2",
+            "stage": 12,
+            "draw": 3,
+            "maxPerSkill": 2
+          },
+          {
+            "code": "vocabulary-kg3",
+            "label": "Clothes, rooms and nature",
+            "domain": "VOCABULARY",
+            "level": "KG3",
+            "stage": 13,
+            "draw": 3,
+            "maxPerSkill": 2
+          },
+          {
+            "code": "vocabulary-grade1",
+            "label": "Weather, jobs and feelings",
+            "domain": "VOCABULARY",
+            "level": "GRADE1",
+            "stage": 14,
+            "draw": 3,
+            "maxPerSkill": 2
+          },
+          {
+            "code": "vocabulary-grade2",
+            "label": "Places and technology",
+            "domain": "VOCABULARY",
+            "level": "GRADE2",
+            "stage": 15,
+            "draw": 3,
+            "maxPerSkill": 2
+          },
+          {
+            "code": "spelling-kg1",
+            "label": "Spell short words",
+            "domain": "SPELLING",
+            "level": "KG1",
+            "stage": 16,
+            "draw": 3,
+            "maxPerSkill": 3
+          },
+          {
+            "code": "spelling-kg2",
+            "label": "Short words and tricky words",
+            "domain": "SPELLING",
+            "level": "KG2",
+            "stage": 17,
+            "draw": 3,
+            "maxPerSkill": 2
+          },
+          {
+            "code": "spelling-kg3",
+            "label": "Digraphs and blends",
+            "domain": "SPELLING",
+            "level": "KG3",
+            "stage": 18,
+            "draw": 3,
+            "maxPerSkill": 2
+          },
+          {
+            "code": "spelling-grade1",
+            "label": "Magic e, vowel teams, endings",
+            "domain": "SPELLING",
+            "level": "GRADE1",
+            "stage": 19,
+            "draw": 3,
+            "maxPerSkill": 2
+          },
+          {
+            "code": "spelling-grade2",
+            "label": "Longer and tricky words",
+            "domain": "SPELLING",
+            "level": "GRADE2",
+            "stage": 20,
+            "draw": 3,
+            "maxPerSkill": 2
+          },
+          {
+            "code": "writing-kg1",
+            "label": "Tracing letters",
+            "domain": "WRITING",
+            "level": "KG1",
+            "stage": 21,
+            "draw": 3,
+            "maxPerSkill": 3
+          },
+          {
+            "code": "writing-kg2",
+            "label": "Writing letters and sounds",
+            "domain": "WRITING",
+            "level": "KG2",
+            "stage": 22,
+            "draw": 3,
+            "maxPerSkill": 2
+          },
+          {
+            "code": "writing-kg3",
+            "label": "Writing words and capitals",
+            "domain": "WRITING",
+            "level": "KG3",
+            "stage": 23,
+            "draw": 3,
+            "maxPerSkill": 2
+          },
+          {
+            "code": "writing-grade1",
+            "label": "Writing sentences",
+            "domain": "WRITING",
+            "level": "GRADE1",
+            "stage": 24,
+            "draw": 3,
+            "maxPerSkill": 3
+          },
+          {
+            "code": "writing-grade2",
+            "label": "Sentences with capitals and full stops",
+            "domain": "WRITING",
+            "level": "GRADE2",
+            "stage": 25,
+            "draw": 3,
+            "maxPerSkill": 3
           }
         ]
       },
       "stages": [
         {
           "stage": 1,
-          "label": "Letters",
+          "label": "Letters and sounds",
           "skill": "kg1-letter-b",
           "questions": [
             {
@@ -74,13 +264,23 @@
               "skill": "kg1-letter-b"
             },
             {
-              "template": "find_letter",
+              "template": "letter_for_sound",
               "pattern": "LETTER_M",
               "distractors": [
-                "n",
-                "w"
+                "LETTER_N",
+                "LETTER_W"
               ],
               "skill": "kg1-letter-m"
+            },
+            {
+              "template": "pick_starting_sound",
+              "pattern": "LETTER_T",
+              "word": "tiger",
+              "distractors": [
+                "lion",
+                "bear"
+              ],
+              "skill": "kg1-letter-t"
             },
             {
               "template": "find_letter",
@@ -96,99 +296,46 @@
         },
         {
           "stage": 2,
-          "label": "Sounds",
-          "skill": "kg1-letter-t",
+          "label": "Short vowels and blending",
+          "skill": "kg2-short-a",
           "questions": [
             {
-              "template": "pick_starting_sound",
-              "pattern": "LETTER_T",
-              "word": "tiger",
-              "distractors": [
-                "lion",
-                "bear"
+              "template": "sound_at_position",
+              "word": "hat",
+              "position": "middle",
+              "choices": [
+                "i",
+                "o"
               ],
-              "skill": "kg1-letter-t"
+              "skill": "kg2-short-a"
             },
             {
-              "template": "pick_starting_sound",
-              "pattern": "LETTER_C",
-              "word": "cup",
+              "template": "blend_word",
+              "word": "mop",
               "distractors": [
-                "sun",
-                "hat"
+                "map",
+                "pot"
               ],
-              "skill": "kg1-letter-c"
+              "skill": "kg2-short-o"
             },
             {
-              "template": "pick_starting_sound",
-              "pattern": "LETTER_A",
-              "word": "ant",
+              "template": "read_word",
+              "word": "sun",
               "distractors": [
-                "egg",
-                "pig"
+                "bus",
+                "cup"
               ],
-              "skill": "kg1-letter-a"
+              "skill": "kg2-short-u"
+            },
+            {
+              "template": "segment_word",
+              "word": "map",
+              "skill": "kg2-segmenting"
             }
           ]
         },
         {
           "stage": 3,
-          "label": "CVC words",
-          "skill": "kg2-short-a",
-          "questions": [
-            {
-              "template": "listen_pick_word",
-              "word": "hat",
-              "distractors": [
-                "hen",
-                "bat"
-              ]
-            },
-            {
-              "template": "listen_pick_word",
-              "word": "pig",
-              "distractors": [
-                "pin",
-                "big"
-              ],
-              "skill": "kg2-short-i"
-            },
-            {
-              "template": "missing_pattern",
-              "word": "bug",
-              "missing": "u",
-              "choices": [
-                "a",
-                "i"
-              ],
-              "skill": "kg2-short-o-u-e"
-            }
-          ]
-        },
-        {
-          "stage": 4,
-          "label": "Blending",
-          "skill": "kg2-short-a",
-          "questions": [
-            {
-              "template": "build_word",
-              "word": "map",
-              "extra": [
-                "o"
-              ]
-            },
-            {
-              "template": "build_word",
-              "word": "sit",
-              "extra": [
-                "e"
-              ],
-              "skill": "kg2-short-i"
-            }
-          ]
-        },
-        {
-          "stage": 5,
           "label": "Digraphs",
           "skill": "kg3-digraph-sh",
           "questions": [
@@ -199,16 +346,13 @@
               "choices": [
                 "ch",
                 "th"
-              ]
+              ],
+              "skill": "kg3-digraph-sh"
             },
             {
-              "template": "missing_pattern",
-              "word": "chick",
-              "missing": "ch",
-              "choices": [
-                "sh",
-                "th"
-              ],
+              "template": "find_pattern",
+              "pattern": "CH",
+              "word": "chin",
               "skill": "kg3-digraph-ch"
             },
             {
@@ -220,74 +364,261 @@
                 "bag"
               ],
               "skill": "kg3-digraph-th"
+            },
+            {
+              "template": "missing_pattern",
+              "word": "chick",
+              "missing": "ch",
+              "choices": [
+                "sh",
+                "th"
+              ],
+              "skill": "kg3-digraph-ch"
+            }
+          ]
+        },
+        {
+          "stage": 4,
+          "label": "Vowel teams and r-controlled vowels",
+          "skill": "g1-vowel-team-ee",
+          "questions": [
+            {
+              "template": "pick_word_with_pattern",
+              "pattern": "EE",
+              "word": "tree",
+              "distractors": [
+                "ten",
+                "tub"
+              ],
+              "skill": "g1-vowel-team-ee"
+            },
+            {
+              "template": "read_word",
+              "word": "boat",
+              "distractors": [
+                "bat",
+                "goat"
+              ],
+              "skill": "g1-vowel-team-oa"
+            },
+            {
+              "template": "read_word",
+              "word": "rain",
+              "distractors": [
+                "ring",
+                "train"
+              ],
+              "skill": "g1-vowel-team-ai-ay"
+            },
+            {
+              "template": "pick_word_with_pattern",
+              "pattern": "AR",
+              "word": "car",
+              "distractors": [
+                "cat",
+                "cup"
+              ],
+              "skill": "g1-r-ar"
+            }
+          ]
+        },
+        {
+          "stage": 5,
+          "label": "Longer words",
+          "skill": "g2-tion-sion",
+          "questions": [
+            {
+              "type": "MULTIPLE_CHOICE",
+              "prompt": "Which word ends like “station”?",
+              "promptSpeech": "Which word ends like station?",
+              "content": {
+                "display": "station",
+                "options": [
+                  {
+                    "id": "action",
+                    "text": "action"
+                  },
+                  {
+                    "id": "actor",
+                    "text": "actor"
+                  },
+                  {
+                    "id": "acting",
+                    "text": "acting"
+                  }
+                ]
+              },
+              "answer": {
+                "accepted": [
+                  "action"
+                ]
+              },
+              "skill": "g2-tion-sion"
+            },
+            {
+              "type": "MULTIPLE_CHOICE",
+              "prompt": "Which word has the ending -ful?",
+              "promptSpeech": "Which word has the ending ful?",
+              "content": {
+                "display": "",
+                "options": [
+                  {
+                    "id": "helpful",
+                    "text": "helpful"
+                  },
+                  {
+                    "id": "helping",
+                    "text": "helping"
+                  },
+                  {
+                    "id": "helper",
+                    "text": "helper"
+                  }
+                ]
+              },
+              "answer": {
+                "accepted": [
+                  "helpful"
+                ]
+              },
+              "skill": "g2-suffixes"
+            },
+            {
+              "type": "MULTIPLE_CHOICE",
+              "prompt": "How many syllables are in “pumpkin”?",
+              "promptSpeech": "How many syllables are in pumpkin?",
+              "content": {
+                "display": "pumpkin",
+                "options": [
+                  {
+                    "id": "two",
+                    "text": "2"
+                  },
+                  {
+                    "id": "one",
+                    "text": "1"
+                  },
+                  {
+                    "id": "three",
+                    "text": "3"
+                  }
+                ]
+              },
+              "answer": {
+                "accepted": [
+                  "two"
+                ]
+              },
+              "skill": "g2-multisyllable"
+            },
+            {
+              "type": "MULTIPLE_CHOICE",
+              "prompt": "Which word has the ending -ness?",
+              "promptSpeech": "Which word has the ending ness?",
+              "content": {
+                "display": "",
+                "options": [
+                  {
+                    "id": "kindness",
+                    "text": "kindness"
+                  },
+                  {
+                    "id": "kindly",
+                    "text": "kindly"
+                  },
+                  {
+                    "id": "kinder",
+                    "text": "kinder"
+                  }
+                ]
+              },
+              "answer": {
+                "accepted": [
+                  "kindness"
+                ]
+              },
+              "skill": "g2-suffixes"
             }
           ]
         },
         {
           "stage": 6,
-          "label": "Sight words",
-          "skill": "kg3-tricky-words-1",
-          "questions": [
-            {
-              "template": "listen_pick_word",
-              "word": "said",
-              "distractors": [
-                "see",
-                "sit"
-              ]
-            },
-            {
-              "template": "listen_pick_word",
-              "word": "they",
-              "distractors": [
-                "the",
-                "that"
-              ]
-            },
-            {
-              "template": "listen_pick_word",
-              "word": "like",
-              "distractors": [
-                "look",
-                "see"
-              ],
-              "skill": "kg2-sight-words-1"
-            }
-          ]
-        },
-        {
-          "stage": 7,
-          "label": "Sentences",
-          "skill": "kg2-sentence-order",
-          "questions": [
-            {
-              "template": "order_sentence",
-              "sentence": "The cat is big.",
-              "emoji": "🐱"
-            },
-            {
-              "template": "order_sentence",
-              "sentence": "I have three teeth.",
-              "emoji": "🦷"
-            }
-          ]
-        },
-        {
-          "stage": 8,
-          "label": "Reading",
-          "skill": "g1-vowel-team-oa",
+          "label": "Listening",
+          "skill": "kg1-reading-find-it",
           "questions": [
             {
               "type": "MULTIPLE_CHOICE",
-              "prompt": "Where is the goat?",
-              "promptSpeech": "Read: The goat is on the boat. Where is the goat?",
+              "prompt": "Who runs?",
+              "promptSpeech": "Listen. The dog runs. Who runs?",
               "content": {
-                "display": "The goat is on the boat.",
+                "display": "🐶 The dog runs.",
                 "options": [
                   {
-                    "id": "boat",
-                    "text": "on the boat",
-                    "emoji": "⛵"
+                    "id": "dog",
+                    "text": "the dog",
+                    "emoji": "🐶"
+                  },
+                  {
+                    "id": "cat",
+                    "text": "the cat",
+                    "emoji": "🐱"
+                  },
+                  {
+                    "id": "fish",
+                    "text": "the fish",
+                    "emoji": "🐟"
+                  }
+                ]
+              },
+              "answer": {
+                "accepted": [
+                  "dog"
+                ]
+              },
+              "skill": "kg1-reading-find-it"
+            },
+            {
+              "type": "MULTIPLE_CHOICE",
+              "prompt": "What is red?",
+              "promptSpeech": "Listen. The ball is red. What is red?",
+              "content": {
+                "display": "🔴 The ball is red.",
+                "options": [
+                  {
+                    "id": "ball",
+                    "text": "the ball",
+                    "emoji": "⚽"
+                  },
+                  {
+                    "id": "sun",
+                    "text": "the sun",
+                    "emoji": "☀️"
+                  },
+                  {
+                    "id": "tree",
+                    "text": "the tree",
+                    "emoji": "🌳"
+                  }
+                ]
+              },
+              "answer": {
+                "accepted": [
+                  "ball"
+                ]
+              },
+              "skill": "kg1-reading-find-it"
+            },
+            {
+              "type": "MULTIPLE_CHOICE",
+              "prompt": "Where is the cat?",
+              "promptSpeech": "Listen. The cat is in the box. Where is the cat?",
+              "content": {
+                "display": "🐱📦 The cat is in the box.",
+                "options": [
+                  {
+                    "id": "box",
+                    "text": "in the box",
+                    "emoji": "📦"
                   },
                   {
                     "id": "tree",
@@ -303,37 +634,718 @@
               },
               "answer": {
                 "accepted": [
-                  "boat"
+                  "box"
                 ]
-              }
+              },
+              "skill": "kg1-read-with-me"
+            }
+          ]
+        },
+        {
+          "stage": 7,
+          "label": "Sight words and sentences",
+          "skill": "kg2-sight-words-1",
+          "questions": [
+            {
+              "template": "listen_pick_word",
+              "word": "like",
+              "distractors": [
+                "look",
+                "see"
+              ],
+              "skill": "kg2-sight-words-1"
+            },
+            {
+              "template": "listen_pick_word",
+              "word": "the",
+              "distractors": [
+                "he",
+                "she"
+              ],
+              "skill": "kg2-sight-words-1"
             },
             {
               "type": "MULTIPLE_CHOICE",
-              "prompt": "Why did the snail not hide?",
-              "promptSpeech": "Read: The snail likes the rain. Why did the snail not hide?",
-              "skill": "g1-vowel-team-ai-ay",
+              "prompt": "Where is the hat?",
+              "promptSpeech": "Where is the hat?",
               "content": {
-                "display": "The goat ran into the barn. But the snail did not hide. The snail likes the rain.",
+                "display": "The hat is on the bed.",
                 "options": [
                   {
-                    "id": "likes-rain",
-                    "text": "It likes the rain."
+                    "id": "bed",
+                    "text": "on the bed",
+                    "emoji": "🛏️"
                   },
                   {
-                    "id": "is-fast",
-                    "text": "It is fast."
+                    "id": "box",
+                    "text": "in the box",
+                    "emoji": "📦"
                   },
                   {
-                    "id": "is-asleep",
-                    "text": "It is asleep."
+                    "id": "cat",
+                    "text": "on the cat",
+                    "emoji": "🐱"
                   }
                 ]
               },
               "answer": {
                 "accepted": [
-                  "likes-rain"
+                  "bed"
                 ]
-              }
+              },
+              "skill": "kg2-reading-find-it"
+            }
+          ]
+        },
+        {
+          "stage": 8,
+          "label": "Reading sentences",
+          "skill": "kg3-reading-find-it",
+          "questions": [
+            {
+              "type": "MULTIPLE_CHOICE",
+              "prompt": "What is in the sea?",
+              "promptSpeech": "What is in the sea?",
+              "content": {
+                "display": "The ship is in the sea. A fish is in the net.",
+                "options": [
+                  {
+                    "id": "ship",
+                    "text": "a ship",
+                    "emoji": "🚢"
+                  },
+                  {
+                    "id": "bus",
+                    "text": "a bus",
+                    "emoji": "🚌"
+                  },
+                  {
+                    "id": "bed",
+                    "text": "a bed",
+                    "emoji": "🛏️"
+                  }
+                ]
+              },
+              "answer": {
+                "accepted": [
+                  "ship"
+                ]
+              },
+              "skill": "kg3-reading-find-it"
+            },
+            {
+              "type": "MULTIPLE_CHOICE",
+              "prompt": "What did Sam do first?",
+              "promptSpeech": "What did Sam do first?",
+              "content": {
+                "display": "Sam got up. Then he had lunch. Then he went to the park.",
+                "options": [
+                  {
+                    "id": "up",
+                    "text": "got up"
+                  },
+                  {
+                    "id": "lunch",
+                    "text": "had lunch"
+                  },
+                  {
+                    "id": "park",
+                    "text": "went to the park"
+                  }
+                ]
+              },
+              "answer": {
+                "accepted": [
+                  "up"
+                ]
+              },
+              "skill": "kg3-reading-sequencing"
+            },
+            {
+              "type": "MULTIPLE_CHOICE",
+              "prompt": "Who has a red hat?",
+              "promptSpeech": "Who has a red hat?",
+              "content": {
+                "display": "Pam has a red hat. Tom has a blue cap.",
+                "options": [
+                  {
+                    "id": "pam",
+                    "text": "Pam"
+                  },
+                  {
+                    "id": "tom",
+                    "text": "Tom"
+                  },
+                  {
+                    "id": "mum",
+                    "text": "Mum"
+                  }
+                ]
+              },
+              "answer": {
+                "accepted": [
+                  "pam"
+                ]
+              },
+              "skill": "kg3-reading-characters"
+            }
+          ]
+        },
+        {
+          "stage": 9,
+          "label": "Stories: details and main idea",
+          "skill": "g1-reading-details",
+          "questions": [
+            {
+              "type": "MULTIPLE_CHOICE",
+              "prompt": "What did Ben find?",
+              "promptSpeech": "What did Ben find?",
+              "content": {
+                "display": "Ben went to the beach. He dug in the sand and found a shell. He gave it to his mum.",
+                "options": [
+                  {
+                    "id": "shell",
+                    "text": "a shell",
+                    "emoji": "🐚"
+                  },
+                  {
+                    "id": "coin",
+                    "text": "a coin",
+                    "emoji": "🪙"
+                  },
+                  {
+                    "id": "crab",
+                    "text": "a crab",
+                    "emoji": "🦀"
+                  }
+                ]
+              },
+              "answer": {
+                "accepted": [
+                  "shell"
+                ]
+              },
+              "skill": "g1-reading-details"
+            },
+            {
+              "type": "MULTIPLE_CHOICE",
+              "prompt": "What is this story mostly about?",
+              "promptSpeech": "What is this story mostly about?",
+              "content": {
+                "display": "Kim feeds her cat in the morning. She brushes its fur. At night the cat sleeps on her bed.",
+                "options": [
+                  {
+                    "id": "care",
+                    "text": "Kim takes care of her cat"
+                  },
+                  {
+                    "id": "bed",
+                    "text": "Kim's new bed"
+                  },
+                  {
+                    "id": "morning",
+                    "text": "what Kim eats"
+                  }
+                ]
+              },
+              "answer": {
+                "accepted": [
+                  "care"
+                ]
+              },
+              "skill": "g1-reading-main-idea"
+            },
+            {
+              "type": "MULTIPLE_CHOICE",
+              "prompt": "How does Jack feel?",
+              "promptSpeech": "How does Jack feel?",
+              "content": {
+                "display": "Jack dropped his ice cream. He looked at it on the ground and cried.",
+                "options": [
+                  {
+                    "id": "sad",
+                    "text": "sad",
+                    "emoji": "😢"
+                  },
+                  {
+                    "id": "happy",
+                    "text": "happy",
+                    "emoji": "😀"
+                  },
+                  {
+                    "id": "sleepy",
+                    "text": "sleepy",
+                    "emoji": "😴"
+                  }
+                ]
+              },
+              "answer": {
+                "accepted": [
+                  "sad"
+                ]
+              },
+              "skill": "g1-reading-inference"
+            }
+          ]
+        },
+        {
+          "stage": 10,
+          "label": "Stories: cause, inference and summary",
+          "skill": "g2-reading-cause-effect",
+          "questions": [
+            {
+              "type": "MULTIPLE_CHOICE",
+              "prompt": "Why was the grass wet?",
+              "promptSpeech": "Why was the grass wet?",
+              "content": {
+                "display": "It rained all night. In the morning the grass was wet, and there were puddles on the path.",
+                "options": [
+                  {
+                    "id": "rain",
+                    "text": "It rained all night."
+                  },
+                  {
+                    "id": "hose",
+                    "text": "Dad used the hose."
+                  },
+                  {
+                    "id": "snow",
+                    "text": "Snow melted on it."
+                  }
+                ]
+              },
+              "answer": {
+                "accepted": [
+                  "rain"
+                ]
+              },
+              "skill": "g2-reading-cause-effect"
+            },
+            {
+              "type": "MULTIPLE_CHOICE",
+              "prompt": "What will Mia probably do next?",
+              "promptSpeech": "What will Mia probably do next?",
+              "content": {
+                "display": "Mia put on her coat and boots. She took her umbrella and opened the front door.",
+                "options": [
+                  {
+                    "id": "out",
+                    "text": "go outside"
+                  },
+                  {
+                    "id": "sleep",
+                    "text": "go to sleep"
+                  },
+                  {
+                    "id": "bath",
+                    "text": "have a bath"
+                  }
+                ]
+              },
+              "answer": {
+                "accepted": [
+                  "out"
+                ]
+              },
+              "skill": "g2-reading-inference"
+            },
+            {
+              "type": "MULTIPLE_CHOICE",
+              "prompt": "Which sentence tells the main idea?",
+              "promptSpeech": "Which sentence tells the main idea?",
+              "content": {
+                "display": "Bees visit many flowers. They carry pollen from flower to flower. This helps new plants grow.",
+                "options": [
+                  {
+                    "id": "help",
+                    "text": "Bees help plants grow."
+                  },
+                  {
+                    "id": "sting",
+                    "text": "Bees can sting."
+                  },
+                  {
+                    "id": "honey",
+                    "text": "Honey is sweet."
+                  }
+                ]
+              },
+              "answer": {
+                "accepted": [
+                  "help"
+                ]
+              },
+              "skill": "g2-reading-main-idea"
+            }
+          ]
+        },
+        {
+          "stage": 11,
+          "label": "Words for things",
+          "skill": "kg1-vocab-animals",
+          "questions": [
+            {
+              "template": "picture_to_word",
+              "word": "dog",
+              "skill": "kg1-vocab-animals"
+            },
+            {
+              "template": "picture_to_word",
+              "word": "lion",
+              "skill": "kg1-vocab-animals"
+            },
+            {
+              "template": "picture_to_word",
+              "word": "duck",
+              "skill": "kg1-vocab-animals"
+            },
+            {
+              "template": "picture_to_word",
+              "word": "monkey",
+              "skill": "kg1-vocab-animals"
+            }
+          ]
+        },
+        {
+          "stage": 12,
+          "label": "Food, toys and transport",
+          "skill": "kg2-vocab-food",
+          "questions": [
+            {
+              "template": "meaning_to_word",
+              "word": "orange",
+              "skill": "kg2-vocab-food"
+            },
+            {
+              "template": "picture_to_word",
+              "word": "jam",
+              "skill": "kg2-vocab-food"
+            },
+            {
+              "template": "meaning_to_word",
+              "word": "ball",
+              "skill": "kg2-vocab-toys"
+            },
+            {
+              "template": "picture_to_word",
+              "word": "bus",
+              "skill": "kg2-vocab-transport"
+            }
+          ]
+        },
+        {
+          "stage": 13,
+          "label": "Clothes, rooms and nature",
+          "skill": "kg3-vocab-clothes",
+          "questions": [
+            {
+              "template": "meaning_to_word",
+              "word": "shoe",
+              "skill": "kg3-vocab-clothes"
+            },
+            {
+              "template": "meaning_to_word",
+              "word": "chair",
+              "skill": "kg3-vocab-rooms"
+            },
+            {
+              "template": "meaning_to_word",
+              "word": "shell",
+              "skill": "kg3-vocab-nature"
+            }
+          ]
+        },
+        {
+          "stage": 14,
+          "label": "Weather, jobs and feelings",
+          "skill": "g1-vocab-weather",
+          "questions": [
+            {
+              "template": "meaning_to_word",
+              "word": "cloud",
+              "skill": "g1-vocab-weather"
+            },
+            {
+              "template": "meaning_to_word",
+              "word": "snow",
+              "skill": "g1-vocab-weather"
+            },
+            {
+              "template": "meaning_to_word",
+              "word": "cook",
+              "skill": "g1-vocab-jobs"
+            }
+          ]
+        },
+        {
+          "stage": 15,
+          "label": "Places and technology",
+          "skill": "g2-vocab-places",
+          "questions": [
+            {
+              "template": "meaning_to_word",
+              "word": "television",
+              "skill": "g2-vocab-technology"
+            },
+            {
+              "template": "meaning_to_word",
+              "word": "station",
+              "skill": "g2-vocab-places"
+            },
+            {
+              "template": "meaning_to_word",
+              "word": "farm",
+              "skill": "g2-vocab-places"
+            }
+          ]
+        },
+        {
+          "stage": 16,
+          "label": "Spell short words",
+          "skill": "kg1-spell-cvc",
+          "questions": [
+            {
+              "template": "spell_word",
+              "word": "cat",
+              "skill": "kg1-spell-cvc"
+            },
+            {
+              "template": "spell_word",
+              "word": "sun",
+              "skill": "kg1-spell-cvc"
+            },
+            {
+              "template": "spell_word",
+              "word": "dog",
+              "skill": "kg1-spell-cvc"
+            }
+          ]
+        },
+        {
+          "stage": 17,
+          "label": "Short words and tricky words",
+          "skill": "kg2-spell-cvc",
+          "questions": [
+            {
+              "template": "spell_word",
+              "word": "bed",
+              "skill": "kg2-spell-cvc"
+            },
+            {
+              "template": "spell_word",
+              "word": "map",
+              "skill": "kg2-spell-cvc"
+            },
+            {
+              "template": "spell_word",
+              "word": "the",
+              "skill": "kg2-spell-tricky"
+            },
+            {
+              "template": "spell_word",
+              "word": "see",
+              "skill": "kg2-spell-hf"
+            }
+          ]
+        },
+        {
+          "stage": 18,
+          "label": "Digraphs and blends",
+          "skill": "kg3-spell-digraphs",
+          "questions": [
+            {
+              "template": "spell_word",
+              "word": "ship",
+              "skill": "kg3-spell-digraphs"
+            },
+            {
+              "template": "spell_word",
+              "word": "frog",
+              "skill": "kg3-spell-blends"
+            },
+            {
+              "template": "spell_word",
+              "word": "chin",
+              "skill": "kg3-spell-digraphs"
+            },
+            {
+              "template": "spell_word",
+              "word": "lamp",
+              "skill": "kg3-spell-blends"
+            }
+          ]
+        },
+        {
+          "stage": 19,
+          "label": "Magic e, vowel teams, endings",
+          "skill": "g1-spell-magic-e",
+          "questions": [
+            {
+              "template": "spell_word",
+              "word": "cake",
+              "skill": "g1-spell-magic-e"
+            },
+            {
+              "template": "spell_word",
+              "word": "rain",
+              "skill": "g1-spell-vowel-teams"
+            },
+            {
+              "template": "spell_word",
+              "word": "star",
+              "skill": "g1-spell-r-controlled"
+            },
+            {
+              "template": "spell_word",
+              "word": "helped",
+              "skill": "g1-spell-endings"
+            }
+          ]
+        },
+        {
+          "stage": 20,
+          "label": "Longer and tricky words",
+          "skill": "g2-spell-multisyllable",
+          "questions": [
+            {
+              "template": "spell_word",
+              "word": "rabbit",
+              "skill": "g2-spell-multisyllable"
+            },
+            {
+              "template": "spell_word",
+              "word": "helpful",
+              "skill": "g2-spell-suffixes"
+            },
+            {
+              "template": "spell_word",
+              "word": "because",
+              "skill": "g2-spell-tricky"
+            },
+            {
+              "template": "spell_word",
+              "word": "picnic",
+              "skill": "g2-spell-multisyllable"
+            }
+          ]
+        },
+        {
+          "stage": 21,
+          "label": "Tracing letters",
+          "skill": "kg1-letter-formation",
+          "questions": [
+            {
+              "template": "trace_letter",
+              "letter": "a",
+              "mode": "trace",
+              "case": "lower",
+              "skill": "kg1-letter-formation"
+            },
+            {
+              "template": "trace_letter",
+              "letter": "m",
+              "mode": "trace",
+              "case": "lower",
+              "skill": "kg1-letter-formation"
+            },
+            {
+              "template": "trace_letter",
+              "letter": "s",
+              "mode": "trace",
+              "case": "lower",
+              "skill": "kg1-letter-formation"
+            }
+          ]
+        },
+        {
+          "stage": 22,
+          "label": "Writing letters and sounds",
+          "skill": "kg2-letter-writing",
+          "questions": [
+            {
+              "template": "trace_letter",
+              "letter": "d",
+              "mode": "write",
+              "case": "lower",
+              "skill": "kg2-letter-writing"
+            },
+            {
+              "template": "write_sound",
+              "pattern": "LETTER_T",
+              "skill": "kg2-sound-to-letter"
+            },
+            {
+              "template": "picture_word",
+              "word": "cat",
+              "skill": "kg2-cvc-writing"
+            }
+          ]
+        },
+        {
+          "stage": 23,
+          "label": "Writing words and capitals",
+          "skill": "kg3-word-writing",
+          "questions": [
+            {
+              "template": "picture_word",
+              "word": "fish",
+              "skill": "kg3-word-writing"
+            },
+            {
+              "template": "picture_word",
+              "word": "dish",
+              "skill": "kg3-word-writing"
+            },
+            {
+              "template": "trace_letter",
+              "letter": "b",
+              "mode": "write",
+              "case": "upper",
+              "skill": "kg3-capitals"
+            }
+          ]
+        },
+        {
+          "stage": 24,
+          "label": "Writing sentences",
+          "skill": "g1-sentence-writing",
+          "questions": [
+            {
+              "template": "sentence_dictation",
+              "word": "cake",
+              "skill": "g1-sentence-writing"
+            },
+            {
+              "template": "sentence_dictation",
+              "word": "play",
+              "skill": "g1-sentence-writing"
+            },
+            {
+              "template": "sentence_dictation",
+              "word": "boat",
+              "skill": "g1-sentence-writing"
+            }
+          ]
+        },
+        {
+          "stage": 25,
+          "label": "Sentences with capitals and full stops",
+          "skill": "g2-editing",
+          "questions": [
+            {
+              "template": "sentence_dictation",
+              "word": "rabbit",
+              "skill": "g2-editing"
+            },
+            {
+              "template": "sentence_dictation",
+              "word": "picnic",
+              "skill": "g2-editing"
+            },
+            {
+              "template": "sentence_dictation",
+              "word": "school",
+              "skill": "g2-editing"
             }
           ]
         }
@@ -345,10 +1357,129 @@
       "description": "A short check of letters, sounds, blending, segmenting, digraphs, patterns, reading and spelling. One try per question; the parent sees a score for each area.",
       "type": "skill_check",
       "config": {
-        "report": "phonics",
+        "version": 2,
         "childTitle": "Sound Check",
         "emoji": "🎯",
-        "areaPassPercent": 75
+        "report": "phonics",
+        "feedback": "full",
+        "allowSkip": false,
+        "pool": "authored",
+        "stopping": {
+          "rule": "none"
+        },
+        "passPercent": 75,
+        "maxItems": 40,
+        "breakEvery": 0,
+        "sections": [
+          {
+            "code": "stage-1",
+            "label": "Letter recognition",
+            "domain": "PHONICS",
+            "level": "KG1",
+            "stage": 1,
+            "draw": 2,
+            "maxPerSkill": 20
+          },
+          {
+            "code": "stage-2",
+            "label": "Letter sounds",
+            "domain": "PHONICS",
+            "level": "KG1",
+            "stage": 2,
+            "draw": 2,
+            "maxPerSkill": 20
+          },
+          {
+            "code": "stage-3",
+            "label": "Beginning sounds",
+            "domain": "PHONICS",
+            "level": "KG1",
+            "stage": 3,
+            "draw": 2,
+            "maxPerSkill": 20
+          },
+          {
+            "code": "stage-4",
+            "label": "Ending sounds",
+            "domain": "PHONICS",
+            "level": "KG2",
+            "stage": 4,
+            "draw": 2,
+            "maxPerSkill": 20
+          },
+          {
+            "code": "stage-5",
+            "label": "Short vowels",
+            "domain": "PHONICS",
+            "level": "KG2",
+            "stage": 5,
+            "draw": 2,
+            "maxPerSkill": 20
+          },
+          {
+            "code": "stage-6",
+            "label": "CVC words",
+            "domain": "PHONICS",
+            "level": "KG2",
+            "stage": 6,
+            "draw": 2,
+            "maxPerSkill": 20
+          },
+          {
+            "code": "stage-7",
+            "label": "Blending",
+            "domain": "PHONICS",
+            "level": "KG2",
+            "stage": 7,
+            "draw": 2,
+            "maxPerSkill": 20
+          },
+          {
+            "code": "stage-8",
+            "label": "Segmenting",
+            "domain": "PHONICS",
+            "level": "KG2",
+            "stage": 8,
+            "draw": 2,
+            "maxPerSkill": 20
+          },
+          {
+            "code": "stage-9",
+            "label": "Digraphs",
+            "domain": "PHONICS",
+            "level": "KG3",
+            "stage": 9,
+            "draw": 2,
+            "maxPerSkill": 20
+          },
+          {
+            "code": "stage-10",
+            "label": "Patterns",
+            "domain": "PHONICS",
+            "level": "GRADE1",
+            "stage": 10,
+            "draw": 2,
+            "maxPerSkill": 20
+          },
+          {
+            "code": "stage-11",
+            "label": "Word reading",
+            "domain": "PHONICS",
+            "level": "GRADE1",
+            "stage": 11,
+            "draw": 2,
+            "maxPerSkill": 20
+          },
+          {
+            "code": "stage-12",
+            "label": "Spelling",
+            "domain": "SPELLING",
+            "level": "KG2",
+            "stage": 12,
+            "draw": 2,
+            "maxPerSkill": 20
+          }
+        ]
       },
       "status": "published",
       "stages": [
@@ -625,6 +1756,197 @@
           ]
         }
       ]
+    },
+    {
+      "code": "skill-recheck",
+      "title": "Skill re-check",
+      "type": "reassessment",
+      "description": "A short re-check of a skill the child has practised since a check found it weak. Questions the child has seen least are chosen.",
+      "status": "published",
+      "config": {
+        "version": 2,
+        "childTitle": "Show what you learned",
+        "emoji": "🌟",
+        "feedback": "encourage",
+        "allowSkip": true,
+        "pool": "skills",
+        "maxItems": 8,
+        "breakEvery": 0,
+        "sections": [
+          {
+            "code": "recheck",
+            "label": "Show what you learned",
+            "domain": "PHONICS",
+            "draw": 5,
+            "maxPerSkill": 5
+          }
+        ]
+      },
+      "stages": []
+    },
+    {
+      "code": "review-check",
+      "title": "Review check",
+      "type": "review_check",
+      "description": "A quick check of the skills that are due for review.",
+      "status": "published",
+      "config": {
+        "version": 2,
+        "childTitle": "Quick review",
+        "emoji": "🔁",
+        "feedback": "full",
+        "allowSkip": false,
+        "pool": "review",
+        "maxItems": 8,
+        "breakEvery": 0,
+        "sections": [
+          {
+            "code": "review",
+            "label": "Quick review",
+            "domain": "PHONICS",
+            "draw": 6,
+            "maxPerSkill": 2
+          }
+        ]
+      },
+      "stages": []
+    },
+    {
+      "code": "progress-check",
+      "title": "Progress check",
+      "type": "progress_check",
+      "description": "Checks each area at the level the child is learning now, to see whether it is time to move on.",
+      "status": "published",
+      "config": {
+        "version": 2,
+        "childTitle": "Progress check",
+        "emoji": "📈",
+        "feedback": "encourage",
+        "allowSkip": true,
+        "pool": "level",
+        "maxItems": 15,
+        "breakEvery": 8,
+        "sections": [
+          {
+            "code": "phonics",
+            "label": "Phonics",
+            "domain": "PHONICS",
+            "draw": 3,
+            "maxPerSkill": 1
+          },
+          {
+            "code": "reading",
+            "label": "Reading",
+            "domain": "READING",
+            "draw": 3,
+            "maxPerSkill": 1
+          },
+          {
+            "code": "vocabulary",
+            "label": "Vocabulary",
+            "domain": "VOCABULARY",
+            "draw": 3,
+            "maxPerSkill": 1
+          },
+          {
+            "code": "spelling",
+            "label": "Spelling",
+            "domain": "SPELLING",
+            "draw": 3,
+            "maxPerSkill": 1
+          },
+          {
+            "code": "writing",
+            "label": "Writing",
+            "domain": "WRITING",
+            "draw": 3,
+            "maxPerSkill": 1
+          }
+        ]
+      },
+      "stages": []
+    },
+    {
+      "code": "diagnostic",
+      "title": "Diagnostic check",
+      "type": "diagnostic",
+      "description": "A closer look at one area: one question for each skill of the level the child is learning, so the parent sees exactly which skills are secure.",
+      "status": "published",
+      "config": {
+        "version": 2,
+        "childTitle": "Show what you know",
+        "emoji": "🔍",
+        "feedback": "none",
+        "allowSkip": true,
+        "pool": "level",
+        "maxItems": 12,
+        "breakEvery": 6,
+        "sections": [
+          {
+            "code": "phonics",
+            "label": "Phonics",
+            "domain": "PHONICS",
+            "draw": 8,
+            "maxPerSkill": 1
+          },
+          {
+            "code": "reading",
+            "label": "Reading",
+            "domain": "READING",
+            "draw": 8,
+            "maxPerSkill": 1
+          },
+          {
+            "code": "vocabulary",
+            "label": "Vocabulary",
+            "domain": "VOCABULARY",
+            "draw": 8,
+            "maxPerSkill": 1
+          },
+          {
+            "code": "spelling",
+            "label": "Spelling",
+            "domain": "SPELLING",
+            "draw": 8,
+            "maxPerSkill": 1
+          },
+          {
+            "code": "writing",
+            "label": "Writing",
+            "domain": "WRITING",
+            "draw": 8,
+            "maxPerSkill": 1
+          }
+        ]
+      },
+      "stages": []
+    },
+    {
+      "code": "end-of-unit",
+      "title": "End of unit check",
+      "type": "end_of_unit",
+      "description": "Checks the skills of one unit after it has been finished.",
+      "status": "published",
+      "config": {
+        "version": 2,
+        "childTitle": "Unit check",
+        "emoji": "🏁",
+        "feedback": "encourage",
+        "allowSkip": true,
+        "pool": "unit",
+        "maxItems": 8,
+        "breakEvery": 0,
+        "sections": [
+          {
+            "code": "unit",
+            "label": "Unit check",
+            "domain": "PHONICS",
+            "draw": 6,
+            "maxPerSkill": 2
+          }
+        ]
+      },
+      "stages": []
     }
   ]
 }

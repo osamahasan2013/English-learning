@@ -141,9 +141,12 @@ describe("phonics engine (real database)", () => {
       .select("overall_score, dimension_scores, skill_scores")
       .eq("assessment_attempt_id", sittingId)
       .single();
-    const areas = stored!.dimension_scores as Record<string, { percent: number; secure: boolean }>;
-    expect(areas["Digraphs"]).toMatchObject({ percent: 0, secure: false });
-    expect(areas["Letter sounds"]).toMatchObject({ percent: 100, secure: true });
+    // Sections keyed by their code, each with its label (Phase 9).
+    const areas = Object.values(
+      stored!.dimension_scores as Record<string, { label: string; percent: number; passed: boolean }>,
+    );
+    expect(areas.find((a) => a.label === "Digraphs")).toMatchObject({ percent: 0, passed: false });
+    expect(areas.find((a) => a.label === "Letter sounds")).toMatchObject({ percent: 100, passed: true });
     const digraphItems = items.filter((i) => i.stage === 9).length;
     expect(Number(stored!.overall_score)).toBeCloseTo(
       (100 * (items.length - digraphItems)) / items.length,
@@ -210,7 +213,7 @@ describe("phonics engine (real database)", () => {
         attemptedAt: new Date().toISOString(),
       },
     ]);
-    expect(smuggled.results[0]).toMatchObject({ status: "rejected", reason: "question_not_in_assessment" });
+    expect(smuggled.results[0]).toMatchObject({ status: "rejected", reason: "question_not_in_sitting" });
 
     // Parent B sees nothing of child A's check.
     const { data } = await parentB.client.from("assessment_results").select("id").eq("child_id", childA);

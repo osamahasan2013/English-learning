@@ -72,6 +72,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // the same event sent twice — converges on the same state.
 
 const ACHIEVEMENT_POINTS = 20;
+// Ids per `in (...)` filter: keeps every request URL well under the API's limit.
+const IN_CHUNK = 100;
 
 type Db = ReturnType<typeof createAdminClient>;
 
@@ -595,13 +597,20 @@ async function loadLessonStructure(db: Db, lessonIds: string[]) {
   for (const a of activityRows ?? []) activities.set(a.id, { lessonId: a.lesson_id, scoredQuestionIds: [] });
   if (activities.size === 0) return activities;
   const scored = new Set((types ?? []).filter((t) => t.is_scored).map((t) => t.code));
-  const { data: questionRows, error: questionsError } = await db
-    .from("questions")
-    .select("id, activity_id, question_type")
-    .in("activity_id", [...activities.keys()])
-    .eq("status", "published");
-  if (questionsError) throw questionsError;
-  for (const q of questionRows ?? []) {
+  // In chunks: a large offline batch can touch hundreds of activities, and one request with
+  // all of their ids would exceed the URL size the API accepts.
+  const activityIds = [...activities.keys()];
+  const questionRows: { id: string; activity_id: string | null; question_type: string }[] = [];
+  for (let i = 0; i < activityIds.length; i += IN_CHUNK) {
+    const { data, error: questionsError } = await db
+      .from("questions")
+      .select("id, activity_id, question_type")
+      .in("activity_id", activityIds.slice(i, i + IN_CHUNK))
+      .eq("status", "published");
+    if (questionsError) throw questionsError;
+    questionRows.push(...(data ?? []));
+  }
+  for (const q of questionRows) {
     if (q.activity_id && scored.has(q.question_type))
       activities.get(q.activity_id)?.scoredQuestionIds.push(q.id);
   }
@@ -708,15 +717,12 @@ async function recomputeLevelRollups(db: Db, childId: string, lessonIds: string[
             .select(
               "lesson_id, status, best_score, attempts, correct_attempts, started_at, last_attempt_at, completed_at",
             )
+            // All of the child's rows (bounded by the curriculum), filtered below: the level's
+            // lesson ids could be too many for one request URL.
             .eq("child_id", childId)
-            .in("lesson_id", allLessonIds)
         : Promise.resolve({ data: [], error: null }),
       allSkillIds.length
-        ? db
-            .from("skill_mastery")
-            .select("skill_id, status")
-            .eq("child_id", childId)
-            .in("skill_id", allSkillIds)
+        ? db.from("skill_mastery").select("skill_id, status").eq("child_id", childId)
         : Promise.resolve({ data: [], error: null }),
     ]);
   if (progressError || masteryError) throw progressError ?? masteryError;

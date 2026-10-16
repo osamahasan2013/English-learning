@@ -190,7 +190,9 @@ describe("spelling engine (real database)", () => {
       .from("questions")
       .select("id, answer")
       .eq("question_type", "SENTENCE_DICTATION")
-      .eq("status", "published");
+      .eq("status", "published")
+      // Lesson questions (assessment items are only answered in a sitting).
+      .not("activity_id", "is", null);
     const strict = (questions as unknown as SpellingQuestion[]).find((q) => q.answer.requirePunctuation)!;
     expect(strict).toBeDefined();
     const sentence = strict.answer.accepted[0];

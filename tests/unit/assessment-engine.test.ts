@@ -6,7 +6,9 @@ import {
   type AdaptiveLesson,
   type AdaptiveSkill,
 } from "@/lib/learning/adaptive";
+import { validateAssessment } from "@/lib/content/assessment-validation";
 import { blueprintSchema, legacyBlueprint } from "@/lib/learning/assessment-blueprint";
+import { itemDifficulty } from "@/lib/learning/item-difficulty";
 import {
   compareEvidence,
   contaminationWeight,
@@ -773,5 +775,129 @@ describe("adaptive recommendations", () => {
 
   it("uses only the configured number of recommendations", () => {
     expect(recommend(base({ rules: { ...DEFAULT_RULES.adaptive, maxRecommendations: 2 } }))).toHaveLength(2);
+  });
+});
+
+// ---------------------------------------------------------------------------------------
+describe("assessment content validation", () => {
+  const refs = {
+    skills: new Map([
+      ["kg1-a", { levelCode: "KG1" }],
+      ["kg1-b", { levelCode: "KG1" }],
+      ["kg2-a", { levelCode: "KG2" }],
+    ]),
+    levelCodes: new Set(["KG1", "KG2"]),
+    levelRank: (code: string) => (code === "KG1" ? 1 : 2),
+    expand: (q: { word?: string; template?: string }) => ({
+      type: q.template === "intro" ? "INTRO" : "MULTIPLE_CHOICE",
+      content: { word: q.word },
+      answer: q.template === "intro" ? null : { accepted: [q.word ?? ""] },
+      word: q.word ?? null,
+    }),
+  };
+  const config = (sections: object[], extra: object = {}) => ({
+    version: 2,
+    childTitle: "Check",
+    feedback: "none",
+    pool: "authored",
+    sections,
+    ...extra,
+  });
+  const stage = (n: number, words: string[], skill = "kg1-a") => ({
+    stage: n,
+    label: `Part ${n}`,
+    skill,
+    questions: words.map((word, i) => ({ template: "pick", word, skill: i % 2 ? "kg1-b" : skill })),
+  });
+
+  it("accepts valid content and computes item difficulty from the level", () => {
+    const r = validateAssessment(
+      {
+        code: "ok",
+        type: "placement",
+        config: config([{ code: "s1", label: "A", domain: "PHONICS", level: "KG2", draw: 2 }]),
+        stages: [stage(1, ["cat", "dog", "sun"], "kg2-a")],
+      },
+      refs,
+    );
+    expect(r.errors).toEqual([]);
+    expect(r.result!.items.map((i) => i.difficulty)).toEqual([3, 3, 3]);
+  });
+
+  it("finds insufficient pools, duplicates, unknown skills and levels, unassessable types and stray stages", () => {
+    const messages = validateAssessment(
+      {
+        code: "bad",
+        type: "placement",
+        config: config([
+          { code: "s1", label: "A", domain: "PHONICS", level: "KG1", draw: 5 },
+          { code: "s2", label: "B", domain: "PHONICS", level: "GRADE9", draw: 1 },
+        ]),
+        stages: [
+          {
+            ...stage(1, ["cat", "cat"]),
+            questions: [
+              { word: "cat" },
+              { word: "cat" },
+              { word: "x", skill: "nope" },
+              { template: "intro", word: "y" },
+            ],
+          },
+          stage(2, ["dog"]),
+          stage(7, ["sun"]),
+        ],
+      },
+      refs,
+    ).errors.map((e) => e.message);
+    const joined = messages.join(" | ");
+    expect(joined).toContain("insufficient pool");
+    expect(joined).toContain("duplicate of");
+    expect(joined).toContain("unknown skill nope");
+    expect(joined).toContain("unknown level GRADE9");
+    expect(joined).toContain("INTRO cannot be assessed");
+    expect(joined).toContain("stage 7 is not part of any section");
+  });
+
+  it("warns about one-skill sections, level mismatches and repeated words; rejects stages on dynamic pools", () => {
+    const warnings = validateAssessment(
+      {
+        code: "warn",
+        type: "placement",
+        config: config([
+          { code: "s1", label: "A", domain: "PHONICS", level: "KG1", draw: 2, maxPerSkill: 4 },
+        ]),
+        stages: [
+          {
+            stage: 1,
+            label: "A",
+            skill: "kg2-a",
+            questions: [{ word: "cat" }, { word: "cat", template: "b" }, { word: "cat", template: "c" }],
+          },
+        ],
+      },
+      refs,
+    ).warnings.map((w) => w.message);
+    expect(warnings.join(" | ")).toMatch(
+      /only one skill.*taught at KG2|taught at KG2.*only one skill|excessive repetition/,
+    );
+    const dynamic = validateAssessment(
+      {
+        code: "dyn",
+        type: "reassessment",
+        config: config([{ code: "r", label: "R", domain: "PHONICS", draw: 3 }], { pool: "skills" }),
+        stages: [stage(1, ["a"])],
+      },
+      refs,
+    );
+    expect(dynamic.errors[0].message).toContain("remove the stages");
+  });
+
+  it("documents item difficulty: level base, task demand, word features", () => {
+    expect(itemDifficulty({ levelRank: 1, questionType: "MULTIPLE_CHOICE" })).toBe(1);
+    expect(itemDifficulty({ levelRank: 3, questionType: "SPELLING", word: "button" })).toBe(7);
+    expect(
+      itemDifficulty({ levelRank: 5, questionType: "WORD_BUILDER", irregular: true, word: "because" }),
+    ).toBe(10);
+    expect(itemDifficulty({ levelRank: 2, questionType: "MULTIPLE_CHOICE", authored: 9 })).toBe(5);
   });
 });

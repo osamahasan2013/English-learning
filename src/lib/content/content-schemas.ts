@@ -1,3 +1,4 @@
+import { ASSESSMENT_TYPES } from "@/lib/learning/assessment-blueprint";
 import { z } from "zod";
 import { findUnsafeSpeech } from "@/lib/audio/pronunciation";
 
@@ -674,10 +675,13 @@ export const assessmentsFileSchema = z.object({
       code: slug,
       title: z.string(),
       description: z.string().default(""),
-      type: z.enum(["placement", "level_check", "skill_check"]),
+      type: z.enum(ASSESSMENT_TYPES),
       level: code.optional(),
+      // The blueprint (src/lib/learning/assessment-blueprint.ts), validated by the importer
+      // with the content checks in src/lib/content/assessment-validation.ts.
       config: z.record(z.unknown()).default({}),
       status,
+      // Authored items, one stage per blueprint section; dynamic pools have none.
       stages: z.array(
         z.object({
           stage: z.number().int().min(1),
@@ -686,7 +690,8 @@ export const assessmentsFileSchema = z.object({
           skill: slug,
           questions: z.array(questionInputSchema).min(1),
         }),
-      ),
+      )
+      .default([]),
     }),
   ),
 });
