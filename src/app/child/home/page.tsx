@@ -3,33 +3,54 @@ import Link from "next/link";
 import { MASTERY_LABELS } from "@/components/parent/skill-badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { requireActiveChild } from "@/lib/auth/session";
-import { lessonPrerequisiteCheck, type RecommendationReason } from "@/lib/learning/engine";
-import { getRecommendedLessons, loadEngineInput } from "@/lib/server/learning-engine";
+import type { AdaptiveRecommendation, RecommendationKind } from "@/lib/learning/adaptive";
+import { lessonPrerequisiteCheck } from "@/lib/learning/engine";
+import { loadAdaptive } from "@/lib/server/adaptive";
+import { loadOpenSittings } from "@/lib/server/assessments";
+import { loadEngineInput } from "@/lib/server/learning-engine";
 import { listPublishedLevels, loadChildHome, loadEngineProgress } from "@/lib/server/family-data";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Home" };
 
-const REASON_LABELS: Record<RecommendationReason, string> = {
+// Short labels for the kind of recommendation (the adaptive engine decides; the page only shows).
+const KIND_LABELS: Record<RecommendationKind, string> = {
   continue: "Keep going",
-  next: "Next",
+  target: "Next",
   review: "Practice",
-  prerequisite: "Practise first",
+  repair: "Practise first",
+  reassess: "Show what you know",
+  stretch: "Try something new",
 };
+const KIND_EMOJI: Record<RecommendationKind, string> = {
+  continue: "▶",
+  target: "✨",
+  review: "🔁",
+  repair: "🧱",
+  reassess: "🎯",
+  stretch: "🧗",
+};
+
+// Where a recommendation (or a plan item) leads: its lesson, or a short re-check.
+function hrefFor(r: Pick<AdaptiveRecommendation, "lessonId" | "recheck">) {
+  if (r.lessonId) return `/child/learn/${r.lessonId}`;
+  return r.recheck ? `/child/check/${r.recheck.assessmentCode}?skill=${r.recheck.skillId}` : "/child/home";
+}
 
 export default async function ChildHomePage() {
   const child = await requireActiveChild();
-  const [home, recommendations, engineInput, engineProgress, levels] = await Promise.all([
+  const [home, adaptive, openSittings, engineInput, engineProgress, levels] = await Promise.all([
     loadChildHome(child),
-    getRecommendedLessons(child.id),
+    loadAdaptive(child.id),
+    loadOpenSittings(child.id),
     loadEngineInput(child.id),
     loadEngineProgress(child.id, child.current_level_id),
     listPublishedLevels(),
   ]);
   const level = levels.find((l) => l.id === child.current_level_id);
-  const recommended = recommendations[0] ?? null;
-  const fallback = home.plan[0];
-  const more = recommendations.slice(1);
+  const recommended = adaptive.recommendations[0] ?? null;
+  const more = adaptive.recommendations.slice(1, 4);
+  const plan = adaptive.plan;
 
   return (
     <div className="space-y-8">
@@ -50,26 +71,42 @@ export default async function ChildHomePage() {
         </Link>
       </section>
 
-      {recommended || fallback ? (
+      {openSittings.map((sitting) => (
         <Link
-          href={`/child/learn/${recommended?.lessonId ?? fallback.lessonId}`}
+          key={sitting.id}
+          href={`/child/assess/${sitting.id}`}
+          className="bg-accent flex items-center gap-5 rounded-[2rem] p-6 text-white shadow-lg transition hover:brightness-110"
+        >
+          <span
+            className="flex size-20 shrink-0 items-center justify-center rounded-full bg-white/20 text-5xl"
+            aria-hidden
+          >
+            {sitting.emoji}
+          </span>
+          <span>
+            <span className="block text-lg font-semibold opacity-90">
+              {sitting.answered > 0 ? "Keep going" : "A check is waiting"}
+            </span>
+            <span className="block text-3xl font-extrabold">{sitting.childTitle}</span>
+          </span>
+        </Link>
+      ))}
+
+      {recommended ? (
+        <Link
+          href={hrefFor(recommended)}
           className="bg-success flex items-center gap-5 rounded-[2rem] p-6 text-white shadow-lg transition hover:brightness-110"
         >
           <span
             className="flex size-20 shrink-0 items-center justify-center rounded-full bg-white/20 text-5xl"
             aria-hidden
           >
-            {recommended?.emoji || "▶"}
+            {recommended.emoji || KIND_EMOJI[recommended.kind]}
           </span>
           <span>
-            <span className="block text-lg font-semibold opacity-90">
-              {recommended
-                ? REASON_LABELS[recommended.reason]
-                : fallback.kind === "review"
-                  ? "Practice"
-                  : "Next"}
-            </span>
-            <span className="block text-3xl font-extrabold">{recommended?.title ?? fallback.title}</span>
+            <span className="block text-lg font-semibold opacity-90">{KIND_LABELS[recommended.kind]}</span>
+            <span className="block text-3xl font-extrabold">{recommended.title}</span>
+            <span className="block text-lg font-semibold opacity-90">{recommended.childMessage}</span>
           </span>
         </Link>
       ) : (
@@ -169,17 +206,17 @@ export default async function ChildHomePage() {
           </h2>
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {more.map((r) => (
-              <li key={r.lessonId}>
+              <li key={r.key}>
                 <Link
-                  href={`/child/learn/${r.lessonId}`}
+                  href={hrefFor(r)}
                   className="bg-surface hover:bg-accent-soft flex min-h-20 items-center gap-3 rounded-3xl p-4 shadow-sm transition"
                 >
                   <span className="text-3xl" aria-hidden>
-                    {r.emoji || (r.reason === "review" ? "🔁" : "✨")}
+                    {r.emoji || KIND_EMOJI[r.kind]}
                   </span>
                   <span>
                     <span className="block text-xl font-bold">{r.title}</span>
-                    <span className="text-muted block">{REASON_LABELS[r.reason]}</span>
+                    <span className="text-muted block">{r.childMessage}</span>
                   </span>
                 </Link>
               </li>
@@ -188,25 +225,25 @@ export default async function ChildHomePage() {
         </section>
       ) : null}
 
-      {home.plan.length > 1 ? (
+      {plan.length > 1 ? (
         <section aria-labelledby="today" className="space-y-3">
           <h2 id="today" className="text-2xl font-extrabold">
             <span aria-hidden>☀️ </span>Today
           </h2>
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {home.plan.map((item, i) => (
-              <li key={`${item.lessonId}-${i}`}>
+            {plan.map((item) => (
+              <li key={item.key}>
                 <Link
-                  href={`/child/learn/${item.lessonId}`}
+                  href={hrefFor(item)}
                   className="bg-surface hover:bg-accent-soft flex min-h-20 items-center gap-3 rounded-3xl p-4 shadow-sm transition"
                 >
                   <span className="text-3xl" aria-hidden>
-                    {item.kind === "review" ? "🔁" : "✨"}
+                    {item.emoji || KIND_EMOJI[item.kind]}
                   </span>
                   <span>
                     <span className="block text-xl font-bold">{item.title}</span>
                     <span className="text-muted block">
-                      {item.kind === "review" ? "Practice" : item.subjectName} · {item.minutes} min
+                      {KIND_LABELS[item.kind]} · {item.minutes} min
                     </span>
                   </span>
                 </Link>

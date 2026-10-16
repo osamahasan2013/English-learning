@@ -115,14 +115,24 @@ export async function loadLatestPhonicsCheck(childId: string) {
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
-  const areas = Object.entries(
-    (data.dimension_scores ?? {}) as Record<string, { stage?: number; percent?: number; secure?: boolean }>,
-  )
-    .map(([label, a]) => ({
-      label,
-      stage: a.stage ?? 0,
+  // Sections as stored since Phase 9 ({ label, order, passed, served }), or areas as stored
+  // before it (keyed by label: { stage, secure }).
+  type Stored = {
+    stage?: number;
+    order?: number;
+    label?: string;
+    percent?: number;
+    secure?: boolean;
+    passed?: boolean;
+    served?: boolean;
+  };
+  const areas = Object.entries((data.dimension_scores ?? {}) as Record<string, Stored>)
+    .filter(([, a]) => a.served !== false)
+    .map(([key, a]) => ({
+      label: a.label ?? key,
+      stage: a.order ?? a.stage ?? 0,
       percent: Number(a.percent ?? 0),
-      secure: !!a.secure,
+      secure: a.passed ?? !!a.secure,
     }))
     .sort((a, b) => a.stage - b.stage);
   return { overall: Number(data.overall_score), takenAt: data.created_at, areas };

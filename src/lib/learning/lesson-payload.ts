@@ -108,10 +108,31 @@ export type LessonPayload = {
     subjectName: string;
     levelName: string;
   };
-  // Set when this payload is an assessment (a skill check such as the Phonics Check):
-  // answers are recorded against an assessment sitting instead of a lesson run, with one
-  // try each. `lesson` then describes the assessment.
-  assessment?: { id: string; code: string; areas: { stage: number; label: string }[] };
+  // Set when this payload is an assessment sitting (Phase 9): answers are recorded against
+  // the sitting the SERVER started (attemptId) instead of a lesson run, with one try each.
+  // `lesson` then describes the assessment. The player follows the blueprint's feedback
+  // mode and the section flow (assessment-flow.ts); it decides only what to ask next — the
+  // server scores everything from the stored answers.
+  assessment?: {
+    id: string;
+    code: string;
+    attemptId: string;
+    type: string;
+    feedback: "none" | "encourage" | "full";
+    allowSkip: boolean;
+    breakEvery: number;
+    flow: {
+      rule: "none" | "level_ladder";
+      startRank: number;
+      passPercent: number;
+      sections: { code: string; label: string; domain: string; rank: number; items: number }[];
+    };
+    // Each step's section (by question id).
+    sectionOf: Record<string, string>;
+    // Answers already stored for this sitting (from any device): right or not.
+    answered: Record<string, boolean>;
+    areas: { stage: number; label: string }[];
+  };
   // Set when this payload is word practice (Word Explorer, My Words): published questions
   // about the chosen words, taken from their lessons. Answers count like any answers, but
   // no lesson run is recorded — the lessons themselves are not "completed" by practice.

@@ -22,7 +22,7 @@ import type { createAdminClient } from "@/lib/supabase/admin";
 type Db = ReturnType<typeof createAdminClient>;
 
 // The shape assessment_results.dimension_scores stores per section (Phase 9).
-export type StoredSectionScore = Omit<SectionResult, "sectionCode"> & { label: string };
+export type StoredSectionScore = Omit<SectionResult, "sectionCode"> & { label: string; order?: number };
 
 export type ReadinessContext = {
   levels: LevelRef[];

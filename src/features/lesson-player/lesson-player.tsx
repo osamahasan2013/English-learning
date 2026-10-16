@@ -72,7 +72,10 @@ export function LessonPlayer({
     preview: boolean;
     autoStart: boolean;
   } | null>(null);
-  const saveKey = `${childId}:${payload.lesson.id}`;
+  // An assessment sitting is saved under its own id: a new sitting never resumes an old one.
+  const saveKey = payload.assessment
+    ? `${childId}:${payload.lesson.id}:${payload.assessment.attemptId}`
+    : `${childId}:${payload.lesson.id}`;
 
   // Look for a lesson in progress on this device before showing anything.
   useEffect(() => {
@@ -128,8 +131,13 @@ function LessonRun({
   autoStart: boolean;
   onRestart: (preview: boolean) => void;
 }) {
-  const saveKey = `${childId}:${payload.lesson.id}`;
   const assessment = payload.assessment ?? null;
+  const saveKey = assessment
+    ? `${childId}:${payload.lesson.id}:${assessment.attemptId}`
+    : `${childId}:${payload.lesson.id}`;
+  // Placement and diagnostic checks give no right/wrong feedback (it would change the
+  // evidence); skill and review checks give the normal feedback.
+  const quiet = !!assessment && assessment.feedback !== "full";
   // Word practice records answers only: no lesson run, so no lesson is "completed" by it.
   const practice = payload.practice ?? null;
   const previewLimit = readiness && !readiness.ready ? readiness.previewSteps : null;
@@ -148,9 +156,23 @@ function LessonRun({
     (s: SessionState, a: Parameters<typeof sessionReducer>[1] | { type: "load"; state: SessionState }) =>
       a.type === "load" ? a.state : sessionReducer(s, a),
     null,
-    () => initialSessionState(sessionSteps, { skipIntro: autoStart }),
+    () =>
+      initialSessionState(sessionSteps, {
+        skipIntro: autoStart,
+        flow: assessment
+          ? {
+              rule: assessment.flow.rule,
+              startRank: assessment.flow.startRank,
+              passPercent: assessment.flow.passPercent,
+              sections: assessment.flow.sections,
+              sectionOf: assessment.sectionOf,
+            }
+          : undefined,
+        answered: assessment?.answered,
+      }),
   );
-  const [runId, setRunId] = useState(() => resumable?.runId ?? newId());
+  // The sitting the server started is the run of an assessment.
+  const [runId, setRunId] = useState(() => assessment?.attemptId ?? resumable?.runId ?? newId());
   const [startedAt, setStartedAt] = useState(() => resumable?.startedAt ?? new Date().toISOString());
   const [reveals, setReveals] = useState<Record<string, Reveal | null>>({});
   // What the writing checks found in the last answer to each written step (shown with the feedback).
@@ -224,7 +246,7 @@ function LessonRun({
 
   // Recover the answer to show for a revealed step (live or revisited).
   useEffect(() => {
-    if (!step || view.phase !== "reveal" || step.questionId in reveals) return;
+    if (!step || quiet || view.phase !== "reveal" || step.questionId in reveals) return;
     let active = true;
     void revealAnswer(step.question, step.answerKey).then((r) => {
       if (active) setReveals((all) => ({ ...all, [step.questionId]: r }));
@@ -232,7 +254,7 @@ function LessonRun({
     return () => {
       active = false;
     };
-  }, [step, view.phase, reveals]);
+  }, [step, quiet, view.phase, reveals]);
 
   // Lesson finished: record the run once (the server scores it from the answers). A
   // preview is not a completed lesson, so it records answers but no run. An assessment
@@ -291,6 +313,11 @@ function LessonRun({
     setChecking(false);
     setWritingChecks((all) => ({ ...all, [step.questionId]: result.writing ?? null }));
     dispatch({ type: "answered", isCorrect: result.isCorrect, almost: result.almost, response });
+    if (quiet) {
+      // No right/wrong in a placement or diagnostic: straight on to the next question.
+      dispatch({ type: "next" });
+      return;
+    }
 
     const kind: FeedbackKind = result.isCorrect
       ? "CORRECT"
@@ -321,6 +348,29 @@ function LessonRun({
     const writingHint = result.isCorrect ? null : firstWritingHint(result.writing);
     const extra = mistake?.speech ?? writingHint;
     void speak(extra ? `${message.speech} ${extra}` : message.speech, "normal", { intent: "FEEDBACK" });
+  }
+
+  // "I don't know": recorded as an honest skip (the server stores it as not right), no feedback.
+  function handleSkip() {
+    if (!step || !assessment?.allowSkip || view.reviewing || state.phase !== "answering" || !step.scored)
+      return;
+    if (state.attemptNumber !== 1 || checking) return;
+    void recordEvent(childId, {
+      kind: "attempt",
+      id: newId(),
+      epoch: learningEpoch,
+      questionId: step.questionId,
+      lessonRunId: null,
+      assessmentId: assessment.id,
+      assessmentAttemptId: runId,
+      sessionId: sessionId(),
+      attemptNumber: 1,
+      response: { skipped: true },
+      responseTimeMs: Math.min(3_600_000, Math.round(performance.now() - shownAt.current)),
+      attemptedAt: new Date().toISOString(),
+    }).then(() => notifyQueued());
+    dispatch({ type: "skip" });
+    dispatch({ type: "next" });
   }
 
   // A story was read (READ_PASSAGE): recorded once, like an answer, never scored. A text
@@ -360,7 +410,7 @@ function LessonRun({
             onRestart(asPreview);
             return;
           }
-          setRunId(newId());
+          setRunId(assessment?.attemptId ?? newId());
           setStartedAt(new Date().toISOString());
           dispatch({ type: "start" });
         }}
@@ -383,6 +433,7 @@ function LessonRun({
         preview={preview}
         practice={practice}
         recommendation={readiness?.recommendation ?? null}
+        assessment={assessment ? { quiet } : null}
         onPlayAgain={() => onRestart(false)}
         speak={speak}
       />
@@ -408,15 +459,21 @@ function LessonRun({
           <span aria-hidden>✕</span>
         </button>
         <ProgressBar
-          value={state.furthest}
+          value={assessment ? Object.keys(state.firstTries).length : state.furthest}
           max={steps.length}
-          label={`Step ${state.index + 1} of ${steps.length}`}
+          label={
+            assessment
+              ? `${Object.keys(state.firstTries).length} answered`
+              : `Step ${state.index + 1} of ${steps.length}`
+          }
           className="h-5"
           tone="success"
         />
-        <span className="text-muted shrink-0 text-lg font-bold" aria-hidden>
-          {state.index + 1}/{steps.length}
-        </span>
+        {assessment ? null : (
+          <span className="text-muted shrink-0 text-lg font-bold" aria-hidden>
+            {state.index + 1}/{steps.length}
+          </span>
+        )}
       </div>
 
       {!audioSupported ? (
@@ -467,6 +524,14 @@ function LessonRun({
           onShow={(count) => setHintsShown((all) => ({ ...all, [step.questionId]: count }))}
           speak={speak}
         />
+      ) : null}
+
+      {assessment?.allowSkip && step.scored && view.phase === "answering" && !view.reviewing ? (
+        <div className="flex justify-center">
+          <Button size="lg" variant="secondary" onClick={handleSkip} disabled={checking}>
+            <span aria-hidden>🤷</span> I don&apos;t know
+          </Button>
+        </div>
       ) : null}
 
       <FeedbackBar
@@ -750,6 +815,7 @@ function LessonSummary({
   preview,
   practice,
   recommendation,
+  assessment,
   onPlayAgain,
   speak,
 }: {
@@ -760,9 +826,12 @@ function LessonSummary({
   preview: boolean;
   practice: LessonPayload["practice"] | null;
   recommendation: { lessonId: string; title: string } | null;
+  // A finished check: no replay; a quiet one (placement, diagnostic) shows no score at all.
+  assessment: { quiet: boolean } | null;
   onPlayAgain: () => void;
   speak: SpeakFn;
 }) {
+  const quiet = assessment?.quiet ?? false;
   const completed = renderFeedback(pickFeedback(payload.feedback, "COMPLETED", score.stars));
   const [minutes] = useState(() => Math.max(1, Math.round((Date.now() - Date.parse(startedAt)) / 60000)));
   useEffect(() => {
@@ -777,19 +846,25 @@ function LessonSummary({
       <h1 className="text-4xl font-extrabold">
         {preview ? "Nice peek!" : practice ? "Great practice!" : `You finished ${payload.lesson.childTitle}!`}
       </h1>
-      <p className="text-2xl font-bold">{completed.text}</p>
-      {!preview && !practice ? (
+      <p className="text-2xl font-bold">{quiet ? "Thank you! You did your best." : completed.text}</p>
+      {!preview && !practice && !quiet ? (
         <p className="text-6xl" aria-label={`${score.stars} out of 3 stars`}>
           {"⭐".repeat(score.stars)}
           <span className="opacity-25">{"⭐".repeat(3 - score.stars)}</span>
         </p>
       ) : null}
-      <p className="text-2xl font-semibold">
-        You got {score.correct} of {score.total} right the first time.
-      </p>
-      <p className="text-muted text-lg">
-        {Math.round(score.percent)}% · {minutes} min
-      </p>
+      {quiet ? (
+        <p className="text-muted text-lg">{minutes} min</p>
+      ) : (
+        <>
+          <p className="text-2xl font-semibold">
+            You got {score.correct} of {score.total} right the first time.
+          </p>
+          <p className="text-muted text-lg">
+            {Math.round(score.percent)}% · {minutes} min
+          </p>
+        </>
+      )}
       {achievements.length > 0 ? (
         <div role="status" className="bg-accent-soft text-accent rounded-3xl p-5">
           <p className="text-xl font-bold">New badge!</p>
@@ -821,10 +896,12 @@ function LessonSummary({
             {practice.returnLabel ?? (practice.kind === "word" ? "Back to the word" : "My Words")}
           </Link>
         ) : null}
-        <Button size="xl" variant="secondary" onClick={onPlayAgain}>
-          <span aria-hidden>🔁</span>{" "}
-          {preview ? "Play the whole lesson" : practice ? "Practice again" : "Play again"}
-        </Button>
+        {assessment ? null : (
+          <Button size="xl" variant="secondary" onClick={onPlayAgain}>
+            <span aria-hidden>🔁</span>{" "}
+            {preview ? "Play the whole lesson" : practice ? "Practice again" : "Play again"}
+          </Button>
+        )}
         <Link
           href="/child/home"
           className="bg-success inline-flex min-h-20 items-center gap-2 rounded-3xl px-8 text-2xl font-semibold text-white"

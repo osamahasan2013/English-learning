@@ -7,6 +7,7 @@ import { getSoundTable } from "@/lib/server/sound-table";
 import { parseQuestion, type ParsedQuestion } from "@/lib/content/question-schemas";
 import { isRenderableQuestionType } from "@/features/activities/supported-types";
 import { buildAnswerKey } from "@/lib/learning/answer-key";
+import { parseBlueprint } from "@/lib/learning/assessment-blueprint";
 import { pickPracticeQuestions, wordAreaFor, type WordArea } from "@/lib/learning/vocabulary";
 import {
   resolveSpellingSettings,
@@ -136,92 +137,187 @@ export async function loadLessonPayload(lessonId: string): Promise<LessonPayload
 // A published assessment (e.g. the Phonics Check) as a player payload: one step per item,
 // in stage order, one try each and no teaching explanations. Answers become digest-only
 // keys exactly as for lessons.
-export async function loadAssessmentPayload(code: string): Promise<LessonPayload | null> {
-  if (!/^[a-z0-9-]{2,80}$/.test(code)) return null;
+// An assessment sitting the server started (Phase 9): its selected questions, in order, as
+// steps of the ordinary player, with the blueprint's feedback mode and section flow. The
+// sitting is read with the parent's RLS client (another family's sitting is not found);
+// answers become digest keys as for lessons. null when the sitting is not open any more.
+export async function loadSittingPayload(
+  childId: string,
+  attemptId: string,
+  now = new Date(),
+): Promise<LessonPayload | { closed: true } | null> {
+  if (!/^[0-9a-f-]{36}$/i.test(attemptId) || !/^[0-9a-f-]{36}$/i.test(childId)) return null;
   const supabase = await createClient();
+  const { data: sitting } = await supabase
+    .from("assessment_attempts")
+    .select("id, assessment_id, status, item_ids, scope, expires_at")
+    .eq("id", attemptId)
+    .eq("child_id", childId)
+    .maybeSingle();
+  if (!sitting) return null;
+  if (
+    sitting.status !== "in_progress" ||
+    (sitting.expires_at && Date.parse(sitting.expires_at) <= now.getTime())
+  )
+    return { closed: true };
   const { data: assessment } = await supabase
     .from("assessments")
-    .select("id, code, title, description, config, version")
-    .eq("code", code)
+    .select("id, code, title, description, assessment_type, config, version")
+    .eq("id", sitting.assessment_id)
     .eq("status", "published")
     .maybeSingle();
-  if (!assessment) return null;
-  const { data: items, error: itemsError } = await supabase
-    .from("assessment_items")
-    .select("question_id, stage, stage_label, sort_order")
-    .eq("assessment_id", assessment.id)
-    .order("stage")
-    .order("sort_order");
-  if (itemsError) throw itemsError;
-  if (!items?.length) return null;
+  if (!assessment) return { closed: true };
 
-  const [{ data: questions, error: questionsError }, feedbackRows, rules] = await Promise.all([
-    supabase
-      .from("questions")
-      .select(QUESTION_COLUMNS)
-      .in(
-        "id",
-        items.map((i) => i.question_id),
-      )
-      .eq("status", "published"),
-    supabase
-      .from("feedback_messages")
-      .select("kind, text, speech, emoji, error_category")
-      .eq("status", "published")
-      .order("sort_order"),
-    loadLearningRules(supabase),
-  ]);
+  // Items: the server's selection, or (older sittings) every authored item.
+  type Plan = {
+    startRank?: number;
+    sections?: {
+      code: string;
+      label: string;
+      domain: string;
+      levelId: string | null;
+      rank: number;
+      passPercent: number;
+    }[];
+    items?: { q: string; s: string }[];
+  };
+  const plan = (sitting.scope ?? {}) as Plan;
+  let items: { questionId: string; section: string; label: string }[];
+  if (sitting.item_ids.length > 0 && plan.items && plan.sections) {
+    const label = new Map(plan.sections.map((s) => [s.code, s.label]));
+    items = plan.items.map((i) => ({ questionId: i.q, section: i.s, label: label.get(i.s) ?? "" }));
+  } else {
+    const { data: rows, error } = await supabase
+      .from("assessment_items")
+      .select("question_id, stage, stage_label, sort_order")
+      .eq("assessment_id", assessment.id)
+      .order("stage")
+      .order("sort_order");
+    if (error) throw error;
+    items = (rows ?? []).map((r) => ({
+      questionId: r.question_id,
+      section: `stage-${r.stage}`,
+      label: r.stage_label,
+    }));
+  }
+  if (items.length === 0) return { closed: true };
+
+  const [{ data: questions, error: questionsError }, feedbackRows, rules, answeredRows, levelRows] =
+    await Promise.all([
+      supabase
+        .from("questions")
+        .select(`${QUESTION_COLUMNS}, activities(activity_type, config)`)
+        .in(
+          "id",
+          items.map((i) => i.questionId),
+        )
+        .eq("status", "published"),
+      supabase
+        .from("feedback_messages")
+        .select("kind, text, speech, emoji, error_category")
+        .eq("status", "published")
+        .order("sort_order"),
+      loadLearningRules(supabase),
+      supabase
+        .from("activity_attempts")
+        .select("question_id, is_correct")
+        .eq("child_id", childId)
+        .eq("assessment_attempt_id", attemptId)
+        .eq("attempt_number", 1),
+      supabase.from("levels").select("id, code").eq("status", "published"),
+    ]);
   if (questionsError) throw questionsError;
   if (feedbackRows.error) throw feedbackRows.error;
-  const byId = new Map(questions.map((q) => [q.id, q]));
+  const byId = new Map((questions ?? []).map((q) => [q.id, q]));
   const support = await loadQuestionSupport(supabase, questions ?? []);
+  const levelCode = new Map((levelRows.data ?? []).map((l) => [l.id, l.code]));
+  const sectionLevel = new Map(
+    (plan.sections ?? []).map((s) => [s.code, s.levelId ? (levelCode.get(s.levelId) ?? null) : null]),
+  );
 
   const steps: LessonStep[] = [];
+  const sectionOf: Record<string, string> = {};
   const areas: { stage: number; label: string }[] = [];
   for (const item of items) {
-    const q = byId.get(item.question_id);
+    const q = byId.get(item.questionId);
     if (!q) continue;
-    const config = parseActivityConfig(q.question_type, {});
+    // A lesson question keeps its activity's configuration (a reading passage, input method).
+    const activity = (Array.isArray(q.activities) ? q.activities[0] : q.activities) as {
+      activity_type: string;
+      config: unknown;
+    } | null;
+    const config = activity
+      ? parseActivityConfig(activity.activity_type, activity.config)
+      : parseActivityConfig(q.question_type, {});
     if (!config.ok) continue;
-    const step = await buildStep(q, support, assessment.id, {
-      activityId: `${assessment.id}:${item.stage}`,
-      activityTitle: item.stage_label,
-      instructions: item.stage_label,
+    const step = await buildStep(q as QuestionRow, support, assessment.id, {
+      activityId: `${assessment.id}:${item.section}`,
+      activityTitle: item.label,
+      instructions: item.label,
       instructionsSpeech: "",
       stage: "assessment",
       config: config.config,
       maxTries: 1,
       explanation: "",
-      levelCode: null,
+      levelCode: sectionLevel.get(item.section) ?? null,
       rules,
     });
     if (!step) continue;
     steps.push(step);
-    if (!areas.some((a) => a.stage === item.stage))
-      areas.push({ stage: item.stage, label: item.stage_label });
+    sectionOf[step.questionId] = item.section;
+    if (!areas.some((a) => a.label === item.label))
+      areas.push({ stage: areas.length + 1, label: item.label });
   }
-  if (steps.length === 0) return null;
+  if (steps.length === 0) return { closed: true };
 
-  const config = (assessment.config ?? {}) as { childTitle?: unknown; emoji?: unknown };
-  const childTitle = typeof config.childTitle === "string" ? config.childTitle : assessment.title;
+  const blueprint = parseBlueprint(assessment.config);
+  const childTitle = blueprint?.childTitle ?? assessment.title;
+  const flowSections = (plan.sections ?? []).map((s) => ({
+    code: s.code,
+    label: s.label,
+    domain: s.domain,
+    rank: s.rank,
+    items: steps.filter((st) => sectionOf[st.questionId] === s.code).length,
+  }));
+  const feedback = blueprint?.feedback ?? "full";
   return {
     lesson: {
       id: assessment.id,
       code: assessment.code,
       title: assessment.title,
       childTitle,
-      emoji: typeof config.emoji === "string" ? config.emoji : "🎯",
+      emoji: blueprint?.emoji ?? "🎯",
       version: assessment.version,
       skillId: steps[0].skillId,
       skillTitle: "",
       description: "Show what you know! Just do your best.",
-      introSpeech: `${childTitle}. Show what you know! Listen, then do your best. There is one try for each question.`,
+      introSpeech:
+        feedback === "full"
+          ? `${childTitle}. Show what you know! Listen, then do your best. There is one try for each question.`
+          : `${childTitle}. Show what you know! Listen, then do your best. If you don't know, that's okay.`,
       estimatedMinutes: Math.max(3, Math.round(steps.length / 3)),
       difficulty: 1,
-      subjectName: "Phonics",
+      subjectName: "",
       levelName: "",
     },
-    assessment: { id: assessment.id, code: assessment.code, areas },
+    assessment: {
+      id: assessment.id,
+      code: assessment.code,
+      attemptId: sitting.id,
+      type: assessment.assessment_type,
+      feedback,
+      allowSkip: blueprint?.allowSkip ?? false,
+      breakEvery: blueprint?.breakEvery ?? 0,
+      flow: {
+        rule: flowSections.length > 0 ? (blueprint?.stopping.rule ?? "none") : "none",
+        startRank: plan.startRank ?? 1,
+        passPercent: blueprint?.passPercent ?? rules.assessment.sectionPassPercent,
+        sections: flowSections,
+      },
+      sectionOf,
+      answered: Object.fromEntries((answeredRows.data ?? []).map((a) => [a.question_id, a.is_correct])),
+      areas,
+    },
     steps,
     feedback: toFeedback(feedbackRows.data ?? []),
     sounds: await getSoundTable(),

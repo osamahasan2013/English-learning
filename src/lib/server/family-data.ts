@@ -2,11 +2,9 @@ import "server-only";
 
 import { cache } from "react";
 import { currentStreak, dailyActivity, safeTimeZone, totalMinutes } from "@/lib/learning/analytics";
-import { buildDailyPlan, type PlanLesson, type PlanReview } from "@/lib/learning/daily-plan";
 import type { MasteryStatus } from "@/lib/learning/mastery";
 import {
   practiceRecommendations,
-  reviewCandidates,
   strongSkills,
   weakSkills,
   type SkillMasterySummary,
@@ -342,7 +340,7 @@ export type PathUnit = {
 };
 
 // The child's learning path for their current level, today's plan and reward totals.
-export async function loadChildHome(child: Tables<"children">, now = new Date()) {
+export async function loadChildHome(child: Tables<"children">) {
   const supabase = await createClient();
   const { data: units, error } = await supabase
     .from("units")
@@ -416,47 +414,9 @@ export async function loadChildHome(child: Tables<"children">, now = new Date())
   });
 
   const allLessons = path.flatMap((u) => u.lessons);
-  const nextLessons: PlanLesson[] = allLessons
-    .filter((l) => !l.completed)
-    .map((l) => ({
-      lessonId: l.id,
-      title: l.title,
-      subjectName: l.subjectName,
-      estimatedMinutes: l.minutes,
-    }));
-
-  // Review a due or weak skill by replaying its first lesson (V1; see docs/curriculum.md).
-  const candidates = reviewCandidates(mastery, now);
-  const reviewLessonBySkill = new Map<string, PathLesson>();
-  for (const lesson of allLessons)
-    if (!reviewLessonBySkill.has(lesson.skillId)) reviewLessonBySkill.set(lesson.skillId, lesson);
-  const missingSkillIds = candidates.map((c) => c.skillId).filter((id) => !reviewLessonBySkill.has(id));
-  const otherLessons = missingSkillIds.length
-    ? ((
-        await supabase
-          .from("lessons")
-          .select("id, skill_id, title, child_title")
-          .in("skill_id", missingSkillIds)
-          .eq("status", "published")
-          .order("sort_order")
-      ).data ?? [])
-    : [];
-  const reviews: PlanReview[] = candidates.flatMap((c) => {
-    const lesson = reviewLessonBySkill.get(c.skillId);
-    if (lesson)
-      return [
-        { skillId: c.skillId, title: c.childTitle, lessonId: lesson.id, subjectName: lesson.subjectName },
-      ];
-    const other = otherLessons.find((l) => l.skill_id === c.skillId);
-    return other
-      ? [{ skillId: c.skillId, title: c.childTitle, lessonId: other.id, subjectName: c.subject }]
-      : [];
-  });
-
-  const plan = buildDailyPlan({ dailyMinutes: child.daily_minutes, nextLessons, reviews });
+  // Today's plan and the recommendations come from the adaptive engine (server/adaptive.ts).
   return {
     path,
-    plan,
     stars: (rewards.data ?? []).reduce((sum, r) => sum + r.stars, 0),
     points: (rewards.data ?? []).reduce((sum, r) => sum + r.points, 0),
     lessonsCompleted: allLessons.filter((l) => l.completed).length,
