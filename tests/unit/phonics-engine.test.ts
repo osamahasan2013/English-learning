@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import { BlueprintError, expandBlueprint } from "@/lib/content/lesson-blueprints";
 import { parseQuestion, type AnswerSpec } from "@/lib/content/question-schemas";
 import { expandTemplate, type TemplateContext, type TemplateWord } from "@/lib/content/templates";
-import { scoreSkillCheck, type AssessmentItemFact } from "@/lib/learning/assessment-scoring";
 import { buildAnswerKey, checkWithKey, revealAnswer } from "@/lib/learning/answer-key";
 import { evaluateResponse } from "@/lib/learning/evaluate";
 import type { ClientQuestion } from "@/lib/learning/lesson-payload";
@@ -196,41 +195,6 @@ describe("lesson blueprints", () => {
     ).toBe(true);
     expect(() => expandBlueprint({ name: "phonics_pattern", pattern: "SH" })).toThrow(BlueprintError);
     expect(() => expandBlueprint({ name: "nope" })).toThrow(/unknown lesson blueprint/);
-  });
-});
-
-describe("phonics check scoring", () => {
-  const items: AssessmentItemFact[] = [
-    { questionId: "q1", stage: 1, stageLabel: "Letters", skillId: "s1", skillCode: "letters" },
-    { questionId: "q2", stage: 1, stageLabel: "Letters", skillId: "s1", skillCode: "letters" },
-    { questionId: "q3", stage: 2, stageLabel: "Blending", skillId: "s2", skillCode: "blend" },
-    { questionId: "q4", stage: 2, stageLabel: "Blending", skillId: "s3", skillCode: "cvc" },
-  ];
-
-  it("scores each area and skill from first tries", () => {
-    const outcome = scoreSkillCheck(
-      items,
-      new Map([
-        ["q1", true],
-        ["q2", true],
-        ["q3", false],
-        ["q4", true],
-      ]),
-      75,
-    );
-    expect(outcome.overallPercent).toBe(75);
-    expect(outcome.areas).toEqual([
-      { stage: 1, label: "Letters", correct: 2, total: 2, percent: 100, secure: true },
-      { stage: 2, label: "Blending", correct: 1, total: 2, percent: 50, secure: false },
-    ]);
-    expect(outcome.skills.blend.percent).toBe(0);
-    expect(outcome.gaps).toEqual(["Blending"]);
-  });
-
-  it("counts unanswered questions as not yet known", () => {
-    const outcome = scoreSkillCheck(items, new Map([["q1", true]]));
-    expect(outcome.overallPercent).toBe(25);
-    expect(scoreSkillCheck([], new Map()).overallPercent).toBe(0);
   });
 });
 

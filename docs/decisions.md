@@ -677,3 +677,86 @@ child of the same grade, so no stale mastery, review, assessment or recommendati
 read as current. Offline devices cannot resurrect deleted or reset data; events from a
 device that was offline during a reset are lost by design. A batch already in flight at the
 instant of a reset can still land (the writer is not one transaction).
+
+## ADR-047 — One assessment engine: blueprints, server-selected sittings, evidence and readiness
+
+**Context.** Phase 9 needs placement, diagnostic, progress, skill, re-check, end-of-unit and
+review checks. Before it, the Phonics Check and the placement each had their own scorer,
+sittings were created by the device's first synced answer (so the device chose what was
+asked), there was one learning level for every area, and a child's school grade and
+learning level were easily confused. Children are 3–8: a long test, a failure screen or a
+level change from one bad morning would do harm.
+
+**Decision.** One engine for all seven types. An assessment is a version-2 **blueprint**
+(`assessments.config`, validated at import): sections with a domain, level, draw size,
+items per skill and difficulty; a stopping rule (`none` or a per-domain **level ladder**);
+feedback mode; skip; item pool (authored items or lesson questions by level, skills, unit,
+review); expiry. A **sitting** is started by a server action, never on a page render: after
+an RLS ownership check the service role selects the items (seeded, least exposed first,
+round-robin over skills) and stores them in `assessment_attempts.item_ids`; starting again
+resumes. The device plays the payload (answer keys only, ADR-021); the ladder runs on the
+device so a sitting works offline; the server accepts only the selected items, one first
+try each, in an open sitting of the same learning epoch, and skips only where allowed.
+Device-created sittings remain only for assessments that select nothing. Scoring is
+deterministic (correct / incorrect / skipped / unanswered, partial credit), with
+contamination weights for items seen before; unreached sections are not scored, so a
+partial sitting is never a failure. Results produce per-skill **evidence**
+(`assessment_evidence`), gaps (`assessment_gap` review items) and per-domain
+**instructional readiness** (`instructional_readiness`: strongest, current and next level,
+confidence INSUFFICIENT → HIGH, source, strengths, needs, prerequisite gaps). Mastery stays
+one model, with hysteresis so a mastered skill does not flip on a slip. The school grade is
+never written by an assessment. The old placement and skill-check scorers were removed.
+
+**Consequences.** New checks are content, not code. The device cannot choose or add
+questions to a sitting; exposure is tracked and visible to admins as counts only.
+Readiness is explainable (sections, items, skills, dates) and conservative: three items per
+placement section give LOW–MEDIUM confidence, and lessons follow readiness only from LOW.
+Limits: no break screens yet; a sitting resumed on another device restarts the remaining
+items there (answers already synced count); readiness is a rule, not a validated
+psychometric instrument, and the UI says "working at", not a score.
+
+## ADR-048 — One explainable recommender, computed per request
+
+**Context.** Recommendations came from three places: the lesson engine's
+`getRecommendedLessons`, the parent's "Practice X" list and the daily plan, each with its
+own rules, and none aware of assessment evidence or per-domain levels.
+
+**Decision.** `src/lib/learning/adaptive.ts` is the only recommender; `loadAdaptive`
+gathers its inputs (readiness, the lesson paths at each domain's teaching level and the
+next, mastery, open review items, prerequisites, recent assessment gaps with the practice
+since) and returns the recommendations, the daily plan and the readiness view. Priorities:
+HIGH (prerequisite repair, assessment gaps, repeated errors, important weak or overdue),
+MEDIUM (continue, target lessons, due review, re-check), LOW (stretch, maintenance). A
+prerequisite is a gap only when an assessment found it or enough practice shows it weak; a
+not-yet-learned prerequisite makes the lesson wait. Results are deduplicated (the deciding
+reason first), fatigue-filtered, interleaved by domain and capped; each carries a child
+message and a parent message that states the rule and the evidence. The daily plan shares
+the parent's minutes over them by learning zone (review / repair / target / stretch).
+Recommendations are not stored: they are recomputed from the derived caches on every
+request; readiness is stored and refreshed when older than a day or than the last reset.
+The old recommender and practice list were removed; domain word/text pickers stay, as
+content choosers inside an activity.
+
+**Consequences.** The child home, the plan, the parent dashboard and the parent checks
+page always agree, and every suggestion can be explained. Nothing stale survives a reset.
+The cost is one set of queries per page view (bounded: two levels per domain, 50 review
+items, 200 evidence rows), measured in the integration performance test.
+
+## ADR-049 — Glyph identity: handwriting is checked against listed look-alikes
+
+**Context.** Handwriting was matched against the target letter with a tolerance (ADR-040).
+A letter containing the target passed: an o drawn for c, a closed loop for a, an E for F,
+a 9 drawn for 6 in some positions.
+
+**Decision.** Each glyph lists its confusables in content (`confusables` →
+`handwriting_glyphs.confusable_codes`, validated at import). `evaluateTrace` compares the
+ink with the target and with every confusable: it is `wrong_letter` when a confusable fits
+clearly better, or — when only one letter has an extra part — when the child drew that part
+precisely (so wobble is not punished) and it belongs to the other letter, or left out the
+target's own part. The best-fitting confusable is named in the checklist. Deterministic, no
+recognition model.
+
+**Consequences.** c/o, b/d, p/q, A/O, E/F and 6/9 are rejected in the modes tested; the
+shipped glyphs traced or written with a wobble still pass at every level. Only listed pairs
+are checked. Three cases remain documented exceptions where the shapes are too close for
+reliable separation (a traced over o, o written for a, a dotless i written as l).

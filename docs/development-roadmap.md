@@ -189,6 +189,24 @@ old soft delete is no longer offered. Tests: SQL `012_child_lifecycle.sql`, inte
 Phase 9 integration point: "reset → placement" calls the existing placement flow after
 `reset_child_learning()`.
 
+## Phase 9 — assessment + adaptive learning engine
+
+One assessment engine for seven assessment types (placement, diagnostic, progress check,
+skill check, re-check, end of unit, review check) driven by data blueprints, with
+server-side item selection and answer security; sittings (start, resume, cancel, expire,
+offline play); deterministic scoring with partial credit, skips and contamination;
+per-skill evidence; mastery hysteresis; per-domain instructional readiness with
+confidence (the school grade is never changed); one explainable recommender with
+prerequisite repair, assessment gaps, re-checks, stretch and a learning-zone daily plan;
+glyph identity in handwriting (ADR-047, ADR-048, ADR-049). Migration `20261012100100`.
+Screens: child check start and sitting (quiet mode, "I don't know"), parent "Level by area"
+and `/parent/assessments`, admin `/admin/assessments`. The superseded placement and
+skill-check scorers and the old lesson recommender were removed. Tests: unit
+`assessment-engine.test.ts`, `daily-plan.test.ts`, glyph identity in `writing.test.ts`,
+audio regression in `audio-accuracy.test.ts`; integration `assessment-engine.test.ts`;
+SQL `013_assessment_engine.sql`; e2e `assessment.spec.ts` and glyph identity in
+`writing.spec.ts`.
+
 ## Phases
 
 | #   | Phase                       | Status | Notes / next steps                                                                                                                                                                                                                                                        |
@@ -202,8 +220,8 @@ Phase 9 integration point: "reset → placement" calls the existing placement fl
 | 7   | Spelling                    | ✅     | Phase 6: spelling targets, checker + error analysis, 9 activities, input methods, dictation, hints, spelling mastery and pattern review, parent report. Next: recorded dictation audio, more lessons, speech input (future)                                               |
 | 8   | Reading                     | ✅     | Phase 7: reading taxonomy, texts with decodability analysis, guided reading, 3 new activity types, reading lessons, sessions + help-word review, parent report, admin preview. Next: recorded story audio, more texts, illustrations                                      |
 | 9   | Writing                     | ✅     | Phase 8: 25 writing skills, glyph-based handwriting (trace / copy / write, undo, typed alternative, order and direction), typed writing (copy, complete, rubrics, story writing, editing), 25 lessons, parent report, admin glyphs. Next: more glyph sets, teacher review |
-| 10  | Assessment                  | 🟡     | Phonics Check playable and scored per area; placement config + scoring logic. Next: placement UI, reassessment timeline                                                                                                                                                   |
-| 11  | Adaptive learning           | 🟡     | Mastery bands, prerequisites, review queue, next lesson and recommendations, daily plan. Next: mixed review sessions across skills, SRS                                                                                                                                   |
+| 10  | Assessment                  | ✅     | Phase 9: one engine, seven blueprint-driven types, server-selected items, sittings, evidence, readiness with confidence, history and re-check comparison. Next: break screens, cross-device resume of the remaining items                                                 |
+| 11  | Adaptive learning           | ✅     | Phase 9: one explainable recommender per domain level, prerequisite repair, gaps, re-checks, stretch, learning-zone daily plan, mastery hysteresis. Next: mixed review sessions across skills, SRS                                                                        |
 | 12  | Parent dashboard            | 🟡     | Stats, activities, average score, learning time, subject progress, skills, recommendations, badges. Next: monthly view, words list                                                                                                                                        |
 | 13  | Games and rewards           | 🟡     | Stars, points, badges, streaks; MATCH, SORT, DRAG_DROP renderers. Next: MEMORY_MATCH, PHONICS_CLASSIFICATION                                                                                                                                                              |
 | 14  | PWA/offline/sync            | 🟡     | Outbox, idempotent sync, SW. Next: fully client-side offline lesson loader from IndexedDB; background sync                                                                                                                                                                |
@@ -222,8 +240,8 @@ Phase 9 integration point: "reset → placement" calls the existing placement fl
 - Answer keys stop answers being read from the page, but small option sets can always be
   tried one by one on a modified client; the server's re-evaluation is what protects
   progress (ADR-021).
-- Writing: handwriting is matched against a model letter with a tolerance, not recognised
-  (a letter containing the target, such as o for c, passes); stroke order and direction are
+- Writing: handwriting is matched against a model letter with a tolerance plus a check
+  against listed look-alike letters (ADR-049), not recognised; stroke order and direction are
   measured and shown but enforced only where a level asks. Open writing is checked by
   deterministic rubrics that do not understand meaning; spelling there is only suggested
   for words close to a known word, and run-together words are a tip (the word list cannot
@@ -254,8 +272,13 @@ Phase 9 integration point: "reset → placement" calls the existing placement fl
   spelling mastery). The dictation replay limit applies per try. Speech input is not
   implemented. The error categories are transparent rules, not a diagnosis.
 - The rate limiter is per server instance.
-- Placement ("Find My Level") has data and logic but no UI yet; parents set the level
-  manually. The Phonics Check is playable.
+- Assessment (Phase 9): placement confidence is typically LOW–MEDIUM (3 items per
+  section); a sitting resumed on another device keeps the answers already synced but the
+  new device starts the remaining items fresh; break screens (`breakEvery`) are not shown
+  — pausing is leaving and resuming later; the level ladder runs on the device, so an
+  abandoned ladder leaves unreached sections unscored (never failed). Readiness is
+  recomputed when older than a day; recommendations are computed on each request. Some
+  placement sections measure one skill (flagged for admins).
 - Word splits are rule-based: four words are flagged for review on purpose; unusual
   spellings need an authored `segments` value.
 - Phonics lessons are one per pattern (a blueprint); extra practice comes from the review

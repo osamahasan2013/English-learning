@@ -388,7 +388,11 @@ overridable in the `learning_rules` table:
 - Review priority (0–100) = (0.6 × (100 − score) + 8 × recent mistakes + up to 20 for being
   overdue) × (0.8 + 0.1 × importance).
 
-Because it is recomputed from history, a skill that slips drops back down.
+Because it is recomputed from history, a skill that slips drops back down — but not on a
+single slip (Phase 9, `mastery.regression`): once MASTERED, a skill keeps MASTERED while
+its score stays within `holdMargin` (10) of the bar and there are fewer than
+`minRecentErrors` (2) errors in its last 5 first tries. The window is replayed in order, so
+the status is still a pure function of the history.
 
 ### Word mastery
 
@@ -450,21 +454,61 @@ steps; answers count as practice, the lesson is not marked completed) or the who
 
 ## Recommendations and review
 
-- **Next lesson**: the first unfinished lesson on the level path (unit → skill → lesson
-  order) whose prerequisites are ready. **Recommended**: continue a started lesson, then
-  the next lesson (its missing prerequisite first), then due review items.
+There is one recommender (`src/lib/learning/adaptive.ts`, ADR-048). Each domain is taught at
+its **instructional level** (readiness, below) when its confidence is at least
+`adaptive.minReadinessConfidence` (LOW), otherwise at the child's learning level.
+
+- **HIGH**: repair a prerequisite gap (a prerequisite with an assessment gap, or practised
+  ≥ 4 times and weak / below PRACTICING) before the lesson that needs it; an assessment
+  gap; repeated errors (≥ 2 of the last 5); an important (importance ≥ 4) weak skill or an
+  important review overdue by ≥ 1 day.
+- **MEDIUM**: continue a started lesson; the next `targetLessonsPerDomain` (2) lessons on
+  each domain's path whose prerequisites are learned (a lesson whose same-level
+  prerequisite is not learned yet waits — it is not a "gap"); due review; a re-check of a
+  gap practised ≥ 4 times since at ≥ 80% (`assessment.reassessment`).
+- **LOW**: stretch — the first lesson of the next level when ≥ 60% of the level's skills
+  are secure and readiness confidence is at least MEDIUM; maintenance review of a mastered
+  skill.
+- Duplicates merge (the deciding reason leads); a lesson finished in the last 20 h waits
+  unless the reason is HIGH; domains alternate within each priority; at most 6.
+  Every recommendation has a child message ("Let's practise sh first.") and a parent
+  message with the rule and the evidence.
 - **Review queue** (`review_items`): every practised skill is scheduled at its next review
-  date; weak skills (≥ 4 answers, score < 70) and skills with ≥ 2 recent mistakes are due
-  now; a word missed on its latest first try (last 14 days) is due now until answered
-  right. Each item names the skill, word, pattern and/or lesson, a priority, a due date and
-  a reason.
-- **Weak skill**: ≥ 4 answers and score < 70 → "Practice ⟨skill⟩" for the parent, and
-  prioritised in the child's daily plan.
-- **Strong skill**: MASTERED or ALMOST_MASTERED.
-- **Daily plan**: the parent's daily minutes (10/15/20/30/45). Up to 2 review items get
-  ~30% of the time (≥ 5 min) when something is weak or due; the rest goes to the next new
-  lessons. Order: one new lesson, reviews, more new lessons. V1 review replays the skill's
-  first lesson; dedicated mixed review sessions come with Phase 11.
+  date; weak skills (≥ 4 answers, score < 70), skills with ≥ 2 recent mistakes and
+  assessment gaps are due now; a word missed on its latest first try (last 14 days) is due
+  now until answered right. Each item names the skill, word, pattern and/or lesson, a
+  priority, a due date and a reason.
+- **Weak / strong skill** summaries: weak = ≥ 4 answers and score < 70; strong = MASTERED
+  or ALMOST_MASTERED.
+- **Daily plan**: the parent's daily minutes (10/15/20/30/45) shared over the
+  recommendations by the learning zone `adaptive.zone` — review 25%, repair 25%, target
+  40%, stretch 10% (unused minutes go to target lessons first, then review, repair,
+  stretch); no slot shorter than 3 minutes; order: repair, one new lesson, review, more
+  lessons, stretch.
+
+## Assessment model (Phase 9)
+
+All numbers are `rules.assessment` (overridable in `learning_rules`).
+
+- **Outcomes**: correct, incorrect, skipped ("I don't know", counts 0), unanswered (not an
+  observation), invalid (rejected); multi-part answers earn partial credit.
+- **Sections**: percent of credit; passed at the blueprint's `passPercent` or
+  `sectionPassPercent` (75). A section the child never reached is not scored: a partial
+  sitting is never a failure.
+- **Contamination**: an item the child answered before counts 0.75 after 1 earlier
+  exposure and 0.5 after 3.
+- **Evidence** per skill: secure ≥ 75%, developing ≥ 50%, else emerging. A gap = ≥ 2 items
+  below 50% (within 60 days) → an `assessment_gap` review item (priority 80) while the
+  skill is below ALMOST_MASTERED.
+- **Readiness** per domain: a level is secure when its section was passed, when it is below
+  the lowest passed section, or by practice (≥ 80% of ≥ 3 skills at ALMOST_MASTERED+ with
+  ≥ 4 first tries each). Current level = the level after the strongest contiguous secure
+  level. Confidence: LOW from 2 items, MEDIUM from 5 items over 2 skills, HIGH from 8 items
+  over 3 skills; stepped down when sections disagree or the evidence is older than 60 days.
+  Phonics placement evidence may set READING and SPELLING to LOW "inferred". The school
+  grade never changes.
+- **Sittings** expire after 168 h unless the blueprint says otherwise; expired and
+  cancelled sittings keep their answers as practice.
 
 ## Feedback
 
@@ -483,20 +527,23 @@ Points: 10 per first-try correct answer + 5 per star; 20 per badge. Badges are d
 
 ## Phonics Check
 
-A skill check (`assessments.code = phonics-check`, type `skill_check`) with twelve areas —
-letter recognition, letter sounds, beginning sounds, ending sounds, short vowels, CVC
-words, blending, segmenting, digraphs, patterns, word reading, spelling — two questions
-each, every question attached to the skill it measures. The child takes it from Phonics →
-Practice ("Sound Check") in the ordinary player with one try per question. The server
-scores the stored first tries per area (secure at ≥ `areaPassPercent`, default 75%) and
-per skill (`src/lib/learning/assessment-scoring.ts`); the answers also count toward skill
-mastery like any other answers. The child sees stars; the parent sees the overall and
-per-area percentages on the dashboard. Retaking it adds a new result.
+A skill check (`assessments.code = phonics-check`, type `skill_check`, full feedback, no
+skip) with twelve sections — letter recognition, letter sounds, beginning sounds, ending
+sounds, short vowels, CVC words, blending, segmenting, digraphs, patterns, word reading,
+spelling — each question attached to the skill it measures. The child starts it from
+Phonics → Practice ("Sound Check"); the server selects the items and scores each section
+(secure at the pass mark) and each skill into evidence; the answers also count toward skill
+mastery. The child sees stars; the parent sees the overall and per-section percentages.
+Retaking it adds a new result.
 
 ## Placement ("Find My Level")
 
-Stages in order: letters → sounds → CVC → blending → digraphs → sight words → sentences →
-reading. The child continues while passing; the suggested level is the one mapped to the
-last passed stage (`src/lib/learning/placement.ts`, config in `assessments.config`). The
-UI must say "suggested level" — this is a transparent rule, not a validated instrument.
-Parents can always override the level on the child's profile.
+A placement blueprint with 25 sections across the five domains and levels (86 authored
+items, 3 drawn per section, at most 2–3 per skill), no feedback, "I don't know" allowed.
+Per domain the **level ladder** starts one level below the school grade
+(`stopping.startOffset`), moves up a level after a passed section and down after a failed
+one, and stops at the boundary — a young child is never walked through every level. The
+result is instructional readiness per domain with its confidence (typically LOW–MEDIUM
+from 3 items per section); the UI says "working at", never a test score, and the school
+grade is not changed. Parents can start it from Checks and levels and can still set the
+learning level on the child's profile.

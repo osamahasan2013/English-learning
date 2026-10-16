@@ -44,8 +44,10 @@ Service worker (Serwist): app shell + visited pages     re-evaluate, store once,
 | `/parent/words[?child=]`                                                | parent                | Vocabulary progress + word bank search       |
 | `/parent/spelling[?child=&page=]`                                       | parent                | Spelling progress and error analysis         |
 | `/parent/reading[?child=]`                                              | parent                | Reading progress and comprehension           |
+| `/parent/assessments[?child=]`                                          | parent                | Levels by area, recommendations, checks      |
 | `/child/home`, `/child/learn/:lessonId`, `/child/rewards`               | parent + active child | Child area                                   |
-| `/child/phonics[?show=…]`, `/child/check/:code`                         | parent + active child | Phonics screen; skill checks (Sound Check)   |
+| `/child/phonics[?show=…]`, `/child/check/:code`                         | parent + active child | Phonics screen; a check's start screen       |
+| `/child/assess/:attemptId`                                              | parent + active child | Plays a sitting the server started           |
 | `/child/words`, `/child/words/category/:code`, `/child/words/find`      | parent + active child | Vocabulary home, categories, word search     |
 | `/child/words/:wordId[/practice]`, `/child/words/mine`, `…/practice`    | parent + active child | Word Explorer, word practice, My Words       |
 | `/child/spelling`, `…/practice[?review=1]`, `…/dictation`               | parent + active child | Spelling home (Learn), practice, dictation   |
@@ -53,11 +55,12 @@ Service worker (Serwist): app shell + visited pages     re-evaluate, store once,
 | `/child/reading`, `/child/reading/words`                                | parent + active child | Reading home, story shelf, tricky words      |
 | `/admin/dashboard`, `/admin/words[/:id]`, `/admin/phonics`              | admin                 | Content admin, word pictures, review flags   |
 | `/admin/reading[/:code]`                                                | admin                 | Reading texts: analysis, preview, publish    |
+| `/admin/assessments`                                                    | admin                 | Blueprints, pools, exposure counts, rules    |
 | `/api/sync`                                                             | parent (POST)         | Progress sync                                |
 | `/manifest.webmanifest`, `/sw.js`, `/offline.html`                      | public                | PWA                                          |
 
-Routes from the product brief that are not built yet (`/child/writing`,
-`/parent/assessments`, `/admin/lessons`, …) are deliberately absent until
+Routes from the product brief that are not built yet (`/admin/lessons`, …) are
+deliberately absent until
 their phase: there are no placeholder pages. `src/proxy.ts` redirects signed-out visitors
 away from `/parent`, `/child`, `/admin`, `/onboarding` and `/update-password` (UX only;
 pages re-check).
@@ -245,12 +248,10 @@ progress or assessment system (ADR-024 – ADR-027).
 - **Progress.** Phonics skills use ordinary skill mastery; `src/lib/learning/phonics-progress.ts`
   turns it into stars for children (0–3 per skill, combined per stage) and percentages for
   parents, plus "Practise sh" suggestions from the review priority.
-- **Assessment.** The Phonics Check is an `assessments` row whose items are grouped into
-  areas (letter recognition … spelling). It runs in the lesson player
-  (`loadAssessmentPayload`; one try per question); answers carry the assessment sitting id,
-  and the server scores each area (`src/lib/learning/assessment-scoring.ts`), stores an
-  `assessment_results` row, updates mastery from the same answers and sets
-  `last_assessed_at`.
+- **Assessment.** The Phonics Check is one of the assessments of the Phase 9 engine (see
+  "Assessment and adaptive engine" below): a version-2 blueprint with twelve area sections,
+  full feedback, one try per question. The server selects its items, scores each section
+  and writes evidence, readiness, mastery and `last_assessed_at` from the same answers.
 - **Screens.** `/child/phonics`: six large cards (Letters, Sounds, Blend, Read Words,
   Practice, Mastery) with a spoken instruction for each; `/parent/phonics` and
   `/admin/phonics`: server-side search with type/stage/level filters and pagination
@@ -457,8 +458,8 @@ ones. New: reference data and evaluators.
    lesson run id and the learning session id) to the IndexedDB outbox **before** showing
    feedback, then checks the response against the answer key. At the end it writes a
    `lesson_run` event (not for a sneak peek). In a skill check the answers carry
-   `assessmentId` + `assessmentAttemptId` instead of a run, and the end writes an
-   `assessment_run` event.
+   `assessmentId` + `assessmentAttemptId` (the sitting the server started) instead of a
+   run, and the end writes an `assessment_run` event.
 2. `SyncProvider` flushes the outbox on load, on reconnect, when the app returns to the
    foreground, after each answer and every 30 s while anything is pending.
 3. `POST /api/sync` authenticates, rate-limits, validates (Zod), confirms the child belongs
@@ -473,7 +474,11 @@ nothing`, scores a run only from first tries at that (published) lesson's own qu
    and only when at least half of them were answered (ADR-028), then recomputes from history:
    activity progress → lesson progress → skill mastery and the review queue → My Words →
    spelling progress and spelling / pattern review items → subject and level progress →
-   session totals → rewards and achievements. Every step is
+   session totals → rewards and achievements. Answers in a sitting are first checked
+   against the sitting (open, same learning epoch, the question among the items the server
+   selected, a skip only where the blueprint allows one); a completed sitting is scored
+   into evidence and a result, assessed skills' mastery is recomputed, gaps feed the review
+   queue and instructional readiness is recomputed (see below). Every step is
    idempotent, so retries and duplicates converge.
 5. The device removes only events the server confirmed (`stored`/`duplicate`). Rejected
    events are kept as `failed` with a reason and shown in parent Settings, where they can be
@@ -490,21 +495,86 @@ Conflict policy: history is append-only, so there are no write conflicts — the
 devices' events is the truth. Derived tables are recomputed from that union. Device
 timestamps are clamped to [now − 60 days, now + 5 min].
 
-## Adaptive learning (V1, rule-based)
+## Assessment and adaptive engine (Phase 9)
 
-- `src/lib/learning/mastery.ts` — per skill, from the latest 30 first tries: accuracy
-  (weighted to the latest 10) × evidence (min(1, attempts / 10)) = mastery score; status by
-  configurable bands NOT_STARTED 0 · LEARNING 1–39 · PRACTICING 40–69 · ALMOST_MASTERED
-  70–89 · MASTERED 90+ (MASTERED also needs practice on two days); review schedule.
+One pipeline, each stage a pure module in `src/lib/learning` with the I/O in
+`src/lib/server` (ADR-047, ADR-048):
+
+```
+raw answers ─▶ evidence ─▶ mastery ─▶ instructional readiness ─▶ recommendation
+(activity_     (assessment_  (skill_     (instructional_            (computed per request,
+ attempts)      evidence)     mastery)    readiness, per domain)     never stored)
+```
+
+- **Blueprints** (`assessment-blueprint.ts`). Every assessment is data: a version-2
+  blueprint in `assessments.config` (sections with a domain, level, draw size, max items
+  per skill, difficulty range; a stopping rule; feedback mode; skip; item pool; expiry).
+  The seven types — placement, diagnostic, progress check, skill check, re-check, end of
+  unit, review check — differ only in their blueprint. Pools: `authored` (items in
+  `assessment_items`), `level` (lesson questions at the measured level), `skills`
+  (re-check), `unit`, `review`. Validated at import (`assessment-validation.ts`).
+- **Sittings** (`src/lib/server/assessment-engine.ts`). A sitting starts only in a server
+  action (child: `startCheck`; parent: `startCheckForChild`), never while rendering a page.
+  After an RLS ownership check, the service role selects the items
+  (`item-selection.ts`: seeded, least-exposed first, skill round-robin, at most
+  `maxPerSkill`, preferred difficulty) and stores them in `assessment_attempts.item_ids`
+  with the plan in `scope`. Starting the same check again resumes the open sitting.
+  Statuses: `in_progress` → `completed` | `abandoned` (parent cancel) | `expired`
+  (`expires_at`, default 168 h). The device plays the payload from
+  `loadSittingPayload` (answer keys only, ADR-021) in the lesson player; the level ladder
+  (`assessment-flow.ts`) runs on the device, so a placement works offline. Answers are
+  ordinary attempt events carrying the sitting id; the server accepts only the selected
+  items, one first try each.
+- **Scoring and evidence** (`assessment-evidence.ts`, `src/lib/server/assessment-results.ts`).
+  Deterministic: correct, incorrect, skipped ("I don't know"), unanswered; partial credit
+  for multi-part answers. Section percent and pass mark; per-skill evidence weighted down
+  when the child had seen the item before (contamination). Each skill's evidence is
+  secure / developing / emerging; weak skills with enough items become `assessment_gap`
+  review items. A partial sitting never counts as a failure: unserved sections are not
+  scored. A re-check stores a comparison with the previous evidence.
+- **Mastery** keeps one model (`mastery.ts`); Phase 9 adds hysteresis: a MASTERED skill
+  keeps its status after a slip unless the score falls `holdMargin` below the bar or there
+  are ≥ 2 errors in the last 5. It is replayed over history, so still a pure function.
+- **Instructional readiness** (`readiness.ts`, stored in `instructional_readiness`). Per
+  domain (phonics, vocabulary, spelling, reading, writing): strongest secure level, current
+  instructional level, next level, confidence (INSUFFICIENT / LOW / MEDIUM / HIGH from item
+  and skill counts, consistency and age), source (assessment / mastery / inferred / default),
+  strengths, needs and prerequisite gaps. The school grade (`children.grade_level_id`) is
+  never changed. Recomputed after each scored sitting and when stale (older than a day or
+  than the last reset) by `loadAdaptive`.
+- **Recommendations** (`adaptive.ts`, loaded by `src/lib/server/adaptive.ts`). The only
+  recommender: each domain is taught at its readiness level (when confident enough; the
+  learning level otherwise). HIGH = prerequisite repair (a prerequisite with an assessment
+  gap or practised enough and weak), assessment gaps, repeated errors, important weak or
+  overdue skills; MEDIUM = continue, next lessons, due review, re-check; LOW = stretch to
+  the next level, maintenance. Not-yet-learned prerequisites make a lesson wait rather than
+  trigger a repair. Deduplicated, fatigue-filtered, interleaved by domain, each with a
+  child message and a parent message stating the rule and the evidence. The daily plan
+  (`daily-plan.ts`) fills the parent's minutes from these recommendations.
+- **Screens.** Child: home (waiting check, recommendations, today's plan), the check start
+  screen, the sitting (quiet mode for placement/diagnostic: no feedback, no score, "I
+  don't know"). Parent: dashboard "Level by area" and "What to practise next";
+  `/parent/assessments` (levels with confidence and evidence, recommendations with reasons,
+  start / cancel checks, history with per-section results and re-check comparisons).
+  Admin: `/admin/assessments` (blueprints, pool sizes, skill coverage, difficulty,
+  exposure counts from `assessment_item_exposure()` — counts only — flags, effective rules).
+
+Other pieces of the learning model, unchanged in role:
+
 - `src/lib/learning/review-queue.ts` — the review queue (`review_items`): every practised
-  skill is scheduled; weak skills, recent mistakes and missed words are due now; items are
-  resolved when no longer needed.
-- `src/lib/learning/engine.ts`, `recommendations.ts` — next lesson, recommendations, weak
-  and strong skills, "Practice X" messages.
-- `src/lib/learning/daily-plan.ts` — today's plan from the parent's daily minutes, weak and
-  due skills first.
+  skill is scheduled; weak skills, recent mistakes, missed words and assessment gaps are
+  due now; items are resolved when no longer needed.
+- `src/lib/learning/engine.ts` — the lesson path within a level (next lesson, prerequisite
+  check for the lesson page); `recommendations.ts` — weak / strong skill summaries.
+  Domain word and text pickers (phonics, spelling, vocabulary, reading) choose content
+  inside an activity; they do not recommend lessons.
 - `src/lib/learning/scoring.ts` — raw score, percentage, accuracy, per-answer score,
   stars/points, time.
+
+Cross-domain rules (documented, deterministic): phonics placement evidence can raise
+READING and SPELLING readiness to LOW "inferred" (`assessment.inferFromPhonics`), never
+higher; a domain is never moved by another domain's practice otherwise; prerequisites
+across domains are honoured through `skill_prerequisites` like any other.
 
 ## Audio
 
@@ -630,9 +700,15 @@ existing placement flow after `reset_child_learning()`; it needs no other change
 
 - RLS on every table (`supabase/migrations/20260929100600_rls_and_grants.sql`), explicit
   grants, column-level grants for user-editable columns, no user write access to progress.
-- Service-role key is server-only (`getServerEnv()` throws in the browser) and used by two
-  modules: the progress writer (after the sync route's ownership check) and the lesson
-  loader (only to turn published answers into digest-only answer keys; ADR-021).
+- Service-role key is server-only (`getServerEnv()` throws in the browser) and used only
+  after the caller's child was found with the parent's RLS client: the progress writer
+  (after the sync route's ownership check), the lesson loader (only to turn published
+  answers into digest-only answer keys; ADR-021), the child lifecycle actions (ADR-046),
+  the assessment engine (start / cancel a sitting, item selection — ADR-047) and the
+  readiness recompute in the adaptive loader (ADR-048).
+- Assessment sittings: the server selects every item; the device can only answer the
+  items of an open sitting of its own child, once each; parents cannot insert or change
+  sittings, evidence or readiness (no write grants); item exposure is admin-only counts.
 - Correct answers are never readable by signed-in users (`questions.answer` has no SELECT
   grant) and never sent to the browser in plain text.
 - Server Actions and the sync route re-check `getUser()`; redirects are same-site only.

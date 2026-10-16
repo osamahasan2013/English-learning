@@ -65,8 +65,9 @@ src/features/            activity renderers + registry, lesson player, reading (
 src/components/          ui/ primitives (Button, Card, Field, Alert, EmptyState, Spinner, ProgressBar),
                          layout/ (AppShell, NavLink, setup screen, sync, offline, SW), parent/, child/
 public/offline.html      static offline fallback served by the service worker
-src/lib/learning/        pure domain logic: evaluate, mastery, scoring, daily plan, placement,
-                         phonics (word split), phonics-progress (stars), assessment-scoring,
+src/lib/learning/        pure domain logic: evaluate, mastery, scoring, daily plan,
+                         phonics (word split), phonics-progress (stars), assessment blueprint / selection /
+                         flow / evidence, readiness, adaptive (the one recommender),
                          spelling (checker, error categories, hints, spelling mastery)…
 src/lib/content/         content schemas, CSV, templates, lesson blueprints, phonics validation, importer
 src/lib/offline/         Dexie DB, outbox, sync protocol, lesson cache
@@ -78,9 +79,13 @@ tests/unit, tests/e2e    Vitest and Playwright
 ## Conventions
 
 - Server-only modules start with `import "server-only"`. The service-role client
-  (`src/lib/supabase/admin.ts`) is used only by the progress writer (after an ownership
-  check), the lesson loader (to build digest-only answer keys; ADR-021) and the child
-  lifecycle actions (delete child / reset learning, after an ownership check; ADR-046).
+  (`src/lib/supabase/admin.ts`) is used only after an RLS ownership check, by: the progress
+  writer, the lesson loader (to build digest-only answer keys; ADR-021), the child
+  lifecycle actions (delete child / reset learning; ADR-046), the assessment engine (start /
+  cancel a sitting and select its items; ADR-047) and the readiness recompute in the
+  adaptive loader (ADR-048).
+- One recommender: `src/lib/learning/adaptive.ts` (via `loadAdaptive`). Don't add another;
+  domain word/text pickers choose content inside an activity, they don't recommend lessons.
 - Correct answers never reach the browser in plain text: `questions.answer` is not readable
   by signed-in users, and renderers get a `reveal` from the answer key, never the answer.
 - Engine numbers (mastery bands, tries, review, scoring) live in `src/lib/learning/rules.ts`
