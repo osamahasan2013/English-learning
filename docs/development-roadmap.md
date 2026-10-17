@@ -207,6 +207,14 @@ audio regression in `audio-accuracy.test.ts`; integration `assessment-engine.tes
 SQL `013_assessment_engine.sql`; e2e `assessment.spec.ts` and glyph identity in
 `writing.spec.ts`.
 
+Hosted (2026-10-17): migration `20261012100100` applied through the SQL Editor (the MCP
+migration call times out) and verified (tables, columns, indexes, RLS, policies, grants,
+`reset_child_learning`, function privileges); content synced and verified by checksum on
+all 46 content tables (question and assessment `version` counters are hosted history and
+were bumped, not overwritten). The sync also added five verb-form word relations that had
+been missing on hosted since an earlier phase. A non-admin probe was refused item exposure
+and readiness writes and saw no family data.
+
 ## Phases
 
 | #   | Phase                       | Status | Notes / next steps                                                                                                                                                                                                                                                        |

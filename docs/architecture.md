@@ -529,7 +529,7 @@ raw answers ─▶ evidence ─▶ mastery ─▶ instructional readiness ─▶
   Deterministic: correct, incorrect, skipped ("I don't know"), unanswered; partial credit
   for multi-part answers. Section percent and pass mark; per-skill evidence weighted down
   when the child had seen the item before (contamination). Each skill's evidence is
-  secure / developing / emerging; weak skills with enough items become `assessment_gap`
+  secure / developing / weak (insufficient below the minimum evidence); weak skills with enough items become `assessment_gap`
   review items. A partial sitting never counts as a failure: unserved sections are not
   scored. A re-check stores a comparison with the previous evidence.
 - **Mastery** keeps one model (`mastery.ts`); Phase 9 adds hysteresis: a MASTERED skill

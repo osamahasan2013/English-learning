@@ -497,7 +497,7 @@ All numbers are `rules.assessment` (overridable in `learning_rules`).
   sitting is never a failure.
 - **Contamination**: an item the child answered before counts 0.75 after 1 earlier
   exposure and 0.5 after 3.
-- **Evidence** per skill: secure ≥ 75%, developing ≥ 50%, else emerging. A gap = ≥ 2 items
+- **Evidence** per skill: secure ≥ 75%, developing ≥ 50%, else weak (insufficient when there is less than one item's weight). A gap = ≥ 2 items
   below 50% (within 60 days) → an `assessment_gap` review item (priority 80) while the
   skill is below ALMOST_MASTERED.
 - **Readiness** per domain: a level is secure when its section was passed, when it is below
