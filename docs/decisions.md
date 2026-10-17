@@ -775,3 +775,31 @@ box (scaled too when written from memory) and each letter is compared at its bes
 rotation (0, ±5°); a part counts as a letter's own beyond 4 units (was 6). This removed false
 look-alike rejections of correct letters traced off-centre or slanted, and the a/o
 exceptions; an a without its stem is refused. Only the dotless i written as l remains.
+
+## ADR-050 — The parent experience is a presentation read-model, never a second source of truth
+
+**Context.** The parent area had grown one card per phase on a single dashboard: stat
+tiles, an "accuracy by area" chart, averaged phonics percentages, four domain summary
+cards and the recommendation list, each page with its own child selector that forgot the
+chosen child when moving between sections. Phase 10 asked for a calm, explainable parent
+experience without inventing metrics or duplicating educational logic.
+
+**Decision.** The parent experience only reads and rewords what the authoritative systems
+computed. `src/lib/parent/view-model.ts` is a pure presentation read-model
+(`ParentDashboardViewModel`, area state, trend, today, practice, guidance, attention notes);
+`src/lib/server/parent-view.ts` composes the existing RLS-scoped loaders and verifies the
+chosen child against the parent's own children. Nothing is stored and no mastery, level,
+review or recommendation is computed: practice and Today are `adaptive.ts` output in its
+own order (ADR-048). Area states and trends are deterministic, documented display rules
+with minimum-evidence thresholds; counts are shown instead of averaged percentages.
+Navigation keeps `?child=`; "Start" hands the device to the child straight into the
+recommended lesson or re-check through a server action that allows only those two child
+paths. Reset learning, which deletes history (ADR-046), now needs the child's name typed,
+as delete already did. No table, migration or service-role use was added.
+
+**Consequences.** The dashboard, the child home and the practice page always agree because
+they render the same recommender output. Parent wording lives in one tested module, so
+banned claims (WPM, "behind", grade-level verdicts, AI judgement) are checked by tests. A
+trend is a display aid only and can never move mastery or a level. The dashboard does fewer
+queries than before (five bounded loaders instead of nine), and the area pages share one
+overview loader.

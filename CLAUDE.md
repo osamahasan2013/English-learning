@@ -65,6 +65,7 @@ src/features/            activity renderers + registry, lesson player, reading (
 src/components/          ui/ primitives (Button, Card, Field, Alert, EmptyState, Spinner, ProgressBar),
                          layout/ (AppShell, NavLink, setup screen, sync, offline, SW), parent/, child/
 public/offline.html      static offline fallback served by the service worker
+src/lib/parent/          parent presentation read-model (wording, area state, trend; ADR-050)
 src/lib/learning/        pure domain logic: evaluate, mastery, scoring, daily plan,
                          phonics (word split), phonics-progress (stars), assessment blueprint / selection /
                          flow / evidence, readiness, adaptive (the one recommender),
@@ -129,5 +130,6 @@ them the app still builds and shows a setup screen. `NEXT_PUBLIC_*` are inlined 
 
 `docs/architecture.md`, `docs/database.md`, `docs/curriculum.md`, `docs/audio.md`,
 `docs/development-roadmap.md`, `docs/decisions.md`, `docs/development.md`,
-`docs/writing-engine.md`, `docs/audio-engine.md`.
+`docs/writing-engine.md`, `docs/audio-engine.md`. Parent screens render
+`src/lib/parent/view-model.ts` only — never compute mastery, levels or recommendations there.
 Update them when behaviour or architecture changes; record decisions as ADRs.

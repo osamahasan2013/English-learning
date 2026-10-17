@@ -230,6 +230,21 @@ lifecycle integration test, break screens in `assessment.spec.ts`. Signed-in pro
 verification was blocked (no production test account; sign-up needs email confirmation)
 and is listed as a manual step.
 
+## Phase 10 — parent experience and dashboard
+
+A parent layer that reads and explains the existing systems (ADR-050): a calm dashboard
+(levels per area, Today and what to practise next from the adaptive engine, progress by
+area with evidence states, strengths and needs, recent finished learning, check status),
+`/parent/progress` (per-area state, trend and skills in parent words), `/parent/practice`
+(the recommender's order with reasons, tips for home and Start buttons that open the lesson
+in child mode), a fuller checks page and history, and an overview card on each area page
+(phonics now shows the child's own progress, letter names apart from sounds). Child
+selection is server-verified on every page and kept across sections. Reset learning now
+needs the child's name typed. No new table, no migration, no second source of truth.
+Tests: `parent-view.test.ts` (unit, 24), `tests/integration/parent-view.test.ts`
+(isolation, foreign ids, trends, every area, five children with a long history),
+`parent-experience.spec.ts` (journey, phone / tablet / desktop, offline note).
+
 ## Phases
 
 | #   | Phase                       | Status | Notes / next steps                                                                                                                                                                                                                                                        |
@@ -245,7 +260,7 @@ and is listed as a manual step.
 | 9   | Writing                     | ✅     | Phase 8: 25 writing skills, glyph-based handwriting (trace / copy / write, undo, typed alternative, order and direction), typed writing (copy, complete, rubrics, story writing, editing), 25 lessons, parent report, admin glyphs. Next: more glyph sets, teacher review |
 | 10  | Assessment                  | ✅     | Phase 9: one engine, seven blueprint-driven types, server-selected items, sittings, evidence, readiness with confidence, history and re-check comparison. Next: cross-device resume of the remaining items                                                                |
 | 11  | Adaptive learning           | ✅     | Phase 9: one explainable recommender per domain level, prerequisite repair, gaps, re-checks, stretch, learning-zone daily plan, mastery hysteresis. Next: mixed review sessions across skills, SRS                                                                        |
-| 12  | Parent dashboard            | 🟡     | Stats, activities, average score, learning time, subject progress, skills, recommendations, badges. Next: monthly view, words list                                                                                                                                        |
+| 12  | Parent dashboard            | ✅     | Phase 10: presentation read-model over mastery, readiness and the adaptive engine; dashboard, progress, practice with Start, checks, area overviews, typed reset. Next: monthly summary, printable report (no export system yet)                                          |
 | 13  | Games and rewards           | 🟡     | Stars, points, badges, streaks; MATCH, SORT, DRAG_DROP renderers. Next: MEMORY_MATCH, PHONICS_CLASSIFICATION                                                                                                                                                              |
 | 14  | PWA/offline/sync            | 🟡     | Outbox, idempotent sync, SW. Next: fully client-side offline lesson loader from IndexedDB; background sync                                                                                                                                                                |
 | 15  | Admin CMS                   | 🟡     | Guarded area, overview, word search. Next: reusable Zod-driven edit forms, CSV upload in UI, media upload with type/size validation                                                                                                                                       |

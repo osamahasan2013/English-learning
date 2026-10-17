@@ -32,32 +32,34 @@ Service worker (Serwist): app shell + visited pages     re-evaluate, store once,
 
 ### Route map
 
-| Route                                                                   | Access                | Purpose                                      |
-| ----------------------------------------------------------------------- | --------------------- | -------------------------------------------- |
-| `/`                                                                     | public                | Landing; signed-in users go to the dashboard |
-| `/login`, `/register`, `/forgot-password`                               | public                | Parent authentication                        |
-| `/update-password`                                                      | signed in             | New password (after a reset link, or change) |
-| `/auth/confirm`                                                         | public                | Email links (`token_hash` or `code`)         |
-| `/onboarding`                                                           | parent                | First child profile                          |
-| `/parent/dashboard`, `/parent/children[/new\|/:id]`, `/parent/settings` | parent                | Family area                                  |
-| `/parent/phonics`                                                       | parent                | Phonics pattern search (filters, pages)      |
-| `/parent/words[?child=]`                                                | parent                | Vocabulary progress + word bank search       |
-| `/parent/spelling[?child=&page=]`                                       | parent                | Spelling progress and error analysis         |
-| `/parent/reading[?child=]`                                              | parent                | Reading progress and comprehension           |
-| `/parent/assessments[?child=]`                                          | parent                | Levels by area, recommendations, checks      |
-| `/child/home`, `/child/learn/:lessonId`, `/child/rewards`               | parent + active child | Child area                                   |
-| `/child/phonics[?show=…]`, `/child/check/:code`                         | parent + active child | Phonics screen; a check's start screen       |
-| `/child/assess/:attemptId`                                              | parent + active child | Plays a sitting the server started           |
-| `/child/words`, `/child/words/category/:code`, `/child/words/find`      | parent + active child | Vocabulary home, categories, word search     |
-| `/child/words/:wordId[/practice]`, `/child/words/mine`, `…/practice`    | parent + active child | Word Explorer, word practice, My Words       |
-| `/child/spelling`, `…/practice[?review=1]`, `…/dictation`               | parent + active child | Spelling home (Learn), practice, dictation   |
-| `/child/spelling/words[?page=]`, `/child/spelling/review`               | parent + active child | My spelling words, spelling review           |
-| `/child/reading`, `/child/reading/words`                                | parent + active child | Reading home, story shelf, tricky words      |
-| `/admin/dashboard`, `/admin/words[/:id]`, `/admin/phonics`              | admin                 | Content admin, word pictures, review flags   |
-| `/admin/reading[/:code]`                                                | admin                 | Reading texts: analysis, preview, publish    |
-| `/admin/assessments`                                                    | admin                 | Blueprints, pools, exposure counts, rules    |
-| `/api/sync`                                                             | parent (POST)         | Progress sync                                |
-| `/manifest.webmanifest`, `/sw.js`, `/offline.html`                      | public                | PWA                                          |
+| Route                                                                | Access                | Purpose                                      |
+| -------------------------------------------------------------------- | --------------------- | -------------------------------------------- |
+| `/`                                                                  | public                | Landing; signed-in users go to the dashboard |
+| `/login`, `/register`, `/forgot-password`                            | public                | Parent authentication                        |
+| `/update-password`                                                   | signed in             | New password (after a reset link, or change) |
+| `/auth/confirm`                                                      | public                | Email links (`token_hash` or `code`)         |
+| `/onboarding`                                                        | parent                | First child profile                          |
+| `/parent` → `/parent/dashboard[?child=]`                             | parent                | Parent home: one child at a glance           |
+| `/parent/progress[?child=]`, `/parent/practice[?child=]`             | parent                | Progress per area; adaptive practice + Start |
+| `/parent/children[/new\|/:id]`, `/parent/settings`                   | parent                | Children (edit, reset, delete), settings     |
+| `/parent/phonics[?child=]`                                           | parent                | Phonics progress + pattern search            |
+| `/parent/words[?child=]`                                             | parent                | Vocabulary progress + word bank search       |
+| `/parent/spelling[?child=&page=]`                                    | parent                | Spelling progress and error analysis         |
+| `/parent/reading[?child=]`, `/parent/writing[?child=]`               | parent                | Reading / writing progress                   |
+| `/parent/assessments[?child=]`                                       | parent                | Levels by area, recommendations, checks      |
+| `/child/home`, `/child/learn/:lessonId`, `/child/rewards`            | parent + active child | Child area                                   |
+| `/child/phonics[?show=…]`, `/child/check/:code`                      | parent + active child | Phonics screen; a check's start screen       |
+| `/child/assess/:attemptId`                                           | parent + active child | Plays a sitting the server started           |
+| `/child/words`, `/child/words/category/:code`, `/child/words/find`   | parent + active child | Vocabulary home, categories, word search     |
+| `/child/words/:wordId[/practice]`, `/child/words/mine`, `…/practice` | parent + active child | Word Explorer, word practice, My Words       |
+| `/child/spelling`, `…/practice[?review=1]`, `…/dictation`            | parent + active child | Spelling home (Learn), practice, dictation   |
+| `/child/spelling/words[?page=]`, `/child/spelling/review`            | parent + active child | My spelling words, spelling review           |
+| `/child/reading`, `/child/reading/words`                             | parent + active child | Reading home, story shelf, tricky words      |
+| `/admin/dashboard`, `/admin/words[/:id]`, `/admin/phonics`           | admin                 | Content admin, word pictures, review flags   |
+| `/admin/reading[/:code]`                                             | admin                 | Reading texts: analysis, preview, publish    |
+| `/admin/assessments`                                                 | admin                 | Blueprints, pools, exposure counts, rules    |
+| `/api/sync`                                                          | parent (POST)         | Progress sync                                |
+| `/manifest.webmanifest`, `/sw.js`, `/offline.html`                   | public                | PWA                                          |
 
 Routes from the product brief that are not built yet (`/admin/lessons`, …) are
 deliberately absent until
@@ -579,6 +581,66 @@ Cross-domain rules (documented, deterministic): phonics placement evidence can r
 READING and SPELLING readiness to LOW "inferred" (`assessment.inferFromPhonics`), never
 higher; a domain is never moved by another domain's practice otherwise; prerequisites
 across domains are honoured through `skill_prerequisites` like any other.
+
+## Parent experience (Phase 10)
+
+A presentation layer over the authoritative systems (ADR-050). It decides nothing about
+learning and stores nothing: mastery (`skill_mastery`), readiness (`instructional_readiness`
+via `loadAdaptive`), recommendations and the daily plan (`adaptive.ts`, ADR-048), review,
+assessment history and lesson runs are read as they are.
+
+- **Data flow.** Page → `loadFamily(?child)` (`src/lib/server/parent-view.ts`: the id is
+  matched against the parent's own children from the RLS-scoped `listChildren`; anything
+  else shows the first child) → the existing loaders in parallel (`loadAdaptive`,
+  `loadChildProgress`, `loadSittingHistory`, `loadOpenSittings`, the domain report loaders),
+  all on the parent's RLS client → the pure read-model `src/lib/parent/view-model.ts`
+  (`ParentDashboardViewModel`, `domainSnapshot`, `answerTrend`, `todayView`, `practiceView`,
+  `homeGuidance`, …) → server components. No new table, no migration, no service role.
+- **Routes.** `/parent/dashboard` (levels per area, worth-knowing notes, Today, what to
+  practise next, progress by area, going well / needs practice, recent learning, checks,
+  this week), `/parent/progress` (each area: learning at, state, trend, skills in parent
+  words; learning time, totals, lessons by subject, badges), `/parent/practice` (top
+  priority, up to four options, the rest — each with its reason, a tip for home and Start),
+  `/parent/assessments` (levels with evidence, next steps, checks, history with areas,
+  sections, strengths, gaps, comparison; what a check is and is not), and one page per
+  area (`phonics`, `words`, `spelling`, `reading`, `writing`) that opens with the same
+  overview card. The parent navigation keeps `?child=` between per-child sections
+  (`NavLink keepQuery`); every page re-checks it.
+- **Wording.** Mastery: Mastered "Consistently demonstrates this skill", Almost there
+  "Usually right; a little more practice makes it secure", Practising "Getting it right
+  more often", Learning "Still developing this skill", Not started. Readiness evidence:
+  Not enough evidence yet / Limited / Moderate / Strong evidence. Levels are "Learning at"
+  per area, never one collapsed level and never a school grade. No WPM, pronunciation or
+  speech score ("Time spent reading"), no AI or "creative" claims for writing, letter names
+  kept apart from sounds on the phonics page, spelling mistakes in plain words
+  (`SPELLING_ERROR_LABELS`), never "behind" or "above grade level".
+- **Area state** (`domainSnapshot`, deterministic): no answers → Not enough evidence yet;
+  no skill with `review.minAttempts` answers → Limited evidence; an adaptive review or
+  repair (high / medium) in the area → Needs review; otherwise the status most judged
+  skills hold (ties → the lower one). Counts are shown with it ("3 mastered · 1 learning"),
+  never an averaged percentage.
+- **Trend** (`answerTrend`, presentation only): the latest 40 first-try lesson answers of
+  the last 8 weeks in an area (checks excluded), earlier half vs recent half; shown only
+  with ≥ 10 answers per half; "Getting more right lately" / "About the same lately" /
+  "Fewer right lately" at a 10-point difference, with both counts written out.
+- **Percentages shown** (documented): lesson "Average score" (first tries, averaged over
+  lessons), a check's "Overall %" and section "x of y", spelling "Right first time", reading
+  "Questions right first time", vocabulary accuracy per area — all computed by the existing
+  engines from stored answers.
+- **Start.** A Start button posts `startActivityAsChild` (child re-verified with RLS;
+  destination must be `/child/learn/<uuid>` or `/child/check/<code>?skill=<uuid>`,
+  `isStartPath`), sets the child-mode cookie and opens that lesson or re-check.
+- **Child management.** Reset learning and delete both need the child's name typed (checked
+  again on the server); the reset dialog says that every answer and the history are deleted
+  and cannot be restored (ADR-046).
+- **Attention.** In-app notes only (a check is waiting, things to practise first, no lessons
+  in 7 days, Find My Level not taken). No push, email or SMS.
+- **Offline.** The parent banner says "You're offline. Some information may be out of
+  date." plus the sync status; the outbox is untouched and there is no parent offline store.
+- **Cost.** Dashboard: 5 loaders in parallel, each bounded (history page of 10, open
+  sittings ≤ 10, runs of 30 days, adaptive's documented bounds); trends: one query, ≤ 1000
+  rows. Measured in `tests/integration/parent-view.test.ts` with five children and a long
+  history.
 
 ## Audio
 

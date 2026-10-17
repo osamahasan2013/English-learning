@@ -394,6 +394,14 @@ its score stays within `holdMargin` (10) of the bar and there are fewer than
 `minRecentErrors` (2) errors in its last 5 first tries. The window is replayed in order, so
 the status is still a pure function of the history.
 
+Parents read the statuses in plain words (Phase 10, `src/lib/parent/view-model.ts`):
+MASTERED "Consistently demonstrates this skill", ALMOST_MASTERED "Usually right; a little
+more practice makes it secure", PRACTICING "Getting it right more often", LEARNING "Still
+developing this skill", NOT_STARTED "Not practised yet". An area's state on the parent
+pages (Not enough evidence yet / Limited evidence / Needs review / the status most judged
+skills hold) is a display rule over these statuses, described in
+[architecture.md](architecture.md#parent-experience-phase-10); it never changes mastery.
+
 ### Word mastery
 
 Each word uses the skill mastery model above on all first tries about that word, with a
