@@ -711,9 +711,18 @@ never written by an assessment. The old placement and skill-check scorers were r
 questions to a sitting; exposure is tracked and visible to admins as counts only.
 Readiness is explainable (sections, items, skills, dates) and conservative: three items per
 placement section give LOW–MEDIUM confidence, and lessons follow readiness only from LOW.
-Limits: no break screens yet; a sitting resumed on another device restarts the remaining
-items there (answers already synced count); readiness is a rule, not a validated
+Limits: a sitting resumed on another device restarts the remaining items there (answers
+already synced count); readiness is a rule, not a validated
 psychometric instrument, and the UI says "working at", not a score.
+
+**Amendment (Phase 9.1).** Calibration checks showed two defects, fixed inside the same
+engine: (1) a check answered mostly with "I don't know" placed the child at the bottom level
+with LOW confidence (enough to move lessons) — confidence now counts answered items only, so
+such a check stays INSUFFICIENT; (2) the ladder could serve up to 75 items to a child passing
+every level (60 to a struggling Grade 2 child) — `stopping.maxSectionsPerDomain` (3) caps it
+at 45, with 15–30 for children working at their grade. Break screens (`breakEvery`) are now
+shown. The school grade still only picks the ladder's start: placement above and below it
+is tested.
 
 ## ADR-048 — One explainable recommender, computed per request
 
@@ -760,3 +769,9 @@ recognition model.
 shipped glyphs traced or written with a wobble still pass at every level. Only listed pairs
 are checked. Three cases remain documented exceptions where the shapes are too close for
 reliable separation (a traced over o, o written for a, a dotless i written as l).
+
+**Amendment (Phase 9.1).** Identity now compares shapes: the ink is centred on each letter's
+box (scaled too when written from memory) and each letter is compared at its best small
+rotation (0, ±5°); a part counts as a letter's own beyond 4 units (was 6). This removed false
+look-alike rejections of correct letters traced off-centre or slanted, and the a/o
+exceptions; an a without its stem is refused. Only the dotless i written as l remains.

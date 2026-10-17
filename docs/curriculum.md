@@ -504,7 +504,11 @@ All numbers are `rules.assessment` (overridable in `learning_rules`).
   the lowest passed section, or by practice (≥ 80% of ≥ 3 skills at ALMOST_MASTERED+ with
   ≥ 4 first tries each). Current level = the level after the strongest contiguous secure
   level. Confidence: LOW from 2 items, MEDIUM from 5 items over 2 skills, HIGH from 8 items
-  over 3 skills; stepped down when sections disagree or the evidence is older than 60 days.
+  over 3 skills, counting only ANSWERED items ("I don't know" makes a section not passed but
+  adds no certainty — a check answered with skips stays INSUFFICIENT, Phase 9.1); stepped
+  down when sections disagree or the evidence is older than 60 days. Parents see it as
+  evidence: Not enough evidence yet / Limited / Moderate / Strong evidence (a count of
+  answers and skills, not a statistical confidence).
   Phonics placement evidence may set READING and SPELLING to LOW "inferred". The school
   grade never changes.
 - **Sittings** expire after 168 h unless the blueprint says otherwise; expired and
@@ -542,8 +546,30 @@ A placement blueprint with 25 sections across the five domains and levels (86 au
 items, 3 drawn per section, at most 2–3 per skill), no feedback, "I don't know" allowed.
 Per domain the **level ladder** starts one level below the school grade
 (`stopping.startOffset`), moves up a level after a passed section and down after a failed
-one, and stops at the boundary — a young child is never walked through every level. The
-result is instructional readiness per domain with its confidence (typically LOW–MEDIUM
-from 3 items per section); the UI says "working at", never a test score, and the school
-grade is not changed. Parents can start it from Checks and levels and can still set the
-learning level on the child's profile.
+one, and stops at the boundary, at the top or bottom level, or after
+`stopping.maxSectionsPerDomain` (3) sections. The result is instructional readiness per
+domain with its evidence (typically Limited–Moderate from 3 items per section); the UI says
+"learning at", never a test score, and the school grade is not changed. Parents can start
+it from Checks and levels and can still set the learning level on the child's profile.
+
+Calibration (Phase 9.1, `tests/unit/placement-calibration.test.ts`): the grade only picks the
+start. Passes keep climbing, so a child places ABOVE their grade (a KG3 child secure through
+Grade 1 is taught at Grade 2; a KG1 child passing everything climbs three sections and is
+taught at Grade 1); fails keep descending, so a child places BELOW it. A check answered
+with "I don't know" moves nothing (Not enough evidence → lessons stay at the learning
+level). When the cap ends a descent, teaching starts at the lowest level checked.
+
+Length: 86 items is the authored POOL; a sitting draws 3 per section and the ladder serves
+only some sections. Items answered (5 areas):
+
+| School grade | Working at grade | Struggling | Largest possible |
+| ------------ | ---------------- | ---------- | ---------------- |
+| KG1          | 15               | 15         | 45               |
+| KG2          | 30               | 15         | 45               |
+| KG3          | 30               | 30         | 45               |
+| Grade 1      | 30               | 45         | 45               |
+| Grade 2      | 30               | 45         | 45               |
+
+(Before the cap the largest was 75 for KG1/KG2 and 60 for a struggling Grade 2 child.) A
+break screen comes every 8 answers (`breakEvery`); stopping keeps every answer and the check
+resumes later.

@@ -128,8 +128,10 @@ sent as the answer `{ strokes }`. Nothing about correctness comes from the devic
 6. **Identity** (Phase 9, ADR-049): each glyph lists the letters it is easily confused
    with (`confusables` in `content/writing.json` → `handwriting_glyphs.confusable_codes`,
    e.g. c ↔ o / e, b ↔ d, p ↔ q, A ↔ O, E ↔ F, 6 ↔ 9). The ink is compared with the target
-   and with each confusable (mean distance both ways, each candidate aligned on its own in
-   write mode): it is rejected as `wrong_letter` when a confusable fits clearly better
+   and with each confusable as a SHAPE (Phase 9.1): centred on each letter's box (also
+   scaled to it when written from memory), each letter at its best small rotation (0, ±5°),
+   mean distance both ways — where the letter sits and how it leans are judged by coverage
+   and precision, not identity. It is rejected as `wrong_letter` when a confusable fits clearly better
    (by more than 0.5), or — when only one of the two letters has an extra part — when the
    child drew that part precisely and it belongs to the other letter (an o's closing arc on
    a c, the bar of an E on an F) or left out the target's own part. The best-fitting
@@ -150,9 +152,12 @@ rejected.
 Limits, stated plainly: this is shape matching against a model with a tolerance plus a
 deterministic check against the listed look-alikes, **not handwriting recognition**. Only
 listed confusables are checked; a letter that is not listed is caught only by the shape
-checks. Documented exceptions where the shapes are too close to separate reliably: a
-traced over o (trace mode), o written for a (write mode) and l written for i without
-its dot (write mode). Very sloppy writing fails more often at Grades 1–2 than at KG1 (by
+checks. One documented exception remains: a dotless stick written from memory for i (with
+the size taken away an l and a dotless i are the same stroke; an i traced without its dot
+IS refused). Phase 9.1 fixed the a/o exceptions and stopped refusing correct letters traced
+a few units off the model or slanted (a → o, O → G, d → a, F → P, l → i were false
+look-alikes). A large stray stroke beside a letter fails precision; a slanted letter is
+accepted at KG1 but Grades 1–2 ask for a closer copy (coverage). Very sloppy writing fails more often at Grades 1–2 than at KG1 (by
 design); stroke order is measured and shown but only enforced where a level asks for it.
 There is no AI grading.
 

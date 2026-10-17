@@ -215,6 +215,21 @@ were bumped, not overwritten). The sync also added five verb-form word relations
 been missing on hosted since an earlier phase. A non-admin probe was refused item exposure
 and readiness writes and saw no family data.
 
+## Phase 9.1 — production verification and assessment calibration
+
+Calibration and hardening of Phase 9, no new architecture: placement confidence counts
+answered items only (a check answered with "I don't know" no longer moves lessons); the
+ladder serves at most 3 sections per area (no child answers more than 45 items; 15–30 at
+grade); break screens every `breakEvery` answers; glyph identity compares shapes (centred,
+best small rotation, 4-unit part gap), removing false look-alike rejections of correct
+letters traced off-centre or slanted and the a/o exceptions; parent wording says
+"evidence" (Not enough / Limited / Moderate / Strong) and shows the level lessons use.
+Tests: `placement-calibration.test.ts` (below / at / above grade, insufficient evidence,
+length per grade), glyph identity regressions in `writing.test.ts`, the extended reset
+lifecycle integration test, break screens in `assessment.spec.ts`. Signed-in production
+verification was blocked (no production test account; sign-up needs email confirmation)
+and is listed as a manual step.
+
 ## Phases
 
 | #   | Phase                       | Status | Notes / next steps                                                                                                                                                                                                                                                        |
@@ -228,7 +243,7 @@ and readiness writes and saw no family data.
 | 7   | Spelling                    | ✅     | Phase 6: spelling targets, checker + error analysis, 9 activities, input methods, dictation, hints, spelling mastery and pattern review, parent report. Next: recorded dictation audio, more lessons, speech input (future)                                               |
 | 8   | Reading                     | ✅     | Phase 7: reading taxonomy, texts with decodability analysis, guided reading, 3 new activity types, reading lessons, sessions + help-word review, parent report, admin preview. Next: recorded story audio, more texts, illustrations                                      |
 | 9   | Writing                     | ✅     | Phase 8: 25 writing skills, glyph-based handwriting (trace / copy / write, undo, typed alternative, order and direction), typed writing (copy, complete, rubrics, story writing, editing), 25 lessons, parent report, admin glyphs. Next: more glyph sets, teacher review |
-| 10  | Assessment                  | ✅     | Phase 9: one engine, seven blueprint-driven types, server-selected items, sittings, evidence, readiness with confidence, history and re-check comparison. Next: break screens, cross-device resume of the remaining items                                                 |
+| 10  | Assessment                  | ✅     | Phase 9: one engine, seven blueprint-driven types, server-selected items, sittings, evidence, readiness with confidence, history and re-check comparison. Next: cross-device resume of the remaining items                                                                |
 | 11  | Adaptive learning           | ✅     | Phase 9: one explainable recommender per domain level, prerequisite repair, gaps, re-checks, stretch, learning-zone daily plan, mastery hysteresis. Next: mixed review sessions across skills, SRS                                                                        |
 | 12  | Parent dashboard            | 🟡     | Stats, activities, average score, learning time, subject progress, skills, recommendations, badges. Next: monthly view, words list                                                                                                                                        |
 | 13  | Games and rewards           | 🟡     | Stars, points, badges, streaks; MATCH, SORT, DRAG_DROP renderers. Next: MEMORY_MATCH, PHONICS_CLASSIFICATION                                                                                                                                                              |
@@ -280,10 +295,11 @@ and readiness writes and saw no family data.
   spelling mastery). The dictation replay limit applies per try. Speech input is not
   implemented. The error categories are transparent rules, not a diagnosis.
 - The rate limiter is per server instance.
-- Assessment (Phase 9): placement confidence is typically LOW–MEDIUM (3 items per
+- Assessment (Phase 9): placement evidence is typically Limited–Moderate (3 items per
   section); a sitting resumed on another device keeps the answers already synced but the
-  new device starts the remaining items fresh; break screens (`breakEvery`) are not shown
-  — pausing is leaving and resuming later; the level ladder runs on the device, so an
+  new device starts the remaining items fresh; when the 3-section cap ends a descent,
+  teaching starts at the lowest level checked (readiness never moves down through practice,
+  only through a new check); the level ladder runs on the device, so an
   abandoned ladder leaves unreached sections unscored (never failed). Readiness is
   recomputed when older than a day; recommendations are computed on each request. Some
   placement sections measure one skill (flagged for admins).

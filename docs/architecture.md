@@ -522,7 +522,10 @@ raw answers ─▶ evidence ─▶ mastery ─▶ instructional readiness ─▶
   Statuses: `in_progress` → `completed` | `abandoned` (parent cancel) | `expired`
   (`expires_at`, default 168 h). The device plays the payload from
   `loadSittingPayload` (answer keys only, ADR-021) in the lesson player; the level ladder
-  (`assessment-flow.ts`) runs on the device, so a placement works offline. Answers are
+  (`assessment-flow.ts`) runs on the device, so a placement works offline. It climbs
+  after a pass and descends after a fail (no grade ceiling) and serves at most
+  `stopping.maxSectionsPerDomain` sections per domain; the player offers a break every
+  `breakEvery` answers. Answers are
   ordinary attempt events carrying the sitting id; the server accepts only the selected
   items, one first try each.
 - **Scoring and evidence** (`assessment-evidence.ts`, `src/lib/server/assessment-results.ts`).
@@ -537,8 +540,9 @@ raw answers ─▶ evidence ─▶ mastery ─▶ instructional readiness ─▶
   are ≥ 2 errors in the last 5. It is replayed over history, so still a pure function.
 - **Instructional readiness** (`readiness.ts`, stored in `instructional_readiness`). Per
   domain (phonics, vocabulary, spelling, reading, writing): strongest secure level, current
-  instructional level, next level, confidence (INSUFFICIENT / LOW / MEDIUM / HIGH from item
-  and skill counts, consistency and age), source (assessment / mastery / inferred / default),
+  instructional level, next level, confidence (INSUFFICIENT / LOW / MEDIUM / HIGH from
+  answered-item and skill counts, consistency and age; shown to parents as evidence labels,
+  `EVIDENCE_LABELS`), source (assessment / mastery / inferred / default),
   strengths, needs and prerequisite gaps. The school grade (`children.grade_level_id`) is
   never changed. Recomputed after each scored sitting and when stale (older than a day or
   than the last reset) by `loadAdaptive`.
