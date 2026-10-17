@@ -142,22 +142,28 @@ test("a child learns phonics from letters to digraphs, takes the Sound Check, an
   expect(mastery).toHaveLength(3);
   for (const m of mastery!) expect(m.status).not.toBe("NOT_STARTED");
 
-  // Parent dashboard: phonics percentages and the Sound Check result per area.
+  // Parent phonics page: progress per stage as counts (letter names kept apart from
+  // sounds) and the Sound Check result per area.
   await page.goto("/child/home");
   await passParentGate(page);
-  const phonicsCard = page.getByRole("heading", { name: "Phonics", exact: true, level: 2 }).locator("../..");
-  await expect(phonicsCard).toContainText(/Letter sounds\s*\d+%/);
-  await expect(phonicsCard).toContainText("Digraphs");
-  await expect(page.getByText(/Phonics Check: 100%/)).toBeVisible();
+  await page.getByRole("navigation", { name: "Parent" }).getByRole("link", { name: "Phonics" }).click();
+  const sounds = page.getByRole("region", { name: "Sounds and spelling patterns" });
+  await expect(sounds).toContainText(/Letter sounds\s*· \d+ of \d+ mastered · [1-9]\d* practised/);
+  await expect(sounds).toContainText("Digraphs");
+  await expect(page.getByRole("region", { name: "Letter names and shapes" })).toBeVisible();
+  const latestCheck = page.getByRole("heading", { name: "Latest Phonics Check" }).locator("..");
+  await expect(latestCheck).toContainText(": secure");
+  await expect(latestCheck).not.toContainText("not yet secure");
   await noSideScroll(page);
 
   // Parents can look patterns up (from the database, filtered and paged).
   await page.goto("/parent/phonics?type=consonant_digraph");
   await expect(page.getByRole("heading", { name: "Phonics patterns" })).toBeVisible();
-  // Scoped to <main>: while the page streams in, React briefly holds a hidden copy of the
-  // results outside it, which an unscoped locator can match twice.
-  const main = page.getByRole("main");
-  await expect(main.getByText(/sh as in ship/)).toBeVisible();
-  await expect(main.getByText(/\(\d+ patterns\)/)).toBeVisible();
+  // Scoped to the patterns section: while the page streams in, React briefly holds a hidden
+  // copy of the results outside <main>, and the child's own phonics progress above the
+  // search also mentions example sounds.
+  const patterns = page.getByRole("region", { name: "Phonics patterns" });
+  await expect(patterns.getByText(/sh as in ship/)).toBeVisible();
+  await expect(patterns.getByText(/\(\d+ patterns\)/)).toBeVisible();
   await noSideScroll(page);
 });

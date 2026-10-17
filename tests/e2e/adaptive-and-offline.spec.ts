@@ -34,7 +34,7 @@ test("a weak skill becomes a practice recommendation and a review item", async (
 
   // Parent: the adaptive engine's recommendation, with the rule behind it.
   await passParentGate(page);
-  const next = page.getByRole("heading", { name: "What to practise next" }).locator("..");
+  const next = page.getByRole("heading", { name: "What to practise next" }).locator("../..");
   await expect(next).toContainText(/sh/i);
   await expect(next).toContainText(/not secure yet|were not right/);
 });
@@ -105,5 +105,5 @@ test("answers given offline are kept on the device and synced exactly once after
   expect(final.count).toBe(after.count);
 
   await passParentGate(page);
-  await expect(page.getByText("Lessons completed").locator("..")).toContainText("1");
+  await expect(page.locator("#main").getByText("Lessons completed").locator("..")).toContainText("1");
 });

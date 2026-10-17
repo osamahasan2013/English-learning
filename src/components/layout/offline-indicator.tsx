@@ -29,7 +29,11 @@ export function OfflineIndicator({ variant = "parent" }: { variant?: "parent" | 
         online ? "bg-accent-soft text-accent" : "bg-warning-soft text-warning",
       )}
     >
-      <span>{online ? "Online" : "Offline — learning is saved on this device and will sync later."}</span>
+      <span>
+        {online
+          ? "Online"
+          : "You're offline. Some information may be out of date. Learning is saved on this device and will sync later."}
+      </span>
       {pending > 0 ? (
         <span>
           {pending} update{pending === 1 ? "" : "s"} waiting to sync

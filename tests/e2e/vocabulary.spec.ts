@@ -107,9 +107,9 @@ test("a child explores a word, saves it, practises it, and the parent sees the p
   // The parent sees it.
   await passParentGate(page);
   await page.goto(`/parent/dashboard?child=${childId}`);
-  await expect(page.getByText("Words practised").first()).toBeVisible();
   await page.getByRole("link", { name: "Vocabulary progress →" }).click();
-  await expect(page.getByRole("heading", { name: "Zoe's vocabulary" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Zoe's vocabulary", exact: true })).toBeVisible();
+  await expect(page.getByText("Words practised").first()).toBeVisible();
   await expect(page.getByRole("heading", { name: "Recent words" })).toBeVisible();
   await expect(page.getByText(/sad/).first()).toBeVisible();
 });

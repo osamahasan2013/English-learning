@@ -57,14 +57,21 @@ test("a parent edits a child's grade and level, and deletes a child", async ({ p
   await page.getByLabel("Learning level").selectOption({ label: "🌿 Kindergarten 2" });
   await page.getByRole("button", { name: "Save changes" }).click();
   await expect(page).toHaveURL(new RegExp(`/parent/dashboard\\?child=${mia}`));
-  await expect(page.getByText(/Kindergarten 3 · learning at Kindergarten 2/)).toBeVisible();
+  await expect(page.getByText(/School grade: Kindergarten 3/)).toBeVisible();
+  // Each area has its own "Learning at"; with no evidence yet they all follow the learning level.
+  const levels = page.getByRole("list", { name: "Learning at, by area" });
+  await expect(levels.getByRole("listitem")).toHaveCount(5);
+  await expect(levels.getByText("Kindergarten 2")).toHaveCount(5);
 
   // Editing Mia changed nothing about Leo.
   expect(await leoProfile()).toEqual(leoBefore);
 
   await page.goto(`/parent/children/${mia}`);
   await page.getByRole("button", { name: "Delete Mia Rose…" }).click();
-  await page.getByLabel("Type Mia Rose to confirm").fill("Mia Rose");
+  await page
+    .getByRole("dialog", { name: "Delete Mia Rose permanently?" })
+    .getByLabel("Type Mia Rose to confirm")
+    .fill("Mia Rose");
   await page.getByRole("button", { name: "Delete Mia Rose", exact: true }).click();
   await expect(page).toHaveURL(/\/parent\/dashboard/);
   await expect(page.getByRole("heading", { level: 1, name: "Leo" })).toBeVisible();
@@ -87,7 +94,8 @@ test("the child area never trusts a child id from the browser", async ({ browser
   await familyB.addCookies([{ name: "el_active_child", value: childA, url: "http://127.0.0.1:3000" }]);
   await pageB.goto("/child/home");
   await expect(pageB).toHaveURL(/\/parent\/dashboard/);
-  await expect(pageB.getByText("Aya")).toHaveCount(0);
+  await expect(pageB.getByRole("heading", { level: 1, name: "Ben" })).toBeVisible();
+  await expect(pageB.getByText("Aya", { exact: true })).toHaveCount(0);
 
   // Garbage in the cookie is equally harmless.
   await familyB.addCookies([

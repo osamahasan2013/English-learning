@@ -28,9 +28,10 @@ export function ResetLearningControl({
         title={`Reset learning for ${name}?`}
         confirmLabel="Reset learning"
         pendingLabel="Resetting…"
+        typeToConfirm={name}
         onConfirm={async () => {
           setDone(false);
-          const result = await resetChildLearning(childId);
+          const result = await resetChildLearning(childId, name);
           if (!result.ok) return result.message;
           await clearChildLocalData(childId);
           setDone(true);
@@ -39,12 +40,15 @@ export function ResetLearningControl({
         }}
       >
         <p>
-          This removes {name}&apos;s learning progress — lessons, stars, skills, words, review and checks —
-          and starts the learning journey again from the beginning.
+          This permanently deletes {name}&apos;s learning history — every answer, lesson, star, badge, skill,
+          word, reading, writing, review and check — and starts the learning journey again from the beginning.
+          Levels go back to the learning level in {name}&apos;s settings.
         </p>
         <p>
-          {name}&apos;s profile and {gradeName} assignment stay. This can&apos;t be undone.
+          {name}&apos;s profile, settings and {gradeName} assignment stay. Your other children are not
+          affected. Answers not yet synced from any device are not added afterwards.
         </p>
+        <p className="font-semibold">This can&apos;t be undone.</p>
       </ConfirmDialog>
       {done ? (
         <p role="status" className="font-semibold">

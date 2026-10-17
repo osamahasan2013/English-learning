@@ -238,7 +238,7 @@ test("a child learns to spell, makes and fixes a mistake, and the parent sees th
   await page.goto("/child/home");
   await passParentGate(page);
   await page.goto(`/parent/spelling?child=${childId}`);
-  await expect(page.getByRole("heading", { level: 2, name: /Sam's spelling/ })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 2, name: "Sam's spelling", exact: true })).toBeVisible();
   await expect(page.getByText("Words spelled").first()).toBeVisible();
   await expect(page.getByText("Two-letter sound").first()).toBeVisible();
   // The child's own words, exactly as written, in the (paginated) latest answers.

@@ -180,9 +180,12 @@ test("parent progress shows activities, average score, learning time and subject
   await expect(page.getByRole("heading", { name: /My skills/ })).toBeVisible();
 
   await passParentGate(page);
-  await expect(page.getByText("Activities completed").locator("..")).toContainText("3");
-  await expect(page.getByText("Average score").locator("..")).toContainText("100");
-  await expect(page.getByText("Learning time (min)").locator("..")).toContainText("1 learning session");
+  await page.getByRole("link", { name: "Progress", exact: true }).click();
+  await expect(page.locator("#main").getByText("Activities completed").locator("..")).toContainText("3");
+  await expect(page.locator("#main").getByText("Average score").locator("..")).toContainText("100");
+  await expect(page.locator("#main").getByText("Learning time (min)").locator("..")).toContainText(
+    "1 learning session",
+  );
   await expect(page.getByRole("progressbar", { name: "Games lessons completed" })).toHaveAttribute(
     "aria-valuenow",
     "1",

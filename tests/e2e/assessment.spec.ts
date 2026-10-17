@@ -46,7 +46,7 @@ test("a parent starts Find My Level; the child takes it offline without feedback
   const { data: before } = await admin.from("children").select("grade_level_id").eq("id", childId).single();
 
   // Dashboard: no evidence yet, so every area starts at the school grade.
-  await expect(page.getByRole("heading", { name: "Level by area" })).toBeVisible();
+  await expect(page.getByRole("list", { name: "Learning at, by area" })).toBeVisible();
   await expect(page.getByText(/No evidence yet/)).toBeVisible();
 
   // Parent starts the placement check.
@@ -68,6 +68,7 @@ test("a parent starts Find My Level; the child takes it offline without feedback
   // Child mode: the check waits on the home screen.
   await page.goto(`/parent/dashboard?child=${childId}`);
   await page.getByRole("button", { name: /Start learning as Maya/ }).click();
+  await expect(page).toHaveURL(/\/child\/home/);
   await page.getByRole("link", { name: /A check is waiting/ }).click();
   await expect(page).toHaveURL(/\/child\/assess\//);
   const { sittingId, items, questions } = await sittingQuestions(childId);

@@ -10,6 +10,8 @@ import { ageFromDateOfBirth } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Children" };
 
+// The family's children (Phase 10): add, open a child's dashboard or progress, hand the
+// device over, or edit / reset / delete (the child's settings page, ADR-046).
 export default async function ChildrenPage() {
   const children = await listChildren();
   return (
@@ -61,6 +63,14 @@ export default async function ChildrenPage() {
                     <Link
                       href={`/parent/dashboard?child=${child.id}`}
                       className={buttonClasses("secondary", "md")}
+                      aria-label={`Dashboard for ${child.name}`}
+                    >
+                      Dashboard
+                    </Link>
+                    <Link
+                      href={`/parent/progress?child=${child.id}`}
+                      className={buttonClasses("secondary", "md")}
+                      aria-label={`Progress for ${child.name}`}
                     >
                       Progress
                     </Link>

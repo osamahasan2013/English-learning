@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { NavLink } from "@/components/layout/nav-link";
 
-export type NavItem = { href: string; label: string };
+export type NavItem = { href: string; label: string; keepQuery?: string[] };
 
 // Shell for the grown-up areas (parent, admin): brand, primary navigation, actions, and
 // a <main> landmark the skip link targets. On narrow screens the navigation becomes a
@@ -37,7 +37,7 @@ export function AppShell({
             className="col-span-2 -mx-4 flex gap-1 overflow-x-auto px-4 py-2 sm:mx-0 sm:px-0 sm:py-0"
           >
             {nav.map((item) => (
-              <NavLink key={item.href} href={item.href}>
+              <NavLink key={item.href} href={item.href} keepQuery={item.keepQuery}>
                 {item.label}
               </NavLink>
             ))}

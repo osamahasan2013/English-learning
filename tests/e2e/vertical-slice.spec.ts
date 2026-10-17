@@ -59,12 +59,20 @@ test("parent creates a child who completes a phonics lesson, and the parent sees
   await expect(page.getByRole("link", { name: /stars\. See my rewards/ })).toContainText(/[1-9]/);
 
   await passParentGate(page);
-  await expect(page.getByText("Lessons completed").locator("..")).toContainText("1");
-  await expect(page.getByRole("heading", { name: "Recent lessons" }).locator("..")).toContainText(
+  await expect(page.locator("#main").getByText("Lessons completed").locator("..")).toContainText("1");
+  await expect(page.getByRole("heading", { name: "Recent learning" }).locator("..")).toContainText(
     "The sh sound",
   );
-  await expect(page.getByRole("heading", { name: "Skills" }).locator("..")).toContainText("SH");
-  await expect(page.getByRole("heading", { name: "Achievements" }).locator("..")).toContainText(
-    "First Lesson",
+  await page.getByRole("link", { name: "Progress", exact: true }).click();
+  const { data: sh } = await admin
+    .from("skills")
+    .select("title, child_title")
+    .eq("code", "kg3-digraph-sh")
+    .single();
+  const phonics = page.getByRole("region", { name: "Phonics", exact: true });
+  await expect(phonics).toContainText(sh!.child_title || sh!.title);
+  await expect(phonics).toContainText(
+    /Consistently demonstrates|Still developing|Getting it right|Usually right/,
   );
+  await expect(page.getByRole("heading", { name: "Badges" }).locator("..")).toContainText("First Lesson");
 });

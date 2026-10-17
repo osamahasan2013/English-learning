@@ -5,15 +5,20 @@ import { SyncProvider } from "@/components/layout/sync-provider";
 import { getProfile, requireParentMode } from "@/lib/auth/session";
 import { APP_SHORT_NAME } from "@/lib/app-info";
 
+// Per-child sections keep the chosen child (?child=) while moving between them; every page
+// re-checks it against the parent's own children.
+const CHILD = ["child"];
 const NAV: NavItem[] = [
-  { href: "/parent/dashboard", label: "Dashboard" },
+  { href: "/parent/dashboard", label: "Dashboard", keepQuery: CHILD },
+  { href: "/parent/progress", label: "Progress", keepQuery: CHILD },
+  { href: "/parent/practice", label: "Practice", keepQuery: CHILD },
+  { href: "/parent/assessments", label: "Checks", keepQuery: CHILD },
+  { href: "/parent/phonics", label: "Phonics", keepQuery: CHILD },
+  { href: "/parent/words", label: "Words", keepQuery: CHILD },
+  { href: "/parent/spelling", label: "Spelling", keepQuery: CHILD },
+  { href: "/parent/reading", label: "Reading", keepQuery: CHILD },
+  { href: "/parent/writing", label: "Writing", keepQuery: CHILD },
   { href: "/parent/children", label: "Children" },
-  { href: "/parent/assessments", label: "Checks" },
-  { href: "/parent/phonics", label: "Phonics" },
-  { href: "/parent/words", label: "Words" },
-  { href: "/parent/spelling", label: "Spelling" },
-  { href: "/parent/reading", label: "Reading" },
-  { href: "/parent/writing", label: "Writing" },
   { href: "/parent/settings", label: "Settings" },
 ];
 

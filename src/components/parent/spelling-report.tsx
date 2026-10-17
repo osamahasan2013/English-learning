@@ -25,38 +25,6 @@ function Figure({ label, value, icon }: { label: string; value: string | number;
 
 const pct = (n: number) => `${Math.round(n)}%`;
 
-export function SpellingSummaryCard({ report, childId }: { report: SpellingReport; childId: string }) {
-  const top = report.errors[0];
-  return (
-    <Card className="space-y-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <CardTitle>Spelling</CardTitle>
-        <Link href={`/parent/spelling?child=${childId}`} className="text-primary text-sm font-semibold">
-          Spelling progress →
-        </Link>
-      </div>
-      {report.wordsPracticed === 0 ? (
-        <p className="text-muted">No spelling yet.</p>
-      ) : (
-        <>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Figure label="Words spelled" value={report.wordsPracticed} icon="✏️" />
-            <Figure label="Words mastered" value={report.wordsMastered} icon="🏆" />
-            <Figure label="Right first time" value={pct(report.firstTryAccuracy)} icon="🎯" />
-            <Figure label="To review" value={report.toReview.length} icon="🔁" />
-          </div>
-          {top ? (
-            <p className="text-sm">
-              <span className="font-semibold">Most common mistake: </span>
-              {SPELLING_ERROR_LABELS[top.category].label} ({top.attempts})
-            </p>
-          ) : null}
-        </>
-      )}
-    </Card>
-  );
-}
-
 export function SpellingReportView({ report, basePath }: { report: SpellingReport; basePath: string }) {
   if (report.wordsPracticed === 0 && report.recentAttempts.total === 0)
     return (
@@ -179,7 +147,7 @@ export function SpellingReportView({ report, basePath }: { report: SpellingRepor
         </Card>
 
         <Card className="space-y-3">
-          <CardTitle>Sounds behind the mistakes</CardTitle>
+          <CardTitle>Sounds the mistakes were in</CardTitle>
           {report.patterns.length === 0 ? (
             <p className="text-muted">No phonics pattern stands out yet.</p>
           ) : (

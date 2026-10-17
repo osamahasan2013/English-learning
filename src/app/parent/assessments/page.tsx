@@ -2,14 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { cancelCheck, startCheckForChild } from "@/app/parent/assessment-actions";
-import { ReadinessGrid, RecommendationList, SittingHistory } from "@/components/parent/assessment-report";
+import { ReadinessGrid, SittingHistory } from "@/components/parent/assessment-report";
+import { ChildSwitcher } from "@/components/parent/child-switcher";
+import { ActionList, ParentHelp } from "@/components/parent/parent-view";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Select } from "@/components/ui/field";
 import { getProfile } from "@/lib/auth/session";
-import { avatarEmoji } from "@/lib/avatars";
 import { DOMAIN_NAMES, DOMAINS } from "@/lib/learning/assessment-blueprint";
 import { loadAdaptive } from "@/lib/server/adaptive";
 import {
@@ -18,8 +19,8 @@ import {
   loadOpenSittings,
   loadSittingHistory,
 } from "@/lib/server/assessments";
-import { listChildren } from "@/lib/server/family-data";
-import { cn } from "@/lib/utils";
+import { practiceView } from "@/lib/parent/view-model";
+import { loadFamily } from "@/lib/server/parent-view";
 
 export const metadata: Metadata = { title: "Checks and levels" };
 
@@ -28,10 +29,8 @@ export const metadata: Metadata = { title: "Checks and levels" };
 // cancel, and the history of past checks. All reads go through the parent's RLS client.
 export default async function ParentAssessmentsPage(props: PageProps<"/parent/assessments">) {
   const params = await props.searchParams;
-  const [children, profile] = await Promise.all([listChildren(), getProfile()]);
-  if (children.length === 0) redirect("/onboarding");
-  const childParam = typeof params.child === "string" ? params.child : undefined;
-  const child = children.find((c) => c.id === childParam) ?? children[0];
+  const [{ children, child }, profile] = await Promise.all([loadFamily(params.child), getProfile()]);
+  if (!child) redirect("/onboarding");
   const timeZone = profile?.timezone ?? "UTC";
   const [adaptive, open, history, checks] = await Promise.all([
     loadAdaptive(child.id),
@@ -41,27 +40,12 @@ export default async function ParentAssessmentsPage(props: PageProps<"/parent/as
   ]);
   const placementDone = history.some((h) => h.type === "placement" && h.status === "completed");
   const flag = (name: string) => params[name] === "1";
+  const next = practiceView(adaptive.recommendations);
 
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-extrabold">Checks and levels</h1>
-      {children.length > 1 ? (
-        <nav aria-label="Choose a child" className="flex flex-wrap gap-2">
-          {children.map((c) => (
-            <Link
-              key={c.id}
-              href={`/parent/assessments?child=${c.id}`}
-              aria-current={c.id === child.id ? "page" : undefined}
-              className={cn(
-                "flex min-h-11 items-center gap-2 rounded-full border-2 px-4 font-semibold",
-                c.id === child.id ? "border-primary bg-accent-soft" : "border-border bg-surface",
-              )}
-            >
-              <span aria-hidden>{avatarEmoji(c.avatar)}</span> {c.name}
-            </Link>
-          ))}
-        </nav>
-      ) : null}
+      <ChildSwitcher kids={children} currentId={child.id} basePath="/parent/assessments" />
       {flag("started") ? (
         <Alert tone="success">The check is ready. {child.name} will find it on their home screen.</Alert>
       ) : null}
@@ -92,11 +76,20 @@ export default async function ParentAssessmentsPage(props: PageProps<"/parent/as
       </Card>
 
       <Card className="space-y-3">
-        <CardTitle>Recommended next steps</CardTitle>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <CardTitle>Recommended next steps</CardTitle>
+          <Link href={`/parent/practice?child=${child.id}`} className="text-primary text-sm font-semibold">
+            All practice →
+          </Link>
+        </div>
         {adaptive.recommendations.length === 0 ? (
           <p className="text-muted">Nothing to recommend yet. Lessons and checks add evidence.</p>
         ) : (
-          <RecommendationList recommendations={adaptive.recommendations} />
+          <ActionList
+            items={[next.top!, ...next.options.slice(0, 2)]}
+            childId={child.id}
+            childName={child.name}
+          />
         )}
       </Card>
 
@@ -189,6 +182,24 @@ export default async function ParentAssessmentsPage(props: PageProps<"/parent/as
           <SittingHistory entries={history} timeZone={timeZone} />
         )}
       </Card>
+
+      <ParentHelp>
+        <p>
+          A check is a short snapshot of what {child.name} answered on one day. It is not a school grade and
+          not an IQ test, and it says nothing medical or psychological.
+        </p>
+        <p>
+          Levels differ by area: a child can be learning at one level in phonics and another in writing. That
+          is normal. “Not enough evidence yet” or “Limited evidence” means more answers are needed before the
+          level can move; until then lessons stay at the learning level you set.
+        </p>
+        <p>
+          “I don&apos;t know” is a fine answer: it helps the check stop where things get too hard, and the
+          child is never told it was wrong. It scores as not yet known, and only answered questions count
+          toward how much evidence a level rests on. Checks give no feedback, so one lower result is not a
+          step back: lesson practice keeps adding evidence too.
+        </p>
+      </ParentHelp>
     </div>
   );
 }

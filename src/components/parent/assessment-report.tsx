@@ -1,4 +1,4 @@
-import type { AdaptiveRecommendation, RecommendationKind } from "@/lib/learning/adaptive";
+import { DOMAIN_NAMES, type Domain } from "@/lib/learning/assessment-blueprint";
 import { EVIDENCE_LABELS } from "@/lib/learning/readiness";
 import type { Confidence } from "@/lib/learning/rules";
 import type { DomainReadiness } from "@/lib/server/adaptive";
@@ -145,44 +145,6 @@ export function ReadinessGrid({
   );
 }
 
-const KIND_TEXT: Record<RecommendationKind, string> = {
-  repair: "Fix first",
-  review: "Review",
-  continue: "Continue",
-  target: "Next lesson",
-  reassess: "Re-check",
-  stretch: "Stretch",
-};
-
-export function RecommendationList({ recommendations }: { recommendations: AdaptiveRecommendation[] }) {
-  return (
-    <ol className="space-y-2">
-      {recommendations.map((r) => (
-        <li
-          key={r.key}
-          className={cn(
-            "rounded-xl p-3",
-            r.priority === "high"
-              ? "bg-warning-soft"
-              : r.priority === "medium"
-                ? "bg-accent-soft"
-                : "bg-surface-muted",
-          )}
-        >
-          <p className="font-bold">
-            <span aria-hidden>{r.emoji} </span>
-            {r.title}
-            <span className="text-muted ml-2 text-sm font-semibold">
-              {KIND_TEXT[r.kind]} · {r.priority} priority · ~{r.minutes} min
-            </span>
-          </p>
-          <p className="text-sm">{r.parentMessage}</p>
-        </li>
-      ))}
-    </ol>
-  );
-}
-
 const STATUS_TEXT: Record<SittingHistoryEntry["status"], string> = {
   in_progress: "In progress",
   completed: "Completed",
@@ -192,67 +154,100 @@ const STATUS_TEXT: Record<SittingHistoryEntry["status"], string> = {
 
 const CHANGE_TEXT: Record<string, string> = {
   improved: "improved",
-  declined: "lower",
+  declined: "lower this time",
   same: "about the same",
   new: "first check",
 };
 
+const STRENGTH_TEXT = {
+  secure: "Secure",
+  developing: "Still developing",
+  weak: "Needs practice",
+  insufficient: "Too few answers to say",
+} as const;
+
 export function SittingHistory({ entries, timeZone }: { entries: SittingHistoryEntry[]; timeZone: string }) {
   return (
     <ul className="divide-border divide-y">
-      {entries.map((e) => (
-        <li key={e.id} className="space-y-2 py-3">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <p className="font-semibold">
-              {e.title}
-              <span className="text-muted ml-2 text-sm font-normal">
-                {ASSESSMENT_TYPE_NAMES[e.type]} · {shortDate(e.startedAt, timeZone)} · {STATUS_TEXT[e.status]}
-              </span>
-            </p>
-            {e.result ? (
+      {entries.map((e) => {
+        const areas = [
+          ...new Set((e.result?.sections ?? []).map((s) => s.domain).filter((d): d is Domain => !!d)),
+        ].map((d) => DOMAIN_NAMES[d]);
+        const byStrength = (k: keyof typeof STRENGTH_TEXT) =>
+          (e.result?.evidence ?? []).filter((x) => x.strength === k && !x.gap && x.title).map((x) => x.title);
+        return (
+          <li key={e.id} className="space-y-2 py-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
               <p className="font-semibold">
-                {Math.round(e.result.overall)}%{e.result.partial ? " (partly answered)" : ""}
+                {e.title}
+                <span className="text-muted ml-2 text-sm font-normal">
+                  {ASSESSMENT_TYPE_NAMES[e.type]} · {shortDate(e.completedAt ?? e.startedAt, timeZone)} ·{" "}
+                  {STATUS_TEXT[e.status]}
+                  {areas.length > 0 ? ` · ${areas.join(", ")}` : ""}
+                </span>
+              </p>
+              {e.result ? (
+                <p className="font-semibold">
+                  Overall {Math.round(e.result.overall)}%{e.result.partial ? " (partly answered)" : ""}
+                </p>
+              ) : null}
+            </div>
+            {e.result && e.result.sections.length > 0 ? (
+              <ul className="grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2" aria-label={`${e.title} sections`}>
+                {e.result.sections.map((s, i) => (
+                  <li key={`${s.label}-${i}`} className="flex justify-between gap-2">
+                    <span>
+                      <span aria-hidden>{s.passed ? "✅" : "🔸"} </span>
+                      {s.label}
+                      <span className="sr-only">{s.passed ? " (passed)" : " (not yet)"}</span>
+                    </span>
+                    <span className="font-semibold">
+                      {s.correct} of {s.items}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {byStrength("secure").length > 0 ? (
+              <p className="text-sm">
+                <span className="font-semibold">Strengths: </span>
+                {byStrength("secure").join(", ")}
               </p>
             ) : null}
-          </div>
-          {e.result && e.result.sections.length > 0 ? (
-            <ul className="grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
-              {e.result.sections.map((s, i) => (
-                <li key={`${s.label}-${i}`} className="flex justify-between gap-2">
-                  <span>
-                    <span aria-hidden>{s.passed ? "✅" : "🔸"} </span>
-                    {s.label}
-                    <span className="sr-only">{s.passed ? " (passed)" : " (not yet)"}</span>
-                  </span>
-                  <span className="font-semibold">
-                    {s.correct}/{s.items}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          {e.result && e.result.evidence.some((x) => x.gap) ? (
-            <p className="text-sm">
-              <span className="font-semibold">Gaps found: </span>
-              {e.result.evidence
-                .filter((x) => x.gap)
-                .map((x) => x.title)
-                .join(", ")}
-            </p>
-          ) : null}
-          {e.result && e.result.comparison.length > 0 ? (
-            <p className="text-sm">
-              <span className="font-semibold">Compared with before: </span>
-              {e.result.comparison
-                .map(
-                  (c) =>
-                    `${c.title} ${c.before === null ? "" : `${Math.round(c.before)}% → `}${Math.round(c.after)}% (${CHANGE_TEXT[c.change] ?? c.change})`,
-                )
-                .join("; ")}
-            </p>
-          ) : null}
-        </li>
-      ))}
+            {byStrength("developing").length > 0 ? (
+              <p className="text-sm">
+                <span className="font-semibold">{STRENGTH_TEXT.developing}: </span>
+                {byStrength("developing").join(", ")}
+              </p>
+            ) : null}
+            {e.result && e.result.evidence.some((x) => x.gap) ? (
+              <p className="text-sm">
+                <span className="font-semibold">Gaps found: </span>
+                {e.result.evidence
+                  .filter((x) => x.gap)
+                  .map((x) => x.title)
+                  .join(", ")}
+              </p>
+            ) : null}
+            {byStrength("insufficient").length > 0 ? (
+              <p className="text-muted text-sm">
+                {STRENGTH_TEXT.insufficient}: {byStrength("insufficient").join(", ")}
+              </p>
+            ) : null}
+            {e.result && e.result.comparison.length > 0 ? (
+              <p className="text-sm">
+                <span className="font-semibold">Compared with before: </span>
+                {e.result.comparison
+                  .map(
+                    (c) =>
+                      `${c.title} ${c.before === null ? "" : `${Math.round(c.before)}% → `}${Math.round(c.after)}% (${CHANGE_TEXT[c.change] ?? c.change})`,
+                  )
+                  .join("; ")}
+              </p>
+            ) : null}
+          </li>
+        );
+      })}
     </ul>
   );
 }

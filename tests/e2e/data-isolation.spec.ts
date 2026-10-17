@@ -20,7 +20,8 @@ test("a parent cannot view or write progress for another family's child", async 
   // Dashboard with another family's child id falls back to B's own child.
   await pageB.goto(`/parent/dashboard?child=${childA}`);
   await expect(pageB.getByRole("heading", { name: "Ben" })).toBeVisible();
-  await expect(pageB.getByText("Aya")).toHaveCount(0);
+  await expect(pageB.getByText("Aya", { exact: true })).toHaveCount(0);
+  await expect(pageB.locator("#main")).not.toContainText(/\bAya\b/);
 
   // Sync API refuses events for another family's child.
   const response = await pageB.request.post("/api/sync", {

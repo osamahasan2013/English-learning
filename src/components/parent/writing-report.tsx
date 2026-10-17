@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { SkillBadge } from "@/components/parent/skill-badge";
 import { Card, CardTitle } from "@/components/ui/card";
 import type { CheckTally } from "@/lib/learning/writing-report";
@@ -34,34 +33,6 @@ const KIND_LABELS: Record<string, string> = {
   rubric: "Own writing",
   story: "Story writing",
 };
-
-export function WritingSummaryCard({ report, childId }: { report: WritingReport; childId: string }) {
-  const s = report.summary;
-  return (
-    <Card className="space-y-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <CardTitle>Writing</CardTitle>
-        <Link href={`/parent/writing?child=${childId}`} className="text-primary text-sm font-semibold">
-          Writing progress →
-        </Link>
-      </div>
-      {s.firstTries === 0 ? (
-        <p className="text-muted">No writing yet.</p>
-      ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Figure label="Writing answers" value={s.firstTries} icon="✍️" />
-          <Figure
-            label="Letters formed"
-            value={share({ checked: s.handwriting.drawn + s.handwriting.typed, met: s.handwriting.formed })}
-            icon="🔤"
-          />
-          <Figure label="Words in own writing" value={s.wordsWritten} icon="📝" />
-          <Figure label="Letters to practise" value={report.lettersToReview.length} icon="🔁" />
-        </div>
-      )}
-    </Card>
-  );
-}
 
 export function WritingReportView({ report }: { report: WritingReport }) {
   const s = report.summary;

@@ -7,6 +7,7 @@ import { ACTIVE_CHILD_COOKIE, getOwnedChild, requireParentMode, requireUser } fr
 import { errorMessage, logger } from "@/lib/logging";
 import { deleteChildForParent, resetChildLearningForParent } from "@/lib/server/child-lifecycle";
 import { listPublishedLevels } from "@/lib/server/family-data";
+import { isStartPath } from "@/lib/parent/view-model";
 import { createClient } from "@/lib/supabase/server";
 import { MAX_CHILDREN_PER_FAMILY, readChildProfileForm } from "@/lib/validation/family";
 import { fieldErrors } from "@/lib/validation/shared";
@@ -127,9 +128,16 @@ export async function deleteChild(childId: string, confirmName: string): Promise
   return { ok: true };
 }
 
-export async function resetChildLearning(childId: string): Promise<LifecycleActionResult> {
+export async function resetChildLearning(
+  childId: string,
+  confirmName: string,
+): Promise<LifecycleActionResult> {
   const user = await requireParentMode();
-  const result = await resetChildLearningForParent(user.id, childId);
+  const child = await getOwnedChild(childId);
+  if (!child) return { ok: false, message: "This profile was not found." };
+  // Resetting deletes the learning history: it needs the typed name too (Phase 10).
+  if (!sameName(confirmName, child.name)) return { ok: false, message: `Type ${child.name} to confirm.` };
+  const result = await resetChildLearningForParent(user.id, child.id);
   if (!result.ok)
     return {
       ok: false,
@@ -157,6 +165,26 @@ export async function enterChildMode(childId: string) {
     maxAge: 60 * 60 * 24 * 30,
   });
   redirect("/child/home");
+}
+
+// "Start" on a parent recommendation (Phase 10): hands the device to the child straight into
+// that lesson or re-check. The child is re-verified (RLS) and the destination must be one
+// of the two child-mode paths a recommendation can lead to; the child pages re-check the
+// lesson or check themselves. Anything else falls back to the child home.
+export async function startActivityAsChild(formData: FormData) {
+  await requireParentMode();
+  const childId = String(formData.get("childId") ?? "");
+  const next = String(formData.get("next") ?? "");
+  const child = await getOwnedChild(childId);
+  if (!child) redirect("/parent/dashboard");
+  (await cookies()).set(ACTIVE_CHILD_COOKIE, child.id, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30,
+  });
+  redirect(isStartPath(next) ? next : "/child/home");
 }
 
 export async function exitChildMode() {

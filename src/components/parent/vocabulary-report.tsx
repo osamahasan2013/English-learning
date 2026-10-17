@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { MASTERY_LABELS } from "@/components/parent/skill-badge";
 import { Card, CardTitle } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -19,41 +18,6 @@ function Figure({ label, value, icon }: { label: string; value: number; icon: st
       </p>
       <p className="text-muted text-sm font-semibold">{label}</p>
     </div>
-  );
-}
-
-export function VocabularySummaryCard({ report, childId }: { report: VocabularyReport; childId: string }) {
-  const weak = [
-    ...report.areas.filter((a) => a.weak).map((a) => WORD_AREA_LABELS[a.area].label),
-    ...report.categories.filter((c) => c.weak).map((c) => c.name),
-  ];
-  return (
-    <Card className="space-y-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <CardTitle>Words</CardTitle>
-        <Link href={`/parent/words?child=${childId}`} className="text-primary text-sm font-semibold">
-          Vocabulary progress →
-        </Link>
-      </div>
-      {report.wordsPracticed === 0 ? (
-        <p className="text-muted">No word practice yet.</p>
-      ) : (
-        <>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Figure label="Words learned" value={report.wordsLearned} icon="📗" />
-            <Figure label="Words practised" value={report.wordsPracticed} icon="✍️" />
-            <Figure label="Words mastered" value={report.wordsMastered} icon="🏆" />
-            <Figure label="In My Words" value={report.savedWords} icon="⭐" />
-          </div>
-          {weak.length > 0 ? (
-            <p className="text-sm">
-              <span className="font-semibold">Needs practice: </span>
-              {weak.join(", ")}
-            </p>
-          ) : null}
-        </>
-      )}
-    </Card>
   );
 }
 

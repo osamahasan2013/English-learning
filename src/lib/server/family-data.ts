@@ -2,6 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 import { currentStreak, dailyActivity, safeTimeZone, totalMinutes } from "@/lib/learning/analytics";
+import { SUBJECT_DOMAIN, type Domain } from "@/lib/learning/assessment-blueprint";
 import type { MasteryStatus } from "@/lib/learning/mastery";
 import { strongSkills, type SkillMasterySummary } from "@/lib/learning/recommendations";
 import { WORD_LEARNED_CORRECT_COUNT } from "@/lib/learning/progress-derivation";
@@ -48,16 +49,17 @@ export type SkillProgress = SkillMasterySummary & {
   childTitle: string;
   dimension: string;
   subject: string;
+  domain: Domain | null;
   accuracy: number;
   lastPracticedAt: string | null;
 };
 
-async function loadSkillProgress(childId: string): Promise<SkillProgress[]> {
+export const loadSkillProgress = cache(async (childId: string): Promise<SkillProgress[]> => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("skill_mastery")
     .select(
-      "skill_id, status, mastery_score, accuracy, attempts, review_priority, next_review_at, last_practiced_at, skills(title, child_title, dimension_code, units(subjects(name)))",
+      "skill_id, status, mastery_score, accuracy, attempts, review_priority, next_review_at, last_practiced_at, skills(title, child_title, dimension_code, units(subjects(name, code)))",
     )
     .eq("child_id", childId);
   if (error) throw error;
@@ -71,6 +73,7 @@ async function loadSkillProgress(childId: string): Promise<SkillProgress[]> {
       childTitle: skill?.child_title || skill?.title || "Skill",
       dimension: skill?.dimension_code ?? "",
       subject: subject?.name ?? "",
+      domain: SUBJECT_DOMAIN[subject?.code ?? ""] ?? null,
       status: row.status as MasteryStatus,
       masteryScore: Number(row.mastery_score),
       accuracy: Number(row.accuracy),
@@ -80,7 +83,7 @@ async function loadSkillProgress(childId: string): Promise<SkillProgress[]> {
       lastPracticedAt: row.last_practiced_at,
     };
   });
-}
+});
 
 function one<T>(value: T | T[] | null | undefined): T | null {
   if (Array.isArray(value)) return value[0] ?? null;

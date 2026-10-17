@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { SkillBadge } from "@/components/parent/skill-badge";
 import { Card, CardTitle } from "@/components/ui/card";
 import type { loadReadingReport } from "@/lib/server/reading";
@@ -34,33 +33,6 @@ function minutes(seconds: number) {
   return `${Math.round(seconds / 60)} min`;
 }
 
-export function ReadingSummaryCard({ report, childId }: { report: ReadingReport; childId: string }) {
-  return (
-    <Card className="space-y-3">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <CardTitle>Reading</CardTitle>
-        <Link href={`/parent/reading?child=${childId}`} className="text-primary text-sm font-semibold">
-          Reading progress →
-        </Link>
-      </div>
-      {report.summary.readings === 0 && report.comprehension.firstTries === 0 ? (
-        <p className="text-muted">No reading yet.</p>
-      ) : (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <Figure label="Texts read" value={report.summary.texts} icon="📖" />
-          <Figure label="Reading lessons done" value={report.lessonsCompleted} icon="✅" />
-          <Figure
-            label="Questions right first time"
-            value={report.comprehension.percent === null ? "—" : `${report.comprehension.percent}%`}
-            icon="🎯"
-          />
-          <Figure label="Words tapped for help" value={report.helpWords.length} icon="🔎" />
-        </div>
-      )}
-    </Card>
-  );
-}
-
 export function ReadingReportView({ report }: { report: ReadingReport }) {
   const empty = report.summary.readings === 0 && report.comprehension.firstTries === 0;
   return (
@@ -79,7 +51,7 @@ export function ReadingReportView({ report }: { report: ReadingReport }) {
             icon="✅"
           />
           <Figure label="Times reading a text" value={report.summary.readings} icon="📖" />
-          <Figure label="Time with texts" value={minutes(report.summary.totalSeconds)} icon="⏱️" />
+          <Figure label="Time spent reading" value={minutes(report.summary.totalSeconds)} icon="⏱️" />
           <Figure
             label="Questions right first time"
             value={

@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ChildSwitcher } from "@/components/parent/child-switcher";
+import { DomainOverviewCard } from "@/components/parent/parent-view";
+import { loadDomainOverview, loadFamily } from "@/lib/server/parent-view";
 import { VocabularyReportView } from "@/components/parent/vocabulary-report";
 import { WordSearchView } from "@/components/vocabulary/word-search";
-import { avatarEmoji } from "@/lib/avatars";
-import { listChildren } from "@/lib/server/family-data";
 import { loadVocabularyReport } from "@/lib/server/vocabulary";
-import { cn } from "@/lib/utils";
 import { parseWordSearch } from "@/lib/validation/vocabulary";
 
 export const metadata: Metadata = { title: "Words" };
@@ -15,33 +14,19 @@ export const metadata: Metadata = { title: "Words" };
 // the word bank search: which words practise sh, which are CVC, which suit Grade 1…
 export default async function ParentWordsPage(props: PageProps<"/parent/words">) {
   const params = await props.searchParams;
-  const children = await listChildren();
-  if (children.length === 0) redirect("/onboarding");
-  const childParam = typeof params.child === "string" ? params.child : undefined;
-  const child = children.find((c) => c.id === childParam) ?? children[0];
+  const { children, child } = await loadFamily(params.child);
+  if (!child) redirect("/onboarding");
   const search = parseWordSearch(params);
-  const report = await loadVocabularyReport(child.id);
+  const [report, overview] = await Promise.all([
+    loadVocabularyReport(child.id),
+    loadDomainOverview(child, "VOCABULARY"),
+  ]);
 
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-extrabold">Words</h1>
-      {children.length > 1 ? (
-        <nav aria-label="Choose a child" className="flex flex-wrap gap-2">
-          {children.map((c) => (
-            <Link
-              key={c.id}
-              href={`/parent/words?child=${c.id}`}
-              aria-current={c.id === child.id ? "page" : undefined}
-              className={cn(
-                "flex min-h-11 items-center gap-2 rounded-full border-2 px-4 font-semibold",
-                c.id === child.id ? "border-primary bg-accent-soft" : "border-border bg-surface",
-              )}
-            >
-              <span aria-hidden>{avatarEmoji(c.avatar)}</span> {c.name}
-            </Link>
-          ))}
-        </nav>
-      ) : null}
+      <ChildSwitcher kids={children} currentId={child.id} basePath="/parent/words" />
+      <DomainOverviewCard overview={overview} childId={child.id} childName={child.name} />
       <section aria-labelledby="progress" className="space-y-3">
         <h2 id="progress" className="text-2xl font-bold">
           {child.name}&apos;s vocabulary

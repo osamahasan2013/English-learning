@@ -129,7 +129,7 @@ test("a child reads a story with help, answers questions about it, and the paren
   await page.goto("/child/home");
   await passParentGate(page);
   await page.goto(`/parent/reading?child=${childId}`);
-  await expect(page.getByRole("heading", { name: /Mia's reading/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Mia's reading", exact: true })).toBeVisible();
   await expect(
     page.getByRole("region", { name: "Reading totals" }).getByText("Reading lessons done (of"),
   ).toBeVisible();

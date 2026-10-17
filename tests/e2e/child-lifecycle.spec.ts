@@ -87,12 +87,7 @@ test("reset learning: progress starts again, the profile and grade stay, offline
   // The parent, on another device.
   const other = await secondDevice(browser, email);
   await other.page.goto(`/parent/dashboard?child=${lina}`);
-  await expect(
-    other.page
-      .getByRole("region", { name: "Summary", exact: true })
-      .getByText("Lessons completed")
-      .locator(".."),
-  ).toContainText("1");
+  await expect(other.page.locator("#main").getByText("Lessons completed").locator("..")).toContainText("1");
   await other.page.goto("/parent/children");
   await other.page.getByRole("link", { name: "Settings for Lina" }).click();
   await expect(other.page.getByRole("heading", { name: "Learning", exact: true })).toBeVisible();
@@ -107,6 +102,9 @@ test("reset learning: progress starts again, the profile and grade stay, offline
   expect(await learningRows(lina)).toBeGreaterThan(0);
 
   await other.page.getByRole("button", { name: "Reset Lina's learning…" }).click();
+  // Resetting deletes history: the name must be typed first (Phase 10).
+  await expect(dialog.getByRole("button", { name: "Reset learning" })).toBeDisabled();
+  await dialog.getByLabel("Type Lina to confirm").fill("Lina");
   await dialog.getByRole("button", { name: "Reset learning" }).click();
   await expect(other.page.getByRole("status").filter({ hasText: "Lina's learning was reset" })).toBeVisible();
   expect(await learningRows(lina)).toBe(0);
@@ -119,12 +117,7 @@ test("reset learning: progress starts again, the profile and grade stay, offline
 
   // The dashboard shows a fresh start at once.
   await other.page.goto(`/parent/dashboard?child=${lina}`);
-  await expect(
-    other.page
-      .getByRole("region", { name: "Summary", exact: true })
-      .getByText("Lessons completed")
-      .locator(".."),
-  ).toContainText("0");
+  await expect(other.page.locator("#main").getByText("Lessons completed").locator("..")).toContainText("0");
 
   // The first device reconnects: its queued answers from before the reset are dropped.
   await page.context().setOffline(false);
