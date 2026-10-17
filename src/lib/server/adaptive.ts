@@ -46,6 +46,9 @@ export type DomainReadiness = {
   // readiness is not confident enough).
   teachingLevelId: string;
   teachingLevelName: string;
+  // Whether the evidence is strong enough for lessons to follow the readiness level
+  // (rules.adaptive.minReadinessConfidence); otherwise teaching stays at the learning level.
+  confident: boolean;
   evidence: {
     reason?: string;
     items?: number;
@@ -125,6 +128,7 @@ export const loadAdaptive = cache(async (childId: string, now = new Date()): Pro
       source: (r?.source ?? "default") as DomainReadiness["source"],
       teachingLevelId: teaching.id,
       teachingLevelName: teaching.name,
+      confident,
       evidence: (r?.evidence ?? {}) as DomainReadiness["evidence"],
       strengths: (r?.strengths ?? []) as DomainReadiness["strengths"],
       needs: (r?.needs ?? []) as DomainReadiness["needs"],

@@ -397,8 +397,10 @@ export function evaluateTrace(
 // and the ink must be THIS letter, not one of them. Two deterministic rules, both on the
 // public reference strokes:
 //
-// 1. Best fit. The ink is compared with this letter and with each confusable (writing from
-//    memory: moved and scaled onto each letter's own box first). Fit = mean distance from
+// 1. Best fit. The ink is compared with this letter and with each confusable as a SHAPE:
+//    centred on each letter's box (writing from memory: also scaled to it), at the best of a
+//    few small rotations — where a traced letter sits and how it leans are judged by
+//    coverage and precision, not here (Phase 9.1). Fit = mean distance from
 //    the letter's samples to the ink + mean distance from the ink to the letter (each capped,
 //    so one stray mark cannot dominate). If a confusable fits better by more than
 //    IDENTITY_MARGIN, the child wrote that letter. A wobbly but correct letter fits its own
@@ -414,8 +416,9 @@ export function evaluateTrace(
 
 const IDENTITY_MARGIN = 0.5;
 const FIT_CAP = 15;
-// Parts of one letter farther than this from the other's strokes are its own.
-const IDENTITY_GAP = 6;
+// Parts of one letter farther than this from the other's strokes are its own (4, not 6: an
+// a's stem lies only 3–5 units from an o's side, Phase 9.1).
+const IDENTITY_GAP = 4;
 const DREW_OTHER_WITHIN = 3;
 // An extra part needs at least this many samples (2 units apart) to count.
 const IDENTITY_MIN_SAMPLES = 3;
@@ -424,6 +427,9 @@ const PART_RULE_MAX_BASE = 2.5;
 // Writing from memory: moving and scaling the letter onto the box shifts its outer parts by
 // up to this much, so a part counts as missing only beyond it.
 const ALIGN_SLACK = 7;
+// Slants allowed for when comparing shapes, degrees (a hand-written letter leans a little;
+// each letter is compared at its own best one, so the choice favours no candidate).
+const IDENTITY_ROTATIONS = [0, -5, 5];
 
 function samplesOf(paths: Point[][]): Point[] {
   return paths.flatMap((path) => (pathLength(path) < DOT_LENGTH ? [path[0]] : resample(path, SAMPLE_STEP)));
@@ -459,8 +465,22 @@ export function identityCheck(
 ): { ok: boolean; lookedLike: string | null } {
   if (ink.length === 0 || confusables.length === 0) return { ok: true, lookedLike: null };
   const own = samplesOf(reference);
-  const placed = samplesOf(settings.align ? alignTo(ink, reference) : ink);
-  const ownFit = fitTo(own, placed);
+  // Identity is about SHAPE: where a traced letter sits (a little off the model) is judged by
+  // coverage and precision, not here, so the ink is centred on each letter (and, written
+  // from memory, also scaled to its box). A small slant of the child's hand is allowed for:
+  // each letter is compared at its best small rotation. Without this a correct a traced 3
+  // units to the right fitted the o better, and a slanted l looked like an i (Phase 9.1).
+  const placeOn = (letter: Point[][], letterSamples: Point[]) => {
+    let best: { samples: Point[]; fit: number } | null = null;
+    for (const angle of IDENTITY_ROTATIONS) {
+      const turned = angle ? rotateInk(ink, angle) : ink;
+      const samples = samplesOf(settings.align ? alignTo(turned, letter) : centreOn(turned, letter));
+      const fit = fitTo(letterSamples, samples);
+      if (!best || fit < best.fit) best = { samples, fit };
+    }
+    return best!;
+  };
+  const { samples: placed, fit: ownFit } = placeOn(reference, own);
   const missBeyond = Math.min(7, Math.max(4, settings.tolerance * 0.6));
   // Scaling a letter written from memory onto the box moves its outer parts most.
   const alignSlack = settings.align ? ALIGN_SLACK : 0;
@@ -473,7 +493,7 @@ export function identityCheck(
     const otherPaths = competitor.strokes.map((s) => s.points);
     const other = samplesOf(otherPaths);
     // 1. Best fit, each letter in its own box.
-    const otherFit = fitTo(other, samplesOf(settings.align ? alignTo(ink, otherPaths) : ink));
+    const otherFit = placeOn(otherPaths, other).fit;
     if (otherFit + IDENTITY_MARGIN < ownFit) {
       flag(competitor.code, otherFit);
       continue;
@@ -503,6 +523,26 @@ export function identityCheck(
   }
   const found = lookedLike as { code: string; fit: number } | null;
   return found ? { ok: false, lookedLike: found.code } : { ok: true, lookedLike: null };
+}
+
+// Moves ink so the centre of its box is on the centre of the letter's box (no scaling).
+function centreOn(ink: Point[][], letter: Point[][]): Point[][] {
+  const [c, r] = [bounds(ink), bounds(letter)];
+  const dx = (r.minX + r.maxX) / 2 - (c.minX + c.maxX) / 2;
+  const dy = (r.minY + r.maxY) / 2 - (c.minY + c.maxY) / 2;
+  return ink.map((path) => path.map(([x, y]) => [x + dx, y + dy] as Point));
+}
+
+// Rotates ink about the centre of its box (degrees; positive = clockwise on screen).
+function rotateInk(ink: Point[][], degrees: number): Point[][] {
+  const b = bounds(ink);
+  const [cx, cy] = [(b.minX + b.maxX) / 2, (b.minY + b.maxY) / 2];
+  const [cos, sin] = [Math.cos((degrees * Math.PI) / 180), Math.sin((degrees * Math.PI) / 180)];
+  return ink.map((path) =>
+    path.map(
+      ([x, y]) => [cx + (x - cx) * cos - (y - cy) * sin, cy + (x - cx) * sin + (y - cy) * cos] as Point,
+    ),
+  );
 }
 
 function round3(n: number) {

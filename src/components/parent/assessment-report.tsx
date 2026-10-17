@@ -1,4 +1,5 @@
 import type { AdaptiveRecommendation, RecommendationKind } from "@/lib/learning/adaptive";
+import { EVIDENCE_LABELS } from "@/lib/learning/readiness";
 import type { Confidence } from "@/lib/learning/rules";
 import type { DomainReadiness } from "@/lib/server/adaptive";
 import { ASSESSMENT_TYPE_NAMES, type SittingHistoryEntry } from "@/lib/server/assessments";
@@ -8,16 +9,15 @@ import { cn } from "@/lib/utils";
 // domain, the explainable recommendations, and sitting results. Text first; colour is only
 // a supplement (every state is also written out).
 
-const CONFIDENCE_TEXT: Record<Confidence, string> = {
-  INSUFFICIENT: "Not enough evidence yet",
-  LOW: "Low confidence",
-  MEDIUM: "Medium confidence",
-  HIGH: "High confidence",
-};
+// The engine's "confidence" is shown as how much EVIDENCE a level rests on (answers and
+// skills counted by a fixed rule) — parents must not read it as a statistical confidence.
+const EVIDENCE_HELP =
+  "How many answers and skills this level rests on (from checks and lesson practice). It is not a test score.";
 
 export function ConfidenceBadge({ confidence }: { confidence: Confidence }) {
   return (
     <span
+      title={EVIDENCE_HELP}
       className={cn(
         "inline-block rounded-full px-2 py-0.5 text-xs font-semibold",
         confidence === "HIGH"
@@ -27,7 +27,7 @@ export function ConfidenceBadge({ confidence }: { confidence: Confidence }) {
             : "bg-surface-muted text-muted",
       )}
     >
-      {CONFIDENCE_TEXT[confidence]}
+      {EVIDENCE_LABELS[confidence]}
     </span>
   );
 }
@@ -36,7 +36,7 @@ const SOURCE_TEXT: Record<DomainReadiness["source"], string> = {
   assessment: "from a check",
   mastery: "from lesson practice",
   inferred: "estimated from phonics",
-  default: "school grade (no evidence yet)",
+  default: "the learning level set for this child (no evidence yet)",
 };
 
 const shortDate = (iso: string, timeZone: string) =>
@@ -62,17 +62,21 @@ export function ReadinessGrid({
             <ConfidenceBadge confidence={r.confidence} />
           </div>
           <p>
-            <span className="text-muted text-sm">Working at </span>
-            <span className="font-semibold">{r.levelName}</span>
-            <span className="text-muted text-sm"> · {SOURCE_TEXT[r.source]}</span>
+            <span className="text-muted text-sm">Learning at </span>
+            <span className="font-semibold">{r.teachingLevelName}</span>
+            <span className="text-muted text-sm">
+              {" "}
+              · {r.confident ? SOURCE_TEXT[r.source] : "the learning level set for this child"}
+            </span>
           </p>
-          {gradeName && r.levelName !== gradeName ? (
-            <p className="text-muted text-sm">School grade stays {gradeName}.</p>
-          ) : null}
-          {r.teachingLevelName !== r.levelName ? (
+          {!r.confident && r.source === "assessment" ? (
             <p className="text-muted text-sm">
-              Lessons stay at {r.teachingLevelName} until there is more evidence.
+              The check did not have enough answered questions to place this area, so lessons stay where they
+              were.
             </p>
+          ) : null}
+          {gradeName && r.teachingLevelName !== gradeName ? (
+            <p className="text-muted text-sm">School grade stays {gradeName}.</p>
           ) : null}
           {detailed ? (
             <dl className="space-y-1 text-sm">

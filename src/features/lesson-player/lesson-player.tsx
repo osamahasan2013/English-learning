@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState, type ReactNode } from "react";
 import { AudioControls } from "@/components/child/audio-controls";
 import { notifyQueued } from "@/components/layout/sync-provider";
 import { Button } from "@/components/ui/button";
@@ -164,6 +164,7 @@ function LessonRun({
               rule: assessment.flow.rule,
               startRank: assessment.flow.startRank,
               passPercent: assessment.flow.passPercent,
+              maxSectionsPerDomain: assessment.flow.maxSectionsPerDomain,
               sections: assessment.flow.sections,
               sectionOf: assessment.sectionOf,
             }
@@ -179,6 +180,9 @@ function LessonRun({
   const [writingChecks, setWritingChecks] = useState<Record<string, WritingAnalysis | null>>({});
   const [achievements, setAchievements] = useState<Achievement[]>([]);
   const [confirmExit, setConfirmExit] = useState(false);
+  // Break screens (blueprint breakEvery): after every N answers in a sitting the child is
+  // offered a short break; stopping keeps every answer and the check resumes later.
+  const [breakAfter, setBreakAfter] = useState(() => Object.keys(state.firstTries).length);
   const [checking, setChecking] = useState(false);
   // Spelling hints opened per question (reported with each answer as hintsUsed).
   const [hintsShown, setHintsShown] = useState<Record<string, number>>({});
@@ -441,6 +445,24 @@ function LessonRun({
   }
 
   if (!step) return null;
+  const answeredCount = Object.keys(state.firstTries).length;
+  if (
+    assessment &&
+    assessment.breakEvery > 0 &&
+    answeredCount > breakAfter &&
+    answeredCount % assessment.breakEvery === 0 &&
+    view.phase === "answering" &&
+    !view.reviewing
+  ) {
+    return (
+      <BreakCard
+        speak={speak}
+        onContinue={() => setBreakAfter(answeredCount)}
+        onStop={() => setConfirmExit(true)}
+        exitDialog={confirmExit ? <ExitDialog onStay={() => setConfirmExit(false)} /> : null}
+      />
+    );
+  }
   const Renderer = isRenderableQuestionType(step.question.type)
     ? ACTIVITY_RENDERERS[step.question.type]
     : null;
@@ -771,6 +793,42 @@ function FeedbackBar({
       ) : null}
       {writing && !mistake ? <WritingFeedback analysis={writing} correct={kind === "CORRECT"} /> : null}
       {showExplanation ? <p className="text-xl font-semibold">{step.explanation}</p> : null}
+    </div>
+  );
+}
+
+function BreakCard({
+  speak,
+  onContinue,
+  onStop,
+  exitDialog,
+}: {
+  speak: SpeakFn;
+  onContinue: () => void;
+  onStop: () => void;
+  exitDialog: ReactNode;
+}) {
+  useEffect(() => {
+    void speak("Great work! Time for a little stretch. Keep going when you are ready.", "normal", {
+      intent: "INSTRUCTION",
+    });
+  }, [speak]);
+  return (
+    <div className="flex min-h-[70dvh] flex-col items-center justify-center gap-6 text-center">
+      <p className="text-8xl" aria-hidden>
+        🧘
+      </p>
+      <h1 className="text-4xl font-extrabold">Great work!</h1>
+      <p className="text-2xl font-bold">Time for a little stretch.</p>
+      <div className="flex flex-wrap justify-center gap-3">
+        <Button size="xl" onClick={onContinue} autoFocus>
+          <span aria-hidden>▶</span> Keep going
+        </Button>
+        <Button size="lg" variant="secondary" onClick={onStop}>
+          <span aria-hidden>🏠</span> Stop for now
+        </Button>
+      </div>
+      {exitDialog}
     </div>
   );
 }

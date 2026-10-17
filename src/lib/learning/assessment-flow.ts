@@ -9,7 +9,9 @@
 //   passed  → the next level up, unless a higher level already failed (the boundary is found);
 //   failed  → the next level down, unless a lower level already passed (boundary found) or
 //             there is no lower level;
-//   the domain ends at the boundary or at the top/bottom level.
+//   the domain ends at the boundary, at the top/bottom level, or after maxSectionsPerDomain
+//   sections. The school grade only picks the start: passes keep going up to the top level,
+//   so a child can place above their grade (and below it) — there is no grade ceiling.
 // none: every section in order.
 
 export type FlowSection = {
@@ -30,6 +32,8 @@ export type FlowState = {
   sections: FlowSection[];
   // Sections finished so far, with the device's own count (from the answer key).
   outcomes: Record<string, SectionOutcome>;
+  // At most this many sections per domain (blueprint stopping; unlimited when absent).
+  maxSectionsPerDomain?: number;
 };
 
 const passed = (o: SectionOutcome, passPercent: number) =>
@@ -48,6 +52,7 @@ export function nextSection(state: FlowState): FlowSection | null {
       .sort((a, b) => a.rank - b.rank);
     if (ladder.length === 0) continue;
     const done = ladder.filter((s) => state.outcomes[s.code]);
+    if (done.length >= (state.maxSectionsPerDomain ?? Infinity)) continue;
     if (done.length === 0) {
       const atOrBelow = ladder.filter((s) => s.rank <= state.startRank);
       return atOrBelow.at(-1) ?? ladder[0];

@@ -80,11 +80,19 @@ test("a parent starts Find My Level; the child takes it offline without feedback
 
   let answered = 0;
   let skipped = 0;
+  let breaks = 0;
   for (let guard = 0; guard < 150; guard++) {
     const finished = page.getByRole("heading", { level: 1, name: /You finished/ });
     const section = page.locator("section[data-question-id]");
-    await finished.or(section).first().waitFor();
+    const rest = page.getByRole("heading", { level: 1, name: "Great work!" });
+    await finished.or(section).or(rest).first().waitFor();
     if (await finished.isVisible()) break;
+    // Break screen every few answers (blueprint breakEvery): keep going.
+    if (await rest.isVisible()) {
+      breaks++;
+      await page.getByRole("button", { name: /Keep going/ }).click();
+      continue;
+    }
     const id = (await section.getAttribute("data-question-id"))!;
     // The first item is answered wrongly: no retry, no feedback, straight on.
     if (answered === 0) {
@@ -101,6 +109,8 @@ test("a parent starts Find My Level; the child takes it offline without feedback
     await expect(section.and(page.locator(`[data-question-id="${id}"]`))).toHaveCount(0);
   }
   await expect(page.getByText("Thank you! You did your best.")).toBeVisible();
+  // A break was offered after every 8 answers.
+  expect(breaks).toBe(Math.floor((answered + skipped - 1) / 8));
   await expect(page.locator("main")).not.toContainText("%");
   expect(skipped).toBeGreaterThan(0);
 
@@ -163,8 +173,12 @@ test("a parent starts Find My Level; the child takes it offline without feedback
   await page.goto(`/parent/assessments?child=${childId}`);
   const levels = page.getByRole("list", { name: "Instructional level by area" });
   await expect(levels.getByRole("heading", { name: "Phonics" })).toBeVisible();
-  await expect(levels).toContainText(/Working at/);
-  await expect(levels).toContainText(/confidence|Not enough evidence yet/);
+  await expect(levels).toContainText(/Learning at/);
+  // Evidence wording, never a "confidence" that reads like statistics (Phase 9.1).
+  await expect(levels).toContainText(
+    /Not enough evidence yet|Limited evidence|Moderate evidence|Strong evidence/,
+  );
+  await expect(levels).not.toContainText(/confidence/i);
   const history = page.getByRole("heading", { name: "Check history" }).locator("..");
   await expect(history).toContainText("Find My Level");
   await expect(history).toContainText("Completed");

@@ -100,14 +100,17 @@ export const blueprintSchema = z
     sections: z.array(blueprintSectionSchema).min(1).max(60),
     // level_ladder: per domain, start near the school grade (startOffset levels below), go up
     // a level after a passed section and down after a failed one, stop at the boundary — a
-    // young child is never walked through every level. none: every drawn item, in order.
+    // young child is never walked through every level; no domain serves more than
+    // maxSectionsPerDomain sections, so a check stays short at both ends (Phase 9.1).
+    // none: every drawn item, in order.
     stopping: z
       .object({
         rule: z.enum(["none", "level_ladder"]),
         startOffset: z.number().int().min(-4).max(2).default(-1),
+        maxSectionsPerDomain: z.number().int().min(1).max(10).default(3),
       })
       .strict()
-      .default({ rule: "none", startOffset: -1 }),
+      .default({ rule: "none", startOffset: -1, maxSectionsPerDomain: 3 }),
     // Section pass mark (weighted %); default: the assessment rules' sectionPassPercent.
     passPercent: z.number().min(1).max(100).optional(),
     maxItems: z.number().int().min(1).max(120).default(40),

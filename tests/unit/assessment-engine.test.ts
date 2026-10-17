@@ -632,6 +632,9 @@ describe("adaptive recommendations", () => {
       "rd-next",
     ]);
     expect(recs.find((r) => r.lessonId === "rd-story")!.parentMessage).toContain("Reading at L2");
+    // Evidence wording for parents, never a statistical-sounding "confidence" (Phase 9.1).
+    expect(recs.find((r) => r.lessonId === "rd-story")!.parentMessage).toContain("moderate evidence");
+    for (const r of recs) expect(r.parentMessage).not.toMatch(/confidence/i);
   });
 
   it("repairs a weak prerequisite before the lesson that needs it", () => {

@@ -175,12 +175,10 @@ describe("tracing engine", () => {
     );
 
     it("refuses every listed confusable, except the documented cases", { timeout: 60_000 }, () => {
-      // Known limits (docs/writing-engine.md): an o traced over an a's model (the a's stem lies
-      // along the o's side), and a dotless stick written from memory for i (with the size
-      // taken away, an l and a dotless i are the same stroke).
+      // Known limit (docs/writing-engine.md): a dotless stick written from memory for i — with
+      // the size taken away, an l and a dotless i are the same stroke. (Phase 9.1 removed the
+      // a/o exceptions: identity now compares shapes, centred, at a small slant.)
       const KNOWN: Record<string, (typeof MODES)[number][]> = {
-        "lower-a<-lower-o": ["trace"],
-        "lower-o<-lower-a": ["write"],
         "lower-i<-lower-l": ["write"],
       };
       for (const g of writingContent.glyphs)
@@ -199,6 +197,71 @@ describe("tracing engine", () => {
                   `${g.code} written as ${other} (${mode}, wobble ${wobble})`,
                 ).toBe(false);
             }
+    });
+
+    // Phase 9.1: identity compares SHAPES. A correct letter traced a little off the model, or
+    // written with a slant, is still that letter; a different letter is still refused.
+    it("accepts a correct letter traced a little off the model or slanted (was rejected as a look-alike)", () => {
+      const turn =
+        (deg: number) =>
+        ([x, y]: Point): Point => {
+          const a = (deg * Math.PI) / 180;
+          return [
+            50 + (x - 50) * Math.cos(a) - (y - 60) * Math.sin(a),
+            60 + (x - 50) * Math.sin(a) + (y - 60) * Math.cos(a),
+          ];
+        };
+      const shifted = ([x, y]: Point): Point => [x + 3, y + 2];
+      for (const settings of [KG1, G2]) {
+        // A correct a traced 3 units right fitted the o model better; an O moved fitted the G.
+        expect(trace("lower-a", drawn("lower-a", shifted, 1), "trace", settings).complete).toBe(true);
+        expect(trace("upper-o", drawn("upper-o", shifted, 1), "trace", settings).complete).toBe(true);
+        // A slanted d looked like an a, a slanted l like an i.
+        expect(trace("lower-d", drawn("lower-d", turn(8), 1), "trace", settings).complete).toBe(true);
+        for (const mode of MODES)
+          expect(trace("lower-l", drawn("lower-l", turn(8), 1), mode, settings).complete, mode).toBe(true);
+        // …and the look-alike is still refused when it is shifted or slanted the same way.
+        expect(trace("lower-a", drawn("lower-o", shifted, 1), "trace", settings).complete).toBe(false);
+        expect(trace("lower-d", drawn("lower-b", turn(8), 1), "trace", settings).complete).toBe(false);
+      }
+      // A slanted F is accepted at KG1; Grade 2 asks for a closer copy (coverage, not identity).
+      const f = trace("upper-f", drawn("upper-f", turn(8), 1), "write", KG1);
+      expect(f.complete).toBe(true);
+      expect(trace("upper-f", drawn("upper-f", turn(8), 1), "write", G2).identityOk).toBe(true);
+    });
+
+    it("refuses an a without its stem (an o), and an i without its dot (an l)", () => {
+      const bowl = drawn("lower-a").slice(0, 1);
+      const stick = drawn("lower-i").slice(0, 1);
+      for (const settings of LEVELS)
+        for (const mode of MODES) {
+          expect(trace("lower-a", bowl, mode, settings).complete, `a bowl only ${mode}`).toBe(false);
+          expect(trace("lower-i", stick, mode, settings).complete, `i stick only ${mode}`).toBe(false);
+        }
+      expect(trace("lower-a", bowl, "write", G1)).toMatchObject({ identityOk: false, lookedLike: "lower-o" });
+    });
+
+    it("tells a from o and o from a, both ways, traced and written (the Phase 9 exceptions)", () => {
+      for (const settings of LEVELS)
+        for (const mode of MODES)
+          for (const wobble of [0, 2]) {
+            expect(
+              trace(
+                "lower-a",
+                drawn("lower-o", (p) => p, wobble),
+                mode,
+                settings,
+              ).complete,
+            ).toBe(false);
+            expect(
+              trace(
+                "lower-o",
+                drawn("lower-a", (p) => p, wobble),
+                mode,
+                settings,
+              ).complete,
+            ).toBe(false);
+          }
     });
 
     it("judges identity against the confusables given, not the device's opinion", () => {

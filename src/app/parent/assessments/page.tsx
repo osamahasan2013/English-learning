@@ -79,7 +79,9 @@ export default async function ParentAssessmentsPage(props: PageProps<"/parent/as
         <CardTitle>Where {child.name} is working</CardTitle>
         <p className="text-muted text-sm">
           Each area has its own level, decided from checks and lesson practice. The school grade (
-          {child.grade?.name ?? "not set"}) never changes because of a check.
+          {child.grade?.name ?? "not set"}) never changes because of a check. The evidence label says how much
+          a level rests on — how many answers and skills — from &ldquo;Not enough evidence yet&rdquo; to
+          &ldquo;Strong evidence&rdquo;. It is not a test score.
         </p>
         <ReadinessGrid
           readiness={adaptive.readiness}

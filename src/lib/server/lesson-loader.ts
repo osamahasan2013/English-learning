@@ -312,6 +312,7 @@ export async function loadSittingPayload(
         rule: flowSections.length > 0 ? (blueprint?.stopping.rule ?? "none") : "none",
         startRank: plan.startRank ?? 1,
         passPercent: blueprint?.passPercent ?? rules.assessment.sectionPassPercent,
+        maxSectionsPerDomain: blueprint?.stopping.maxSectionsPerDomain,
         sections: flowSections,
       },
       sectionOf,

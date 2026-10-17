@@ -673,6 +673,35 @@ describe("assessment + adaptive engine (real database)", () => {
       .select("*", { count: "exact", head: true })
       .eq("child_id", dee);
     expect(count).toBe(0);
+
+    // Phase 9.1: the child is the same child — profile kept, learning back at the grade.
+    const { data: kept } = await serviceClient()
+      .from("children")
+      .select("name, grade_level_id, current_level_id, learning_epoch, deleted_at")
+      .eq("id", dee)
+      .single();
+    expect(kept).toMatchObject({ name: "Dee", learning_epoch: 1, deleted_at: null });
+    expect(kept!.current_level_id).toBe(kept!.grade_level_id);
+
+    // …and a new journey starts from the new evidence only.
+    const fresh = (await engine.startSitting({ childId: dee, code: "find-my-level", origin: "child" })) as {
+      attemptId: string;
+    };
+    expect(fresh.attemptId).not.toBe(first.attemptId);
+    await play(dee, fresh.attemptId, () => "right", { epoch: 1 });
+    const { data: evidence } = await serviceClient()
+      .from("assessment_evidence")
+      .select("assessment_attempt_id")
+      .eq("child_id", dee);
+    expect(evidence!.length).toBeGreaterThan(0);
+    expect(new Set(evidence!.map((e) => e.assessment_attempt_id))).toEqual(new Set([fresh.attemptId]));
+    const renewed = await loadAdaptive(dee);
+    expect(renewed.readiness.some((r) => r.source === "assessment")).toBe(true);
+    expect(renewed.recommendations.length).toBeGreaterThan(0);
+    // Nothing from the first journey: its gap (spelling skipped) is not recommended again.
+    expect(renewed.recommendations.some((r) => r.reasons.some((x) => x.code === "assessment_gap"))).toBe(
+      false,
+    );
   });
 
   it("delete: a deleted child's offline sitting cannot recreate the child or leave active records", async () => {

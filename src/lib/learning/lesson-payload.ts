@@ -125,6 +125,7 @@ export type LessonPayload = {
       rule: "none" | "level_ladder";
       startRank: number;
       passPercent: number;
+      maxSectionsPerDomain?: number;
       sections: { code: string; label: string; domain: string; rank: number; items: number }[];
     };
     // Each step's section (by question id).

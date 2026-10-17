@@ -1,6 +1,6 @@
 import { DOMAIN_NAMES, type Domain } from "@/lib/learning/assessment-blueprint";
 import { masteryRank, type MasteryStatus } from "@/lib/learning/mastery";
-import { confidenceRank } from "@/lib/learning/readiness";
+import { confidenceRank, EVIDENCE_LABELS } from "@/lib/learning/readiness";
 import type { ReviewReason } from "@/lib/learning/review-queue";
 import {
   DEFAULT_RULES,
@@ -457,7 +457,7 @@ export function parentMessage(d: Pick<AdaptiveRecommendation, "kind" | "reasons"
         case "continue":
           return "Started but not finished yet.";
         case "target":
-          return `Next lesson for ${r.domain ? DOMAIN_NAMES[r.domain] : "this area"} at ${r.levelName} (instructional level, ${(r.confidence ?? "INSUFFICIENT").toLowerCase()} confidence).`;
+          return `Next lesson for ${r.domain ? DOMAIN_NAMES[r.domain] : "this area"} at ${r.levelName} (instructional level; ${EVIDENCE_LABELS[r.confidence ?? "INSUFFICIENT"].toLowerCase()}).`;
         case "stretch":
           return `${r.detail} — a first look at ${r.levelName}.`;
         case "reassess":

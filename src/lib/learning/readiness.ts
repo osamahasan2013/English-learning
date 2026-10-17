@@ -83,6 +83,15 @@ export type Readiness = {
 const stepDown = (c: Confidence): Confidence =>
   CONFIDENCE_LEVELS[Math.max(0, CONFIDENCE_LEVELS.indexOf(c) - 1)];
 export const confidenceRank = (c: Confidence) => CONFIDENCE_LEVELS.indexOf(c);
+
+// How parents see the value (Phase 9.1): it is a deterministic count of the answers and
+// skills a level rests on, not a statistical confidence, so the words say "evidence".
+export const EVIDENCE_LABELS: Readonly<Record<Confidence, string>> = {
+  INSUFFICIENT: "Not enough evidence yet",
+  LOW: "Limited evidence",
+  MEDIUM: "Moderate evidence",
+  HIGH: "Strong evidence",
+};
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 // The advancement rule: is this domain level secured by practice?
@@ -184,8 +193,13 @@ export function computeReadiness(input: ReadinessInput): Readiness {
   if (source === "assessment") {
     const deciding = served.filter((s) => s.levelRank === strongest || s.levelRank === currentRank);
     const pool = deciding.length > 0 ? deciding : served;
-    items = Math.round(pool.reduce((t, s) => t + s.weight, 0) * 100) / 100;
-    skills = new Set(pool.flatMap((s) => s.skills)).size;
+    // Only ANSWERED items make the engine sure: "I don't know" counts as not right (the
+    // section is not passed) but adds no certainty, so a check answered mostly with skips
+    // stays INSUFFICIENT and teaching stays at the learning level (Phase 9.1).
+    const answeredWeight = (s: SectionResult) =>
+      s.items > 0 ? (s.weight * (s.items - s.skipped)) / s.items : 0;
+    items = Math.round(pool.reduce((t, s) => t + answeredWeight(s), 0) * 100) / 100;
+    skills = new Set(pool.filter((s) => s.items > s.skipped).flatMap((s) => s.skills)).size;
     const c = rules.confidence;
     confidence =
       items >= c.highItems && skills >= c.highSkills

@@ -25,6 +25,7 @@ export type SessionFlow = {
   rule: "none" | "level_ladder";
   startRank: number;
   passPercent: number;
+  maxSectionsPerDomain?: number;
   sections: FlowSection[];
   sectionOf: Record<string, string>;
 };
@@ -131,6 +132,7 @@ export function nextStepIndex(state: SessionState, from: number): number | null 
       rule: flow.rule,
       startRank: flow.startRank,
       passPercent: flow.passPercent,
+      maxSectionsPerDomain: flow.maxSectionsPerDomain,
       sections: flow.sections,
       outcomes,
     });
