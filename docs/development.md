@@ -86,3 +86,29 @@ Add a new migration file (timestamped), include explicit grants and RLS, run
 
 Any Node.js host, or Vercel with the default settings (Next.js, repository root). Set the
 three environment variables. `npm run build` also generates `public/sw.js`.
+
+## Production checks after a deploy
+
+Signed out (automatable): `/`, `/login` and `/register` load; every `/parent/*` and
+`/child/*` page redirects to `/login?next=…`; `/manifest.webmanifest`, `/sw.js` and
+`/offline.html` load; `POST /api/sync` without a session answers 401.
+
+Signed in — **manual, by the account owner.** It cannot be automated against production
+without bypassing sign-in: the only production account is the owner's, sign-up needs email
+confirmation, and creating a confirmed user with the service role or disabling confirmation
+is not allowed. Use a test child, never a real one:
+
+1. Sign in.
+2. Add a second test child.
+3. Switch between child A and child B with the child selector.
+4. Check that the dashboard changes completely (name, levels, today, recent learning).
+5. Open Progress.
+6. Open Practice.
+7. Start a recommended activity (the child's lesson opens) and finish or leave it.
+8. Open Checks.
+9. Check the levels, evidence labels and history make sense.
+10. Reset the test child (type its name).
+11. Check the reset state: no recent learning, "Not enough evidence yet" in every area,
+    profile and grade unchanged, the other child unchanged.
+12. Sign out and sign in again.
+13. Check that everything above persisted.

@@ -245,6 +245,18 @@ Tests: `parent-view.test.ts` (unit, 24), `tests/integration/parent-view.test.ts`
 (isolation, foreign ids, trends, every area, five children with a long history),
 `parent-experience.spec.ts` (journey, phone / tablet / desktop, offline note).
 
+## Phase 10.1 — parent experience hardening
+
+No new features. The destructive Reset learning server action is tested directly
+(`tests/integration/reset-action.test.ts`: right name, wrong / empty / blank / sibling's
+name, another family's child, signed out, child mode, forged ids, and the full reset
+semantics including stale offline events). An axe-core audit of every parent page, the
+dialogs and keyboard use (`tests/e2e/parent-accessibility.spec.ts`) found and fixed three
+small issues (a definition list without its term, `aria-labelledby` on role-less cards,
+dialog colours left to the browser). Signed-in production verification stays blocked: the
+only production account is the owner's, sign-up needs email confirmation, and creating a
+confirmed user directly would bypass sign-in; the manual checklist is in development.md.
+
 ## Phases
 
 | #   | Phase                       | Status | Notes / next steps                                                                                                                                                                                                                                                        |

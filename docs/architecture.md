@@ -642,6 +642,41 @@ assessment history and lesson runs are read as they are.
   rows. Measured in `tests/integration/parent-view.test.ts` with five children and a long
   history.
 
+### Reset confirmation (Phase 10.1)
+
+`resetChildLearning(childId, confirmName)` (the server action) refuses unless all hold, in
+order: a signed-in user (else redirect to sign-in), the device is not in child mode (else
+back to the child area), the child is the parent's own (`getOwnedChild`, RLS — another
+family's or a forged id reads "This profile was not found."), and the typed name equals the
+child's name ignoring case and surrounding spaces (empty, blank, a sibling's name or a
+longer string are refused with "Type <name> to confirm."). Only then does
+`reset_child_learning` run (ADR-046). `tests/integration/reset-action.test.ts` calls the
+action itself with real auth, RLS and database, and checks the reset semantics: all 19
+learning tables empty for the child (evidence and readiness included), name, parent and
+grade kept, learning level back at the grade, epoch + 1, recommendations rebuilt from
+nothing, siblings and other families untouched, pre-reset offline events answered
+`obsolete`. A mutation run (name check removed) makes the test fail.
+
+### Accessibility audit (Phase 10.1)
+
+`tests/e2e/parent-accessibility.spec.ts` runs axe-core (devDependency, injected into the
+page) on all ten parent pages with a signed-in fixture (two children, a finished lesson, a
+waiting check), every `<details>` opened, in light and dark colour scheme, plus the child
+settings page and the reset and delete dialogs open — WCAG 2.0/2.1 A and AA and axe best
+practice, no rule disabled. Violations fail the test, and so does any "needs review" item
+except colour contrast axe cannot compute. Those are text made only of decorative icons
+(`aria-hidden`, beside written labels), navigation links at the edge of the scrollable nav
+row, and text in the top-layer modal dialog. Their colours are the theme tokens, all at
+WCAG AA or better (lowest: warning on warning-soft 4.51:1, success on success-soft 4.57:1,
+accent on accent-soft 4.80:1; body text on any surface ≥ 12.4:1). The app has one light
+palette, so the dark-scheme run checks the same colours. A canary (an unnamed button and
+faint text injected on purpose) must be caught, so a clean result means the audit ran.
+Keyboard: skip link, focus ring (≥ 2 px outline) on every focusable control on the
+dashboard, child selector and Start by Tab and Enter, `<details>` toggled with Enter, the
+reset dialog takes focus and returns it on Escape. Fixed by the audit: a `<dd>` without its
+`<dt>` on the checks page, `aria-labelledby` on role-less cards in child settings, and the
+confirm dialog now uses the theme's surface and text colours instead of browser defaults.
+
 ## Audio
 
 Full detail, limitations and the pronunciation matrix: [audio.md](audio.md).
