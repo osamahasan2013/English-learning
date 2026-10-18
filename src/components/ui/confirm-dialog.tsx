@@ -69,7 +69,7 @@ export function ConfirmDialog({
       </Button>
       <dialog
         ref={dialogRef}
-        className="m-auto w-[min(92vw,30rem)] rounded-3xl p-6 backdrop:bg-black/50"
+        className="bg-surface text-foreground m-auto w-[min(92vw,30rem)] rounded-3xl p-6 backdrop:bg-black/50"
         aria-labelledby={`${id}-title`}
         aria-describedby={`${id}-desc`}
         onCancel={(e) => {

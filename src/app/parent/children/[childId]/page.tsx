@@ -33,7 +33,7 @@ export default async function ChildSettingsPage(props: PageProps<"/parent/childr
           }}
         />
       </Card>
-      <Card className="space-y-3" aria-labelledby="learning-heading">
+      <Card role="region" className="space-y-3" aria-labelledby="learning-heading">
         <h2 id="learning-heading" className="text-lg font-bold">
           Learning
         </h2>
@@ -44,7 +44,7 @@ export default async function ChildSettingsPage(props: PageProps<"/parent/childr
         </p>
         <ResetLearningControl childId={child.id} name={child.name} gradeName={gradeName} />
       </Card>
-      <Card className="border-danger/40 space-y-3" aria-labelledby="danger-heading">
+      <Card role="region" className="border-danger/40 space-y-3" aria-labelledby="danger-heading">
         <h2 id="danger-heading" className="text-lg font-bold">
           <span aria-hidden>⚠️ </span>Danger zone
         </h2>

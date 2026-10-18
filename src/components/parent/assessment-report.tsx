@@ -95,7 +95,12 @@ export function ReadinessGrid({
                   </dd>
                 </div>
               ) : null}
-              {r.evidence.reason ? <dd className="text-muted">{r.evidence.reason}</dd> : null}
+              {r.evidence.reason ? (
+                <div>
+                  <dt className="sr-only">Reason</dt>
+                  <dd className="text-muted">{r.evidence.reason}</dd>
+                </div>
+              ) : null}
               {r.strengths.length > 0 ? (
                 <div>
                   <dt className="inline font-semibold">Strengths: </dt>
